@@ -1,0 +1,17 @@
+UIT Mobile includes Kotlin ports of protocol, URL security, session health,
+calendar reminder, assignment submission, and H5P handling logic from:
+
+RyanNg1403/uit-cli
+https://github.com/RyanNg1403/uit-cli
+Copyright (c) 2026 Phat Nguyen
+MIT License (see LICENSE)
+
+The architecture is informed by Google's Now in Android project. No Now in
+Android source files or artwork are included.
+
+The UIT emblem and campus photograph are university identity/media assets.
+Their source and treatment are documented in docs/design/ASSETS.md. University
+assets are not relicensed under the source-code MIT license.
+
+IBM Plex Sans and IBM Plex Mono are bundled under the SIL Open Font License.
+See docs/design/licenses/IBM-Plex-OFL.txt.

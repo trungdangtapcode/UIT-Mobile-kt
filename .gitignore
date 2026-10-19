@@ -1,0 +1,52 @@
+# Local build state and generated Android artifacts.
+.gradle/
+.kotlin/
+**/build/
+**/.cxx/
+**/.externalNativeBuild/
+*.apk
+*.aab
+*.ap_
+*.idsig
+*.dex
+*.hprof
+*.heapdump
+captures/
+
+# Machine-specific IDE and SDK configuration.
+local.properties
+.idea/
+.vscode/
+*.iml
+
+# Local credentials, signing material and environment overrides.
+.env
+.env.*
+!.env.example
+!.env.sample
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+keystore.properties
+signing.properties
+credentials.json
+service-account*.json
+
+# Local logs, caches and editor/OS files.
+*.log
+__pycache__/
+*.py[cod]
+.venv/
+node_modules/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*~
+*.swp
+*.swo
+
+# Intentionally versioned: Gradle wrapper JAR, Room schemas, bundled assets/fonts,
+# asset notices, and the curated phone preview gallery and historical references.

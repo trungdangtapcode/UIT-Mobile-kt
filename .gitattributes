@@ -1,0 +1,11 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ttf binary
+*.jar binary
+*.zip binary
+# Preserve upstream font licenses byte-for-byte, including their line endings.
+core/designsystem/src/main/assets/licenses/IBM-Plex-OFL.txt -text whitespace=-blank-at-eol,cr-at-eol
+docs/design/licenses/IBM-Plex-OFL.txt -text whitespace=-blank-at-eol,cr-at-eol

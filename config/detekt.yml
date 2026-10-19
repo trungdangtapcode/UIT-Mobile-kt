@@ -1,0 +1,37 @@
+config:
+  validation: true
+  warningsAsErrors: true
+build:
+  maxIssues: 0
+processors:
+  active: false
+comments:
+  active: false
+complexity:
+  active: false
+coroutines:
+  active: true
+  GlobalCoroutineUsage:
+    active: true
+  SuspendFunSwallowedCancellation:
+    active: true
+empty-blocks:
+  active: false
+exceptions:
+  active: false
+naming:
+  active: false
+performance:
+  active: false
+potential-bugs:
+  active: true
+  InvalidRange:
+    active: true
+  IteratorHasNextCallsNextMethod:
+    active: true
+  UnconditionalJumpStatementInLoop:
+    active: true
+  UnreachableCode:
+    active: true
+style:
+  active: false

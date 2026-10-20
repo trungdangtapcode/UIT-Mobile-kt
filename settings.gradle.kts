@@ -18,6 +18,7 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "uit-mobile"
+include(":core:model", ":core:common", ":core:domain")
 if (!providers.gradleProperty("headless").isPresent) {
     include(":app")
 }

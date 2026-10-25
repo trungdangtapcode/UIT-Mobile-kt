@@ -15,4 +15,5 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.activity.compose)
     implementation(libs.core.ktx)
+    implementation(project(":core:designsystem"))
 }

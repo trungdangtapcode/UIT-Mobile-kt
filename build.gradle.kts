@@ -27,4 +27,14 @@ val detektCheck by tasks.registering(JavaExec::class) {
     mainClass.set("io.gitlab.arturbosch.detekt.cli.Main")
     args("--input", "core,feature,app", "--excludes", "**/build/**", "--config", "config/detekt.yml", "--report", "html:build/reports/detekt.html")
 }
-tasks.named("check") { dependsOn(ktlintCheck) }
+val verifyArchitecture by tasks.registering(Exec::class) {
+    commandLine("python3", "scripts/check-architecture.py")
+}
+tasks.named("check") { dependsOn(verifyArchitecture, ktlintCheck, detektCheck) }
+
+tasks.named("check") {
+    dependsOn(":core:common:test", ":core:domain:test", ":core:network:common:test", ":core:network:moodle:test", ":core:network:daa:test")
+    if (!providers.gradleProperty("headless").isPresent) {
+        dependsOn(":core:database:testDebugUnitTest", ":core:data:testDebugUnitTest", ":feature:courses:testDebugUnitTest", ":app:lintDebug")
+    }
+}

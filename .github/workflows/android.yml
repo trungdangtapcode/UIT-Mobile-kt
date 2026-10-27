@@ -1,0 +1,22 @@
+name: Android
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/check-repo-hygiene.py
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - run: ./gradlew :app:assembleDebug check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uit-mobile-debug
+          path: app/build/outputs/apk/debug/*.apk

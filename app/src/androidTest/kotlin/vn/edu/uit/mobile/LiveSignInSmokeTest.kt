@@ -71,15 +71,29 @@ class LiveSignInSmokeTest {
             }
             fun screenshot(name: String) {
                 val instrumentation = InstrumentationRegistry.getInstrumentation()
+                val rendered = CountDownLatch(1)
+                instrumentation.runOnMainSync {
+                    browser.postVisualStateCallback(
+                        1L,
+                        object : WebView.VisualStateCallback() {
+                            override fun onComplete(requestId: Long) {
+                                browser.postOnAnimation { browser.postOnAnimation { rendered.countDown() } }
+                            }
+                        }
+                    )
+                }
+                assertTrue("WebView did not draw the completed page", rendered.await(15, TimeUnit.SECONDS))
+                instrumentation.waitForIdleSync()
+                Thread.sleep(150)
                 val folder = File(instrumentation.targetContext.filesDir, "auth-smoke").apply { mkdirs() }
                 val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
                 File(folder, "$name.png").outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
                 bitmap.recycle()
             }
-            awaitScript("Boolean(document.querySelector('a[href*=\"/auth/oauth2/login.php\"]'))")
+            awaitScript("document.readyState === 'complete' && Boolean(document.querySelector('a[href*=\"/auth/oauth2/login.php\"]'))")
             screenshot("moodle-login")
             evaluate("document.querySelector('a[href*=\"/auth/oauth2/login.php\"]').click(); true")
-            awaitScript("location.hostname === 'sso.uit.edu.vn' && Boolean(document.querySelector('#username') && document.querySelector('#password'))")
+            awaitScript("document.readyState === 'complete' && location.hostname === 'sso.uit.edu.vn' && Boolean(document.querySelector('#username') && document.querySelector('#password'))")
             screenshot("sso-login")
             InstrumentationRegistry.getInstrumentation().runOnMainSync {
                 val root = browser.rootView

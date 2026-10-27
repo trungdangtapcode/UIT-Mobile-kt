@@ -52,6 +52,8 @@ class OfflinePortalRepository(
                     profile = entries.firstOrNull { it.profile.studentId.isNotEmpty() }?.profile ?: StudentProfile(),
                     sections = entries.flatMap { it.sections.entries }.associate { it.toPair() }, assignments = entries.flatMap { it.assignments },
                     courseNews = entries.flatMap { it.courseNews }.sortedByDescending { it.created },
+                    studentServices = entries.firstNotNullOfOrNull { it.studentServices },
+                    portalLinked = sessions.any { it.account.portal == PortalType.UIT_PORTAL },
                     grades = entries.flatMap { it.grades.entries }.associate { it.toPair() }, updatedAt = entries.maxOfOrNull { it.updatedAt } ?: 0
                 )
             }
@@ -173,6 +175,63 @@ class OfflinePortalRepository(
                 state.value = SyncState(error = error)
             }
             error?.let { AppResult.Failure(it) } ?: AppResult.Success(Unit)
+        }
+    }
+    override suspend fun refreshStudentServices(): AppResult<Unit, AppError> = withContext(dispatchers.io) {
+        mutex.withLock {
+            val session = vault.sessions.first().firstOrNull { it.account.portal == PortalType.UIT_PORTAL }
+                ?: return@withLock AppResult.Failure(AppError.SessionExpired)
+            var cached = store.read(session.account.id)
+            var services = cached.studentServices ?: StudentServicesSnapshot()
+            var firstError: AppError? = null
+            val issues = services.issues.associateBy { it.key }.toMutableMap()
+            suspend fun persist() {
+                services = services.copy(issues = issues.values.toList())
+                cached = cached.copy(studentServices = services)
+                store.write(session.account.id, cached)
+            }
+            suspend fun attempt(key: String, read: suspend () -> StudentServicesSnapshot): Boolean = when (val result = appResult(PortalType.UIT_PORTAL) { read() }) {
+                is AppResult.Success -> {
+                    services = result.data
+                    issues.remove(key)
+                    persist()
+                    true
+                }
+                is AppResult.Failure -> {
+                    firstError = firstError ?: result.error
+                    val failure = when (val error = result.error) {
+                        AppError.SessionExpired -> ServiceFailureKind.SIGN_IN
+                        AppError.NetworkOffline -> ServiceFailureKind.NETWORK
+                        is AppError.PortalUnavailable -> if (error.code == "invalidresponse") ServiceFailureKind.INVALID_RESPONSE else ServiceFailureKind.UNAVAILABLE
+                        else -> ServiceFailureKind.UNAVAILABLE
+                    }
+                    issues[key] = ServiceIssue(key, failure)
+                    persist()
+                    failure != ServiceFailureKind.SIGN_IN
+                }
+            }
+            when (
+                val result = appResult(PortalType.UIT_PORTAL) {
+                    transportFactory(session).use { transport ->
+                        val api = StudentServicesClient(transport)
+                        if (!attempt("tuition") { services.copy(tuition = api.tuition().copy(fetchedAt = Clock.System.now().epochSeconds)) }) return@use
+                        for (kind in ProcedureKind.entries) {
+                            if (!attempt(kind.name) {
+                                    val section = api.procedure(kind).copy(fetchedAt = Clock.System.now().epochSeconds)
+                                    services.copy(procedures = services.procedures.filterNot { it.kind == kind } + section)
+                                }
+                            ) {
+                                return@use
+                            }
+                        }
+                        attempt("graduation") { services.copy(graduation = api.graduation().copy(fetchedAt = Clock.System.now().epochSeconds)) }
+                    }
+                }
+            ) {
+                is AppResult.Failure -> firstError = result.error
+                else -> Unit
+            }
+            firstError?.let { AppResult.Failure(it) } ?: AppResult.Success(Unit)
         }
     }
     override suspend fun calendar(year: Int, month: Int): AppResult<Unit, AppError> = appResult(PortalType.MOODLE) {

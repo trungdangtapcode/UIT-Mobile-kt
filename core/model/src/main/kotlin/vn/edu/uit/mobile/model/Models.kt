@@ -165,5 +165,7 @@ data class PortalSnapshot(
     val assignments: List<Assignment> = emptyList(),
     val grades: Map<String, List<GradeItem>> = emptyMap(),
     val updatedAt: Long = 0,
-    val courseNews: List<Discussion> = emptyList()
+    val courseNews: List<Discussion> = emptyList(),
+    val studentServices: StudentServicesSnapshot? = null,
+    val portalLinked: Boolean = false
 )

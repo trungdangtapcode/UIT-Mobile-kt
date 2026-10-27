@@ -1,0 +1,498 @@
+{
+  "observationDate": "2026-10-27",
+  "scope": "Authorized read-only research against the current UIT Portal. Field names/types only; no account values, collection sizes, cookies or tokens. Empty collections do not establish an item schema.",
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/sinh-vien/gia-han-hoc-phi",
+      "observedHttpStatus": 200,
+      "responseShape": {
+        "periodStatus": {
+          "open": "boolean",
+          "start_date": "string",
+          "end_date": "string",
+          "semester_label": "string",
+          "year_name": "string",
+          "canRegister": "boolean",
+          "registerBlockReason": "string"
+        },
+        "history": {
+          "type": "array",
+          "observedItemSchemas": [],
+          "itemSchemaObserved": false
+        },
+        "canMutate": "boolean",
+        "presentStatusName": "string"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/sinh-vien/giay-xac-nhan",
+      "observedHttpStatus": 200,
+      "responseShape": {
+        "history": {
+          "xnsv": {
+            "type": "array",
+            "observedItemSchemas": [
+              {
+                "id": "string",
+                "team_code": "string",
+                "team_name": "string",
+                "name": "string",
+                "stage_code": "string",
+                "wrong_reason": "string",
+                "regis_number": "string",
+                "stage_name": "string",
+                "language": "string",
+                "verify_type": "string",
+                "reason": "string",
+                "note": "string",
+                "create_date": "string",
+                "create_date_display": "string",
+                "attachment_names": {
+                  "type": "array",
+                  "observedItemSchemas": [],
+                  "itemSchemaObserved": false
+                }
+              }
+            ],
+            "itemSchemaObserved": true
+          },
+          "vvnh": {
+            "type": "array",
+            "observedItemSchemas": [],
+            "itemSchemaObserved": false
+          },
+          "ggt": {
+            "type": "array",
+            "observedItemSchemas": [],
+            "itemSchemaObserved": false
+          },
+          "xntt": {
+            "type": "array",
+            "observedItemSchemas": [],
+            "itemSchemaObserved": false
+          },
+          "drl": {
+            "type": "array",
+            "observedItemSchemas": [],
+            "itemSchemaObserved": false
+          },
+          "udgd": {
+            "type": "array",
+            "observedItemSchemas": [],
+            "itemSchemaObserved": false
+          },
+          "gkhk": {
+            "type": "array",
+            "observedItemSchemas": [],
+            "itemSchemaObserved": false
+          },
+          "stemNamThu": "number"
+        },
+        "canMutate": "boolean",
+        "presentStatusName": "string",
+        "meritOptions": {
+          "type": "array",
+          "observedItemSchemas": [
+            {
+              "semester": "string",
+              "year_id": "number",
+              "label": "string"
+            }
+          ],
+          "itemSchemaObserved": true
+        },
+        "fullName": "string",
+        "studentCode": "string",
+        "stemNamThu": "number",
+        "error": "null"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/sinh-vien/hoan-thi",
+      "observedHttpStatus": 200,
+      "responseShape": {
+        "eligible": {
+          "is_open": "boolean",
+          "title_register": "string",
+          "subjects": {
+            "type": "array",
+            "observedItemSchemas": [],
+            "itemSchemaObserved": false
+          }
+        },
+        "history": {
+          "type": "array",
+          "observedItemSchemas": [],
+          "itemSchemaObserved": false
+        },
+        "reexamEligible": {
+          "type": "array",
+          "observedItemSchemas": [],
+          "itemSchemaObserved": false
+        },
+        "reexamHistory": {
+          "type": "array",
+          "observedItemSchemas": [],
+          "itemSchemaObserved": false
+        },
+        "canMutate": "boolean",
+        "presentStatusName": "string",
+        "error": "null"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/sinh-vien/phuc-khao",
+      "observedHttpStatus": 200,
+      "responseShape": {
+        "eligible": {
+          "type": "array",
+          "observedItemSchemas": [
+            {
+              "id": "string",
+              "section_class_code": "string",
+              "subject_code": "string",
+              "subject_name": "string",
+              "date_exam": "string",
+              "room_code": "string",
+              "room_id": "string",
+              "current_point": "number",
+              "examination": "string",
+              "revaluation_deadline": "string",
+              "can_appeal": "boolean"
+            }
+          ],
+          "itemSchemaObserved": true
+        },
+        "history": {
+          "type": "array",
+          "observedItemSchemas": [],
+          "itemSchemaObserved": false
+        },
+        "canMutate": "boolean",
+        "presentStatusName": "string",
+        "error": "null"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/sinh-vien/thoi-hoc-bao-luu",
+      "observedHttpStatus": 200,
+      "responseShape": {
+        "history": {
+          "type": "array",
+          "observedItemSchemas": [],
+          "itemSchemaObserved": false
+        },
+        "canMutate": "boolean",
+        "presentStatusName": "string",
+        "error": "null"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/sinh-vien/tot-nghiep",
+      "observedHttpStatus": 200,
+      "responseShape": {
+        "data": {
+          "conditions": {
+            "type": "array",
+            "observedItemSchemas": [
+              {
+                "id": "number",
+                "name": "string",
+                "status": "string",
+                "note": "null"
+              }
+            ],
+            "itemSchemaObserved": true
+          },
+          "config": {
+            "id": "number",
+            "periodLabel": "string",
+            "startDate": "string",
+            "endDate": "string",
+            "graduationYear": "string"
+          },
+          "studentInfo": {
+            "gpa": "number",
+            "passedCredits": "number",
+            "totalProgramCredits": "number",
+            "trainingScore": "number",
+            "gdqpImageUrl": "null",
+            "birthCertUrl": "string",
+            "transcriptUrl": "null",
+            "birthCertUpload": "null",
+            "transcriptUpload": "string"
+          },
+          "canRegister": "boolean",
+          "registerGates": {
+            "docs": "boolean",
+            "fee": "boolean",
+            "credit": "boolean",
+            "phone": "boolean"
+          },
+          "isGradException": "boolean",
+          "summerRegistrationBlock": "boolean",
+          "alreadyRegistered": "boolean",
+          "registrationStatus": "null",
+          "inRegistrationPeriod": "boolean",
+          "registrationPeriodStatus": "string",
+          "isAdminOverride": "boolean",
+          "defenseEducation": {
+            "passed": "boolean",
+            "score": "number",
+            "rankLabel": "string",
+            "certificate": "string",
+            "yearName": "string"
+          },
+          "foreignLanguage": {
+            "passed": "boolean",
+            "items": {
+              "type": "array",
+              "observedItemSchemas": [
+                {
+                  "type": "string",
+                  "score": "string",
+                  "testDate": "string",
+                  "outputStandard": "boolean"
+                }
+              ],
+              "itemSchemaObserved": true
+            }
+          },
+          "debts": {
+            "type": "array",
+            "observedItemSchemas": [
+              {
+                "key": "string",
+                "label": "string",
+                "ok": "boolean",
+                "statusText": "string",
+                "hint": "string"
+              }
+            ],
+            "itemSchemaObserved": true
+          },
+          "isVb2": "boolean",
+          "nhanBang": "string",
+          "surplusSubjects": {
+            "type": "array",
+            "observedItemSchemas": [
+              {
+                "id": "number",
+                "code": "string",
+                "name": "string",
+                "hp": "string"
+              }
+            ],
+            "itemSchemaObserved": true
+          },
+          "contactPhone": "string",
+          "feeGuide": "string",
+          "contactGuide": "string",
+          "requiresTrainingScore": "boolean",
+          "registeredInfo": "null",
+          "ketQuaCuoi": "null"
+        },
+        "canMutate": "boolean",
+        "presentStatusName": "string",
+        "isImpersonating": "boolean",
+        "error": "null"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/sinh-vien/xac-nhan-chung-chi",
+      "observedHttpStatus": 200,
+      "responseShape": {
+        "certs": {
+          "type": "array",
+          "observedItemSchemas": [
+            {
+              "id": "string",
+              "cert_type": "string",
+              "tongdiem": "number",
+              "ngaythi": "string",
+              "xethocbong": "boolean",
+              "hinhanh": "string",
+              "status": "string",
+              "output_standard": "boolean",
+              "create_date": "string"
+            }
+          ],
+          "itemSchemaObserved": true
+        },
+        "certTypes": {
+          "type": "array",
+          "observedItemSchemas": [
+            {
+              "id": "number",
+              "code": "string",
+              "name": "string",
+              "type": "string",
+              "abbrName": "string",
+              "applyUitGlobal": "boolean"
+            }
+          ],
+          "itemSchemaObserved": true
+        },
+        "canMutate": "boolean",
+        "presentStatusName": "string",
+        "error": "null"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/sinh-vien/xin-bang-diem",
+      "observedHttpStatus": 200,
+      "responseShape": {
+        "parameters": {
+          "type": "array",
+          "observedItemSchemas": [
+            {
+              "id": "string",
+              "parameter": "string",
+              "display_name": "string",
+              "cost": "number"
+            }
+          ],
+          "itemSchemaObserved": true
+        },
+        "history": {
+          "type": "array",
+          "observedItemSchemas": [],
+          "itemSchemaObserved": false
+        },
+        "years": {
+          "years": {
+            "type": "array",
+            "observedItemSchemas": [
+              {
+                "id": "number",
+                "name": "string",
+                "yearNumber": "number",
+                "startDates": {
+                  "1": "null",
+                  "2": "null",
+                  "3": "null"
+                },
+                "endDates": {
+                  "1": "null",
+                  "2": "null",
+                  "3": "null"
+                }
+              }
+            ],
+            "itemSchemaObserved": true
+          },
+          "defaultYearId": "number",
+          "defaultSemester": "number"
+        },
+        "canMutate": "boolean",
+        "presentStatusName": "string",
+        "feePaymentLocation": "string",
+        "error": "null"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/sv/tuition",
+      "observedHttpStatus": 200,
+      "responseShape": {
+        "records": {
+          "type": "array",
+          "observedItemSchemas": [
+            {
+              "index": "number",
+              "period": "string",
+              "subject_codes": "string",
+              "period_1_due_date": "string",
+              "period_2_due_date": "string",
+              "qr_code": "boolean",
+              "id": "number",
+              "debt_in_advance": "string",
+              "late_payment_date": "string",
+              "late_payment_date_formatted": "string",
+              "must_be_paid": "string",
+              "note": "string",
+              "paid": "string",
+              "paid_time": "string",
+              "paid_time_formatted": "string",
+              "payment_status": "string",
+              "payment_status_label": "string",
+              "period_1_due_date_formatted": "string",
+              "period_2_due_date_formatted": "string",
+              "reduction_amount": "string",
+              "remaining": "string",
+              "renewal_date": "string",
+              "renewal_date_formatted": "string",
+              "semester": "string",
+              "semester_label": "string",
+              "tuition_amount": "string",
+              "tuition_credit_number": "string",
+              "tuition_renewal": "string",
+              "tuition_semester": "string",
+              "tuition_status": "string",
+              "tuition_status_label": "string",
+              "year_id": {
+                "type": "array",
+                "observedItemSchemas": [
+                  "number"
+                ],
+                "itemSchemaObserved": true
+              },
+              "year_id_name": "string",
+              "detail_ids": {
+                "type": "array",
+                "observedItemSchemas": [
+                  {
+                    "index": "number",
+                    "id": "number",
+                    "additional_tuition": "string",
+                    "amount": "string",
+                    "improve": "string",
+                    "note": "string",
+                    "repayment": "string",
+                    "subject_code": "string",
+                    "subject_id": {
+                      "type": "array",
+                      "observedItemSchemas": [
+                        "number"
+                      ],
+                      "itemSchemaObserved": true
+                    },
+                    "subject_id_name": "string",
+                    "subject_name": "string",
+                    "tuition_credit_number": "string",
+                    "unit_price": "string"
+                  }
+                ],
+                "itemSchemaObserved": true
+              },
+              "payment_ids": {
+                "type": "array",
+                "observedItemSchemas": [
+                  {
+                    "id": "number",
+                    "amount": "number",
+                    "payment_time": "string",
+                    "bank_name": "string",
+                    "trans_id": "string",
+                    "invoice_code": "string",
+                    "status": "string"
+                  }
+                ],
+                "itemSchemaObserved": true
+              }
+            }
+          ],
+          "itemSchemaObserved": true
+        }
+      }
+    }
+  ]
+}

@@ -17,6 +17,7 @@ import vn.edu.uit.mobile.academic.*
 import vn.edu.uit.mobile.courses.*
 import vn.edu.uit.mobile.dashboard.*
 import vn.edu.uit.mobile.designsystem.*
+import vn.edu.uit.mobile.model.*
 import vn.edu.uit.mobile.schedule.*
 
 @RunWith(RobolectricTestRunner::class)
@@ -25,6 +26,103 @@ import vn.edu.uit.mobile.schedule.*
 class WorkspaceDesignTest {
     @get:Rule val compose = createComposeRule()
     private val data = WorkspacePreviewData
+
+    @Test fun tuitionTabShowsExactTermBalanceAndExpandableChargeDetails() {
+        compose.setContent { Frame(4) { AcademicContent(AcademicState(StudentServicesPreviewData.snapshot)) } }
+        compose.onNodeWithText("Tuition", substring = false).performClick()
+        compose.onNodeWithText("Remaining for this term").assertIsDisplayed()
+        compose.onAllNodesWithText("2.500.000 ₫").onFirst().assertIsDisplayed()
+        capture("tuition-390-phone")
+        compose.onNodeWithTag("student-services-content").performScrollToNode(hasText("View charge details"))
+        compose.onNodeWithText("View charge details").performClick()
+        compose.onNodeWithTag("student-services-content").performScrollToNode(hasText("Programming fundamentals"))
+        compose.onNodeWithText("Programming fundamentals").assertIsDisplayed()
+        capture("tuition-details-phone")
+    }
+
+    @Test fun changingTuitionTermDoesNotAggregateHistoricalDebt() {
+        compose.setContent { Frame(4) { AcademicContent(AcademicState(StudentServicesPreviewData.snapshot)) } }
+        compose.onNodeWithText("Tuition", substring = false).performClick()
+        compose.onNodeWithContentDescription("Choose tuition term").performClick()
+        compose.onNodeWithText("Semester 2 · 2025–2026").performClick()
+        compose.onAllNodesWithText("0 ₫").onFirst().assertIsDisplayed()
+        compose.onNodeWithText("2.500.000 ₫").assertDoesNotExist()
+    }
+
+    @Test fun procedureHistoryIsReachableOnPhone() {
+        compose.setContent { Frame(4) { AcademicContent(AcademicState(StudentServicesPreviewData.snapshot)) } }
+        compose.onNodeWithText("Procedures").performClick()
+        capture("procedures-390-phone")
+        compose.onNodeWithTag("student-services-content").performScrollToNode(hasText("TEST-CERT-001"))
+        compose.onNodeWithText("Ready for collection").assertIsDisplayed()
+        compose.onNodeWithText("Gửi đơn").assertDoesNotExist()
+        compose.onNodeWithText("Submit").assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-mdpi")
+    fun tuitionFitsSmallPhoneAndKeepsBottomNavigation() {
+        compose.setContent { Frame(4) { AcademicContent(AcademicState(StudentServicesPreviewData.snapshot)) } }
+        compose.onNodeWithText("Tuition", substring = false).performClick()
+        compose.onNodeWithText("Remaining for this term").assertIsDisplayed()
+        compose.onNodeWithText("Today").assertIsDisplayed()
+        capture("tuition-360-phone")
+    }
+
+    @Test
+    @Config(qualifiers = "w412dp-h915dp-mdpi")
+    fun graduationShowsUniversityConditionsOnDarkPhone() {
+        compose.setContent { Frame(4, dark = true) { AcademicContent(AcademicState(StudentServicesPreviewData.snapshot)) } }
+        compose.onNodeWithText("Graduation").performClick()
+        compose.onNodeWithText("No registration recorded").assertIsDisplayed()
+        capture("graduation-412-dark-phone")
+        compose.onNodeWithTag("student-services-content").performScrollToNode(hasText("Complete the degree credit requirement"))
+        compose.onNodeWithText("In progress", substring = false).assertIsDisplayed()
+        capture("graduation-conditions-phone")
+    }
+
+    @Test fun serviceFailureRetainsCachedBalanceAndOffersRetry() {
+        var retried = false
+        val cached = StudentServicesPreviewData.snapshot.copy(studentServices = StudentServicesPreviewData.services.copy(issues = listOf(ServiceIssue("tuition", ServiceFailureKind.NETWORK))))
+        compose.setContent { Frame(4) { StudentServicesContent(1, AcademicState(cached), { retried = true }) } }
+        compose.onNodeWithText("Showing your previously saved records.").assertIsDisplayed()
+        compose.onNodeWithText("Try again").performClick()
+        assertTrue(retried)
+        compose.onNodeWithTag("student-services-content").performScrollToNode(hasText("Remaining for this term"))
+        compose.onAllNodesWithText("2.500.000 ₫").onFirst().assertIsDisplayed()
+        capture("tuition-offline-phone")
+    }
+
+    @Test fun serviceLoadingAndUnloadedDataNeverClaimAnEmptyHistory() {
+        compose.setContent { Frame(4) { StudentServicesContent(1, AcademicState(PortalSnapshot(portalLinked = true), servicesLoading = true)) } }
+        compose.onNodeWithText("Updating student services…").assertIsDisplayed()
+        compose.onNodeWithText("No tuition records").assertDoesNotExist()
+        compose.onNodeWithText("0 ₫").assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-mdpi")
+    fun tuitionWithLargeTextKeepsTheBalanceAndTabsReachable() {
+        compose.setContent {
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(density.density, 1.3f)) {
+                Frame(4) { AcademicContent(AcademicState(StudentServicesPreviewData.snapshot)) }
+            }
+        }
+        compose.onNodeWithText("Tuition", substring = false).performClick()
+        compose.onNodeWithText("Remaining for this term").assertIsDisplayed()
+        capture("tuition-360-large-text")
+        compose.onNodeWithText("Graduation").performScrollTo().performClick()
+        compose.onNodeWithText("No registration recorded").assertIsDisplayed()
+    }
+
+    @Test fun disconnectedServiceLinksBackToAccountSettings() {
+        var accounts = false
+        compose.setContent { Frame(4) { StudentServicesContent(1, AcademicState(), onAccounts = { accounts = true }) } }
+        compose.onNodeWithText("Connect UIT Portal").assertIsDisplayed()
+        compose.onNodeWithText("Account settings").performClick()
+        assertTrue(accounts)
+    }
     private fun capture(name: String) {
         if (java.lang.Boolean.getBoolean("roborazzi.test.record")) {
             val path = File(System.getProperty("uit.preview.dir"), "$name.png")

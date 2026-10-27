@@ -10,6 +10,7 @@ open class FakePortalRepository : PortalRepository {
     var submits = 0
     override suspend fun calendar(year: Int, month: Int): AppResult<Unit, AppError> = AppResult.Success(Unit)
     override suspend fun refresh(): AppResult<Unit, AppError> = AppResult.Success(Unit)
+    override suspend fun refreshStudentServices(): AppResult<Unit, AppError> = AppResult.Success(Unit)
     override suspend fun courseDetails(course: Course): AppResult<List<CourseSection>, AppError> = AppResult.Success(emptyList())
     override suspend fun assignments(course: Course): AppResult<List<Assignment>, AppError> = AppResult.Success(emptyList())
     override suspend fun submission(course: Course, assignment: Assignment): AppResult<SubmissionStatus, AppError> = AppResult.Success(SubmissionStatus("new"))

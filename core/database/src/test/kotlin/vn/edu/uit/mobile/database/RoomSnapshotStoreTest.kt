@@ -50,4 +50,27 @@ class RoomSnapshotStoreTest {
         assertTrue(store.read("one").courses.isEmpty())
         assertEquals("Second", store.read("two").courses.single().fullname)
     }
+
+    @Test fun studentServiceCacheSurvivesRoundTripAndAccountRemoval() = runTest {
+        val services = StudentServicesSnapshot(tuition = TuitionSummary(emptyList(), fetchedAt = 123), procedures = listOf(ProcedureSection(ProcedureKind.TRANSCRIPTS, emptyList(), fetchedAt = 124)))
+        store.write("portal", PortalSnapshot(studentServices = services))
+        assertEquals(services, store.read("portal").studentServices)
+        assertNull(store.read("other").studentServices)
+        store.delete("portal")
+        assertNull(store.read("portal").studentServices)
+    }
+
+    @Test fun oldSnapshotWithoutStudentServicesRemainsReadable() = runTest {
+        store.write("old", PortalSnapshot(courses = listOf(Course(1, "old", "IT001", "Programming"))))
+        val entity = requireNotNull(db.dao().snapshot("old"))
+        val payload = com.google.gson.JsonParser.parseString(entity.payload).asJsonObject.apply {
+            remove("studentServices")
+            remove("portalLinked")
+        }
+        db.dao().save(entity.copy(payload = payload.toString()))
+        val old = store.read("old")
+        assertNull(old.studentServices)
+        assertFalse(old.portalLinked)
+        assertEquals("IT001", old.courses.single().shortname)
+    }
 }

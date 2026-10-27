@@ -102,6 +102,18 @@ Deadlines: date-indexed rows with exact due timestamp and textual status. Submit
 upcoming and overdue filters use repository data. Academic: actual cumulative GPA,
 semester values and transcript details; degree progress appears only when supplied.
 
+Academic student services: keep the five bottom destinations. Inside Academic,
+use a horizontally scrollable set of cut-corner filters for Records, Tuition,
+Procedures and Graduation. Each view remains a single phone reading column.
+Tuition selects one reported term before showing its exact remaining balance;
+do not sum historical balances without verified accounting semantics. Request
+history groups by service. Graduation presents the university's registration
+status and condition list. Reuse Panel, native buttons and existing type/color
+tokens. Show per-section saved times, cached-data notices and retry controls;
+missing financial values are an em dash, never a fabricated zero. All new student
+service controls navigate, expand or refresh reads; there are no submission,
+payment, cancellation or upload controls.
+
 ## References and evidence
 
 - [Research and baseline audit](../docs/design/AI-SLOP-AUDIT.md)

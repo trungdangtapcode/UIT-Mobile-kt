@@ -5,6 +5,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -27,31 +28,87 @@ import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.model.*
 
-@Immutable data class AcademicState(val snapshot: PortalSnapshot = PortalSnapshot())
+@Immutable data class AcademicState(val snapshot: PortalSnapshot = PortalSnapshot(), val servicesLoading: Boolean = false, val servicesError: AppError? = null)
 sealed interface AcademicIntent {
     data object Refresh : AcademicIntent
+    data object OpenServices : AcademicIntent
+    data object RefreshServices : AcademicIntent
 }
 class AcademicViewModel(private val repository: PortalRepository) : BaseMviViewModel<AcademicState, AcademicIntent, Unit>(AcademicState()) {
+    private var servicesRequested = false
+    private var serviceJob: kotlinx.coroutines.Job? = null
     init {
-        viewModelScope.launch { repository.snapshot.collect { state.value = AcademicState(it) } }
+        viewModelScope.launch {
+            repository.snapshot.collect {
+                if (!it.portalLinked) servicesRequested = false
+                state.value = state.value.copy(snapshot = it)
+            }
+        }
     }
     override fun onIntent(intent: AcademicIntent) {
-        viewModelScope.launch { repository.refresh() }
+        if (intent == AcademicIntent.Refresh) {
+            viewModelScope.launch { repository.refresh() }
+            return
+        }
+        if (!state.value.snapshot.portalLinked || serviceJob?.isActive == true || intent == AcademicIntent.OpenServices && servicesRequested) return
+        servicesRequested = true
+        serviceJob = viewModelScope.launch {
+            state.value = state.value.copy(servicesLoading = true, servicesError = null)
+            try {
+                val result = when (val refresh = appResult(PortalType.UIT_PORTAL) { repository.refreshStudentServices() }) {
+                    is AppResult.Success -> refresh.data
+                    is AppResult.Failure -> refresh
+                }
+                state.value = state.value.copy(servicesError = (result as? AppResult.Failure)?.error)
+            } finally {
+                state.value = state.value.copy(servicesLoading = false)
+            }
+        }
     }
 }
 
 @Composable fun AcademicScreen(viewModel: AcademicViewModel, accounts: @Composable () -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    AcademicContent(state, onRefresh = { viewModel.onIntent(AcademicIntent.Refresh) }, accounts = accounts)
+    AcademicContent(state, onRefresh = { viewModel.onIntent(AcademicIntent.Refresh) }, onOpenServices = { viewModel.onIntent(AcademicIntent.OpenServices) }, onRefreshServices = { viewModel.onIntent(AcademicIntent.RefreshServices) }, accounts = accounts)
 }
 
-@Composable fun AcademicContent(state: AcademicState, onRefresh: () -> Unit = {}, accounts: @Composable () -> Unit = {}) {
+@Composable fun AcademicContent(state: AcademicState, onRefresh: () -> Unit = {}, onOpenServices: () -> Unit = {}, onRefreshServices: () -> Unit = {}, accounts: @Composable () -> Unit = {}) {
+    var section by rememberSaveable { mutableIntStateOf(0) }
+    var openAccounts by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(section, state.snapshot.portalLinked) { if (section > 0) onOpenServices() }
+    Column(Modifier.fillMaxSize()) {
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("Records", "Tuition", "Procedures", "Graduation").forEachIndexed { index, label ->
+                FilterChip(selected = section == index, onClick = { section = index }, shape = TechnicalShapes.Control, label = { Text(label) })
+            }
+        }
+        Box(Modifier.weight(1f)) {
+            if (section == 0) {
+                AcademicRecordsContent(state, onRefresh, openAccounts, accounts)
+            } else {
+                StudentServicesContent(section, state, onRefreshServices, onAccounts = {
+                    openAccounts = true
+                    section = 0
+                })
+            }
+        }
+    }
+}
+
+@Composable private fun AcademicRecordsContent(state: AcademicState, onRefresh: () -> Unit, openAccounts: Boolean, accounts: @Composable () -> Unit) {
     val snapshot = state.snapshot
     val transcript = snapshot.transcript
     var selected by rememberSaveable(transcript.semesters.size) { mutableIntStateOf(maxOf(0, transcript.semesters.lastIndex)) }
     var showAccounts by rememberSaveable { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    LaunchedEffect(openAccounts) {
+        if (openAccounts) {
+            showAccounts = true
+            listState.scrollToItem(6)
+        }
+    }
     Box(Modifier.fillMaxSize()) {
-        LazyColumn(Modifier.fillMaxSize().testTag("academic-content"), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        LazyColumn(Modifier.fillMaxSize().testTag("academic-content"), state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
                 PageHeading("Academic record", "DAA transcript, GPA and examinations.") {
                     IconButton(onClick = onRefresh) { Icon(Icons.Outlined.Refresh, "Refresh academic data") }

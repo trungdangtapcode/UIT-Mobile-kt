@@ -12,6 +12,11 @@ key before being stored in DataStore.
 
 ## Interface and previews
 
+Academic also includes read-only **Tuition**, **Procedures** and **Graduation**
+views using the linked UIT Portal session. See [student services](docs/STUDENT-SERVICES.md)
+for behavior, offline caching and validation. No applications or payments are sent
+by these new views.
+
 The Compose interface is designed for portrait Android phones at 360dp, 390dp
 and 412dp widths. It uses UIT blue, the transparent lotus/orbit emblem, bundled
 IBM Plex fonts and a subtle campus background. Frames keep three small cut corners

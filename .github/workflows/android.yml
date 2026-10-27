@@ -56,8 +56,9 @@ jobs:
           disable-animations: true
           script: |
             ./gradlew :app:connectedDebugAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true
-            mkdir -p build
-            adb pull /sdcard/Android/data/vn.edu.uit.mobile/files/auth-smoke build/auth-smoke
+            mkdir -p build/auth-smoke
+            adb exec-out run-as vn.edu.uit.mobile cat files/auth-smoke/moodle-login.png > build/auth-smoke/moodle-login.png
+            adb exec-out run-as vn.edu.uit.mobile cat files/auth-smoke/sso-login.png > build/auth-smoke/sso-login.png
       - uses: actions/upload-artifact@v4
         if: always()
         with:

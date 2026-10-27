@@ -71,7 +71,7 @@ class LiveSignInSmokeTest {
             }
             fun screenshot(name: String) {
                 val instrumentation = InstrumentationRegistry.getInstrumentation()
-                val folder = File(instrumentation.targetContext.getExternalFilesDir(null), "auth-smoke").apply { mkdirs() }
+                val folder = File(instrumentation.targetContext.filesDir, "auth-smoke").apply { mkdirs() }
                 val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
                 File(folder, "$name.png").outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
                 bitmap.recycle()

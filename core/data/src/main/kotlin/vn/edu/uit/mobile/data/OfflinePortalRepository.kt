@@ -179,13 +179,7 @@ class OfflinePortalRepository(
     }
     override suspend fun studentProfile(accountId: String): AppResult<StudentProfileDetails, AppError> = appResult(PortalType.UIT_PORTAL) {
         withContext(dispatchers.io) {
-            val sessions = vault.sessions.first()
-            val selected = sessions.firstOrNull { it.account.id == accountId } ?: throw SessionExpiredException()
-            val portal = when {
-                selected.account.portal == PortalType.UIT_PORTAL -> selected
-                selected.account.portal == PortalType.MOODLE && selected.account.baseUrl == "https://courses.uit.edu.vn" -> sessions.firstOrNull { it.account.portal == PortalType.UIT_PORTAL && it.account.userId == selected.account.userId }
-                else -> null
-            } ?: throw IllegalArgumentException("This account has no linked UIT Portal profile. Sign in with UIT SSO to link it.")
+            val (selected, portal) = profileSessions(accountId)
             transportFactory(portal).use { transport ->
                 val api = UitPortalClient(transport)
                 var details = api.profileDetails()
@@ -201,11 +195,34 @@ class OfflinePortalRepository(
                     else -> null
                 }
                 details = details.copy(accountId = accountId, portrait = portrait, fetchedAt = Clock.System.now().epochSeconds)
-                val current = vault.sessions.first()
-                if (current.none { it.account == selected.account } || current.none { it.account == portal.account }) throw SessionExpiredException()
+                checkProfileSessions(selected, portal)
                 details
             }
         }
+    }
+    override suspend fun studentProfileScan(accountId: String, documentId: String): AppResult<ProfileScan, AppError> = appResult(PortalType.UIT_PORTAL) {
+        withContext(dispatchers.io) {
+            val (selected, portal) = profileSessions(accountId)
+            transportFactory(portal).use { transport ->
+                val scan = UitPortalClient(transport).profileScan(documentId)
+                checkProfileSessions(selected, portal)
+                scan
+            }
+        }
+    }
+    private suspend fun profileSessions(accountId: String): Pair<PortalSession, PortalSession> {
+        val sessions = vault.sessions.first()
+        val selected = sessions.firstOrNull { it.account.id == accountId } ?: throw SessionExpiredException()
+        val portal = when {
+            selected.account.portal == PortalType.UIT_PORTAL -> selected
+            selected.account.portal == PortalType.MOODLE && selected.account.baseUrl == "https://courses.uit.edu.vn" -> sessions.firstOrNull { it.account.portal == PortalType.UIT_PORTAL && it.account.userId == selected.account.userId }
+            else -> null
+        } ?: throw IllegalArgumentException("This account has no linked UIT Portal profile. Sign in with UIT SSO to link it.")
+        return selected to portal
+    }
+    private suspend fun checkProfileSessions(selected: PortalSession, portal: PortalSession) {
+        val current = vault.sessions.first()
+        if (current.none { it.account == selected.account } || current.none { it.account == portal.account }) throw SessionExpiredException()
     }
     override suspend fun refreshStudentServices(): AppResult<Unit, AppError> = withContext(dispatchers.io) {
         mutex.withLock {

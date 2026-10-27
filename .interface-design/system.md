@@ -122,7 +122,13 @@ native Back and the five bottom destinations. Refresh and account settings remai
 available in the profile toolbar. Settings contains the existing account and
 appearance sheet; each account can open its own profile. Missing values are
 explicit and section failures remain visible. Profile details and the optional
-portrait stay in screen memory; documents expose metadata without scan downloads.
+portrait stay in screen memory. Uploaded documents expose a View scan action;
+missing images disable that action. Open images in a full-screen native dialog
+with a Back button and document title above an image fitted inside a quiet canvas.
+Keep zoom, fit and gesture hints below the image, with native touch targets. The
+image remains the focal content and keeps its original rectangular edges. Support
+pinch, double-tap and bounded panning. Viewer errors retain Back and Retry controls;
+closing or switching accounts clears image state without creating a file.
 
 ## References and evidence
 

@@ -2,7 +2,9 @@ package vn.edu.uit.mobile.model
 
 /** Detailed personal information is displayed in memory, never added to Room snapshots. */
 data class ProfileField(val label: String, val value: String)
-data class ProfileGroup(val title: String, val fields: List<ProfileField>)
+data class ProfileDocument(val id: String, val title: String, val available: Boolean)
+data class ProfileScan(val documentId: String, val title: String, val bytes: ByteArray)
+data class ProfileGroup(val title: String, val fields: List<ProfileField>, val document: ProfileDocument? = null)
 data class ProfileSection(val id: String, val title: String, val groups: List<ProfileGroup>, val failure: ServiceFailureKind? = null)
 data class StudentProfileDetails(
     val accountId: String = "",

@@ -8,8 +8,7 @@ import vn.edu.uit.mobile.network.*
 /** Only explicit display fields are retained; update actions and attachment URLs are excluded. */
 object UitProfileParser {
     fun parse(body: String): StudentProfileDetails {
-        val data = UitPortalParser.flightObjects(body).firstOrNull { "studentCode" in it && "academic" in it }
-            ?: throw InvalidResponseException("UIT Portal profile data is missing")
+        val data = profile(body)
         if (data.str("studentCode").isBlank() || data.str("fullName").isBlank()) throw InvalidResponseException("Student profile identity is missing")
         val academic = data.field("academic")
         val personal = data.field("personal")
@@ -61,8 +60,9 @@ object UitProfileParser {
             section(
                 "images",
                 "Documents",
-                data.list("imageProfile").map { image ->
-                    ProfileGroup(image.str("label").ifBlank { "Profile document" }, listOf(ProfileField("On file", if (image.str("imageUrl").isNotBlank()) "Yes" else "No"), ProfileField("Required", display(image.field("required"))), ProfileField("Uploaded", display(image.field("uploadedAt")))))
+                data.list("imageProfile").mapIndexed { index, image ->
+                    val document = document(image, index)
+                    ProfileGroup(document.title, listOf(ProfileField("On file", if (document.available) "Yes" else "No"), ProfileField("Required", display(image.field("required"))), ProfileField("Uploaded", display(image.field("uploadedAt")))), document)
                 }
             )
             section("insurance", "Insurance", emptyList())
@@ -70,6 +70,20 @@ object UitProfileParser {
         }
         return StudentProfileDetails(studentCode = data.str("studentCode"), fullName = data.str("fullName"), faculty = academic.str("faculty_name"), major = academic.str("major_name"), className = academic.str("class_name"), enrollmentStatus = academic.str("enrollment_status"), sections = sections)
     }
+
+    internal fun scanSource(body: String, documentId: String): Pair<ProfileDocument, String> {
+        val data = profile(body)
+        val visible = data["visibleTabs"] as? JsonArray
+        if (!visible.isNullOrEmpty() && visible.none { it.str() == "images" }) throw InvalidResponseException("Profile scans are not available")
+        val image = data.list("imageProfile").mapIndexed { index, item -> document(item, index) to item }.singleOrNull { it.first.id == documentId }
+            ?: throw InvalidResponseException("This profile document is no longer available")
+        if (!image.first.available) throw InvalidResponseException("No scan has been provided for this document")
+        return image.first to image.second.str("imageUrl")
+    }
+
+    private fun profile(body: String): JsonObject = UitPortalParser.flightObjects(body).firstOrNull { "studentCode" in it && "academic" in it && it["academic"] is JsonObject }
+        ?: throw InvalidResponseException("UIT Portal profile data is missing")
+    private fun document(image: JsonElement, index: Int): ProfileDocument = ProfileDocument(image.str("type").ifBlank { "document-$index" }, image.str("label").ifBlank { "Profile document" }, image.str("imageUrl").isNotBlank())
 
     fun insurance(data: JsonElement): ProfileSection {
         if (data !is JsonObject || data["cards"] !is JsonObject || data["profile"] !is JsonObject || data["history"] !is JsonArray) throw InvalidResponseException("Student insurance data is missing")

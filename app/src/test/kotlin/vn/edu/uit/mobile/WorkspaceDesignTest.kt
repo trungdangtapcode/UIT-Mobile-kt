@@ -28,6 +28,89 @@ class WorkspaceDesignTest {
     @get:Rule val compose = createComposeRule()
     private val data = WorkspacePreviewData
 
+    @Test fun documentsOfferImagePreviewAndDisableDocumentsWithoutAnUpload() {
+        var opened: String? = null
+        compose.setContent { Frame(4) { StudentProfileContent(StudentProfilePreviewData.state, onOpenScan = { opened = it }) } }
+        compose.onNodeWithText("Documents").performScrollTo().performClick()
+        compose.onNodeWithTag("student-profile-content").performScrollToNode(hasText("View scan"))
+        compose.onNodeWithText("View scan").performClick()
+        assertEquals("transcript", opened)
+        capture("profile-documents-390-phone")
+        compose.onNodeWithTag("student-profile-content").performScrollToNode(hasText("No scan uploaded"))
+        compose.onNodeWithText("No scan uploaded").assertIsNotEnabled()
+    }
+
+    @Test fun scanViewerFitsTheImageAndSupportsZoomDoubleTapAndReset() {
+        compose.setContent { UitTheme { ProfileScanContent(ScanPreviewData.state) } }
+        awaitScanImage()
+        capture("profile-scan-390-phone")
+        compose.onNodeWithContentDescription("Zoom out scan").assertIsNotEnabled()
+        compose.onNodeWithContentDescription("Zoom in scan").performClick()
+        compose.onNodeWithText("150%").assertIsDisplayed()
+        compose.onNodeWithText("Fit", substring = false).performClick()
+        compose.onNodeWithTag("profile-scan-image").performTouchInput { doubleClick(center) }
+        compose.onNodeWithText("300%").assertIsDisplayed()
+        compose.onNodeWithTag("profile-scan-image").performTouchInput { swipe(center, center + androidx.compose.ui.geometry.Offset(32f, 48f)) }
+        compose.onNodeWithText("Fit", substring = false).performClick()
+        compose.onNodeWithText("100%").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-mdpi")
+    fun compactScanErrorWithLargeTextAllowsRetryAndClose() {
+        var retries = 0
+        var closed = false
+        compose.setContent {
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(density.density, 1.3f)) {
+                UitTheme { ProfileScanContent(ScanPreviewData.state.copy(bytes = null, error = vn.edu.uit.mobile.common.AppError.NetworkOffline), onClose = { closed = true }, onRetry = { retries++ }) }
+            }
+        }
+        capture("profile-scan-360-error-phone")
+        compose.onNodeWithText("Try again").performClick()
+        compose.onNodeWithContentDescription("Close scan viewer").performClick()
+        assertEquals(1, retries)
+        assertTrue(closed)
+    }
+
+    @Test
+    @Config(qualifiers = "w412dp-h915dp-mdpi")
+    fun darkScanViewerKeepsTheDocumentAndControlsReadable() {
+        compose.setContent { UitTheme(dark = true) { ProfileScanContent(ScanPreviewData.state) } }
+        awaitScanImage()
+        compose.onNodeWithContentDescription("Close scan viewer").assertIsDisplayed()
+        capture("profile-scan-412-dark-phone")
+    }
+
+    @Test fun actualScanDialogCanCloseWithoutLeavingTheProfile() {
+        compose.setContent {
+            var open by remember { mutableStateOf(false) }
+            Frame(4) { StudentProfileContent(StudentProfilePreviewData.state, onOpenScan = { open = true }) }
+            if (open) UitTheme { ProfileScanViewer(ScanPreviewData.state, onClose = { open = false }, onRetry = {}) }
+        }
+        compose.onNodeWithText("Documents").performScrollTo().performClick()
+        compose.onNodeWithTag("student-profile-content").performScrollToNode(hasText("View scan"))
+        compose.onNodeWithText("View scan").performClick()
+        awaitScanImage()
+        compose.onNodeWithContentDescription("Close scan viewer").performClick()
+        compose.onNodeWithTag("profile-scan-viewer").assertDoesNotExist()
+        compose.onNodeWithText("View scan").assertIsDisplayed()
+    }
+
+    @Test fun invalidScanBytesShowAnErrorInsteadOfABlankViewer() {
+        var retries = 0
+        compose.setContent { UitTheme { ProfileScanContent(ScanPreviewData.state.copy(bytes = "not an image".toByteArray()), onRetry = { retries++ }) } }
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Try again").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Try again").performClick()
+        assertEquals(1, retries)
+        compose.onNodeWithContentDescription("Scan image").assertDoesNotExist()
+    }
+
+    private fun awaitScanImage() {
+        compose.waitUntil(10_000) { compose.onAllNodesWithContentDescription("Scan image").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithContentDescription("Scan image").assertIsDisplayed()
+    }
+
     @Test fun studentProfileShowsIdentityAndCanOpenAccountSettings() {
         var settings = false
         compose.setContent { Frame(4) { StudentProfileContent(StudentProfilePreviewData.state, onManageAccounts = { settings = true }) } }

@@ -14,7 +14,25 @@ class StudentProfileViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val first = Account("one", "https://portal.uit.edu.vn", 1, "First Student", PortalType.UIT_PORTAL)
     private val second = first.copy(id = "two", userId = 2, displayName = "Second Student")
-    private fun profile(id: String) = StudentProfileDetails(id, "TEST-$id", "Student $id", "", "", "", "", emptyList())
+    private fun profile(id: String) = StudentProfileDetails(
+        id,
+        "TEST-$id",
+        "Student $id",
+        "",
+        "",
+        "",
+        "",
+        listOf(
+            ProfileSection(
+                "images",
+                "Documents",
+                listOf(
+                    ProfileGroup("Transcript", emptyList(), ProfileDocument("transcript", "Transcript", true)),
+                    ProfileGroup("ID front", emptyList(), ProfileDocument("id-front", "ID front", true))
+                )
+            )
+        )
+    )
     private class Accounts(initial: List<Account>) : AccountRepository {
         override val accounts = MutableStateFlow(initial)
         override suspend fun remove(accountId: String) {
@@ -31,6 +49,71 @@ class StudentProfileViewModelTest {
 
     @After fun cleanup() {
         Dispatchers.resetMain()
+    }
+
+    @Test fun closedScanCannotReplaceTheNextDocumentWithALateResponse() = runTest(dispatcher) {
+        val waiting = CompletableDeferred<Unit>()
+        val repository = object : FakePortalRepository() {
+            override suspend fun studentProfile(accountId: String): AppResult<StudentProfileDetails, AppError> = AppResult.Success(profile(accountId))
+            override suspend fun studentProfileScan(accountId: String, documentId: String): AppResult<ProfileScan, AppError> {
+                if (documentId == "transcript") withContext(NonCancellable) { waiting.await() }
+                return AppResult.Success(ProfileScan(documentId, documentId, documentId.toByteArray()))
+            }
+        }
+        val model = StudentProfileViewModel(repository, Accounts(listOf(first)))
+        runCurrent()
+        model.onIntent(StudentProfileIntent.Open("one"))
+        runCurrent()
+        model.onIntent(StudentProfileIntent.OpenScan("transcript"))
+        runCurrent()
+        assertTrue(model.uiState.value.scan!!.loading)
+        model.onIntent(StudentProfileIntent.CloseScan)
+        assertNull(model.uiState.value.scan)
+        model.onIntent(StudentProfileIntent.OpenScan("id-front"))
+        runCurrent()
+        assertEquals("id-front", model.uiState.value.scan?.document?.id)
+        waiting.complete(Unit)
+        runCurrent()
+        assertArrayEquals("id-front".toByteArray(), model.uiState.value.scan?.bytes)
+        model.onIntent(StudentProfileIntent.Close)
+        assertNull(model.uiState.value.scan)
+    }
+
+    @Test fun scanErrorsCanRetryAndAccountChangesClearTheLoadedImage() = runTest(dispatcher) {
+        var offline = true
+        var scanRequests = 0
+        val accounts = Accounts(listOf(first, second))
+        val repository = object : FakePortalRepository() {
+            override suspend fun studentProfile(accountId: String): AppResult<StudentProfileDetails, AppError> = AppResult.Success(profile(accountId))
+            override suspend fun studentProfileScan(accountId: String, documentId: String): AppResult<ProfileScan, AppError> {
+                scanRequests++
+                return if (offline) AppResult.Failure(AppError.NetworkOffline) else AppResult.Success(ProfileScan(documentId, documentId, byteArrayOf(1, 2)))
+            }
+        }
+        val model = StudentProfileViewModel(repository, accounts)
+        runCurrent()
+        model.onIntent(StudentProfileIntent.Open("one"))
+        runCurrent()
+        model.onIntent(StudentProfileIntent.OpenScan("unknown"))
+        runCurrent()
+        assertEquals(0, scanRequests)
+        model.onIntent(StudentProfileIntent.OpenScan("transcript"))
+        runCurrent()
+        assertEquals(AppError.NetworkOffline, model.uiState.value.scan?.error)
+        offline = false
+        model.onIntent(StudentProfileIntent.RetryScan)
+        runCurrent()
+        assertNotNull(model.uiState.value.scan?.bytes)
+        model.onIntent(StudentProfileIntent.Open("two"))
+        runCurrent()
+        assertNull(model.uiState.value.scan)
+        model.onIntent(StudentProfileIntent.OpenScan("transcript"))
+        runCurrent()
+        accounts.remove("two")
+        runCurrent()
+        assertNull(model.uiState.value.scan)
+        assertNull(model.uiState.value.details)
+        model.onIntent(StudentProfileIntent.Close)
     }
 
     @Test fun switchingAccountsNeverDisplaysAnEarlierResponse() = runTest(dispatcher) {

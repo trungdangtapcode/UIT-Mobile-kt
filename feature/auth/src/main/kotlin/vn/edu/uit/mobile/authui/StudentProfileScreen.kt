@@ -28,10 +28,13 @@ import vn.edu.uit.mobile.designsystem.*
 @Composable fun StudentProfileScreen(viewModel: StudentProfileViewModel, onBack: () -> Unit, onManageAccounts: () -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     BackHandler(onBack = onBack)
-    StudentProfileContent(state, onBack, onManageAccounts, onRefresh = { viewModel.onIntent(StudentProfileIntent.Refresh) })
+    StudentProfileContent(state, onBack, onManageAccounts, onRefresh = { viewModel.onIntent(StudentProfileIntent.Refresh) }, onOpenScan = { viewModel.onIntent(StudentProfileIntent.OpenScan(it)) })
+    state.scan?.let { scan ->
+        ProfileScanViewer(scan, onClose = { viewModel.onIntent(StudentProfileIntent.CloseScan) }, onRetry = { viewModel.onIntent(StudentProfileIntent.RetryScan) })
+    }
 }
 
-@Composable fun StudentProfileContent(state: StudentProfileState, onBack: () -> Unit = {}, onManageAccounts: () -> Unit = {}, onRefresh: () -> Unit = {}) {
+@Composable fun StudentProfileContent(state: StudentProfileState, onBack: () -> Unit = {}, onManageAccounts: () -> Unit = {}, onRefresh: () -> Unit = {}, onOpenScan: (String) -> Unit = {}) {
     val details = state.details
     var selected by rememberSaveable(state.account?.id) { mutableStateOf("personal") }
     val section = details?.sections?.firstOrNull { it.id == selected } ?: details?.sections?.firstOrNull()
@@ -127,6 +130,13 @@ import vn.edu.uit.mobile.designsystem.*
                             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(field.label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(field.value, style = MaterialTheme.typography.bodyLarge)
+                            }
+                        }
+                        group.document?.let { document ->
+                            OutlinedButton(onClick = { onOpenScan(document.id) }, enabled = document.available && !state.loading, shape = TechnicalShapes.Field) {
+                                Icon(Icons.Outlined.Image, null, Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(if (document.available) "View scan" else "No scan uploaded")
                             }
                         }
                     }

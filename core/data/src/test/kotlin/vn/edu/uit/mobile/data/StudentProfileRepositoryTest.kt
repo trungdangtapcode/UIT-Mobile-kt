@@ -36,12 +36,60 @@ class StudentProfileRepositoryTest {
         override suspend fun write(accountId: String, snapshot: PortalSnapshot): Unit = error("Detailed profiles must not use disk snapshots")
         override suspend fun delete(accountId: String): Unit = error("Detailed profiles must not use disk snapshots")
     }
-    private fun html(): String {
-        val profile = """{"studentCode":"TEST-002","fullName":"Second Student","academic":{},"visibleTabs":["personal","insurance"]}"""
+    private fun html(scan: Boolean = false): String {
+        val documents = if (scan) """, "imageProfile":[{"type":"transcript","label":"Transcript","imageUrl":"data:image/jpeg;base64,/9j/AA=="}]""" else ""
+        val profile = """{"studentCode":"TEST-002","fullName":"Second Student","academic":{},"visibleTabs":["personal","insurance","images"]$documents}"""
         val frame = JsonArray(listOf(JsonPrimitive(1), JsonPrimitive("1:[\"$\",\"div\",null,{\"profile\":$profile}]\n")))
         return "<html><script>self.__next_f.push($frame)</script></html>"
     }
     private fun repository(sessions: Sessions, dispatcher: AppDispatchers, factory: (PortalSession) -> PortalTransport) = OfflinePortalRepository(sessions, NoStorage(), directory.root, dispatcher, factory)
+
+    @Test fun scanUsesTheSelectedMoodleLinkWithoutDiskWritesOrOtherAccounts() = runTest {
+        var requests = 0
+        val usedAccounts = mutableListOf<String>()
+        val http = HttpClient(
+            MockEngine { request ->
+                requests++
+                assertEquals(HttpMethod.Get, request.method)
+                assertEquals("/sinh-vien/ho-so", request.url.encodedPath)
+                assertEquals("ums_portal_session=second", request.headers[HttpHeaders.Cookie])
+                respond(html(scan = true))
+            }
+        )
+        val repository = repository(Sessions(listOf(first, second, moodle)), AppDispatchers(StandardTestDispatcher(testScheduler))) {
+            usedAccounts += it.account.id
+            SafePortalTransport(it, http)
+        }
+        val result = repository.studentProfileScan("moodle", "transcript") as AppResult.Success
+        assertEquals("transcript", result.data.documentId)
+        assertArrayEquals(byteArrayOf(0xff.toByte(), 0xd8.toByte(), 0xff.toByte(), 0), result.data.bytes)
+        assertEquals(listOf("second"), usedAccounts)
+        assertEquals(1, requests)
+        assertTrue(directory.root.listFiles().orEmpty().isEmpty())
+    }
+
+    @Test fun removingThePortalDuringScanLoadingDiscardsPrivateImageBytes() = runTest {
+        val sessions = Sessions(listOf(second, moodle))
+        val waiting = CompletableDeferred<Unit>()
+        val http = HttpClient(
+            MockEngine {
+                waiting.await()
+                respond(html(scan = true))
+            }
+        )
+        val repository = repository(sessions, AppDispatchers(StandardTestDispatcher(testScheduler))) { SafePortalTransport(it, http) }
+        val response = async { repository.studentProfileScan("moodle", "transcript") }
+        runCurrent()
+        sessions.remove("second")
+        waiting.complete(Unit)
+        assertEquals(AppError.SessionExpired, (response.await() as AppResult.Failure).error)
+    }
+
+    @Test fun expiredScanSessionReportsSignInWithoutAnImage() = runTest {
+        val http = HttpClient(MockEngine { respond("", HttpStatusCode.Unauthorized) })
+        val repository = repository(Sessions(listOf(second)), AppDispatchers(StandardTestDispatcher(testScheduler))) { SafePortalTransport(it, http) }
+        assertEquals(AppError.SessionExpired, (repository.studentProfileScan("second", "transcript") as AppResult.Failure).error)
+    }
 
     @Test fun exactAccountUsesOnlyItsPortalCookieAndThreeReadRequestsWithoutStorage() = runTest {
         val requests = mutableListOf<Pair<HttpMethod, String>>()

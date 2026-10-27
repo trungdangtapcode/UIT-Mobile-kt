@@ -20,7 +20,14 @@ internal object StudentProfilePreviewData {
             ProfileSection("family", "Family", listOf(ProfileGroup("Emergency contact", listOf(ProfileField("Full name", "Test Contact"), ProfileField("Relationship", "Parent"), ProfileField("Phone", "TEST-CONTACT-PHONE"))))),
             ProfileSection("academic", "Academic", listOf(ProfileGroup("Enrollment and study", listOf(ProfileField("Student ID", "TEST-2026001"), ProfileField("Class", "SE2026"), ProfileField("Training program", "Standard program"), ProfileField("Credits earned", "96"), ProfileField("Cumulative GPA", "8.1"))))),
             ProfileSection("health", "Health", listOf(ProfileGroup("Health information", listOf(ProfileField("Blood type", "Not provided"), ProfileField("Registered healthcare facility", "Example clinic"))))),
-            ProfileSection("images", "Documents", listOf(ProfileGroup("Transcript", listOf(ProfileField("On file", "Yes"), ProfileField("Required", "Yes"))))),
+            ProfileSection(
+                "images",
+                "Documents",
+                listOf(
+                    ProfileGroup("Transcript", listOf(ProfileField("On file", "Yes"), ProfileField("Required", "Yes")), ProfileDocument("transcript", "Transcript", true)),
+                    ProfileGroup("Additional certificate", listOf(ProfileField("On file", "No"), ProfileField("Required", "No")), ProfileDocument("certificate", "Additional certificate", false))
+                )
+            ),
             ProfileSection("insurance", "Insurance", listOf(ProfileGroup("Health insurance", listOf(ProfileField("Insurance number", "TEST-INSURANCE"), ProfileField("Valid until", "2026-12-31"), ProfileField("Healthcare facility", "Example clinic"))))),
             ProfileSection("rewards", "Awards", emptyList())
         ),

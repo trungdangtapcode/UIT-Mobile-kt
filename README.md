@@ -17,6 +17,8 @@ personal, family, academic, health and insurance information. Account management
 and appearance settings are available through the profile's settings button.
 See [student profile](docs/STUDENT-PROFILE.md) for account selection and memory-only
 handling of these details.
+Uploaded profile documents can be opened in an in-app image viewer with pinch
+zoom, double-tap, pan and fit controls. Scan images stay in memory while viewing.
 
 Academic also includes read-only **Tuition**, **Procedures** and **Graduation**
 views using the linked UIT Portal session. See [student services](docs/STUDENT-SERVICES.md)

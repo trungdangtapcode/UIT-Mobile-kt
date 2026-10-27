@@ -23,7 +23,12 @@ class GetUnifiedScheduleUseCase(private val linker: CourseCrossLinker = CourseCr
         val result = mutableListOf<ScheduleEntry>()
         var date = from
         while (date <= through) {
-            snapshot.timetable.filter { it.dayOfWeek == date.dayOfWeek.isoDayNumber && date.toString() >= it.startDate && date.toString() <= it.endDate }.forEach { slot ->
+            snapshot.timetable.filter {
+                it.dayOfWeek == date.dayOfWeek.isoDayNumber &&
+                    date.toString() >= it.startDate &&
+                    date.toString() <= it.endDate &&
+                    ((date.toEpochDays() - LocalDate.parse(it.startDate).toEpochDays()) / 7) % it.weekInterval.coerceAtLeast(1) == 0
+            }.forEach { slot ->
                 val canceled = snapshot.notices.any { it.type == ScheduleChangeType.CANCELED && it.classCode.equals(slot.classCode, true) && it.targetDate == date.toString() && it.lessonStart <= slot.lessonEnd && it.lessonEnd >= slot.lessonStart }
                 result += ScheduleEntry(
                     "class:${slot.classCode}:$date:${slot.lessonStart}",
@@ -43,7 +48,7 @@ class GetUnifiedScheduleUseCase(private val linker: CourseCrossLinker = CourseCr
             result += ScheduleEntry("makeup:${it.nodeId}:${it.classCode}", it.title, dateAt(d, UitLessonTimeCalculator.start(it.lessonStart)), dateAt(d, UitLessonTimeCalculator.end(it.lessonEnd)), ScheduleKind.MAKE_UP, it.classCode, it.room, linker.match(it.classCode, snapshot.courses))
         }
         snapshot.exams.filter { it.examDate >= from.toString() && it.examDate <= through.toString() }.forEach {
-            val start = dateAt(LocalDate.parse(it.examDate), UitLessonTimeCalculator.examStart(it.examShift))
+            val start = dateAt(LocalDate.parse(it.examDate), UitLessonTimeCalculator.examStart(it))
             result += ScheduleEntry("exam:${it.classCode}:${it.examDate}:${it.examShift}", it.courseName, start, start, ScheduleKind.EXAM, it.classCode, it.room, linker.match(it.classCode, snapshot.courses))
         }
         val rangeStart = dateAt(from, LocalTime(0, 0))

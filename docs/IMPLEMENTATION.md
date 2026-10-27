@@ -4,8 +4,8 @@
 | --- | --- |
 | 1 — Foundation | Version catalog, wrapper, JVM/Android/Compose convention plugins, dependency checks; immutable models, typed errors, URL sanitation, session classification and UIT period/timezone helpers |
 | 2 — Moodle | Session AJAX argument normalization and unwrapping; concurrent course discovery across all six timeline buckets; narrow error-classified HTML fallback; sections and four-way resource enrichment; assignments/status/upload/save; forums/replies; grades/participants; monthly calendar; notifications/inbox; H5P activity packages and bounded ZIP inspection; atomic downloads |
-| 3 — DAA | Drupal insert-command extraction; timetable, exam, notice/announcement, transcript and student profile parsers; rowspan handling, Vietnamese header normalization and validated dates/periods |
-| 4 — Persistence/auth/domain | Room schema and account-scoped normalized tables plus transactional snapshots; encrypted DataStore session vault; ephemeral unified CAS/legacy login; cached repository flows; exact course linking; schedule overlays; deadline reminder and submission-confirmation use cases |
+| 3 — Academic portals | Current UIT Portal timetable/transcript APIs, server-rendered profile extraction and read-only exam requests; legacy Drupal insert-command extraction; timetable, exam, notice/announcement, transcript and student profile parsers; rowspan handling, Vietnamese header normalization and validated dates/periods |
+| 4 — Persistence/auth/domain | Room schema and account-scoped normalized tables plus transactional snapshots; encrypted DataStore session vault; ephemeral unified Keycloak SSO/legacy login; cached repository flows; exact course linking; schedule overlays; deadline reminder and submission-confirmation use cases |
 | 5 — Presentation/sync | Material 3 light/dark/dynamic theme; phone bottom navigation; five single-column destinations; MVI ViewModels; date-grouped weekly agenda/monthly calendar; course materials/forums/assignments/grades/participants; file picker and confirmation; native H5P text/media summary; inbox; transcript/GPA projection; constrained WorkManager and persistent alert deduplication |
 
 ## Module boundaries
@@ -46,19 +46,25 @@ vault; cached links and HTML attributes are sanitized.
   shown before the network; obsolete loads canceled on course switches;
   unconfirmed submission never reaching the repository.
 
-## Live validation still required
+## Live authentication and remaining validation
 
-1. Complete current CAS login and verify both MoodleSession and Drupal SSESS
-   capture; verify legacy undergraduate and `/sdh` sessions on a device.
-2. Capture redacted DAA snapshots to confirm production headers, multi-row cells,
-   semester summaries and account-specific empty states. Add them as fixtures only
-   after removing personal data and session credentials.
-3. Validate Moodle capability discovery, upload repository ID, submission forms,
-   student news forums, private messaging permissions, and actual H5P packages.
-4. Exercise adaptive layouts, document opening, notification permission and
-   background execution on phone/tablet devices. There are no instrumented device
-   screenshots or live-portal integration results in this repository. Host-side
-   Compose previews with synthetic data are available in the [design gallery](design/README.md).
+Authorized live-browser testing verified Moodle login, reuse of the SSO session
+at UIT Portal, and access with each service's own session cookie. Private current
+portal captures validated the timetable, transcript and profile production parsers.
+See [authentication and Android compatibility](AUTHENTICATION.md) for the current
+endpoints and scoped certificate configuration. Credentials and private responses
+are not repository fixtures or CI inputs.
+
+The Android instrumented smoke test checks real HTTPS and the public Moodle/SSO
+form in API 30 WebView. It does not use student credentials. Remaining checks are:
+
+1. Verify authenticated behavior on individual physical phones and legacy
+   undergraduate/graduate Moodle accounts.
+2. Validate Moodle write capabilities, upload repository ID, submission forms,
+   private messaging permissions and actual H5P packages before using those writes.
+3. Exercise document opening, notification permission and background execution on
+   physical phones. Host-side Compose previews use synthetic data in the
+   [design gallery](design/README.md).
 
 A UI submission saves the draft/file submission and does not silently perform a
 separate irreversible final-submit operation. The app explicitly explains this
@@ -68,7 +74,6 @@ separate; absence of an action does not establish that work was submitted.
 ## Workspace UI verification
 
 The redesigned presentation includes host-side Compose interaction tests and
-Robolectric/Roborazzi rendering for phones, larger text, dark mode and expanded
-layouts. See [the design documentation](design/README.md). Inbox ViewModel tests
+Robolectric/Roborazzi rendering for phones, larger text and dark mode. See [the design documentation](design/README.md). Inbox ViewModel tests
 cover stale conversation responses, preserving drafts after failed sends, and
 successful sends completing after the user switches conversations.

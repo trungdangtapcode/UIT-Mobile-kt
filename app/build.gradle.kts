@@ -2,7 +2,7 @@ plugins { alias(libs.plugins.android.application); kotlin("android"); id("org.je
 android {
     namespace = "vn.edu.uit.mobile"
     compileSdk = 35
-    defaultConfig { applicationId = "vn.edu.uit.mobile"; minSdk = 26; targetSdk = 35; versionCode = 1; versionName = "0.1.0" }
+    defaultConfig { applicationId = "vn.edu.uit.mobile"; minSdk = 26; targetSdk = 35; versionCode = 2; versionName = "0.1.1"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
     buildFeatures { compose = true }
     testOptions { unitTests.isIncludeAndroidResources = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
@@ -10,6 +10,8 @@ android {
 }
 kotlin { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
 dependencies {
+    androidTestImplementation(libs.android.test.runner)
+    androidTestImplementation(libs.android.test.junit)
     testImplementation(libs.junit4)
     testImplementation(libs.robolectric)
     testImplementation(libs.compose.ui.test)

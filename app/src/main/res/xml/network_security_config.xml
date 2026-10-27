@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <!-- UIT currently omits the legacy cross-sign for this public CA from its chain. -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="false">courses.uit.edu.vn</domain>
+        <domain includeSubdomains="false">coursesold.uit.edu.vn</domain>
+        <domain includeSubdomains="false">sso.uit.edu.vn</domain>
+        <domain includeSubdomains="false">daa.uit.edu.vn</domain>
+        <domain includeSubdomains="false">portal.uit.edu.vn</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="@raw/sectigo_public_server_authentication_root_e46" />
+        </trust-anchors>
+    </domain-config>
+</network-security-config>

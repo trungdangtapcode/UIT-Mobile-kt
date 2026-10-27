@@ -35,6 +35,6 @@ tasks.named("check") { dependsOn(verifyArchitecture, ktlintCheck, detektCheck) }
 tasks.named("check") {
     dependsOn(":core:common:test", ":core:domain:test", ":core:network:common:test", ":core:network:moodle:test", ":core:network:daa:test")
     if (!providers.gradleProperty("headless").isPresent) {
-        dependsOn(":core:database:testDebugUnitTest", ":core:data:testDebugUnitTest", ":feature:courses:testDebugUnitTest", ":app:lintDebug")
+        dependsOn(":core:auth:testDebugUnitTest", ":core:database:testDebugUnitTest", ":core:data:testDebugUnitTest", ":feature:courses:testDebugUnitTest", ":app:lintDebug")
     }
 }

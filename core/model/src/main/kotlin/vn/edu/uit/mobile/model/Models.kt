@@ -1,6 +1,6 @@
 package vn.edu.uit.mobile.model
 
-enum class PortalType { MOODLE, DAA }
+enum class PortalType { MOODLE, DAA, UIT_PORTAL }
 enum class SessionHealthState { CHECKING, CONNECTED, EXPIRED, UNAVAILABLE }
 data class Account(val id: String, val baseUrl: String, val userId: Long, val displayName: String, val portal: PortalType)
 data class PortalSession(val account: Account, val cookie: String, val sesskey: String = "")
@@ -79,7 +79,8 @@ data class DaaTimetableSlot(
     val room: String,
     val lecturerName: String,
     val startDate: String,
-    val endDate: String
+    val endDate: String,
+    val weekInterval: Int = 1
 )
 data class DaaExamSlot(
     val classCode: String,
@@ -87,7 +88,8 @@ data class DaaExamSlot(
     val examShift: Int,
     val examDate: String,
     val room: String,
-    val seatNumber: String = ""
+    val seatNumber: String = "",
+    val startTime: String? = null
 )
 enum class ScheduleChangeType { CANCELED, MAKE_UP }
 data class ClassScheduleChangeNotice(

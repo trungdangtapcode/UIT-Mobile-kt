@@ -1,0 +1,16 @@
+<resources>
+    <string name="sso_title">UIT sign-in</string>
+    <string name="sso_close">Close</string>
+    <string name="sso_retry">Try again</string>
+    <string name="sso_continue_moodle">Continue with Moodle only</string>
+    <string name="sso_preparing">Preparing secure sign-in…</string>
+    <string name="sso_loading">Loading %1$s…</string>
+    <string name="sso_ready">Sign in on %1$s</string>
+    <string name="sso_portal_connecting">Moodle connected. Connecting UIT Portal with the same SSO session…</string>
+    <string name="sso_timeout">The sign-in page took too long to respond. Check your connection and try again.</string>
+    <string name="sso_network_error">Cannot load the sign-in page (network error %1$d). Check your connection and try again.</string>
+    <string name="sso_http_error">The sign-in server returned HTTP %1$d. Try again later.</string>
+    <string name="sso_ssl_error">Cannot verify the HTTPS certificate for %1$s. Check your phone’s date and time, and update Android System WebView. The connection was stopped.</string>
+    <string name="sso_blocked">Sign-in tried to leave the trusted UIT sites. The page was blocked.</string>
+    <string name="sso_renderer_error">Android WebView stopped. Close this window and try signing in again.</string>
+</resources>

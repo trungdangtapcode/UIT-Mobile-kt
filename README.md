@@ -1,13 +1,13 @@
 # UIT Mobile
 
-An Android phone app unifying UIT Moodle and the DAA academic portal. Built from the
+An Android phone app unifying UIT Moodle and the current UIT student portal. Built from the
 [implementation plan](docs/plan/README.md), with protocol behavior ported from
 [`uit-cli`](https://github.com/RyanNg1403/uit-cli).
 
 The app has five destinations: Today, Schedule, Courses, Deadlines & Inbox, and
 Academic. It supports current UIT SSO and linked undergraduate/graduate legacy
 Moodle accounts. Sign-in uses a temporary WebView; passwords stay inside the
-portal. Moodle and DAA sessions are encrypted with an Android Keystore AES-256-GCM
+portal. Moodle and UIT Portal sessions are encrypted with an Android Keystore AES-256-GCM
 key before being stored in DataStore.
 
 ## Interface and previews
@@ -43,7 +43,7 @@ sdk.dir=/absolute/path/to/Android/Sdk
 ```
 
 Open **Academic → Accounts & appearance → Sign in with UIT SSO**. The browser
-captures Moodle identity, then visits DAA using the same CAS session. Legacy
+captures Moodle identity, then connects UIT Portal using the same SSO session. Legacy
 accounts use separate login sessions. Grant notification permission when offered.
 No real credentials, captured cookies, or API tokens are included in this project.
 
@@ -95,11 +95,13 @@ schema under `core/database/schemas/`.
 ## Validation limits
 
 The implementation is tested against deterministic fixtures and mocked HTTP,
-including cases ported from the CLI's tests. DAA fixtures are **synthetic examples
-of the planned Drupal markup**, not authenticated production snapshots. Live CAS,
-portal-specific selectors, upload permissions and device rendering need validation
-with a UIT account and device. No live submissions or messages were sent during
-implementation.
+including cases ported from the CLI's tests. Authenticated Moodle-to-Portal SSO
+and current academic response schemas were checked with an authorized UIT account.
+See [authentication and Android compatibility](docs/AUTHENTICATION.md) for the flow,
+scoped TLS compatibility fix, native WebView smoke test and validation boundaries.
+Legacy DAA fixtures remain synthetic Drupal examples. Moodle write permissions,
+legacy sign-in and behavior on individual phone models still need validation.
+No live submissions or messages were sent during implementation.
 
 Unavailable Moodle student AJAX methods fall back to supported HTML parsers;
 unsupported writes and inbox capabilities report a typed error rather than

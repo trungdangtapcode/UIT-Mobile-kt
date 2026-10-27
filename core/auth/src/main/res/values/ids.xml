@@ -1,0 +1,6 @@
+<resources>
+    <item name="sso_close" type="id" />
+    <item name="sso_status" type="id" />
+    <item name="sso_retry" type="id" />
+    <item name="sso_continue_moodle" type="id" />
+</resources>

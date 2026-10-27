@@ -146,6 +146,12 @@ class OfflinePortalRepository(
                                     }
                                 }
                                 if (gradesLoaded || newsLoaded) update { cached.copy(grades = grades, courseNews = if (newsLoaded) news.distinctBy { it.id } else cached.courseNews) }
+                            } else if (session.account.portal == PortalType.UIT_PORTAL) {
+                                val api = UitPortalClient(transport)
+                                update { cached.copy(timetable = api.timetable()) }
+                                update { cached.copy(exams = api.exams()) }
+                                update { cached.copy(profile = api.profile()) }
+                                update { cached.copy(transcript = api.transcript()) }
                             } else {
                                 val api = DaaClient(transport)
                                 update { cached.copy(timetable = api.timetable()) }

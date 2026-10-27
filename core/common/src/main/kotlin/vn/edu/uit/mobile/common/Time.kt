@@ -1,6 +1,7 @@
 package vn.edu.uit.mobile.common
 
 import kotlinx.datetime.*
+import vn.edu.uit.mobile.model.DaaExamSlot
 
 val UitTimeZone: TimeZone = TimeZone.of("Asia/Ho_Chi_Minh")
 object UitLessonTimeCalculator {
@@ -18,6 +19,7 @@ object UitLessonTimeCalculator {
         require(shift in 1..4)
         return LocalTime.parse(listOf("07:30", "09:30", "13:30", "15:30")[shift - 1])
     }
+    fun examStart(exam: DaaExamSlot): LocalTime = exam.startTime?.let(LocalTime::parse) ?: examStart(exam.examShift)
     fun parsePeriods(text: String): IntRange {
         val cleaned = text.replace(Regex("(?i)tiết|periods?"), "").trim()
         val range = Regex("^(10|[1-9])\\s*[-–]\\s*(10|[1-9])$").matchEntire(cleaned)

@@ -47,17 +47,17 @@ fun AccountsScreen(viewModel: AccountsViewModel, onLogin: (String) -> Unit, dark
                 Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     IconTile(Icons.Outlined.Hub)
                     Text("Connect UIT SSO", style = MaterialTheme.typography.titleLarge)
-                    Text("Bring Moodle courses and DAA academic records into one workspace.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Bring Moodle courses and UIT Portal academic records into one workspace.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
         state.accounts.forEach { account ->
             Panel {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    IconTile(if (account.portal == PortalType.DAA) Icons.Outlined.School else Icons.AutoMirrored.Outlined.MenuBook, if (account.portal == PortalType.DAA) WorkspaceColors.Teal else WorkspaceColors.Ocean)
+                    IconTile(if (account.portal != PortalType.MOODLE) Icons.Outlined.School else Icons.AutoMirrored.Outlined.MenuBook, if (account.portal != PortalType.MOODLE) WorkspaceColors.Teal else WorkspaceColors.Ocean)
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            if (account.portal == PortalType.DAA) {
+                            if (account.portal != PortalType.MOODLE) {
                                 "Academic records"
                             } else if (account.baseUrl.endsWith("/sdh")) {
                                 "Graduate Moodle"
@@ -74,7 +74,7 @@ fun AccountsScreen(viewModel: AccountsViewModel, onLogin: (String) -> Unit, dark
                 }
                 Text(account.baseUrl, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { onLogin(if (account.portal == PortalType.DAA) "https://courses.uit.edu.vn" else account.baseUrl) }, shape = TechnicalShapes.Field) {
+                    OutlinedButton(onClick = { onLogin(if (account.portal != PortalType.MOODLE) "https://courses.uit.edu.vn" else account.baseUrl) }, shape = TechnicalShapes.Field) {
                         Icon(Icons.Outlined.Refresh, null, Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
                         Text("Sign in again")

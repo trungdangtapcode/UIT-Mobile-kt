@@ -121,7 +121,7 @@ class AcademicViewModel(private val repository: PortalRepository) : BaseMviViewM
             Text("Degree progress · ${progress.toInt()}%", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             LinearProgressIndicator(progress = { (progress.toFloat() / 100).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth().height(3.dp), drawStopIndicator = {})
         }
-        Text("DAA academic record · ${transcript.semesters.size} semesters", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Academic record · ${transcript.semesters.size} semesters", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -241,7 +241,7 @@ class AcademicViewModel(private val repository: PortalRepository) : BaseMviViewM
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(exam.courseName, style = MaterialTheme.typography.titleSmall)
-                    Text("${exam.room} · ${UitLessonTimeCalculator.examStart(exam.examShift)} · Shift ${exam.examShift}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${exam.room} · ${UitLessonTimeCalculator.examStart(exam)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (exam.seatNumber.isNotBlank()) Text("Seat ${exam.seatNumber}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 StatusPill(

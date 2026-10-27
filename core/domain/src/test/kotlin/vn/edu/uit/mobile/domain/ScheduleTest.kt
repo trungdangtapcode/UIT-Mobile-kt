@@ -30,6 +30,17 @@ class ScheduleTest {
         assertEquals(ScheduleKind.CLASS, entries.single().kind)
     }
 
+    @Test fun `fortnightly portal meetings skip alternate weeks`() {
+        val meetings = GetUnifiedScheduleUseCase()(PortalSnapshot(timetable = listOf(slot.copy(weekInterval = 2))), LocalDate(2026, 9, 7), LocalDate(2026, 9, 28))
+        assertEquals(listOf("2026-09-07", "2026-09-21"), meetings.map { Instant.fromEpochSeconds(it.start).toLocalDateTime(UitTimeZone).date.toString() })
+    }
+
+    @Test fun `portal exam clock time overrides a lesson period range`() {
+        val exam = DaaExamSlot("IT004.O21", "Databases", 7, "2026-10-28", "A204", startTime = "13:30")
+        val entry = GetUnifiedScheduleUseCase()(PortalSnapshot(exams = listOf(exam)), LocalDate(2026, 10, 28), LocalDate(2026, 10, 28)).single()
+        assertEquals(dateAt(LocalDate(2026, 10, 28), LocalTime(13, 30)), entry.start)
+    }
+
     @Test fun `cross linking uses complete tokens and rejects ambiguous accounts`() {
         val linker = CourseCrossLinker()
         assertEquals(course, linker.match("it004.o21", listOf(course)))

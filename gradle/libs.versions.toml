@@ -12,6 +12,8 @@ compose = "2025.04.01"
 lifecycle = "2.9.0"
 
 [libraries]
+android-test-runner = { module = "androidx.test:runner", version = "1.6.2" }
+android-test-junit = { module = "androidx.test.ext:junit", version = "1.2.1" }
 compose-ui-test = { module = "androidx.compose.ui:ui-test-junit4" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version = "1.44.0" }

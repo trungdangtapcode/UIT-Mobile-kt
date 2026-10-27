@@ -13,6 +13,13 @@ class UitPortalClient(private val transport: PortalTransport) {
     suspend fun timetable(): List<DaaTimetableSlot> = UitPortalParser.timetable(parseJson(transport.request("/api/sinh-vien/tkb/dang-ky")))
     suspend fun transcript(): AcademicTranscript = UitPortalParser.transcript(parseJson(transport.request("/api/sinh-vien/bang-diem")))
     suspend fun profile(): StudentProfile = UitPortalParser.profile(transport.request("/sinh-vien/ho-so").toString(Charsets.UTF_8))
+    suspend fun profileDetails(): StudentProfileDetails = UitProfileParser.parse(transport.request("/sinh-vien/ho-so").toString(Charsets.UTF_8))
+    suspend fun profileInsurance(): ProfileSection = UitProfileParser.insurance(parseJson(transport.request("/api/sinh-vien/bao-hiem")))
+    suspend fun profilePortrait(): ByteArray = transport.request("/api/sinh-vien/anh-the").also {
+        val jpeg = it.size >= 3 && it[0] == 0xff.toByte() && it[1] == 0xd8.toByte() && it[2] == 0xff.toByte()
+        val png = it.size >= 8 && it.copyOfRange(0, 8).contentEquals(byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a))
+        if (it.size > 2 * 1024 * 1024 || !(jpeg || png)) throw InvalidResponseException("Student portrait is unavailable")
+    }
     suspend fun exams(): List<DaaExamSlot> {
         val term = parseJson(transport.request("/api/sinh-vien/tkb/dang-ky"))
         val semester = term.int("hocKy")
@@ -89,7 +96,7 @@ object UitPortalParser {
     }
 
     /** Decode the portal's server-rendered Flight records without executing page scripts. */
-    private fun flightObjects(body: String): List<JsonObject> {
+    internal fun flightObjects(body: String): List<JsonObject> {
         val stream = Ksoup.parse(body).select("script").mapNotNull { script ->
             val text = script.data().trim()
             if (!text.startsWith("self.__next_f.push(")) return@mapNotNull null

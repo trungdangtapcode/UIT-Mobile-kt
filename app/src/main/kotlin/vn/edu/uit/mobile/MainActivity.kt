@@ -55,6 +55,7 @@ class MainActivity : ComponentActivity() {
                 val inbox = ownedViewModel { InboxViewModel(repository) }
                 val academic = ownedViewModel { AcademicViewModel(repository) }
                 val auth = ownedViewModel { AccountsViewModel(accounts) }
+                val studentProfile = ownedViewModel { StudentProfileViewModel(repository, accounts) }
                 val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
                 val accountState by auth.uiState.collectAsStateWithLifecycle()
                 LaunchedEffect(accountState.accounts) { if (accountState.accounts.isNotEmpty()) repository.refresh() }
@@ -73,14 +74,14 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, courses, inbox, academic) {
+                UitShell(repository, dashboard, schedule, courses, inbox, academic, studentProfile) { onProfile ->
                     AccountsScreen(auth, login, dark, dynamic, {
                         dark = it
                         preferences.edit().putBoolean("dark", it).apply()
                     }, {
                         dynamic = it
                         preferences.edit().putBoolean("dynamic", it).apply()
-                    })
+                    }, onProfile = onProfile)
                 }
             }
         }
@@ -105,38 +106,61 @@ private fun UitShell(
     courses: CoursesViewModel,
     inbox: InboxViewModel,
     academic: AcademicViewModel,
-    accounts: @Composable () -> Unit
+    studentProfile: StudentProfileViewModel,
+    accounts: @Composable ((vn.edu.uit.mobile.model.Account) -> Unit) -> Unit
 ) {
     var selected by rememberSaveable { mutableIntStateOf(0) }
     var showAccounts by rememberSaveable { mutableStateOf(false) }
+    var showProfile by rememberSaveable { mutableStateOf(false) }
+    var profileAccountId by rememberSaveable { mutableStateOf<String?>(null) }
+    fun openProfile(account: vn.edu.uit.mobile.model.Account? = null) {
+        showAccounts = false
+        showProfile = true
+        profileAccountId = account?.id
+        studentProfile.onIntent(StudentProfileIntent.Open(account?.id))
+    }
+    fun closeProfile() {
+        showProfile = false
+        profileAccountId = null
+        studentProfile.onIntent(StudentProfileIntent.Close)
+    }
+    LaunchedEffect(Unit) { if (showProfile) studentProfile.onIntent(StudentProfileIntent.Open(profileAccountId)) }
+    val accountContent: @Composable () -> Unit = { accounts { openProfile(it) } }
     val sync by repository.syncState.collectAsStateWithLifecycle(SyncState())
     val snapshot by repository.snapshot.collectAsStateWithLifecycle(vn.edu.uit.mobile.model.PortalSnapshot())
     val now = kotlinx.datetime.Clock.System.now().epochSeconds
     WorkspaceFrame(
-        selected, { selected = it }, { showAccounts = true }, snapshot.profile.fullName,
+        selected, {
+            selected = it
+            closeProfile()
+        }, { openProfile() }, snapshot.profile.fullName,
         connected = snapshot.updatedAt > 0, syncing = sync.syncing, lastSync = snapshot.updatedAt,
         deadlineCount = snapshot.events.count { it.deadline && it.needsAction && it.start in now..(now + 7 * 86400) },
         errorMessage = sync.error?.text()
     ) {
-        when (selected) {
-            0 -> DashboardScreen(dashboard, onCourse = {
-                courses.onIntent(CoursesIntent.Select(it))
-                selected = 2
-            }, onSchedule = { selected = 1 }, onInbox = { selected = 3 }, onConnect = { showAccounts = true })
-            1 -> ScheduleScreen(schedule) {
-                courses.onIntent(CoursesIntent.Select(it))
-                selected = 2
+        if (showProfile) {
+            StudentProfileScreen(studentProfile, onBack = { closeProfile() }, onManageAccounts = { showAccounts = true })
+        } else {
+            when (selected) {
+                0 -> DashboardScreen(dashboard, onCourse = {
+                    courses.onIntent(CoursesIntent.Select(it))
+                    selected = 2
+                }, onSchedule = { selected = 1 }, onInbox = { selected = 3 }, onConnect = { showAccounts = true })
+                1 -> ScheduleScreen(schedule) {
+                    courses.onIntent(CoursesIntent.Select(it))
+                    selected = 2
+                }
+                2 -> CoursesScreen(courses)
+                3 -> InboxScreen(inbox)
+                else -> AcademicScreen(academic, accountContent)
             }
-            2 -> CoursesScreen(courses)
-            3 -> InboxScreen(inbox)
-            else -> AcademicScreen(academic, accounts)
         }
     }
     if (showAccounts) {
         ModalBottomSheet(shape = TechnicalShapes.Dialog, onDismissRequest = { showAccounts = false }) {
             Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                 SectionHeading("Accounts & appearance", "Your connected portals and workspace preferences")
-                accounts()
+                accountContent()
             }
         }
     }

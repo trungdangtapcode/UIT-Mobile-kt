@@ -11,6 +11,7 @@ interface PortalRepository {
     suspend fun calendar(year: Int, month: Int): AppResult<Unit, AppError>
     suspend fun refresh(): AppResult<Unit, AppError>
     suspend fun refreshStudentServices(): AppResult<Unit, AppError>
+    suspend fun studentProfile(accountId: String): AppResult<StudentProfileDetails, AppError>
     suspend fun courseDetails(course: Course): AppResult<List<CourseSection>, AppError>
     suspend fun assignments(course: Course): AppResult<List<Assignment>, AppError>
     suspend fun submission(course: Course, assignment: Assignment): AppResult<SubmissionStatus, AppError>

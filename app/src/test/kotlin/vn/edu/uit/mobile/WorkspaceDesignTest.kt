@@ -14,6 +14,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import vn.edu.uit.mobile.academic.*
+import vn.edu.uit.mobile.authui.*
 import vn.edu.uit.mobile.courses.*
 import vn.edu.uit.mobile.dashboard.*
 import vn.edu.uit.mobile.designsystem.*
@@ -26,6 +27,73 @@ import vn.edu.uit.mobile.schedule.*
 class WorkspaceDesignTest {
     @get:Rule val compose = createComposeRule()
     private val data = WorkspacePreviewData
+
+    @Test fun studentProfileShowsIdentityAndCanOpenAccountSettings() {
+        var settings = false
+        compose.setContent { Frame(4) { StudentProfileContent(StudentProfilePreviewData.state, onManageAccounts = { settings = true }) } }
+        compose.onNodeWithText("TEST-2026001").assertIsDisplayed()
+        compose.onNodeWithText("Faculty of Computer Science").assertIsDisplayed()
+        capture("profile-390-phone")
+        compose.onNodeWithContentDescription("Manage accounts and appearance").performClick()
+        assertTrue(settings)
+    }
+
+    @Test fun studentProfileSectionsExposeAcademicAndInsuranceDataWithoutEditControls() {
+        compose.setContent { Frame(4) { StudentProfileContent(StudentProfilePreviewData.state) } }
+        compose.onNode(hasText("Academic") and hasAnyAncestor(hasTestTag("student-profile-sections"))).performClick()
+        compose.onNodeWithTag("student-profile-content").performScrollToNode(hasText("Enrollment and study"))
+        compose.onNodeWithText("Training program").assertIsDisplayed()
+        capture("profile-academic-phone")
+        compose.onNodeWithTag("student-profile-content").performScrollToIndex(2)
+        compose.onNodeWithText("Insurance").performScrollTo().performClick()
+        compose.onNodeWithTag("student-profile-content").performScrollToNode(hasText("TEST-INSURANCE"))
+        compose.onNodeWithText("TEST-INSURANCE").assertIsDisplayed()
+        capture("profile-insurance-phone")
+        compose.onNodeWithText("Save changes").assertDoesNotExist()
+        compose.onNodeWithText("Upload").assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-mdpi")
+    fun compactProfileWithLargeTextKeepsIdentityReadable() {
+        compose.setContent {
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(density.density, 1.3f)) {
+                Frame(4) { StudentProfileContent(StudentProfilePreviewData.state) }
+            }
+        }
+        compose.onNodeWithText("TEST-2026001").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Back from student profile").assertIsDisplayed()
+        capture("profile-360-large-text")
+    }
+
+    @Test
+    @Config(qualifiers = "w412dp-h915dp-mdpi")
+    fun darkProfileRendersFamilyInformation() {
+        compose.setContent { Frame(4, dark = true) { StudentProfileContent(StudentProfilePreviewData.state) } }
+        compose.onNodeWithText("Family", substring = false).performClick()
+        compose.onNodeWithText("Emergency contact").assertIsDisplayed()
+        capture("profile-family-412-dark-phone")
+    }
+
+    @Test fun profileErrorsRetainOnlyTheLoadedSessionAndAllowRetry() {
+        var retries = 0
+        val state = StudentProfilePreviewData.state.copy(error = vn.edu.uit.mobile.common.AppError.NetworkOffline)
+        compose.setContent { Frame(4) { StudentProfileContent(state, onRefresh = { retries++ }) } }
+        compose.onNodeWithTag("student-profile-content").performScrollToNode(hasText("Try again"))
+        compose.onNodeWithText("Showing the profile already loaded in this session.").assertIsDisplayed()
+        compose.onNodeWithText("Try again").performClick()
+        assertEquals(1, retries)
+    }
+
+    @Test fun disconnectedProfileOffersSsoAndBack() {
+        var back = false
+        compose.setContent { Frame(4) { StudentProfileContent(StudentProfileState(), onBack = { back = true }) } }
+        compose.onNodeWithText("Connect your student account").assertIsDisplayed()
+        compose.onNodeWithText("Sign in with UIT SSO").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Back from student profile").performClick()
+        assertTrue(back)
+    }
 
     @Test fun tuitionTabShowsExactTermBalanceAndExpandableChargeDetails() {
         compose.setContent { Frame(4) { AcademicContent(AcademicState(StudentServicesPreviewData.snapshot)) } }

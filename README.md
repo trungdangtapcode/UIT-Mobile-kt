@@ -12,6 +12,12 @@ key before being stored in DataStore.
 
 ## Interface and previews
 
+Tap the toolbar account icon to view the linked student's **Profile**, including
+personal, family, academic, health and insurance information. Account management
+and appearance settings are available through the profile's settings button.
+See [student profile](docs/STUDENT-PROFILE.md) for account selection and memory-only
+handling of these details.
+
 Academic also includes read-only **Tuition**, **Procedures** and **Graduation**
 views using the linked UIT Portal session. See [student services](docs/STUDENT-SERVICES.md)
 for behavior, offline caching and validation. No applications or payments are sent
@@ -47,7 +53,7 @@ sdk.dir=/absolute/path/to/Android/Sdk
 ./gradlew :app:installDebug
 ```
 
-Open **Academic → Accounts & appearance → Sign in with UIT SSO**. The browser
+Open **Account icon → Settings → Sign in with UIT SSO**. The browser
 captures Moodle identity, then connects UIT Portal using the same SSO session. Legacy
 accounts use separate login sessions. Grant notification permission when offered.
 No real credentials, captured cookies, or API tokens are included in this project.

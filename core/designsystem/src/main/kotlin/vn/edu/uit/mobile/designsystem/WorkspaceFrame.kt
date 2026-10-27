@@ -82,7 +82,7 @@ fun WorkspaceFrame(
                                 modifier = Modifier.testTag("workspace-account").semantics { stateDescription = displayName.ifBlank { "Student account" } }
                             ) {
                                 Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Outlined.PersonOutline, "Open accounts and appearance", Modifier.size(24.dp))
+                                    Icon(Icons.Outlined.PersonOutline, "Open student profile", Modifier.size(24.dp))
                                 }
                             }
                         }

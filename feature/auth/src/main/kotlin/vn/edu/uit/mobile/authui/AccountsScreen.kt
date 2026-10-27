@@ -1,5 +1,6 @@
 package vn.edu.uit.mobile.authui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Login
@@ -38,7 +39,7 @@ class AccountsViewModel(private val repository: AccountRepository) : BaseMviView
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AccountsScreen(viewModel: AccountsViewModel, onLogin: (String) -> Unit, dark: Boolean, dynamic: Boolean, onDark: (Boolean) -> Unit, onDynamic: (Boolean) -> Unit) {
+fun AccountsScreen(viewModel: AccountsViewModel, onLogin: (String) -> Unit, dark: Boolean, dynamic: Boolean, onDark: (Boolean) -> Unit, onDynamic: (Boolean) -> Unit, onProfile: ((Account) -> Unit)? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var removing by remember { mutableStateOf<Account?>(null) }
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -53,7 +54,7 @@ fun AccountsScreen(viewModel: AccountsViewModel, onLogin: (String) -> Unit, dark
         }
         state.accounts.forEach { account ->
             Panel {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(modifier = if (onProfile != null) Modifier.fillMaxWidth().clickable(onClickLabel = "View student profile") { onProfile(account) } else Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     IconTile(if (account.portal != PortalType.MOODLE) Icons.Outlined.School else Icons.AutoMirrored.Outlined.MenuBook, if (account.portal != PortalType.MOODLE) WorkspaceColors.Teal else WorkspaceColors.Ocean)
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
@@ -73,6 +74,7 @@ fun AccountsScreen(viewModel: AccountsViewModel, onLogin: (String) -> Unit, dark
                     StatusPill("Linked", WorkspaceColors.Teal, true)
                 }
                 Text(account.baseUrl, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (onProfile != null) TextButton(onClick = { onProfile(account) }, shape = TechnicalShapes.Control) { Text("View student profile") }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { onLogin(if (account.portal != PortalType.MOODLE) "https://courses.uit.edu.vn" else account.baseUrl) }, shape = TechnicalShapes.Field) {
                         Icon(Icons.Outlined.Refresh, null, Modifier.size(16.dp))

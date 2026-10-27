@@ -177,6 +177,36 @@ class OfflinePortalRepository(
             error?.let { AppResult.Failure(it) } ?: AppResult.Success(Unit)
         }
     }
+    override suspend fun studentProfile(accountId: String): AppResult<StudentProfileDetails, AppError> = appResult(PortalType.UIT_PORTAL) {
+        withContext(dispatchers.io) {
+            val sessions = vault.sessions.first()
+            val selected = sessions.firstOrNull { it.account.id == accountId } ?: throw SessionExpiredException()
+            val portal = when {
+                selected.account.portal == PortalType.UIT_PORTAL -> selected
+                selected.account.portal == PortalType.MOODLE && selected.account.baseUrl == "https://courses.uit.edu.vn" -> sessions.firstOrNull { it.account.portal == PortalType.UIT_PORTAL && it.account.userId == selected.account.userId }
+                else -> null
+            } ?: throw IllegalArgumentException("This account has no linked UIT Portal profile. Sign in with UIT SSO to link it.")
+            transportFactory(portal).use { transport ->
+                val api = UitPortalClient(transport)
+                var details = api.profileDetails()
+                if (details.sections.any { it.id == "insurance" }) {
+                    val insurance = when (val result = appResult(PortalType.UIT_PORTAL) { api.profileInsurance() }) {
+                        is AppResult.Success -> result.data
+                        is AppResult.Failure -> ProfileSection("insurance", "Insurance", emptyList(), if (result.error == AppError.SessionExpired) ServiceFailureKind.SIGN_IN else ServiceFailureKind.UNAVAILABLE)
+                    }
+                    details = details.copy(sections = details.sections.map { if (it.id == "insurance") insurance else it })
+                }
+                val portrait = when (val photo = appResult(PortalType.UIT_PORTAL) { api.profilePortrait() }) {
+                    is AppResult.Success -> photo.data
+                    else -> null
+                }
+                details = details.copy(accountId = accountId, portrait = portrait, fetchedAt = Clock.System.now().epochSeconds)
+                val current = vault.sessions.first()
+                if (current.none { it.account == selected.account } || current.none { it.account == portal.account }) throw SessionExpiredException()
+                details
+            }
+        }
+    }
     override suspend fun refreshStudentServices(): AppResult<Unit, AppError> = withContext(dispatchers.io) {
         mutex.withLock {
             val session = vault.sessions.first().firstOrNull { it.account.portal == PortalType.UIT_PORTAL }

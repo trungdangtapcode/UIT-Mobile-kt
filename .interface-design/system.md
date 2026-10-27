@@ -114,6 +114,16 @@ missing financial values are an em dash, never a fabricated zero. All new studen
 service controls navigate, expand or refresh reads; there are no submission,
 payment, cancellation or upload controls.
 
+Student profile: the toolbar account action opens the student's profile in the
+same single phone column. Keep a compact identity panel with the student's name,
+code, class, faculty, major and reported status. Use horizontally scrollable
+section filters, then vertical label/value groups. Preserve readable wrapping,
+native Back and the five bottom destinations. Refresh and account settings remain
+available in the profile toolbar. Settings contains the existing account and
+appearance sheet; each account can open its own profile. Missing values are
+explicit and section failures remain visible. Profile details and the optional
+portrait stay in screen memory; documents expose metadata without scan downloads.
+
 ## References and evidence
 
 - [Research and baseline audit](../docs/design/AI-SLOP-AUDIT.md)

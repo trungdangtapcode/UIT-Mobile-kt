@@ -55,7 +55,7 @@ jobs:
           profile: pixel_4
           disable-animations: true
           script: |
-            ./gradlew :app:connectedDebugAndroidTest
+            ./gradlew :app:connectedDebugAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true
             mkdir -p build
             adb pull /sdcard/Android/data/vn.edu.uit.mobile/files/auth-smoke build/auth-smoke
       - uses: actions/upload-artifact@v4

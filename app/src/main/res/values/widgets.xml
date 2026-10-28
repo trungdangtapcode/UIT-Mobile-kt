@@ -1,0 +1,14 @@
+<resources>
+    <string name="widget_next_name">UIT Mobile · Next class</string>
+    <string name="widget_today_name">UIT Mobile · Today</string>
+    <string name="widget_next_description">The next class or exam, room, and closest deadline from your saved UIT schedule.</string>
+    <string name="widget_today_description">Today\'s remaining classes and closest deadline from your saved UIT schedule.</string>
+    <string name="widget_next_heading">Next class</string>
+    <string name="widget_today_heading">Today</string>
+    <string name="widget_loading_title">Open UIT Mobile</string>
+    <string name="widget_loading_body">Sign in and sync to load your timetable.</string>
+    <string name="widget_deadline_heading">Closest deadline</string>
+    <string name="widget_open_schedule">Open class schedule</string>
+    <string name="widget_open_deadlines">Open deadlines</string>
+    <string name="widget_saved">Saved schedule · GMT+07</string>
+</resources>

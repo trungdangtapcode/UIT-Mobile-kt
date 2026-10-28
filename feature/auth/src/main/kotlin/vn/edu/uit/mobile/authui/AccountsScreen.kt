@@ -39,7 +39,7 @@ class AccountsViewModel(private val repository: AccountRepository) : BaseMviView
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AccountsScreen(viewModel: AccountsViewModel, onLogin: (String) -> Unit, dark: Boolean, dynamic: Boolean, onDark: (Boolean) -> Unit, onDynamic: (Boolean) -> Unit, onProfile: ((Account) -> Unit)? = null) {
+fun AccountsScreen(viewModel: AccountsViewModel, onLogin: (String) -> Unit, dark: Boolean, dynamic: Boolean, onDark: (Boolean) -> Unit, onDynamic: (Boolean) -> Unit, onProfile: ((Account) -> Unit)? = null, onWidgets: (() -> Unit)? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var removing by remember { mutableStateOf<Account?>(null) }
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -98,6 +98,13 @@ fun AccountsScreen(viewModel: AccountsViewModel, onLogin: (String) -> Unit, dark
         Text("APPEARANCE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         AppearanceSetting(Icons.Outlined.DarkMode, "Dark appearance", "Ocean dark theme", dark, onDark)
         AppearanceSetting(Icons.Outlined.Palette, "Device colors", "Match your wallpaper's color palette", dynamic, onDynamic)
+        onWidgets?.let {
+            OutlinedButton(onClick = it, shape = TechnicalShapes.Field, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Outlined.Widgets, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Home screen widgets")
+            }
+        }
     }
     removing?.let { account ->
         AlertDialog(

@@ -6,6 +6,7 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import vn.edu.uit.mobile.data.*
 import vn.edu.uit.mobile.domain.*
+import vn.edu.uit.mobile.widgets.WidgetRuntime
 
 class UitApplication : Application() {
     override fun onCreate() {
@@ -21,5 +22,6 @@ class UitApplication : Application() {
             )
         }
         UitSyncWorker.schedule(this)
+        WidgetRuntime.observe(this)
     }
 }

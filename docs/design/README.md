@@ -33,6 +33,7 @@ appearance choices remain unchanged.
 | Student procedures | [Request history](previews/procedures-390-phone.png) |
 | Student profile | [390dp](previews/profile-390-phone.png) · [Academic](previews/profile-academic-phone.png) · [Insurance](previews/profile-insurance-phone.png) · [360dp larger text](previews/profile-360-large-text.png) · [412dp dark family view](previews/profile-family-412-dark-phone.png) |
 | Profile scans | [Documents](previews/profile-documents-390-phone.png) · [Image viewer](previews/profile-scan-390-phone.png) · [412dp dark](previews/profile-scan-412-dark-phone.png) · [360dp larger-text error](previews/profile-scan-360-error-phone.png) |
+| Home screen widgets | [Next class · 360dp phone](previews/widget-next-360-phone.png) · [Today · 390dp phone](previews/widget-today-390-phone.png) · [412dp device colors](previews/widget-today-412-device-colors-phone.png) · [360dp larger text](previews/widget-today-360-large-text-phone.png) · [Disconnected](previews/widget-disconnected-360-phone.png) · [Pin chooser](previews/widget-picker-phone.png) |
 | Graduation | [412dp dark](previews/graduation-412-dark-phone.png) · [Assessment conditions](previews/graduation-conditions-phone.png) |
 | Inbox | [Deadlines](previews/focus-phone.png) · [Conversation list](previews/inbox-phone.png) · [Chat](previews/inbox-conversation-phone.png) |
 | Appearance | [Dark phone](previews/dashboard-dark.png) · [Compact dark phone](previews/dashboard-dark-360-phone.png) · [Larger text](previews/dashboard-compact-large-text.png) |
@@ -42,6 +43,10 @@ These are the actual Compose components rendered with Robolectric native graphic
 and Roborazzi. Names, grades, courses and messages are synthetic test fixtures;
 production screens read repository data. No credentials are needed to render them.
 Screenshots and passing tests do not constitute visual approval.
+
+Widget images inflate and draw the actual Android RemoteViews, with a 16dp outer
+gutter representing their placement on a phone. They are host-side renders, not
+screenshots of an installed launcher. The widget pin chooser uses actual Compose.
 
 ## Render on a rootless server
 

@@ -1,5 +1,6 @@
 package vn.edu.uit.mobile.designsystem
 
+import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
@@ -73,15 +74,17 @@ private val WorkspaceTypography = Typography(
 @Composable
 fun UitTheme(dark: Boolean = isSystemInDarkTheme(), dynamic: Boolean = false, content: @Composable () -> Unit) {
     val context = LocalContext.current
-    val colors = when {
-        dynamic && Build.VERSION.SDK_INT >= 31 -> if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        dark -> DarkColors
-        else -> LightColors
-    }
+    val colors = uitColorScheme(context, dark, dynamic)
     MaterialTheme(
         colorScheme = colors,
         typography = WorkspaceTypography,
         shapes = Shapes(extraSmall = TechnicalShapes.Tile, small = TechnicalShapes.Control, medium = TechnicalShapes.Field, large = TechnicalShapes.Panel, extraLarge = TechnicalShapes.Dialog),
         content = content
     )
+}
+
+fun uitColorScheme(context: Context, dark: Boolean, dynamic: Boolean): ColorScheme = when {
+    dynamic && Build.VERSION.SDK_INT >= 31 -> if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    dark -> DarkColors
+    else -> LightColors
 }

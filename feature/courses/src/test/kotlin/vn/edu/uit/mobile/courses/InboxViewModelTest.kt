@@ -21,6 +21,25 @@ class InboxViewModelTest {
         Dispatchers.resetMain()
     }
 
+    @Test fun widgetDeadlineFocusExitsChatAndSelectsOverdueWithoutARefresh() = runTest(dispatcher) {
+        var refreshes = 0
+        val repository = object : FakePortalRepository() {
+            override suspend fun refresh(): AppResult<Unit, AppError> {
+                refreshes++
+                return AppResult.Success(Unit)
+            }
+        }
+        val model = InboxViewModel(repository)
+        model.onIntent(InboxIntent.Open(Conversation(1, "Test conversation")))
+        runCurrent()
+        model.onIntent(InboxIntent.ShowDeadlines(overdue = true))
+        runCurrent()
+        assertEquals(0, model.uiState.value.tab)
+        assertNull(model.uiState.value.selected)
+        assertTrue(model.uiState.value.overdueFocus)
+        assertEquals(0, refreshes)
+    }
+
     @Test fun previousConversationCannotReplaceCurrentMessages() = runTest(dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val repository = object : FakePortalRepository() {

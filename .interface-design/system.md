@@ -132,6 +132,17 @@ image remains the focal content and keeps its original rectangular edges. Suppor
 pinch, double-tap and bounded panning. Viewer errors retain Back and Retry controls;
 closing or switching accounts clears image state without creating a file.
 
+Home screen widgets: use real launcher RemoteViews in the app's saved appearance,
+sharing the Material color resolver and bundled fonts. Keep a small emblem/date
+masthead, then the class name, exact teaching time, class code and room. Next class
+is compact; Today adds remaining rows and the closest deadline as space allows.
+Larger fonts reduce the row count. The saved snapshot time and GMT+07 remain visible.
+Keep the same 8dp small cuts and 28dp physical bottom-right cut in the native frame.
+No campus hero, counters or decorative charts inside widgets. Disconnected widgets
+offer sign-in; missing submission status stays explicit. Class taps focus their
+schedule date; deadline taps focus the appropriate queue. The pin chooser uses
+native controls and includes manual launcher instructions.
+
 ## References and evidence
 
 - [Research and baseline audit](../docs/design/AI-SLOP-AUDIT.md)

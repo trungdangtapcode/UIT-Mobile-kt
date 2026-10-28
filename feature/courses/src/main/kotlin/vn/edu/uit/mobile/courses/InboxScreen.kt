@@ -34,7 +34,9 @@ import vn.edu.uit.mobile.model.*
     val selected: Conversation? = null,
     val tab: Int = 0,
     val error: AppError? = null,
-    val sending: Boolean = false
+    val sending: Boolean = false,
+    val deadlineFocus: Int = 0,
+    val overdueFocus: Boolean = false
 )
 sealed interface InboxIntent {
     data class Tab(val index: Int) : InboxIntent
@@ -43,6 +45,7 @@ sealed interface InboxIntent {
     data class Open(val conversation: Conversation) : InboxIntent
     data class Send(val text: String) : InboxIntent
     data object Back : InboxIntent
+    data class ShowDeadlines(val overdue: Boolean = false) : InboxIntent
 }
 sealed interface InboxEffect {
     data class Notice(val text: String) : InboxEffect
@@ -53,6 +56,10 @@ class InboxViewModel(private val repository: PortalRepository) : BaseMviViewMode
         viewModelScope.launch { repository.snapshot.collect { state.value = state.value.copy(events = it.events.filter { e -> e.deadline }.sortedBy { e -> e.start }) } }
     }
     override fun onIntent(intent: InboxIntent) {
+        if (intent is InboxIntent.ShowDeadlines) {
+            state.value = state.value.copy(tab = 0, selected = null, messages = emptyList(), error = null, deadlineFocus = state.value.deadlineFocus + 1, overdueFocus = intent.overdue)
+            return
+        }
         if (intent is InboxIntent.Tab) state.value = state.value.copy(tab = intent.index, error = null)
         if (intent == InboxIntent.Back) {
             state.value = state.value.copy(selected = null, messages = emptyList())
@@ -118,7 +125,7 @@ class InboxViewModel(private val repository: PortalRepository) : BaseMviViewMode
 }
 
 @Composable fun InboxContent(state: InboxState, onIntent: (InboxIntent) -> Unit = {}, now: Long = Clock.System.now().epochSeconds, draft: String = "", onDraftChange: (String) -> Unit = {}) {
-    var filter by rememberSaveable { mutableStateOf("Upcoming") }
+    var filter by rememberSaveable(state.deadlineFocus) { mutableStateOf(if (state.overdueFocus) "Overdue" else "Upcoming") }
     BackHandler(enabled = state.tab == 2 && state.selected != null) { onIntent(InboxIntent.Back) }
     if (state.tab == 2 && state.selected != null) {
         Box(Modifier.fillMaxSize().padding(16.dp)) { ChatPanel(state, draft, onDraftChange, onIntent) }

@@ -20,6 +20,7 @@ import vn.edu.uit.mobile.dashboard.*
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.model.*
 import vn.edu.uit.mobile.schedule.*
+import vn.edu.uit.mobile.widgets.*
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w390dp-h844dp-mdpi", application = Application::class)
@@ -27,6 +28,34 @@ import vn.edu.uit.mobile.schedule.*
 class WorkspaceDesignTest {
     @get:Rule val compose = createComposeRule()
     private val data = WorkspacePreviewData
+
+    @Test fun widgetPickerCanPinEitherSizeAndExplainsTheManualPath() {
+        var pinned: ScheduleWidgetKind? = null
+        compose.setContent { UitTheme(dark = true, dynamic = false) { HomeWidgetsContent(true, {}, { pinned = it }) } }
+        compose.onNodeWithText("Next class · 4 × 2").assertIsDisplayed()
+        if (java.lang.Boolean.getBoolean("roborazzi.test.record")) {
+            compose.onNodeWithTag("home-widget-picker").captureRoboImage(File(System.getProperty("uit.preview.dir"), "widget-picker-phone.png").absolutePath)
+        }
+        compose.onNodeWithText("Today · 4 × 3").performClick()
+        compose.onNodeWithText("Add to home screen").performClick()
+        assertEquals(ScheduleWidgetKind.TODAY, pinned)
+    }
+
+    @Test fun unsupportedPinningKeepsTheManualInstructionsAvailable() {
+        compose.setContent { UitTheme { HomeWidgetsContent(false, {}, {}) } }
+        compose.onNodeWithText("Add to home screen").assertIsNotEnabled()
+        compose.onNodeWithText("You can also long-press your home screen, choose Widgets, then UIT Mobile.").assertIsDisplayed()
+    }
+
+    @Test fun widgetScheduleFocusResetsAStoredModeAndFilter() {
+        var state by mutableStateOf(ScheduleState(data.snapshot, LocalDate(2026, 10, 26)))
+        compose.setContent { Frame(1) { ScheduleContent(state) } }
+        compose.onNodeWithText("Week", substring = false).performClick()
+        compose.onNodeWithText("Exams", substring = false).performScrollTo().performClick()
+        compose.runOnIdle { state = state.copy(anchor = LocalDate(2026, 10, 27), focusRequest = 1) }
+        compose.onNodeWithContentDescription("Show schedule for 2026-10-27").assertIsSelected()
+        compose.onNodeWithText("Machine Learning").assertIsDisplayed()
+    }
 
     @Test fun documentsOfferImagePreviewAndDisableDocumentsWithoutAnUpload() {
         var opened: String? = null
@@ -367,6 +396,7 @@ class WorkspaceDesignTest {
                 ScheduleContent(state, onIntent = { intent ->
                     state = when (intent) {
                         is ScheduleIntent.Date -> state.copy(anchor = intent.date)
+                        is ScheduleIntent.FocusDate -> state.copy(anchor = intent.date, monthly = false, focusRequest = state.focusRequest + 1)
                         is ScheduleIntent.Semester -> state.copy(anchor = intent.date)
                         ScheduleIntent.Toggle -> state.copy(monthly = !state.monthly)
                         is ScheduleIntent.Move -> state

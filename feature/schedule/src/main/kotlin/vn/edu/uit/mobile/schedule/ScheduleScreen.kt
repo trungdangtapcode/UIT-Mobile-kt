@@ -29,12 +29,13 @@ import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.model.*
 
-@Immutable data class ScheduleState(val snapshot: PortalSnapshot = PortalSnapshot(), val anchor: LocalDate = today(), val monthly: Boolean = false)
+@Immutable data class ScheduleState(val snapshot: PortalSnapshot = PortalSnapshot(), val anchor: LocalDate = today(), val monthly: Boolean = false, val focusRequest: Int = 0)
 sealed interface ScheduleIntent {
     data class Move(val amount: Int) : ScheduleIntent
     data object Toggle : ScheduleIntent
     data class Semester(val date: LocalDate) : ScheduleIntent
     data class Date(val date: LocalDate) : ScheduleIntent
+    data class FocusDate(val date: LocalDate) : ScheduleIntent
 }
 class ScheduleViewModel(private val repository: PortalRepository) : BaseMviViewModel<ScheduleState, ScheduleIntent, Unit>(ScheduleState()) {
     init {
@@ -46,6 +47,7 @@ class ScheduleViewModel(private val repository: PortalRepository) : BaseMviViewM
             ScheduleIntent.Toggle -> state.value.copy(monthly = !state.value.monthly)
             is ScheduleIntent.Date -> state.value.copy(anchor = intent.date)
             is ScheduleIntent.Semester -> state.value.copy(anchor = intent.date)
+            is ScheduleIntent.FocusDate -> state.value.copy(anchor = intent.date, monthly = false, focusRequest = state.value.focusRequest + 1)
         }
         if (state.value.monthly) viewModelScope.launch { repository.calendar(state.value.anchor.year, state.value.anchor.monthNumber) }
     }
@@ -63,6 +65,13 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
     var semesters by remember { mutableStateOf(false) }
     var filter by rememberSaveable { mutableStateOf("All events") }
     var mode by rememberSaveable { mutableStateOf("Day") }
+    LaunchedEffect(state.focusRequest) {
+        if (state.focusRequest > 0) {
+            mode = "Day"
+            filter = "All events"
+            selected = null
+        }
+    }
     val week = state.anchor.minus(state.anchor.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
     val month = LocalDate(state.anchor.year, state.anchor.monthNumber, 1)
     val first = when (mode) {

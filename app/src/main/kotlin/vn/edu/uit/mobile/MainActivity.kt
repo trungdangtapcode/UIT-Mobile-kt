@@ -1,6 +1,7 @@
 package vn.edu.uit.mobile
 
 import android.Manifest
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -16,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.core.os.BundleCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -32,17 +34,21 @@ import vn.edu.uit.mobile.dashboard.*
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.schedule.*
+import vn.edu.uit.mobile.widgets.*
 
 class MainActivity : ComponentActivity() {
+    private var widgetRoute by mutableStateOf<WidgetRoute?>(null)
     private val repository: PortalRepository by inject()
     private val accounts: AccountRepository by inject()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        widgetRoute = WidgetRoute.read(if (savedInstanceState == null) intent else BundleCompat.getParcelable(savedInstanceState, "pending_widget_route", Intent::class.java))
         enableEdgeToEdge()
         val preferences = getSharedPreferences("appearance", MODE_PRIVATE)
         setContent {
             var dark by rememberSaveable { mutableStateOf(preferences.getBoolean("dark", true)) }
             var dynamic by rememberSaveable { mutableStateOf(preferences.getBoolean("dynamic", true)) }
+            var showWidgets by rememberSaveable { mutableStateOf(false) }
             UitTheme(dark, dynamic) {
                 SideEffect {
                     val bars = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
@@ -74,17 +80,38 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, courses, inbox, academic, studentProfile) { onProfile ->
+                UitShell(repository, dashboard, schedule, courses, inbox, academic, studentProfile, widgetRoute, {
+                    showWidgets = false
+                    widgetRoute = null
+                    setIntent(
+                        Intent(intent).apply {
+                            data = null
+                            action = Intent.ACTION_MAIN
+                        }
+                    )
+                }) { onProfile ->
                     AccountsScreen(auth, login, dark, dynamic, {
                         dark = it
                         preferences.edit().putBoolean("dark", it).apply()
+                        WidgetRuntime.requestRender(this)
                     }, {
                         dynamic = it
                         preferences.edit().putBoolean("dynamic", it).apply()
-                    }, onProfile = onProfile)
+                        WidgetRuntime.requestRender(this)
+                    }, onProfile = onProfile, onWidgets = { showWidgets = true })
                 }
+                if (showWidgets) HomeWidgetsDialog { showWidgets = false }
             }
         }
+    }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        widgetRoute = WidgetRoute.read(intent)
+    }
+    override fun onSaveInstanceState(outState: Bundle) {
+        widgetRoute?.let { outState.putParcelable("pending_widget_route", it.intent(this)) }
+        super.onSaveInstanceState(outState)
     }
 }
 
@@ -107,6 +134,8 @@ private fun UitShell(
     inbox: InboxViewModel,
     academic: AcademicViewModel,
     studentProfile: StudentProfileViewModel,
+    widgetRoute: WidgetRoute?,
+    onWidgetRouteConsumed: () -> Unit,
     accounts: @Composable ((vn.edu.uit.mobile.model.Account) -> Unit) -> Unit
 ) {
     var selected by rememberSaveable { mutableIntStateOf(0) }
@@ -125,6 +154,23 @@ private fun UitShell(
         studentProfile.onIntent(StudentProfileIntent.Close)
     }
     LaunchedEffect(Unit) { if (showProfile) studentProfile.onIntent(StudentProfileIntent.Open(profileAccountId)) }
+    LaunchedEffect(widgetRoute) {
+        val route = widgetRoute ?: return@LaunchedEffect
+        closeProfile()
+        showAccounts = false
+        when (route.destination) {
+            "schedule" -> {
+                selected = 1
+                schedule.onIntent(ScheduleIntent.FocusDate(route.date?.let(kotlinx.datetime.LocalDate::parse) ?: today()))
+            }
+            "deadlines", "overdue" -> {
+                selected = 3
+                inbox.onIntent(InboxIntent.ShowDeadlines(route.destination == "overdue"))
+            }
+            "profile" -> openProfile()
+        }
+        onWidgetRouteConsumed()
+    }
     val accountContent: @Composable () -> Unit = { accounts { openProfile(it) } }
     val sync by repository.syncState.collectAsStateWithLifecycle(SyncState())
     val snapshot by repository.snapshot.collectAsStateWithLifecycle(vn.edu.uit.mobile.model.PortalSnapshot())

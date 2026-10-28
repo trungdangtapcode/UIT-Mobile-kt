@@ -2,7 +2,7 @@ plugins { alias(libs.plugins.android.application); kotlin("android"); id("org.je
 android {
     namespace = "vn.edu.uit.mobile"
     compileSdk = 35
-    defaultConfig { applicationId = "vn.edu.uit.mobile"; minSdk = 26; targetSdk = 35; versionCode = 6; versionName = "0.1.5"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
+    defaultConfig { applicationId = "vn.edu.uit.mobile"; minSdk = 26; targetSdk = 35; versionCode = 7; versionName = "0.1.6"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
     buildFeatures { compose = true }
     testOptions { unitTests.isIncludeAndroidResources = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
@@ -15,6 +15,7 @@ dependencies {
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test)
     testImplementation(libs.junit4)
+    testImplementation(testFixtures(project(":core:domain")))
     testImplementation(libs.robolectric)
     testImplementation(libs.compose.ui.test)
     testImplementation(libs.roborazzi)
@@ -31,7 +32,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     // Compose rendering uses the debug-only host Activity supplied by ui-test-manifest.
-    if (name.contains("Release")) exclude("**/WorkspaceDesignTest.class")
+    if (name.contains("Release")) exclude("**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class")
     val recordUi = providers.gradleProperty("recordUi").getOrElse("false").toBoolean()
     systemProperty("roborazzi.test.record", recordUi)
     if (recordUi) outputs.dir(rootProject.layout.projectDirectory.dir("docs/design/previews"))

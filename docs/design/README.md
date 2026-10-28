@@ -15,7 +15,12 @@ Main panels have three 8dp cuts and a larger 28dp physical bottom-right cut.
 | --- | --- | --- |
 | [Today](previews/dashboard-360-phone.png) | [Today](previews/dashboard-phone.png) | [Today](previews/dashboard-412-phone.png) |
 
-![Today on a 390dp Android phone](previews/dashboard-phone.png)
+Fresh installations enable dark appearance and device colors. The device-color
+preview below uses the test device's palette; actual colors depend on the user's
+wallpaper on Android 12+. Older Android versions use the UIT dark palette. Saved
+appearance choices remain unchanged.
+
+![Default dark appearance with device colors on a 390dp phone](previews/dashboard-default-device-colors-phone.png)
 
 ## Phone screens
 

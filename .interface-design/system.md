@@ -34,7 +34,9 @@ physical bottom-right cut. Build success does not establish visual approval.
 
 - Light background #F8FAFC, white reading surfaces, ink #102A43, UIT blue #0768B5.
 - Dark background #111C28, surfaces #162330, text #E6F2FF, primary #65BEFF.
-- Fresh installations start in light mode. Existing saved appearance choices win.
+- Fresh installations enable dark appearance and device colors by default.
+  Android 12+ uses the wallpaper-derived dark palette; older versions use the UIT
+  dark palette. Existing saved appearance choices win.
 - Semantic states include text: canceled classes are labeled and struck through;
   current classes say In progress; submissions expose exact due dates and urgency.
 - IBM Plex Sans 400/500/600 for content and controls. IBM Plex Mono for class codes,

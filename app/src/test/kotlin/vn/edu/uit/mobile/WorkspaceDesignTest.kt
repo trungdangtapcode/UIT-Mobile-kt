@@ -282,8 +282,8 @@ class WorkspaceDesignTest {
         }
     }
 
-    @Composable private fun Frame(selected: Int, dark: Boolean = false, onSelect: (Int) -> Unit = {}, body: @Composable () -> Unit) {
-        UitTheme(dark = dark, dynamic = false) { WorkspaceFrame(selected, onSelect, {}, "Alex Morgan", true, false, data.now - 300, 3, content = body) }
+    @Composable private fun Frame(selected: Int, dark: Boolean = false, onSelect: (Int) -> Unit = {}, dynamic: Boolean = false, body: @Composable () -> Unit) {
+        UitTheme(dark = dark, dynamic = dynamic) { WorkspaceFrame(selected, onSelect, {}, "Alex Morgan", true, false, data.now - 300, 3, content = body) }
     }
 
     @Test fun phoneDashboardNavigatesToSchedule() {
@@ -333,9 +333,12 @@ class WorkspaceDesignTest {
     }
 
     @Test fun darkDashboardRemainsReadable() {
-        compose.setContent { Frame(0, dark = true) { DashboardContent(DashboardState(data.snapshot), now = data.now) } }
+        var dynamic by mutableStateOf(false)
+        compose.setContent { Frame(0, dark = true, dynamic = dynamic) { DashboardContent(DashboardState(data.snapshot), now = data.now) } }
         compose.onNodeWithText("Monday").assertIsDisplayed()
         capture("dashboard-dark")
+        compose.runOnIdle { dynamic = true }
+        capture("dashboard-default-device-colors-phone")
     }
 
     @Test

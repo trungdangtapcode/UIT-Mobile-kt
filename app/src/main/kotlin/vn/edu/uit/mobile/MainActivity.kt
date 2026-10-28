@@ -41,8 +41,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val preferences = getSharedPreferences("appearance", MODE_PRIVATE)
         setContent {
-            var dark by rememberSaveable { mutableStateOf(preferences.getBoolean("dark", false)) }
-            var dynamic by rememberSaveable { mutableStateOf(preferences.getBoolean("dynamic", false)) }
+            var dark by rememberSaveable { mutableStateOf(preferences.getBoolean("dark", true)) }
+            var dynamic by rememberSaveable { mutableStateOf(preferences.getBoolean("dynamic", true)) }
             UitTheme(dark, dynamic) {
                 SideEffect {
                     val bars = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)

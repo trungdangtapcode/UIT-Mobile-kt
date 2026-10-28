@@ -30,6 +30,10 @@ and 412dp widths. It uses UIT blue, the transparent lotus/orbit emblem, bundled
 IBM Plex fonts and a subtle campus background. Frames keep three small cut corners
 and a larger physical bottom-right cut.
 
+Dark appearance and Device colors are enabled by default when no preference has
+been saved. Android 12+ derives colors from the device wallpaper; earlier Android
+versions use the UIT dark palette. Explicitly saved appearance choices are retained.
+
 Five bottom destinations share a single-column phone layout: daily timetable and
 submissions, Day/Week/Month scheduling, course materials, deadlines/messages and
 academic records. Conversations open as a separate phone view with Back navigation.

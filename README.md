@@ -43,6 +43,12 @@ closest deadline from saved data. Add them through **Account icon â†’ Settings â
 Home screen widgets**, or the launcher's widget picker. See [home screen widgets](docs/HOME-WIDGETS.md)
 for resizing, offline behavior and background update limits.
 
+Courses includes optional **Analyze assignment & checklist** and **Ask course
+text** workflows. They use explicitly selected saved descriptions or pasted text,
+an OpenAI-backed HTTPS gateway and inspectable source quotes. Personal checklists
+are saved locally; PDF ingestion is not part of this first version. See
+[Study AI setup and limits](docs/STUDY-AI.md).
+
 See the [phone preview gallery](docs/design/README.md) and
 [mobile scope](docs/design/MOBILE.md). Previews render on a rootless server without
 an emulator. Older layout experiments are historical, not current product targets.

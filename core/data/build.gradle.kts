@@ -1,5 +1,6 @@
 plugins { id("uit.android.library") }
 dependencies {
+    implementation(libs.ktor.okhttp)
     testImplementation(libs.ktor.mock)
     testImplementation(testFixtures(project(":core:domain")))
     testImplementation(libs.junit4)

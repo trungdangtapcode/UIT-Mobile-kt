@@ -8,11 +8,13 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.Density
 import com.github.takahirom.roborazzi.captureRoboImage
 import java.io.File
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import vn.edu.uit.mobile.courses.*
@@ -25,10 +27,14 @@ import vn.edu.uit.mobile.model.*
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class StudyDesignTest {
     @get:Rule val compose = createComposeRule()
+
+    @After fun restoreFontScale() {
+        RuntimeEnvironment.setFontScale(1f)
+    }
     private val course = Course(1, "synthetic", "IT004.O21", "Database Systems")
     private val source = StudySource("assignment:1", "Database project brief", "Deliver a normalized SQL database and a short report. Include three test cases.")
     private val assignment = Assignment(1, 1, 2, source.title, source.text, due = 1793548800, accountId = course.accountId)
-    private val state = StudyState(course, assignment, listOf(source), setOf(source.id), StudyConnection("https://study.example.org", true))
+    private val state = StudyState(course, assignment, listOf(source), setOf(source.id), StudyConnection(configured = true, model = "synthetic-preview"))
     private val answer = StudyAnswer(
         "synthetic-preview",
         1793386800,
@@ -72,7 +78,7 @@ class StudyDesignTest {
         compose.onNodeWithContentDescription("Select source ${source.title}").performClick()
         assertEquals(source.id, selected)
         compose.onNodeWithText("Send selected text").performScrollTo().assertIsNotEnabled()
-        compose.onNodeWithText("Configure gateway").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Configure AI connection").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -98,6 +104,43 @@ class StudyDesignTest {
         compose.onNodeWithText("Leave unsaved changes?").assertIsDisplayed()
         compose.onNodeWithText("Keep editing").performClick()
         assertFalse(closed)
+    }
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-mdpi")
+    fun connectionDefaultsToDirectAndSwitchingToGatewayClearsTheEnteredKey() {
+        var savedMode: StudyConnectionMode? = null
+        compose.setContent { UitTheme(dark = true, dynamic = false) { StudyConnectionDialog(StudyConnection(), {}, { mode, _, _, _ -> savedMode = mode }, {}) } }
+        capture("ai-connection-direct-360-phone")
+        compose.onNodeWithText("OpenAI model ID").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Your OpenAI API key").performScrollTo().performTextInput("synthetic-personal-openai-key-for-tests")
+        compose.onNodeWithText("Gateway", substring = false).performScrollTo().performClick()
+        compose.onNodeWithText("Gateway access token").performScrollTo().assertTextEquals("Gateway access token", "")
+        compose.onNodeWithText("Save connection").assertIsNotEnabled()
+        assertNull(savedMode)
+    }
+
+    @Test fun gatewaySettingsStayOptionalAndInvalidFormsDoNotDismissOrSave() {
+        var saved = false
+        compose.setContent { UitTheme(dark = true, dynamic = false) { StudyConnectionDialog(StudyConnection("https://study.example.org", true, StudyConnectionMode.GATEWAY), {}, { _, _, _, _ -> saved = true }, {}) } }
+        capture("ai-connection-gateway-390-phone")
+        compose.onNodeWithText("Gateway access token").performScrollTo().performTextInput("sk-synthetic-personal-key-not-for-a-gateway")
+        compose.onNodeWithText("Save connection").performClick()
+        compose.onNodeWithText("Enter the gateway access token, not an OpenAI API key.").performScrollTo().assertIsDisplayed()
+        assertFalse(saved)
+    }
+
+    @Test
+    @Config(qualifiers = "w412dp-h915dp-mdpi")
+    fun directSettingsSaveOnlyTheExplicitPersonalKeyAndModel() {
+        var result: Pair<StudyConnectionMode, String>? = null
+        RuntimeEnvironment.setFontScale(1.3f)
+        compose.setContent { UitTheme(dark = true, dynamic = false) { StudyConnectionDialog(StudyConnection(), {}, { mode, _, _, model -> result = mode to model }, {}) } }
+        capture("ai-connection-direct-412-large-text-phone")
+        compose.onNodeWithText("OpenAI model ID").performScrollTo().performTextInput("synthetic-model")
+        compose.onNodeWithText("Your OpenAI API key").performScrollTo().performTextInput("synthetic-personal-openai-key-for-tests")
+        compose.onNodeWithText("Save connection").performClick()
+        assertEquals(StudyConnectionMode.DIRECT to "synthetic-model", result)
     }
 
     @Composable private fun Frame(content: @Composable () -> Unit) {

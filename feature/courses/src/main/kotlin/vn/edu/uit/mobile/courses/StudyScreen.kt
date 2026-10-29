@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -18,8 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
@@ -34,8 +38,8 @@ import vn.edu.uit.mobile.domain.*
         viewModel::addTask, viewModel::task, viewModel::removeTask, viewModel::moveTask, viewModel::saveTasks
     )
     if (settings) {
-        StudyConnectionDialog(state.connection, { settings = false }, { endpoint, token ->
-            viewModel.configure(endpoint, token)
+        StudyConnectionDialog(state.connection, { settings = false }, { mode, endpoint, secret, model ->
+            viewModel.configure(mode, endpoint, secret, model)
             settings = false
         }, {
             viewModel.disconnect()
@@ -73,7 +77,7 @@ import vn.edu.uit.mobile.domain.*
                     Text("Course")
                 }
                 Spacer(Modifier.weight(1f))
-                IconButton(onClick = onSettings, enabled = !state.busy) { Icon(Icons.Outlined.Settings, "Study gateway settings") }
+                IconButton(onClick = onSettings, enabled = !state.busy) { Icon(Icons.Outlined.Settings, "AI connection settings") }
             }
             PageHeading(if (state.assignment == null) "Ask course text" else "Analyze assignment", state.course?.shortname.orEmpty())
         }
@@ -114,13 +118,13 @@ import vn.edu.uit.mobile.domain.*
             Panel {
                 Text("${state.selected.size} selected · ${state.sources.filter { it.id in state.selected }.sumOf { it.text.length }} characters", style = MaterialTheme.typography.labelMedium)
                 if (!state.connection.configured) {
-                    Text("Connect your study gateway", style = MaterialTheme.typography.titleMedium)
-                    Text("An OpenAI-backed gateway is required. Configure its HTTPS address and gateway token; keep the OpenAI API key on the server.", style = MaterialTheme.typography.bodyMedium)
-                    OutlinedButton(onClick = onSettings, enabled = !state.busy, shape = TechnicalShapes.Field) { Text("Configure gateway") }
+                    Text("Connect study AI", style = MaterialTheme.typography.titleMedium)
+                    Text("Connect directly with your own OpenAI API key and model. A hosted gateway is optional.", style = MaterialTheme.typography.bodyMedium)
+                    OutlinedButton(onClick = onSettings, enabled = !state.busy, shape = TechnicalShapes.Field) { Text("Configure AI connection") }
                 } else {
                     Text("Processor", style = MaterialTheme.typography.labelMedium)
-                    Text(state.connection.endpoint, style = MaterialTheme.typography.bodySmall)
-                    Text("Only the checked texts and your question are sent to this gateway and OpenAI. Gateway source text is held for the request; OpenAI processing follows your provider account settings.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(if (state.connection.mode == StudyConnectionMode.DIRECT) "Direct OpenAI · ${state.connection.model}" else "Gateway · ${state.connection.endpoint}", style = MaterialTheme.typography.bodySmall)
+                    Text(if (state.connection.mode == StudyConnectionMode.DIRECT) "Only the checked texts and your question are sent directly to OpenAI using your API account. No UIT Mobile backend is involved." else "Only the checked texts and your question are sent to this gateway and OpenAI. Gateway source text is held for the request; OpenAI processing follows your provider account settings.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (state.assignment == null) OutlinedTextField(value = state.question, onValueChange = onQuestion, enabled = !state.busy, label = { Text("Question about the selected text") }, supportingText = { Text("${state.question.length}/1200") }, modifier = Modifier.fillMaxWidth(), shape = TechnicalShapes.Field, minLines = 2)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -239,15 +243,59 @@ import vn.edu.uit.mobile.domain.*
     }, confirmButton = { TextButton({ onAdd(title, text) }, enabled = title.isNotBlank() && text.isNotBlank()) { Text("Add source") } }, dismissButton = { TextButton(onDismiss) { Text("Cancel") } })
 }
 
-@Composable private fun StudyConnectionDialog(connection: StudyConnection, onDismiss: () -> Unit, onSave: (String, String) -> Unit, onDisconnect: () -> Unit) {
-    var endpoint by remember { mutableStateOf(connection.endpoint) }
-    var token by remember { mutableStateOf("") }
-    AlertDialog(onDismissRequest = onDismiss, shape = TechnicalShapes.Dialog, title = { Text("Study gateway") }, text = {
-        Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Use your HTTPS study gateway and its access token. The OpenAI API key belongs in the server process, not in this form.", style = MaterialTheme.typography.bodySmall)
-            OutlinedTextField(endpoint, { endpoint = it }, label = { Text("HTTPS gateway address") }, singleLine = true, shape = TechnicalShapes.Field)
-            OutlinedTextField(token, { token = it }, label = { Text("Gateway access token") }, visualTransformation = PasswordVisualTransformation(), singleLine = true, shape = TechnicalShapes.Field)
-            if (connection.configured) TextButton(onDisconnect) { Text("Clear connection") }
+@Composable fun StudyConnectionDialog(connection: StudyConnection, onDismiss: () -> Unit, onSave: (StudyConnectionMode, String, String, String) -> Unit, onDisconnect: () -> Unit) {
+    var mode by remember { mutableStateOf(connection.mode) }
+    var endpoint by remember { mutableStateOf(if (connection.mode == StudyConnectionMode.GATEWAY) connection.endpoint else "") }
+    var secret by remember { mutableStateOf("") }
+    var model by remember { mutableStateOf(connection.model) }
+    var error by remember { mutableStateOf<String?>(null) }
+    fun save() {
+        val credential = secret.trim()
+        val modelId = model.trim()
+        error = when {
+            mode == StudyConnectionMode.DIRECT && (credential.length !in 24..1024 || credential.any { it.code !in 33..126 }) -> "Enter your personal OpenAI API key without spaces."
+            mode == StudyConnectionMode.DIRECT && !modelId.matches(Regex("[A-Za-z0-9._-]{1,100}")) -> "Enter an available model ID supporting Responses and structured outputs."
+            mode == StudyConnectionMode.GATEWAY && (credential.length !in 32..512 || credential.any { it.code !in 33..126 } || credential.startsWith("sk-")) -> "Enter the gateway access token, not an OpenAI API key."
+            mode == StudyConnectionMode.GATEWAY && runCatching { StudyAiRules.endpoint(endpoint) }.isFailure -> "Enter a valid HTTPS gateway origin without a path or query."
+            else -> null
         }
-    }, confirmButton = { TextButton({ onSave(endpoint, token) }, enabled = endpoint.isNotBlank() && token.length >= 32) { Text("Save connection") } }, dismissButton = { TextButton(onDismiss) { Text("Cancel") } })
+        if (error == null) onSave(mode, endpoint.trim(), credential, modelId)
+    }
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(Modifier.padding(16.dp).widthIn(max = 480.dp).fillMaxWidth().fillMaxHeight(0.9f), shape = TechnicalShapes.Dialog, color = MaterialTheme.colorScheme.surface) {
+            Column(Modifier.padding(20.dp)) {
+                Text("AI connection", style = MaterialTheme.typography.headlineSmall)
+                Spacer(Modifier.height(16.dp))
+                Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).testTag("ai-connection-form"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    StudyConnectionMode.entries.forEach { option ->
+                        OutlinedButton(onClick = {
+                            mode = option
+                            secret = ""
+                            error = null
+                        }, shape = TechnicalShapes.Field, modifier = Modifier.fillMaxWidth()) {
+                            RadioButton(selected = mode == option, onClick = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(if (option == StudyConnectionMode.DIRECT) "Direct OpenAI" else "Gateway")
+                        }
+                    }
+                    if (mode == StudyConnectionMode.DIRECT) {
+                        Text("Connect from this phone to OpenAI. No backend to host. Use your own API key and API billing account; this is separate from ChatGPT sign-in.", style = MaterialTheme.typography.bodySmall)
+                        OutlinedTextField(model, { model = it.take(100) }, modifier = Modifier.fillMaxWidth(), label = { Text("OpenAI model ID") }, supportingText = { Text("Use a model available to your API project with structured outputs.") }, singleLine = true, shape = TechnicalShapes.Field)
+                    } else {
+                        Text("Use an HTTPS gateway to keep the OpenAI key on your server. Enter its separate gateway token here.", style = MaterialTheme.typography.bodySmall)
+                        OutlinedTextField(endpoint, { endpoint = it }, modifier = Modifier.fillMaxWidth(), label = { Text("HTTPS gateway address") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), singleLine = true, shape = TechnicalShapes.Field)
+                    }
+                    OutlinedTextField(secret, { secret = it.take(1024) }, modifier = Modifier.fillMaxWidth(), label = { Text(if (mode == StudyConnectionMode.DIRECT) "Your OpenAI API key" else "Gateway access token") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), visualTransformation = PasswordVisualTransformation(), singleLine = true, shape = TechnicalShapes.Field)
+                    Text("Credentials are encrypted on this phone. Use a personal key for direct mode; never distribute a shared key in the APK. A compromised device can still expose stored credentials.", style = MaterialTheme.typography.bodySmall)
+                    error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                    if (connection.configured) TextButton(onDisconnect, shape = TechnicalShapes.Control) { Text("Clear connection") }
+                }
+                Spacer(Modifier.height(12.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onDismiss, shape = TechnicalShapes.Control) { Text("Cancel") }
+                    TextButton(::save, enabled = secret.isNotBlank(), shape = TechnicalShapes.Control) { Text("Save connection") }
+                }
+            }
+        }
+    }
 }

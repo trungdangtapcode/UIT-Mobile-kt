@@ -390,7 +390,7 @@ class UitGraph(context: Context) {
     val vault = EncryptedSessionVault(app)
     private val studyStorage = StudyPrivateStorage(app)
     val accounts: AccountRepository = VaultAccountRepository(vault, store, File(app.filesDir, "materials"), studyStorage::removeAccount)
-    val studyAi: StudyAiRepository = GatewayStudyAiRepository(studyStorage, accounts)
+    val studyAi: StudyAiRepository = ConnectedStudyAiRepository(studyStorage, accounts)
     val portal: PortalRepository = OfflinePortalRepository(vault, store, File(app.filesDir, "materials"))
     companion object {
         @Volatile private var instance: UitGraph? = null

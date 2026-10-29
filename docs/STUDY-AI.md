@@ -3,7 +3,7 @@
 This branch adds two native Android workflows inside **Courses**:
 
 - **Assignments → Analyze assignment & checklist:** inspect the saved brief, send
-  selected text to the configured gateway, review stated requirements separately
+  selected text through the configured connection, review stated requirements separately
   from suggestions, and explicitly add/edit/reorder/save a personal checklist.
 - **Ask course text:** select saved assignment/activity descriptions or add a pasted
   excerpt, ask a question, and inspect the original text behind each citation.
@@ -14,11 +14,42 @@ treated as an empty document. Long source text stays visible for inspection but
 must be shortened into an explicit excerpt before sending. Select at most five
 sources, 12,000 characters each and 36,000 characters in total.
 
-## Configure the development gateway
+## Direct OpenAI: default, no backend to host
+
+Open **AI connection settings → Direct OpenAI**, enter your own OpenAI API key
+and an available model ID supporting Responses and strict structured outputs,
+then save. The Android client sends selected content directly to the fixed
+`https://api.openai.com/v1/responses` endpoint. It does not require Python, a VPS,
+a gateway URL or a university service proxy.
+
+The key is entered at runtime and encrypted with Android Keystore AES-GCM; it is
+not compiled into the APK, stored in Git, prefilled into the form or copied from
+Codex. Use a personal key and your own API billing account. Encryption at rest does
+not prevent a compromised device from accessing credentials while the app runs.
+Configure API project usage controls separately. The model ID is explicit because
+project access varies; no automatic request is sent when saving configuration.
+
+Both connection modes use the same selected-source limits, evidence validation,
+request timeout and explicit Send action. Direct mode also sets `store: false`,
+uses strict structured outputs, rejects refusals/incomplete output, and provides
+no tools or university credentials to the model. Selected processing uses your
+OpenAI API account and is separate from ChatGPT subscription/OAuth sign-in.
+
+## Optional HTTPS gateway
+
+Choose **AI connection settings → Gateway** to use the server-based alternative.
+Enter its HTTPS origin and its separate access token; the OpenAI key remains on
+that server. Existing saved gateway settings are recognized and preserved.
+Switching the form's mode clears its credential field, and saving replaces the
+active connection atomically. A failed direct request never falls back to a gateway
+or forwards its personal API key there. Clearing a connection resets the setup to
+unconfigured Direct OpenAI while preserving local checklists.
+
+### Run the development gateway
 
 The included Python 3 standard-library gateway uses OpenAI's Responses API with a
 strict JSON schema. Provider calls use the fixed official HTTPS origin and do not
-follow redirects. No provider key is compiled into Android.
+follow redirects. No provider key is compiled into Android. This section is only needed for Gateway mode.
 
 Run from a terminal where the key is already exported. `export` affects that shell
 and its child processes; exporting in another terminal does not change a running
@@ -46,8 +77,8 @@ must be able to reach the HTTPS origin. This rootless development service does n
 configure DNS, certificates or a public listener automatically. Plain HTTP and TLS
 verification bypasses are not enabled in the app.
 
-Inside either study screen, open **Study gateway settings** and enter that HTTPS
-origin and **UIT_AI_TOKEN**, not OPENAI_API_KEY. The connection and saved checklists
+In **AI connection settings → Gateway**, enter that HTTPS origin and
+**UIT_AI_TOKEN**, not OPENAI_API_KEY. The connection and saved checklists
 are encrypted with Android Keystore AES-GCM, and app backups remain disabled.
 **Clear connection** removes the gateway configuration without deleting personal
 checklists. Removing a course account deletes that account's stored checklists.
@@ -61,20 +92,22 @@ credential is forwarded to the gateway or used as its caller identity.
 ## Data and result handling
 
 Only checked source titles/text, the question, action and requested language are
-sent after **Send selected text**. There is no background AI processing. The app
+sent after **Send selected text**, either directly to OpenAI or through the selected
+gateway. There is no background AI processing. The app
 does not send snapshots, profile scans, submission files, university cookies,
-passwords, sesskeys or provider keys. Pasted excerpts stay in screen memory until
+passwords or sesskeys. In direct mode only the explicit personal API key is sent
+to OpenAI as the authorization header, separate from the model input. Pasted excerpts stay in screen memory until
 sent; the student controls their contents.
 
-The gateway holds source text for the request and has no content store or raw
-request logging. It requests `store: false` from OpenAI; this is not a claim of zero
+The optional gateway holds source text for the request and has no content store
+or raw request logging. Both modes request `store: false` from OpenAI; this is not a claim of zero
 provider retention. OpenAI processing follows the API account's applicable data
 controls. Source text and generated answers are not saved by this implementation.
 Opening another course, closing the study flow or removing its account clears the
 in-memory study state. App process death clears unsaved excerpts and answers.
 
 Every stated requirement or answer must cite a supplied source and an exact short
-quote. Both gateway and app reject unknown source IDs and quotes absent from the
+quote. The app, and the gateway when used, reject unknown source IDs and quotes absent from the
 selected text, allowing whitespace normalization. Suggestions and unknown facts
 are separately labeled. These checks establish reference validity, not whether a
 claim is logically supported; the source viewer lets students inspect that gap.
@@ -117,7 +150,8 @@ that silently repeat a potentially billable provider call.
 
 ## OpenAI authentication
 
-The included adapter reads **OPENAI_API_KEY** from its server process. Existing
+Direct mode uses the personal API key entered on the phone. The optional gateway
+reads **OPENAI_API_KEY** from its server process. Existing
 Codex credentials are not read or copied. OpenAI documents an alternative
 [Sign in with ChatGPT flow for open-source clients](https://developers.openai.com/siwc/quickstart),
 which requires the application's own registration, scopes and user authorization.
@@ -135,8 +169,9 @@ JAVA_HOME=/path/to/jdk21 ./gradlew :app:testDebugUnitTest \
 Tests use synthetic content and provider fixtures. They check the real loopback
 HTTP contract, OpenAI request shape/refusals, source and response limits, quote
 validation, ownership/lifecycle behavior, explicit sends/saves and phone UI.
-Actual OpenAI answer quality, account/model access, latency/billing and phone-to-
-gateway HTTPS deployment require a separately configured live run. No private
+Actual OpenAI answer quality, account/model access and latency/billing need a
+separately configured live run. Phone-to-gateway HTTPS deployment is relevant only
+to the optional gateway. No private
 student content or API key is put in test fixtures or CI.
 
 This text-only implementation addresses the first milestones of [Assignment

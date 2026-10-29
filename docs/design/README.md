@@ -28,7 +28,7 @@ appearance choices remain unchanged.
 | --- | --- |
 | Class schedule | [Day](previews/schedule-phone.png) · [Week agenda](previews/schedule-week-phone.png) · [Month](previews/schedule-month-phone.png) |
 | Courses | [Course list](previews/courses-phone.png) · [Materials](previews/course-materials-phone.png) |
-| Study AI (synthetic results) | [Assignment sources · 390dp](previews/ai-assignment-390-phone.png) · [Evidence · 390dp](previews/ai-evidence-390-phone.png) · [Question setup · 360dp](previews/ai-question-360-phone.png) · [Checklist · 412dp larger text](previews/ai-checklist-412-large-text-phone.png) |
+| Study AI (synthetic results) | [Assignment sources · 390dp](previews/ai-assignment-390-phone.png) · [Evidence · 390dp](previews/ai-evidence-390-phone.png) · [Question setup · 360dp](previews/ai-question-360-phone.png) · [Direct connection · 360dp](previews/ai-connection-direct-360-phone.png) · [Direct connection · 412dp larger text](previews/ai-connection-direct-412-large-text-phone.png) · [Optional gateway · 390dp](previews/ai-connection-gateway-390-phone.png) · [Checklist · 412dp larger text](previews/ai-checklist-412-large-text-phone.png) |
 | Academic record | [Overview](previews/academic-phone.png) · [Semester selection](previews/academic-semester-phone.png) · [GPA planner](previews/academic-planner-phone.png) |
 | Tuition | [390dp](previews/tuition-390-phone.png) · [360dp](previews/tuition-360-phone.png) · [Charge details](previews/tuition-details-phone.png) · [Offline](previews/tuition-offline-phone.png) · [Larger text](previews/tuition-360-large-text.png) |
 | Student procedures | [Request history](previews/procedures-390-phone.png) |

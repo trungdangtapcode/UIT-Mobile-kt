@@ -64,7 +64,7 @@ class StudyViewModel(private val ai: StudyAiRepository, portal: PortalRepository
     fun cancel() {
         epoch++
         operation?.cancel()
-        state.value = state.value.copy(busy = false, message = "Request canceled. The gateway may already have processed it.")
+        state.value = state.value.copy(busy = false, message = "Request canceled. The AI service may already have processed it.")
     }
     fun select(id: String) {
         if (state.value.busy) return
@@ -86,15 +86,15 @@ class StudyViewModel(private val ai: StudyAiRepository, portal: PortalRepository
         val id = "excerpt:${System.nanoTime()}"
         state.value = state.value.copy(sources = state.value.sources + StudySource(id, title, text), answer = null)
     }
-    fun configure(endpoint: String, token: String) = launchOperation {
-        ai.configure(endpoint, token)
+    fun configure(mode: StudyConnectionMode, endpoint: String, secret: String, model: String) = launchOperation {
+        if (mode == StudyConnectionMode.DIRECT) ai.configureDirect(secret, model) else ai.configure(endpoint, secret)
         currentCoroutineContext().ensureActive()
         state.value = state.value.copy(connection = ai.connection(), answer = null, message = "Connection saved on this device.")
     }
     fun disconnect() = launchOperation {
         ai.disconnect()
         currentCoroutineContext().ensureActive()
-        state.value = state.value.copy(connection = StudyConnection(), answer = null, message = "Gateway connection cleared. Your saved checklist remains on this device.")
+        state.value = state.value.copy(connection = StudyConnection(), answer = null, message = "AI connection cleared. Your saved checklist remains on this device.")
     }
     fun generate() {
         val current = state.value
@@ -102,7 +102,7 @@ class StudyViewModel(private val ai: StudyAiRepository, portal: PortalRepository
         val mode = if (current.assignment == null) "ask" else "analyze"
         val sources = current.sources.filter { it.id in current.selected }
         try {
-            check(current.connection.configured) { "Configure a study gateway before generating an answer." }
+            check(current.connection.configured) { "Configure Direct OpenAI or an optional gateway before generating an answer." }
             StudyAiRules.validate(sources, mode, current.question)
         } catch (e: IllegalArgumentException) {
             state.value = current.copy(message = e.message)
@@ -158,7 +158,7 @@ class StudyViewModel(private val ai: StudyAiRepository, portal: PortalRepository
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                if (epoch == expected) state.value = state.value.copy(message = if (e is IllegalStateException || e is IllegalArgumentException) e.message?.take(240) ?: "Study action failed. Try again." else "Study action failed. Check the gateway and try again.")
+                if (epoch == expected) state.value = state.value.copy(message = if (e is IllegalStateException || e is IllegalArgumentException) e.message?.take(240) ?: "Study action failed. Try again." else "Study action failed. Check the AI connection and try again.")
             } finally {
                 if (epoch == expected) state.value = state.value.copy(busy = false)
             }

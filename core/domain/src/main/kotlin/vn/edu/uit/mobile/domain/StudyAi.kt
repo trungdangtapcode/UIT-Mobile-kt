@@ -7,12 +7,15 @@ data class StudySource(val id: String, val title: String, val text: String)
 data class StudyCitation(val sourceId: String, val quote: String)
 data class StudyItem(val kind: String, val text: String, val citations: List<StudyCitation> = emptyList())
 data class StudyAnswer(val model: String, val generatedAt: Long, val items: List<StudyItem>)
-data class StudyConnection(val endpoint: String = "", val configured: Boolean = false)
+enum class StudyConnectionMode { DIRECT, GATEWAY }
+data class StudyConnection(val endpoint: String = "https://api.openai.com", val configured: Boolean = false, val mode: StudyConnectionMode = StudyConnectionMode.DIRECT, val model: String = "")
 data class StudyTask(val text: String, val checked: Boolean = false)
+class StudyAiException(message: String) : IllegalStateException(message)
 
 interface StudyAiRepository {
     suspend fun connection(): StudyConnection
     suspend fun configure(endpoint: String, token: String)
+    suspend fun configureDirect(apiKey: String, model: String)
     suspend fun disconnect()
     suspend fun generate(course: Course, mode: String, sources: List<StudySource>, question: String, language: String): StudyAnswer
     suspend fun tasks(course: Course, assignmentId: Long): List<StudyTask>
@@ -38,15 +41,15 @@ object StudyAiRules {
 
     fun verify(answer: StudyAnswer, sources: List<StudySource>, mode: String) {
         val text = sources.associate { it.id to normalize(it.text) }
-        require(answer.items.size in 1..12 && answer.model.isNotBlank() && answer.model.length <= 100) { "The gateway returned an invalid result." }
-        require(answer.generatedAt in 1..4102444800L) { "The gateway returned an invalid timestamp." }
+        require(answer.items.size in 1..12 && answer.model.isNotBlank() && answer.model.length <= 100) { "The AI service returned an invalid result." }
+        require(answer.generatedAt in 1..4102444800L) { "The AI service returned an invalid timestamp." }
         answer.items.forEach { item ->
-            require(item.kind in if (mode == "ask") setOf("answer", "unknown") else setOf("requirement", "suggestion", "unknown")) { "The gateway returned an unsupported result." }
-            require(item.text.isNotBlank() && item.text.length <= 1500 && item.citations.size <= 3) { "The gateway returned an invalid result." }
+            require(item.kind in if (mode == "ask") setOf("answer", "unknown") else setOf("requirement", "suggestion", "unknown")) { "The AI service returned an unsupported result." }
+            require(item.text.isNotBlank() && item.text.length <= 1500 && item.citations.size <= 3) { "The AI service returned an invalid result." }
             require(item.kind !in setOf("requirement", "answer") || item.citations.isNotEmpty()) { "The answer has no supporting source." }
             item.citations.forEach { citation ->
                 val quote = normalize(citation.quote)
-                require(quote.length in 6..500 && text[citation.sourceId]?.contains(quote) == true) { "The gateway cited text outside your selection." }
+                require(quote.length in 6..500 && text[citation.sourceId]?.contains(quote) == true) { "The AI service cited text outside your selection." }
             }
         }
     }

@@ -45,7 +45,9 @@ for resizing, offline behavior and background update limits.
 
 Courses includes optional **Analyze assignment & checklist** and **Ask course
 text** workflows. They use explicitly selected saved descriptions or pasted text,
-an OpenAI-backed HTTPS gateway and inspectable source quotes. Personal checklists
+direct OpenAI access (the default) or an optional HTTPS gateway, with inspectable
+source quotes. Direct mode uses a personal API key entered on the phone and needs
+no hosted backend. Personal checklists
 are saved locally; PDF ingestion is not part of this first version. See
 [Study AI setup and limits](docs/STUDY-AI.md).
 

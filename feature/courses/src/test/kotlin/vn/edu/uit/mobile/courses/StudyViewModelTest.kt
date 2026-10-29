@@ -23,8 +23,9 @@ class StudyViewModelTest {
         var generated = 0
         var saved = emptyList<StudyTask>()
         var gate: CompletableDeferred<Unit>? = null
-        override suspend fun connection() = StudyConnection("https://study.example.org", true)
+        override suspend fun connection() = StudyConnection("https://study.example.org", true, StudyConnectionMode.GATEWAY)
         override suspend fun configure(endpoint: String, token: String) = Unit
+        override suspend fun configureDirect(apiKey: String, model: String) = Unit
         override suspend fun disconnect() = Unit
         override suspend fun tasks(course: Course, assignmentId: Long) = saved
         override suspend fun saveTasks(course: Course, assignmentId: Long, tasks: List<StudyTask>) {

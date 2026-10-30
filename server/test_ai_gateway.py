@@ -66,6 +66,13 @@ class GatewayTest(unittest.TestCase):
                 validate_result(result, REQUEST["sources"], "analyze")
             self.assertEqual("invalid_evidence", error.exception.code)
 
+    def test_unicode_portal_whitespace_uses_the_same_quote_contract_as_android(self):
+        for space in ["\u00a0", "\u202f", "\u0085", "\u2003", "\u001c"]:
+            sources = copy.deepcopy(REQUEST["sources"])
+            sources[0]["text"] = "Deliver" + space + "a report and a working SQL database."
+            result = validate_result(copy.deepcopy(RESULT), sources, "analyze")
+            self.assertEqual("Deliver a report", result["items"][0]["citations"][0]["quote"])
+
     def test_suggestions_and_missing_facts_are_distinct_from_extracted_requirements(self):
         result = {"items": [{"kind": "suggestion", "text": "Sketch a schema first.", "citations": []},
                             {"kind": "unknown", "text": "The selected text does not state a due date.", "citations": []}]}

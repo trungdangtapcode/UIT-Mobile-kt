@@ -54,5 +54,5 @@ object StudyAiRules {
         }
     }
 
-    private fun normalize(text: String) = text.trim().replace(Regex("\\s+"), " ")
+    private fun normalize(text: String) = text.replace(Regex("[\\s\\p{Z}\\u0085\\u001c-\\u001f]+"), " ").trim()
 }

@@ -154,59 +154,62 @@ class ConnectedStudyAiRepository(
                 )
             )
         }
-        val response = try {
-            client.post(endpoint) {
+        return@withContext try {
+            client.preparePost(endpoint) {
                 header("Authorization", "Bearer ${config.getValue("token").jsonPrimitive.content}")
                 header("Content-Type", "application/json")
                 setBody(if (direct) OpenAiStudyProtocol.request(config.getValue("model").jsonPrimitive.content, request).toString() else request.toString())
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            error(if (direct) "Unable to reach OpenAI. Check your internet connection." else "Unable to reach the study gateway. Check your connection and HTTPS settings.")
-        }
-        return@withContext try {
-            if (response.status.value != 200) {
-                throw StudyAiException(
-                    if (direct) {
-                        when (response.status.value) {
-                            401, 403 -> "OpenAI rejected the API key or project access. Check your personal key and model permissions."
-                            429 -> "Your OpenAI quota or rate limit was reached. Check your API account and try later."
-                            400, 404 -> "OpenAI rejected the request or model. Choose an available model supporting Responses and structured outputs."
-                            else -> "OpenAI could not complete this request. Try again later."
-                        }
-                    } else {
-                        when (response.status.value) {
-                            401, 403 -> "The gateway token was rejected. Update the connection."
-                            429 -> "The study gateway is busy or its usage limit was reached. Try later."
-                            400, 413 -> "The gateway rejected this selection. Choose less text and try again."
-                            else -> "The gateway could not produce a supported answer. Try again later."
-                        }
+            }.execute { response ->
+                val channel = response.bodyAsChannel()
+                try {
+                    if (response.status.value != 200) {
+                        throw StudyAiException(
+                            if (direct) {
+                                when (response.status.value) {
+                                    401, 403 -> "OpenAI rejected the API key or project access. Check your personal key and model permissions."
+                                    429 -> "Your OpenAI quota or rate limit was reached. Check your API account and try later."
+                                    400, 404 -> "OpenAI rejected the request or model. Choose an available model supporting Responses and structured outputs."
+                                    else -> "OpenAI could not complete this request. Try again later."
+                                }
+                            } else {
+                                when (response.status.value) {
+                                    401, 403 -> "The gateway token was rejected. Update the connection."
+                                    429 -> "The study gateway is busy or its usage limit was reached. Try later."
+                                    400, 413 -> "The gateway rejected this selection. Choose less text and try again."
+                                    else -> "The gateway could not produce a supported answer. Try again later."
+                                }
+                            }
+                        )
                     }
-                )
+                    val bytes = ByteArrayOutputStream()
+                    val buffer = ByteArray(4096)
+                    while (true) {
+                        val count = channel.readAvailable(buffer, 0, buffer.size)
+                        if (count < 0) break
+                        require(bytes.size() + count <= if (direct) 262144 else 65536) { "The AI response exceeded the supported size." }
+                        bytes.write(buffer, 0, count)
+                    }
+                    val data = Json.parseToJsonElement(bytes.toString("UTF-8")).jsonObject
+                    val answer = if (direct) OpenAiStudyProtocol.directResult(data) else OpenAiStudyProtocol.gatewayResult(data)
+                    StudyAiRules.verify(answer, sources, mode)
+                    requireAccount(course)
+                    answer
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: StudyAiException) {
+                    throw e
+                } catch (e: Exception) {
+                    throw StudyAiException("The AI result could not be verified against your selected sources.")
+                } finally {
+                    channel.cancel(null)
+                }
             }
-            val bytes = ByteArrayOutputStream()
-            val channel = response.bodyAsChannel()
-            val buffer = ByteArray(4096)
-            while (true) {
-                val count = channel.readAvailable(buffer, 0, buffer.size)
-                if (count < 0) break
-                require(bytes.size() + count <= if (direct) 262144 else 65536) { "The AI response exceeded the supported size." }
-                bytes.write(buffer, 0, count)
-            }
-            val data = Json.parseToJsonElement(bytes.toString("UTF-8")).jsonObject
-            val answer = if (direct) OpenAiStudyProtocol.directResult(data) else OpenAiStudyProtocol.gatewayResult(data)
-            StudyAiRules.verify(answer, sources, mode)
-            requireAccount(course)
-            answer
         } catch (e: CancellationException) {
             throw e
         } catch (e: StudyAiException) {
             throw e
         } catch (e: Exception) {
-            error("The AI result could not be verified against your selected sources.")
-        } finally {
-            response.bodyAsChannel().cancel(null)
+            error(if (direct) "Unable to reach OpenAI. Check your internet connection." else "Unable to reach the study gateway. Check your connection and HTTPS settings.")
         }
     }
     private fun taskKey(course: Course, assignmentId: Long) = "${studyAccountPrefix(course.accountId)}${course.id}:$assignmentId"

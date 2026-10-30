@@ -44,7 +44,7 @@ class StudyViewModel(private val ai: StudyAiRepository, portal: PortalRepository
             records.filter { it.accountId == course.accountId && it.courseId == course.id }.forEach { a -> source("assignment:${a.id}", a.name, a.intro)?.let(::add) }
             if (assignment == null) sections.flatMap { it.modules }.filter { it.courseId == course.id }.forEach { m -> source("module:${m.id}", m.name, m.description)?.let(::add) }
         }.distinctBy { it.id }
-        state.value = StudyState(course, assignment, sources, if (assignment != null) sources.take(1).map { it.id }.toSet() else emptySet())
+        state.value = StudyState(course, assignment, sources, if (assignment != null) sources.filter { it.text.length <= 12000 }.take(1).map { it.id }.toSet() else emptySet())
         launchOperation {
             val connection = ai.connection()
             val tasks = assignment?.let { ai.tasks(course, it.id) }.orEmpty()
@@ -69,6 +69,8 @@ class StudyViewModel(private val ai: StudyAiRepository, portal: PortalRepository
     fun select(id: String) {
         if (state.value.busy) return
         val selected = state.value.selected
+        val source = state.value.sources.firstOrNull { it.id == id } ?: return
+        if (id !in selected && (source.text.length > 12000 || selected.size >= 5)) return
         state.value = state.value.copy(selected = if (id in selected) selected - id else selected + id, answer = null, message = null)
     }
     fun question(value: String) {

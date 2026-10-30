@@ -4,6 +4,7 @@ import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.*
@@ -222,6 +223,34 @@ class StudyAiRepositoryTest {
         assertFalse(repo.connection().configured)
         accounts.remove(course.accountId)
         assertTrue(runCatching { repo.tasks(course, 2) }.isFailure)
+    }
+
+    @Test fun oversizedAndErrorResponsesAreCanceledWithoutWaitingForTheStreamToEnd() = runTest {
+        for (direct in listOf(false, true)) {
+            for (status in listOf(HttpStatusCode.OK, HttpStatusCode.Unauthorized)) {
+                val channel = ByteChannel(autoFlush = true)
+                val producer = backgroundScope.launch(Dispatchers.IO) {
+                    try {
+                        while (true) channel.writeFully(ByteArray(4096) { 97 })
+                    } catch (_: java.io.IOException) {
+                        // The consumer must cancel this deliberately unending response.
+                    } finally {
+                        channel.close()
+                    }
+                }
+                val client = HttpClient(MockEngine { respond(channel, status) })
+                val repo = ConnectedStudyAiRepository(Storage(), Accounts(), client)
+                if (direct) repo.configureDirect("synthetic-personal-openai-key-for-tests", "test-model") else repo.configure("https://study.example.org", token)
+                try {
+                    val failure = withContext(Dispatchers.IO) { withTimeout(5000) { runCatching { repo.generate(course, "ask", listOf(source), "Question", "English") }.exceptionOrNull() } }
+                    assertTrue(failure is StudyAiException)
+                    assertTrue(channel.isClosedForRead)
+                } finally {
+                    producer.cancelAndJoin()
+                    client.close()
+                }
+            }
+        }
     }
 
     @Test fun rateLimitsAndRedirectsHaveExplicitErrorsAndDoNotBecomeAnswers() = runTest {

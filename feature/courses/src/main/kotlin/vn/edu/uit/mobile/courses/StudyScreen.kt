@@ -98,7 +98,7 @@ import vn.edu.uit.mobile.domain.*
         itemsIndexed(state.sources, key = { _, source -> source.id }) { _, source ->
             Panel {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(source.id in state.selected, { onSelect(source.id) }, modifier = Modifier.semantics { contentDescription = "Select source ${source.title}" }, enabled = !state.busy && source.text.length <= 12000 && (source.id in state.selected || state.selected.size < 5))
+                    Checkbox(source.id in state.selected, { onSelect(source.id) }, modifier = Modifier.semantics { contentDescription = "Select source ${source.title}" }, enabled = !state.busy && (source.id in state.selected || (source.text.length <= 12000 && state.selected.size < 5)))
                     Column(Modifier.weight(1f)) {
                         Text(source.title, style = MaterialTheme.typography.titleSmall)
                         Text(if (source.text.length > 12000) "Too long · add a shorter excerpt" else "${source.text.length} characters", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

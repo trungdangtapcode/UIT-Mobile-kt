@@ -62,6 +62,23 @@ class StudyViewModelTest {
         assertEquals(12345L, vm.uiState.value.assignment?.due)
     }
 
+    @Test fun oversizedAssignmentCanBeReplacedWithAnExplicitShortExcerpt() = runTest(dispatcher) {
+        val ai = Ai()
+        val vm = StudyViewModel(ai, portal)
+        val longAssignment = assignment.copy(intro = "a".repeat(12001))
+        vm.open(course, emptyList(), listOf(longAssignment), longAssignment)
+        runCurrent()
+        assertTrue(vm.uiState.value.selected.isEmpty())
+        vm.select("assignment:2")
+        assertTrue(vm.uiState.value.selected.isEmpty())
+        vm.addExcerpt("Short brief", "Deliver a report and three tests.")
+        vm.select(vm.uiState.value.sources.last().id)
+        vm.generate()
+        runCurrent()
+        assertEquals(1, ai.generated)
+        assertNotNull(vm.uiState.value.answer)
+    }
+
     @Test fun generatedTasksAreEditableDeduplicatedAndOnlySavedExplicitly() = runTest(dispatcher) {
         val ai = Ai()
         val vm = StudyViewModel(ai, portal)

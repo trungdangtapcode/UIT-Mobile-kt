@@ -28,6 +28,14 @@ class StudyAiTest {
         assertThrows(IllegalArgumentException::class.java) { StudyAiRules.verify(answer("The final exam is tomorrow."), listOf(source), "ask") }
     }
 
+    @Test fun `Unicode portal whitespace agrees with gateway normalization`() {
+        for (space in listOf("\u00a0", "\u202f", "\u0085", "\u2003", "\u001c")) {
+            val portalSource = source.copy(text = "A transaction${space}preserves consistency.")
+            StudyAiRules.verify(answer(), listOf(portalSource), "ask")
+            StudyAiRules.verify(answer("A transaction${space}preserves consistency."), listOf(source), "ask")
+        }
+    }
+
     @Test fun `unknown facts and suggestions never masquerade as sourced answers`() {
         StudyAiRules.verify(StudyAnswer("test", 1, listOf(StudyItem("unknown", "The selected text does not say."))), listOf(source), "ask")
         StudyAiRules.verify(StudyAnswer("test", 1, listOf(StudyItem("suggestion", "Draft an outline first."))), listOf(source), "analyze")

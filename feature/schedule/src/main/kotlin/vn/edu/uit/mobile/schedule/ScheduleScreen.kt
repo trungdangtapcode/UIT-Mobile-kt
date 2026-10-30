@@ -1,5 +1,9 @@
 package vn.edu.uit.mobile.schedule
 
+import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -17,19 +21,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.datetime.*
 import vn.edu.uit.mobile.common.*
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.model.*
 
-@Immutable data class ScheduleState(val snapshot: PortalSnapshot = PortalSnapshot(), val anchor: LocalDate = today(), val monthly: Boolean = false, val focusRequest: Int = 0)
+@Immutable data class ScheduleState(val snapshot: PortalSnapshot = PortalSnapshot(), val anchor: LocalDate = today(), val monthly: Boolean = false, val focusRequest: Int = 0, val calendarExportBusy: Boolean = false, val calendarExportMessage: String? = null)
 sealed interface ScheduleIntent {
     data class Move(val amount: Int) : ScheduleIntent
     data object Toggle : ScheduleIntent
@@ -40,6 +45,48 @@ sealed interface ScheduleIntent {
 class ScheduleViewModel(private val repository: PortalRepository) : BaseMviViewModel<ScheduleState, ScheduleIntent, Unit>(ScheduleState()) {
     init {
         viewModelScope.launch { repository.snapshot.collect { state.value = state.value.copy(snapshot = it) } }
+    }
+    private var pendingCalendarExport: CalendarExportPlan? = null
+    fun prepareCalendarExport(plan: CalendarExportPlan): String? {
+        if (state.value.calendarExportBusy) return null
+        return try {
+            check(plan.entries == CalendarFileExport().plan(state.value.snapshot, plan.options).entries) { "The saved schedule changed. Review the updated preview and try again." }
+            check(plan.entries.isNotEmpty()) { "There are no events to export." }
+            pendingCalendarExport = plan
+            state.value = state.value.copy(calendarExportBusy = true, calendarExportMessage = null)
+            plan.fileName
+        } catch (e: Exception) {
+            state.value = state.value.copy(calendarExportMessage = "The saved schedule changed or this range cannot be exported. Review the preview and try a shorter range.")
+            null
+        }
+    }
+    fun calendarPickerUnavailable() {
+        pendingCalendarExport = null
+        state.value = state.value.copy(calendarExportBusy = false, calendarExportMessage = "No document picker is available on this device.")
+    }
+    fun completeCalendarExport(context: Context, uri: Uri?) = viewModelScope.launch {
+        val plan = pendingCalendarExport
+        pendingCalendarExport = null
+        if (uri == null) {
+            state.value = state.value.copy(calendarExportBusy = false, calendarExportMessage = "Export canceled. No events were written.")
+            return@launch
+        }
+        try {
+            check(plan != null) { "The export was interrupted. Review the selection and save again." }
+            check(plan.entries == CalendarFileExport().plan(state.value.snapshot, plan.options).entries) { "The saved schedule changed. Review the updated preview and save again." }
+            withContext(Dispatchers.IO) {
+                val bytes = CalendarFileExport().render(plan, Clock.System.now().epochSeconds).toByteArray(Charsets.UTF_8)
+                val stream = context.applicationContext.contentResolver.openOutputStream(uri, "wt") ?: error("No output stream")
+                stream.use { it.write(bytes) }
+            }
+            state.value = state.value.copy(calendarExportMessage = "Calendar file saved. Import it with your calendar app; it will not update automatically.")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            state.value = state.value.copy(calendarExportMessage = "Calendar file was not saved. The selection may have changed or the destination is unavailable. Review and try again.")
+        } finally {
+            state.value = state.value.copy(calendarExportBusy = false)
+        }
     }
     override fun onIntent(intent: ScheduleIntent) {
         state.value = when (intent) {
@@ -55,12 +102,27 @@ class ScheduleViewModel(private val repository: PortalRepository) : BaseMviViewM
 
 @Composable fun ScheduleScreen(viewModel: ScheduleViewModel, onCourse: (Course) -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    ScheduleContent(state, viewModel::onIntent, onCourse)
+    var exporting by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current.applicationContext
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/calendar")) { uri -> viewModel.completeCalendarExport(context, uri) }
+    if (exporting) {
+        CalendarExportContent(state.snapshot, state.anchor, state.calendarExportBusy, state.calendarExportMessage, { exporting = false }) { plan ->
+            viewModel.prepareCalendarExport(plan)?.let { fileName ->
+                try {
+                    picker.launch(fileName)
+                } catch (_: android.content.ActivityNotFoundException) {
+                    viewModel.calendarPickerUnavailable()
+                }
+            }
+        }
+    } else {
+        ScheduleContent(state, viewModel::onIntent, onCourse, { exporting = true })
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {}, onCourse: (Course) -> Unit = {}) {
+fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {}, onCourse: (Course) -> Unit = {}, onExport: (() -> Unit)? = null) {
     var selected by remember { mutableStateOf<ScheduleEntry?>(null) }
     var semesters by remember { mutableStateOf(false) }
     var filter by rememberSaveable { mutableStateOf("All events") }
@@ -94,7 +156,12 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
         }
     }
     LazyColumn(Modifier.fillMaxSize().testTag("schedule-content"), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        item { PageHeading("Class schedule", "Classes, rooms and schedule changes.") }
+        item {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) { PageHeading("Class schedule", "Classes, rooms and schedule changes.") }
+                if (onExport != null) IconButton(onExport) { Icon(Icons.Outlined.SaveAlt, "Export calendar file") }
+            }
+        }
         item {
             Panel {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

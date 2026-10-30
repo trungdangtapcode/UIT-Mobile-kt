@@ -17,13 +17,14 @@ import vn.edu.uit.mobile.model.*
 import vn.edu.uit.mobile.moodle.*
 import vn.edu.uit.mobile.network.*
 
-class VaultAccountRepository(private val vault: SessionStore, private val store: SnapshotStore, private val materials: File? = null) : AccountRepository {
+class VaultAccountRepository(private val vault: SessionStore, private val store: SnapshotStore, private val materials: File? = null, private val onRemove: (String) -> Unit = {}) : AccountRepository {
     override val accounts: Flow<List<Account>> = vault.sessions.map { sessions -> sessions.map { it.account } }
     override suspend fun saveSessions(sessions: List<PortalSession>) {
         vault.save(sessions)
     }
     override suspend fun remove(accountId: String) {
         vault.remove(accountId)
+        withContext(Dispatchers.IO) { onRemove(accountId) }
         store.delete(accountId)
         materials?.let { root -> File(root, accountFolder(accountId)).deleteRecursively() }
     }
@@ -387,7 +388,9 @@ class UitGraph(context: Context) {
     val database = UitDatabase.create(app)
     val store: SnapshotStore = RoomSnapshotStore(database)
     val vault = EncryptedSessionVault(app)
-    val accounts: AccountRepository = VaultAccountRepository(vault, store, File(app.filesDir, "materials"))
+    private val studyStorage = StudyPrivateStorage(app)
+    val accounts: AccountRepository = VaultAccountRepository(vault, store, File(app.filesDir, "materials"), studyStorage::removeAccount)
+    val studyAi: StudyAiRepository = ConnectedStudyAiRepository(studyStorage, accounts)
     val portal: PortalRepository = OfflinePortalRepository(vault, store, File(app.filesDir, "materials"))
     companion object {
         @Volatile private var instance: UitGraph? = null

@@ -6,6 +6,7 @@ dependencies {
     testImplementation(libs.junit4)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.turbine)
+    testImplementation(libs.robolectric)
     implementation(project(":core:domain"))
     implementation(project(":core:designsystem"))
 }

@@ -43,6 +43,14 @@ closest deadline from saved data. Add them through **Account icon â†’ Settings â
 Home screen widgets**, or the launcher's widget picker. See [home screen widgets](docs/HOME-WIDGETS.md)
 for resizing, offline behavior and background update limits.
 
+Courses includes optional **Analyze assignment & checklist** and **Ask course
+text** workflows. They use explicitly selected saved descriptions or pasted text,
+direct OpenAI access (the default) or an optional HTTPS gateway, with inspectable
+source quotes. Direct mode uses a personal API key entered on the phone and needs
+no hosted backend. Personal checklists
+are saved locally; PDF ingestion is not part of this first version. See
+[Study AI setup and limits](docs/STUDY-AI.md).
+
 See the [phone preview gallery](docs/design/README.md) and
 [mobile scope](docs/design/MOBILE.md). Previews render on a rootless server without
 an emulator. Older layout experiments are historical, not current product targets.

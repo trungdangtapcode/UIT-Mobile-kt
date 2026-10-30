@@ -35,8 +35,16 @@ import kotlinx.coroutines.*
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.model.*
 
-@Composable fun CoursesScreen(viewModel: CoursesViewModel) {
+@Composable fun CoursesScreen(viewModel: CoursesViewModel, study: StudyViewModel? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val studyState = study?.uiState?.collectAsStateWithLifecycle()?.value
+    LaunchedEffect(state.selected?.accountId, state.selected?.id) {
+        if (studyState?.course != null && studyState.course != state.selected) study?.close()
+    }
+    if (study != null && studyState?.course != null && studyState.course == state.selected) {
+        StudyScreen(study)
+        return
+    }
     BackHandler(enabled = state.selected != null) { viewModel.onIntent(CoursesIntent.Back) }
     val snack = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -90,10 +98,22 @@ import vn.edu.uit.mobile.model.*
     }
     Scaffold(snackbarHost = { SnackbarHost(snack) }, containerColor = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground, contentWindowInsets = WindowInsets(0, 0, 0, 0)) { padding ->
         Box(Modifier.padding(padding)) {
-            CoursesContent(state, viewModel::onIntent, onPickFile = { assignment ->
-                pendingAssignment = assignment
-                picker.launch(arrayOf("*/*"))
-            }, onReply = { replyTo = it })
+            CoursesContent(
+                state,
+                viewModel::onIntent,
+                onPickFile = { assignment ->
+                    pendingAssignment = assignment
+                    picker.launch(arrayOf("*/*"))
+                },
+                onReply = { replyTo = it },
+                onStudy = if (study == null) {
+                    null
+                } else {
+                    { assignment ->
+                        state.selected?.let { study.open(it, state.sections, state.assignments, assignment) }
+                    }
+                }
+            )
         }
     }
     selectedFile?.let { (name, bytes) ->
@@ -155,9 +175,9 @@ import vn.edu.uit.mobile.model.*
 }
 
 @Composable
-fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, onPickFile: (Assignment) -> Unit = {}, onReply: (Discussion) -> Unit = {}) {
+fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, onPickFile: (Assignment) -> Unit = {}, onReply: (Discussion) -> Unit = {}, onStudy: ((Assignment?) -> Unit)? = null) {
     val course = state.selected
-    if (course == null) CourseLibrary(state, onIntent) else CourseWorkspace(state, course, onIntent, onPickFile, onReply)
+    if (course == null) CourseLibrary(state, onIntent) else CourseWorkspace(state, course, onIntent, onPickFile, onReply, onStudy)
 }
 
 @Composable private fun CourseLibrary(state: CoursesState, onIntent: (CoursesIntent) -> Unit) {
@@ -191,7 +211,7 @@ fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, 
     }
 }
 
-@Composable private fun CourseWorkspace(state: CoursesState, course: Course, onIntent: (CoursesIntent) -> Unit, onPickFile: (Assignment) -> Unit, onReply: (Discussion) -> Unit) {
+@Composable private fun CourseWorkspace(state: CoursesState, course: Course, onIntent: (CoursesIntent) -> Unit, onPickFile: (Assignment) -> Unit, onReply: (Discussion) -> Unit, onStudy: ((Assignment?) -> Unit)?) {
     var collapsed by rememberSaveable(course.accountId, course.id) { mutableStateOf(listOf<Long>()) }
     var peopleQuery by rememberSaveable(course.accountId, course.id) { mutableStateOf("") }
     val accent = WorkspaceColors.course(course.id)
@@ -229,6 +249,15 @@ fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, 
                 if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 8.dp).height(3.dp))
             }
             state.error?.let { error -> item { InlineNotice(error.text(), true) } }
+            if (onStudy != null) {
+                item {
+                    OutlinedButton(onClick = { onStudy(null) }, enabled = !state.loading, shape = TechnicalShapes.Field, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Outlined.QuestionAnswer, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Ask course text")
+                    }
+                }
+            }
             when (state.tab) {
                 0 -> {
                     if (state.sections.isEmpty() && !state.loading) item { Panel { EmptyState("No materials here yet", "Your saved course materials will appear here after loading this course.") } }
@@ -267,6 +296,7 @@ fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, 
                                 }
                                 state.status[assignment.id]?.grade?.takeIf(String::isNotBlank)?.let { StatusPill("Grade: $it", WorkspaceColors.Teal) }
                                 assignment.files.forEach { FileActions(it, { onIntent(CoursesIntent.Download(it)) }, { onIntent(CoursesIntent.Inspect(it)) }) }
+                                if (onStudy != null) OutlinedButton(onClick = { onStudy(assignment) }, enabled = !state.loading, modifier = Modifier.fillMaxWidth(), shape = TechnicalShapes.Field) { Text("Analyze assignment & checklist") }
                                 Button(onClick = { onPickFile(assignment) }, enabled = !state.loading, modifier = Modifier.fillMaxWidth(), shape = TechnicalShapes.Field) {
                                     Icon(Icons.Outlined.UploadFile, null, Modifier.size(18.dp))
                                     Spacer(Modifier.width(8.dp))

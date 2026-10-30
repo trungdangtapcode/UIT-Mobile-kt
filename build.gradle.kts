@@ -30,7 +30,11 @@ val detektCheck by tasks.registering(JavaExec::class) {
 val verifyArchitecture by tasks.registering(Exec::class) {
     commandLine("python3", "scripts/check-architecture.py")
 }
+val verifyStudyGateway by tasks.registering(Exec::class) {
+    commandLine("python3", "-m", "unittest", "discover", "-s", "server")
+}
 tasks.named("check") { dependsOn(verifyArchitecture, ktlintCheck, detektCheck) }
+tasks.named("check") { dependsOn(verifyStudyGateway) }
 
 tasks.named("check") {
     dependsOn(":core:common:test", ":core:domain:test", ":core:network:common:test", ":core:network:moodle:test", ":core:network:daa:test")

@@ -31,6 +31,7 @@ import vn.edu.uit.mobile.authui.*
 import vn.edu.uit.mobile.common.*
 import vn.edu.uit.mobile.courses.*
 import vn.edu.uit.mobile.dashboard.*
+import vn.edu.uit.mobile.data.createStudyAiRepository
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.schedule.*
@@ -40,6 +41,7 @@ class MainActivity : ComponentActivity() {
     private var widgetRoute by mutableStateOf<WidgetRoute?>(null)
     private val repository: PortalRepository by inject()
     private val accounts: AccountRepository by inject()
+    private val studyRepository: StudyAiRepository by lazy { createStudyAiRepository(this, accounts) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         widgetRoute = WidgetRoute.read(if (savedInstanceState == null) intent else BundleCompat.getParcelable(savedInstanceState, "pending_widget_route", Intent::class.java))
@@ -58,6 +60,7 @@ class MainActivity : ComponentActivity() {
                 val dashboard = ownedViewModel { DashboardViewModel(repository) }
                 val schedule = ownedViewModel { ScheduleViewModel(repository) }
                 val courses = ownedViewModel { CoursesViewModel(repository) }
+                val study = ownedViewModel { StudyViewModel(studyRepository, repository) }
                 val inbox = ownedViewModel { InboxViewModel(repository) }
                 val academic = ownedViewModel { AcademicViewModel(repository) }
                 val auth = ownedViewModel { AccountsViewModel(accounts) }
@@ -80,7 +83,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, courses, inbox, academic, studentProfile, widgetRoute, {
+                UitShell(repository, dashboard, schedule, courses, study, inbox, academic, studentProfile, widgetRoute, {
                     showWidgets = false
                     widgetRoute = null
                     setIntent(
@@ -131,6 +134,7 @@ private fun UitShell(
     dashboard: DashboardViewModel,
     schedule: ScheduleViewModel,
     courses: CoursesViewModel,
+    study: StudyViewModel,
     inbox: InboxViewModel,
     academic: AcademicViewModel,
     studentProfile: StudentProfileViewModel,
@@ -196,7 +200,7 @@ private fun UitShell(
                     courses.onIntent(CoursesIntent.Select(it))
                     selected = 2
                 }
-                2 -> CoursesScreen(courses)
+                2 -> CoursesScreen(courses, study)
                 3 -> InboxScreen(inbox)
                 else -> AcademicScreen(academic, accountContent)
             }

@@ -160,3 +160,8 @@ phone. See [behavior and limits](docs/FREE-TIME-FINDER.md).
 
 The toolbar searches saved course, material, assignment and notice metadata locally.
 See [search scope and account isolation](docs/UNIFIED-SEARCH.md).
+
+## Offline course packs
+
+Courses can queue selected saved section files with Wi-Fi controls, per-file
+retry/cancellation and verified offline copies. See [download behavior and limits](docs/OFFLINE-DOWNLOADS.md).

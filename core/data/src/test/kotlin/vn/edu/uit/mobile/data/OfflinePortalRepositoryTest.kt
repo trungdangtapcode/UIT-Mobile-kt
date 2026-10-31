@@ -66,4 +66,23 @@ class OfflinePortalRepositoryTest {
         assertTrue(repository.accounts.first().isEmpty())
         assertTrue(store.read("one").courses.isEmpty())
     }
+
+    @Test fun aTransferFinishingAfterAccountRemovalCannotLeaveDownloadedBytes() = runTest {
+        val sessions = Sessions(listOf(session))
+        val store = Store(PortalSnapshot())
+        val transport = object : PortalTransport {
+            override val session = this@OfflinePortalRepositoryTest.session
+            override suspend fun request(path: String, method: io.ktor.http.HttpMethod, configure: io.ktor.client.request.HttpRequestBuilder.() -> Unit): ByteArray = error("No page request expected")
+            override suspend fun download(url: String, destination: java.io.File): DownloadedFile {
+                destination.parentFile!!.mkdirs()
+                destination.writeText("Synthetic resource")
+                sessions.remove("one")
+                return DownloadedFile(destination.path, "a".repeat(64))
+            }
+        }
+        val repository = OfflinePortalRepository(sessions, store, folder.root, transportFactory = { transport })
+        val result = repository.download(Course(1, "one", "IT004", "Databases"), CourseFile("Notes.pdf", "https://courses.uit.edu.vn/notes.pdf"))
+        assertEquals(AppError.SessionExpired, (result as AppResult.Failure).error)
+        assertTrue(folder.root.walkTopDown().none { it.isFile })
+    }
 }

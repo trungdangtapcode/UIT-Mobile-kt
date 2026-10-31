@@ -32,7 +32,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     // Compose rendering uses the debug-only host Activity supplied by ui-test-manifest.
-    if (name.contains("Release")) exclude("**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class")
+    if (name.contains("Release")) exclude("**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class")
     val recordUi = providers.gradleProperty("recordUi").getOrElse("false").toBoolean()
     systemProperty("roborazzi.test.record", recordUi)
     if (recordUi) outputs.dir(rootProject.layout.projectDirectory.dir("docs/design/previews"))

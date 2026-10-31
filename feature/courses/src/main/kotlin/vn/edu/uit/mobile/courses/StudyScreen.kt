@@ -138,25 +138,25 @@ import vn.edu.uit.mobile.feature.courses.R
                 }
                 if (state.busy) {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
-                    TextButton(onClick = onCancel, shape = TechnicalShapes.Control) { Text("Cancel request") }
+                    TextButton(onClick = onCancel, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_cancel_request)) }
                 }
             }
         }
         state.message?.let { message -> item { InlineNotice(message) } }
         state.answer?.let { answer ->
             item {
-                SectionHeading("Study result", "${answer.model} · ${dateText(answer.generatedAt)} ${clockText(answer.generatedAt)}")
+                SectionHeading(stringResource(R.string.st_result), stringResource(R.string.st_result_meta, answer.model, dateText(answer.generatedAt), clockText(answer.generatedAt)))
                 if (state.answeredQuestion.isNotBlank()) Text(state.answeredQuestion, style = MaterialTheme.typography.bodyMedium)
-                Text("Source quotes can be inspected below. A matching quote does not guarantee the explanation is correct.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.st_quote_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             itemsIndexed(answer.items) { _, item ->
                 Panel {
                     Text(
                         when (item.kind) {
-                            "requirement" -> "Stated requirement"
-                            "suggestion" -> "Suggested step"
-                            "unknown" -> "Not established by the selected text"
-                            else -> "Source-based answer"
+                            "requirement" -> stringResource(R.string.st_kind_requirement)
+                            "suggestion" -> stringResource(R.string.st_kind_suggestion)
+                            "unknown" -> stringResource(R.string.st_kind_unknown)
+                            else -> stringResource(R.string.st_kind_answer)
                         },
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
@@ -172,36 +172,37 @@ import vn.edu.uit.mobile.feature.courses.R
                             }
                         }
                     }
-                    if (state.assignment != null && item.kind in setOf("requirement", "suggestion")) TextButton(onClick = { onAddTask(item.text) }, enabled = !state.busy && state.tasks.none { it.text == item.text }, shape = TechnicalShapes.Control) { Text(if (state.tasks.any { it.text == item.text }) "Added to checklist" else "Add to checklist") }
+                    if (state.assignment != null && item.kind in setOf("requirement", "suggestion")) TextButton(onClick = { onAddTask(item.text) }, enabled = !state.busy && state.tasks.none { it.text == item.text }, shape = TechnicalShapes.Control) { Text(stringResource(if (state.tasks.any { it.text == item.text }) R.string.st_added else R.string.st_add_to_checklist)) }
                 }
             }
         }
         if (state.assignment != null) {
-            item { SectionHeading("Personal checklist", "Edit suggestions before saving. This does not submit your assignment.") }
-            if (state.tasks.isEmpty()) item { Text("Add a result above, or write your own step below.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            item { SectionHeading(stringResource(R.string.st_checklist), stringResource(R.string.st_checklist_hint)) }
+            if (state.tasks.isEmpty()) item { Text(stringResource(R.string.st_checklist_empty), color = MaterialTheme.colorScheme.onSurfaceVariant) }
             itemsIndexed(state.tasks) { index, task ->
                 Panel {
+                    val completeLabel = stringResource(R.string.st_complete_step, index + 1)
                     Row(verticalAlignment = Alignment.Top) {
-                        Checkbox(task.checked, { onTask(index, null, it) }, modifier = Modifier.semantics { contentDescription = "Complete step ${index + 1}" }, enabled = !state.busy)
-                        OutlinedTextField(task.text, { onTask(index, it, null) }, enabled = !state.busy, modifier = Modifier.weight(1f), label = { Text("Step ${index + 1}") }, shape = TechnicalShapes.Field)
+                        Checkbox(task.checked, { onTask(index, null, it) }, modifier = Modifier.semantics { contentDescription = completeLabel }, enabled = !state.busy)
+                        OutlinedTextField(task.text, { onTask(index, it, null) }, enabled = !state.busy, modifier = Modifier.weight(1f), label = { Text(stringResource(R.string.st_step, index + 1)) }, shape = TechnicalShapes.Field)
                     }
                     Row {
-                        IconButton({ onMoveTask(index, -1) }, enabled = !state.busy && index > 0) { Icon(Icons.Outlined.ArrowUpward, "Move step ${index + 1} up") }
-                        IconButton({ onMoveTask(index, 1) }, enabled = !state.busy && index < state.tasks.lastIndex) { Icon(Icons.Outlined.ArrowDownward, "Move step ${index + 1} down") }
+                        IconButton({ onMoveTask(index, -1) }, enabled = !state.busy && index > 0) { Icon(Icons.Outlined.ArrowUpward, stringResource(R.string.st_move_up, index + 1)) }
+                        IconButton({ onMoveTask(index, 1) }, enabled = !state.busy && index < state.tasks.lastIndex) { Icon(Icons.Outlined.ArrowDownward, stringResource(R.string.st_move_down, index + 1)) }
                         Spacer(Modifier.weight(1f))
-                        IconButton({ onRemoveTask(index) }, enabled = !state.busy) { Icon(Icons.Outlined.DeleteOutline, "Remove step ${index + 1}") }
+                        IconButton({ onRemoveTask(index) }, enabled = !state.busy) { Icon(Icons.Outlined.DeleteOutline, stringResource(R.string.st_remove_step, index + 1)) }
                     }
                 }
             }
             item {
                 var step by remember { mutableStateOf("") }
-                OutlinedTextField(step, { step = it.take(1500) }, label = { Text("Your own step") }, enabled = !state.busy, shape = TechnicalShapes.Field, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(step, { step = it.take(1500) }, label = { Text(stringResource(R.string.st_own_step)) }, enabled = !state.busy, shape = TechnicalShapes.Field, modifier = Modifier.fillMaxWidth())
                 TextButton({
                     onAddTask(step)
                     step = ""
-                }, enabled = !state.busy && step.isNotBlank() && state.tasks.size < 30, shape = TechnicalShapes.Control) { Text("Add step") }
-                Button(onSave, enabled = !state.busy && state.dirty && state.tasks.all { it.text.isNotBlank() }, shape = TechnicalShapes.Field, modifier = Modifier.fillMaxWidth()) { Text("Save checklist on this device") }
-                Text(if (state.dirty) "Unsaved changes" else "Saved steps stay on this device and are removed with the course account.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }, enabled = !state.busy && step.isNotBlank() && state.tasks.size < 30, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_add_step)) }
+                Button(onSave, enabled = !state.busy && state.dirty && state.tasks.all { it.text.isNotBlank() }, shape = TechnicalShapes.Field, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.st_save_checklist)) }
+                Text(stringResource(if (state.dirty) R.string.st_unsaved else R.string.st_saved_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -209,14 +210,14 @@ import vn.edu.uit.mobile.feature.courses.R
         AlertDialog(onDismissRequest = { preview = null }, shape = TechnicalShapes.Dialog, title = { Text(source.title) }, text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 quote?.let {
-                    Text("Cited passage", style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.st_cited), style = MaterialTheme.typography.labelLarge)
                     SelectionContainer { Text(it) }
                     HorizontalDivider()
                 }
-                Text("Selected source text", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.st_source_text), style = MaterialTheme.typography.labelLarge)
                 SelectionContainer { Text(source.text) }
             }
-        }, confirmButton = { TextButton({ preview = null }) { Text("Close source") } })
+        }, confirmButton = { TextButton({ preview = null }) { Text(stringResource(R.string.st_close_source)) } })
     }
     if (excerpt) {
         StudyExcerptDialog({ excerpt = false }) { title, text ->
@@ -225,25 +226,25 @@ import vn.edu.uit.mobile.feature.courses.R
         }
     }
     if (exit) {
-        AlertDialog(onDismissRequest = { exit = false }, shape = TechnicalShapes.Dialog, title = { Text("Leave unsaved changes?") }, text = { Text("Save your checklist before leaving, or discard these edits.") }, confirmButton = {
+        AlertDialog(onDismissRequest = { exit = false }, shape = TechnicalShapes.Dialog, title = { Text(stringResource(R.string.st_leave_title)) }, text = { Text(stringResource(R.string.st_leave_body)) }, confirmButton = {
             TextButton({
                 exit = false
                 onBack()
-            }) { Text("Discard edits") }
-        }, dismissButton = { TextButton({ exit = false }) { Text("Keep editing") } })
+            }) { Text(stringResource(R.string.st_discard)) }
+        }, dismissButton = { TextButton({ exit = false }) { Text(stringResource(R.string.st_keep_editing)) } })
     }
 }
 
 @Composable private fun StudyExcerptDialog(onDismiss: () -> Unit, onAdd: (String, String) -> Unit) {
     var title by remember { mutableStateOf("") }
     var text by remember { mutableStateOf("") }
-    AlertDialog(onDismissRequest = onDismiss, shape = TechnicalShapes.Dialog, title = { Text("Add a text excerpt") }, text = {
+    AlertDialog(onDismissRequest = onDismiss, shape = TechnicalShapes.Dialog, title = { Text(stringResource(R.string.st_excerpt_title)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Paste only the course text you want to use. It stays in this screen until you choose to send it.", style = MaterialTheme.typography.bodySmall)
-            OutlinedTextField(title, { title = it.take(200) }, label = { Text("Source title") }, shape = TechnicalShapes.Field)
-            OutlinedTextField(text, { text = it.take(12000) }, label = { Text("Source text") }, minLines = 4, maxLines = 8, supportingText = { Text("${text.length}/12000") }, shape = TechnicalShapes.Field)
+            Text(stringResource(R.string.st_excerpt_body), style = MaterialTheme.typography.bodySmall)
+            OutlinedTextField(title, { title = it.take(200) }, label = { Text(stringResource(R.string.st_source_title)) }, shape = TechnicalShapes.Field)
+            OutlinedTextField(text, { text = it.take(12000) }, label = { Text(stringResource(R.string.st_source_body)) }, minLines = 4, maxLines = 8, supportingText = { Text("${text.length}/12000") }, shape = TechnicalShapes.Field)
         }
-    }, confirmButton = { TextButton({ onAdd(title, text) }, enabled = title.isNotBlank() && text.isNotBlank()) { Text("Add source") } }, dismissButton = { TextButton(onDismiss) { Text("Cancel") } })
+    }, confirmButton = { TextButton({ onAdd(title, text) }, enabled = title.isNotBlank() && text.isNotBlank()) { Text(stringResource(R.string.st_add_source)) } }, dismissButton = { TextButton(onDismiss) { Text(stringResource(R.string.st_cancel)) } })
 }
 
 @Composable fun StudyConnectionDialog(connection: StudyConnection, onDismiss: () -> Unit, onSave: (StudyConnectionMode, String, String, String) -> Unit, onDisconnect: () -> Unit) {

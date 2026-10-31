@@ -35,8 +35,13 @@ import kotlinx.coroutines.*
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.model.*
 
-@Composable fun CoursesScreen(viewModel: CoursesViewModel, study: StudyViewModel? = null, onReturnToSearch: (() -> Unit)? = null) {
+@Composable fun CoursesScreen(viewModel: CoursesViewModel, study: StudyViewModel? = null, onReturnToSearch: (() -> Unit)? = null, downloads: OfflineDownloadsViewModel? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var showDownloads by rememberSaveable { mutableStateOf(false) }
+    if (showDownloads && downloads != null) {
+        OfflineDownloadsScreen(downloads) { showDownloads = false }
+        return
+    }
     val studyState = study?.uiState?.collectAsStateWithLifecycle()?.value
     LaunchedEffect(state.selected?.accountId, state.selected?.id) {
         if (studyState?.course != null && studyState.course != state.selected) study?.close()
@@ -107,6 +112,7 @@ import vn.edu.uit.mobile.model.*
                     picker.launch(arrayOf("*/*"))
                 },
                 onReply = { replyTo = it },
+                onDownloads = if (downloads == null) null else ({ showDownloads = true }),
                 onStudy = if (study == null) {
                     null
                 } else {
@@ -176,12 +182,12 @@ import vn.edu.uit.mobile.model.*
 }
 
 @Composable
-fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, onPickFile: (Assignment) -> Unit = {}, onReply: (Discussion) -> Unit = {}, onStudy: ((Assignment?) -> Unit)? = null) {
+fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, onPickFile: (Assignment) -> Unit = {}, onReply: (Discussion) -> Unit = {}, onStudy: ((Assignment?) -> Unit)? = null, onDownloads: (() -> Unit)? = null) {
     val course = state.selected
-    if (course == null) CourseLibrary(state, onIntent) else CourseWorkspace(state, course, onIntent, onPickFile, onReply, onStudy)
+    if (course == null) CourseLibrary(state, onIntent, onDownloads) else CourseWorkspace(state, course, onIntent, onPickFile, onReply, onStudy)
 }
 
-@Composable private fun CourseLibrary(state: CoursesState, onIntent: (CoursesIntent) -> Unit) {
+@Composable private fun CourseLibrary(state: CoursesState, onIntent: (CoursesIntent) -> Unit, onDownloads: (() -> Unit)?) {
     val courses = state.snapshot.courses.filter { (state.filter == "all" || it.classification == state.filter || state.filter == "hidden" && it.hidden) && "${it.shortname} ${it.fullname}".contains(state.query, true) }
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -190,6 +196,7 @@ fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, 
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item { PageHeading("Courses", "Your Moodle materials and submissions.") }
+            if (onDownloads != null) item { OutlinedButton(onDownloads, shape = TechnicalShapes.Control) { Text("Offline downloads") } }
             item { SearchField(state.query, { onIntent(CoursesIntent.Query(it)) }, "Find a course by name or code") }
             item {
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

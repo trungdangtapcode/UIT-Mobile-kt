@@ -31,7 +31,9 @@ import vn.edu.uit.mobile.authui.*
 import vn.edu.uit.mobile.common.*
 import vn.edu.uit.mobile.courses.*
 import vn.edu.uit.mobile.dashboard.*
+import vn.edu.uit.mobile.data.createOfflineDownloadStorage
 import vn.edu.uit.mobile.data.createStudyAiRepository
+import vn.edu.uit.mobile.data.observeDownloadWifi
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.schedule.*
@@ -59,6 +61,7 @@ class MainActivity : ComponentActivity() {
                 }
                 val dashboard = ownedViewModel { DashboardViewModel(repository) }
                 val schedule = ownedViewModel { ScheduleViewModel(repository, accounts) }
+                val downloads = ownedViewModel { OfflineDownloadsViewModel(repository, accounts, createOfflineDownloadStorage(this), observeDownloadWifi(applicationContext)) }
                 val search = ownedViewModel { WorkspaceSearchViewModel(repository, accounts) }
                 val courses = ownedViewModel { CoursesViewModel(repository) }
                 val study = ownedViewModel { StudyViewModel(studyRepository, repository) }
@@ -84,7 +87,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, courses, search, study, inbox, academic, studentProfile, widgetRoute, {
+                UitShell(repository, dashboard, schedule, courses, search, downloads, study, inbox, academic, studentProfile, widgetRoute, {
                     showWidgets = false
                     widgetRoute = null
                     setIntent(
@@ -136,6 +139,7 @@ private fun UitShell(
     schedule: ScheduleViewModel,
     courses: CoursesViewModel,
     search: WorkspaceSearchViewModel,
+    downloads: OfflineDownloadsViewModel,
     study: StudyViewModel,
     inbox: InboxViewModel,
     academic: AcademicViewModel,
@@ -240,7 +244,8 @@ private fun UitShell(
                             )
                     } else {
                         null
-                    }
+                    },
+                    downloads
                 )
                 3 -> InboxScreen(inbox)
                 else -> AcademicScreen(academic, accountContent)

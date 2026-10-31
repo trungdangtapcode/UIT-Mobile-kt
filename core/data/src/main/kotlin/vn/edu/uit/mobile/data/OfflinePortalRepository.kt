@@ -359,27 +359,16 @@ class OfflinePortalRepository(
     override suspend fun messages(conversationId: Long) = withActive { it.messages(conversationId) }
     override suspend fun sendMessage(conversationId: Long, text: String) = withActive { it.sendMessage(conversationId, text) }
     override suspend fun download(course: Course, file: CourseFile) = withCourse(course) { _, transport ->
-        val key = accountFolder(course.accountId)
-        val filename = file.name.substringAfterLast('/').substringAfterLast('\\').replace(Regex("[^\\p{L}\\p{N}._ -]"), "_").takeIf { it.isNotBlank() && it !in setOf(".", "..") } ?: "resource"
-        val folder = File(fileRoot, "$key/${course.id}")
-        val urlKey = MessageDigest.getInstance("SHA-256").digest(file.url.toByteArray()).take(6).joinToString("") { "%02x".format(it) }
-        val destination = File(folder, "$urlKey-$filename")
-        val checksum = File(destination.path + ".sha256")
-        if (destination.isFile && checksum.isFile) {
-            val digest = MessageDigest.getInstance("SHA-256")
-            destination.inputStream().use { input ->
-                val buffer = ByteArray(65536)
-                while (true) {
-                    val count = input.read(buffer)
-                    if (count < 0) break
-                    digest.update(buffer, 0, count)
-                }
-            }
-            val actual = digest.digest().joinToString("") { "%02x".format(it) }
-            if (actual == checksum.readText()) return@withCourse DownloadedFile(destination.path, actual)
-        }
+        val destination = materialDestination(fileRoot, course, file)
+        verifiedMaterial(destination)?.let { return@withCourse it }
         val downloaded = transport.download(file.url, destination)
-        checksum.writeText(downloaded.sha256)
+        if (vault.sessions.first().none { it.account.id == course.accountId }) {
+            destination.delete()
+            File(destination.path + ".sha256").delete()
+            throw SessionExpiredException()
+        }
+        currentCoroutineContext().ensureActive()
+        writeMaterialChecksum(destination, downloaded.sha256)
         downloaded
     }
     override suspend fun inspectH5p(course: Course, file: CourseFile) = withCourse(course) { _, transport -> H5pPackageReader().read(transport.request(file.url)) }
@@ -399,4 +388,4 @@ class UitGraph(context: Context) {
     }
 }
 
-private fun accountFolder(accountId: String): String = MessageDigest.getInstance("SHA-256").digest(accountId.toByteArray()).take(8).joinToString("") { "%02x".format(it) }
+internal fun accountFolder(accountId: String): String = MessageDigest.getInstance("SHA-256").digest(accountId.toByteArray()).take(8).joinToString("") { "%02x".format(it) }

@@ -134,7 +134,7 @@ import vn.edu.uit.mobile.feature.courses.R
                     listOf("English", "Vietnamese").forEach { language -> FilterChip(selected = state.language == language, onClick = { onLanguage(language) }, enabled = !state.busy, label = { Text(language) }, shape = TechnicalShapes.Control) }
                 }
                 Button(onClick = onGenerate, enabled = state.connection.configured && !state.busy && state.selected.isNotEmpty() && (state.assignment != null || state.question.isNotBlank()), modifier = Modifier.fillMaxWidth(), shape = TechnicalShapes.Field) {
-                    Text(if (state.answer == null) "Send selected text" else "Generate again")
+                    Text(stringResource(if (state.answer == null) R.string.st_send else R.string.st_generate_again))
                 }
                 if (state.busy) {
                     LinearProgressIndicator(Modifier.fillMaxWidth())

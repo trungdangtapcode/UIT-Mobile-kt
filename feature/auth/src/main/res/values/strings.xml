@@ -3,4 +3,27 @@
     <string name="accounts_language_section">LANGUAGE</string>
     <string name="language_vietnamese" translatable="false">Tiếng Việt</string>
     <string name="language_english" translatable="false">English</string>
+    <string name="auth_connect_title">Connect UIT SSO</string>
+    <string name="auth_connect_body">Bring Moodle courses and UIT Portal academic records into one workspace.</string>
+    <string name="auth_account_academic">Academic records</string>
+    <string name="auth_account_graduate">Graduate Moodle</string>
+    <string name="auth_account_legacy">Legacy Moodle</string>
+    <string name="auth_account_moodle">UIT Moodle</string>
+    <string name="auth_linked">Linked</string>
+    <string name="auth_view_profile">View student profile</string>
+    <string name="auth_sign_in_again">Sign in again</string>
+    <string name="auth_remove_description">Remove %1$s</string>
+    <string name="auth_sign_in">Sign in with UIT SSO</string>
+    <string name="auth_link_legacy">Link legacy Moodle</string>
+    <string name="auth_link_graduate">Link graduate Moodle</string>
+    <string name="auth_appearance">APPEARANCE</string>
+    <string name="auth_dark_title">Dark appearance</string>
+    <string name="auth_dark_detail">Ocean dark theme</string>
+    <string name="auth_dynamic_title">Device colors</string>
+    <string name="auth_dynamic_detail">Match your wallpaper\'s color palette</string>
+    <string name="auth_widgets">Home screen widgets</string>
+    <string name="auth_remove_title">Remove this account?</string>
+    <string name="auth_remove_body">Remove %1$s and its saved course data from this device?</string>
+    <string name="auth_remove_confirm">Remove account</string>
+    <string name="auth_remove_keep">Keep account</string>
 </resources>

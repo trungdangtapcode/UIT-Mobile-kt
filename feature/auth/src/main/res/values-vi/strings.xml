@@ -1,4 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="accounts_language_section">NGÔN NGỮ</string>
+    <string name="auth_connect_title">Kết nối UIT SSO</string>
+    <string name="auth_connect_body">Gom môn học Moodle và kết quả học tập UIT Portal vào một nơi.</string>
+    <string name="auth_account_academic">Kết quả học tập</string>
+    <string name="auth_account_graduate">Moodle cao học</string>
+    <string name="auth_account_legacy">Moodle cũ</string>
+    <string name="auth_account_moodle">Moodle UIT</string>
+    <string name="auth_linked">Đã liên kết</string>
+    <string name="auth_view_profile">Xem hồ sơ sinh viên</string>
+    <string name="auth_sign_in_again">Đăng nhập lại</string>
+    <string name="auth_remove_description">Xoá %1$s</string>
+    <string name="auth_sign_in">Đăng nhập UIT SSO</string>
+    <string name="auth_link_legacy">Liên kết Moodle cũ</string>
+    <string name="auth_link_graduate">Liên kết Moodle cao học</string>
+    <string name="auth_appearance">GIAO DIỆN</string>
+    <string name="auth_dark_title">Giao diện tối</string>
+    <string name="auth_dark_detail">Chủ đề tối Ocean</string>
+    <string name="auth_dynamic_title">Màu thiết bị</string>
+    <string name="auth_dynamic_detail">Lấy bảng màu theo hình nền</string>
+    <string name="auth_widgets">Widget màn hình chính</string>
+    <string name="auth_remove_title">Xoá tài khoản này?</string>
+    <string name="auth_remove_body">Xoá %1$s và dữ liệu môn học đã lưu khỏi thiết bị?</string>
+    <string name="auth_remove_confirm">Xoá tài khoản</string>
+    <string name="auth_remove_keep">Giữ tài khoản</string>
 </resources>

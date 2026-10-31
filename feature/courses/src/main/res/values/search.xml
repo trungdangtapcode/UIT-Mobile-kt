@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="srch_title">Workspace</string>
+    <string name="srch_page_title">Search workspace</string>
+    <string name="srch_page_subtitle">Courses, materials, assignments and notices</string>
+    <string name="srch_field_hint">Search saved names and course codes</string>
+    <string name="srch_unowned">Notices without saved account provenance are excluded. Refresh to load attributable notices.</string>
+    <string name="srch_results">Search results</string>
+    <string name="srch_hint">Saved metadata only. Load a course to include its materials and assignments. Document contents are not indexed.</string>
+    <string name="srch_all">All</string>
+    <string name="srch_kind_courses">Courses</string>
+    <string name="srch_kind_materials">Materials</string>
+    <string name="srch_kind_assignments">Assignments</string>
+    <string name="srch_kind_notices">Notices</string>
+    <string name="srch_empty_title">No saved searchable data</string>
+    <string name="srch_empty_body">Connect an account and load courses or notices. A profile refresh alone does not populate search.</string>
+    <string name="srch_prompt_title">Search your saved workspace</string>
+    <string name="srch_prompt_body">Try a course code, document name, assignment or notice title. Queries stay on this phone.</string>
+    <string name="srch_none_title">No matching saved results</string>
+    <string name="srch_none_body">Try fewer words, another category or load more course data.</string>
+    <string name="srch_open_result">Open saved result</string>
+    <string name="srch_group_more">Showing the first 20 matches; refine your query.</string>
+    <string name="srch_open_course">Open course workspace</string>
+    <string name="srch_due">Due · %1$s %2$s · GMT+07</string>
+    <string name="srch_periods">%1$s · periods %2$d–%3$d</string>
+    <string name="srch_room">Room · %1$s</string>
+    <string name="srch_saved_note">Saved content. Official submissions, dates and university records are unchanged.</string>
+    <string name="srch_size_reported">%1$d reported bytes</string>
+    <string name="srch_size_missing">Size not reported</string>
+    <string name="srch_opening">Opening…</string>
+    <string name="srch_open_file">Open file on this device</string>
+    <string name="srch_file_error">File saved. Install an app that can open this format.</string>
+</resources>

@@ -1,6 +1,7 @@
 package vn.edu.uit.mobile
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -44,6 +45,11 @@ class MainActivity : ComponentActivity() {
     private val repository: PortalRepository by inject()
     private val accounts: AccountRepository by inject()
     private val studyRepository: StudyAiRepository by lazy { createStudyAiRepository(this, accounts) }
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(newBase.withAppLanguage(LanguagePreference.read(newBase)))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         widgetRoute = WidgetRoute.read(if (savedInstanceState == null) intent else BundleCompat.getParcelable(savedInstanceState, "pending_widget_route", Intent::class.java))
@@ -53,6 +59,7 @@ class MainActivity : ComponentActivity() {
             var dark by rememberSaveable { mutableStateOf(preferences.getBoolean("dark", true)) }
             var dynamic by rememberSaveable { mutableStateOf(preferences.getBoolean("dynamic", true)) }
             var showWidgets by rememberSaveable { mutableStateOf(false) }
+            val language = LanguagePreference.read(this)
             UitTheme(dark, dynamic) {
                 SideEffect {
                     val bars = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
@@ -97,15 +104,23 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }) { onProfile ->
-                    AccountsScreen(auth, login, dark, dynamic, {
-                        dark = it
-                        preferences.edit().putBoolean("dark", it).apply()
-                        WidgetRuntime.requestRender(this)
-                    }, {
-                        dynamic = it
-                        preferences.edit().putBoolean("dynamic", it).apply()
-                        WidgetRuntime.requestRender(this)
-                    }, onProfile = onProfile, onWidgets = { showWidgets = true })
+                    AccountsScreen(
+                        auth, login, dark, dynamic, {
+                            dark = it
+                            preferences.edit().putBoolean("dark", it).apply()
+                            WidgetRuntime.requestRender(this)
+                        }, {
+                            dynamic = it
+                            preferences.edit().putBoolean("dynamic", it).apply()
+                            WidgetRuntime.requestRender(this)
+                        }, onProfile = onProfile, onWidgets = { showWidgets = true },
+                        language = language,
+                        onLanguage = {
+                            LanguagePreference.write(this, it)
+                            WidgetRuntime.requestRender(this)
+                            recreate()
+                        }
+                    )
                 }
                 if (showWidgets) HomeWidgetsDialog { showWidgets = false }
             }

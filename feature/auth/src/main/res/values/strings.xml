@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accounts_language_section">LANGUAGE</string>
+    <string name="language_vietnamese" translatable="false">Tiếng Việt</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="auth_connect_title">Connect UIT SSO</string>
+    <string name="auth_connect_body">Bring Moodle courses and UIT Portal academic records into one workspace.</string>
+    <string name="auth_account_academic">Academic records</string>
+    <string name="auth_account_graduate">Graduate Moodle</string>
+    <string name="auth_account_legacy">Legacy Moodle</string>
+    <string name="auth_account_moodle">UIT Moodle</string>
+    <string name="auth_linked">Linked</string>
+    <string name="auth_view_profile">View student profile</string>
+    <string name="auth_sign_in_again">Sign in again</string>
+    <string name="auth_remove_description">Remove %1$s</string>
+    <string name="auth_sign_in">Sign in with UIT SSO</string>
+    <string name="auth_link_legacy">Link legacy Moodle</string>
+    <string name="auth_link_graduate">Link graduate Moodle</string>
+    <string name="auth_appearance">APPEARANCE</string>
+    <string name="auth_dark_title">Dark appearance</string>
+    <string name="auth_dark_detail">Ocean dark theme</string>
+    <string name="auth_dynamic_title">Device colors</string>
+    <string name="auth_dynamic_detail">Match your wallpaper\'s color palette</string>
+    <string name="auth_widgets">Home screen widgets</string>
+    <string name="auth_remove_title">Remove this account?</string>
+    <string name="auth_remove_body">Remove %1$s and its saved course data from this device?</string>
+    <string name="auth_remove_confirm">Remove account</string>
+    <string name="auth_remove_keep">Keep account</string>
+    <string name="profile_title">Student profile</string>
+    <string name="profile_back">Back from student profile</string>
+    <string name="profile_refresh">Refresh student profile</string>
+    <string name="profile_settings">Manage accounts and appearance</string>
+    <string name="profile_connect_heading">Connect your student account</string>
+    <string name="profile_connect_body">Sign in with UIT SSO to view your student profile.</string>
+    <string name="profile_loading">Loading your UIT Portal profile…</string>
+    <string name="profile_loaded">Loaded %1$s at %2$s · GMT+07</string>
+    <string name="profile_err_signin">Sign in again to load this student profile.</string>
+    <string name="profile_err_offline">Cannot reach UIT Portal. Check your connection and try again.</string>
+    <string name="profile_err_generic">The student profile could not be loaded. Try again.</string>
+    <string name="profile_cached">Showing the profile already loaded in this session.</string>
+    <string name="profile_try_again">Try again</string>
+    <string name="profile_account_settings">Account settings</string>
+    <string name="profile_view_scan">View scan</string>
+    <string name="profile_no_scan">No scan uploaded</string>
+</resources>

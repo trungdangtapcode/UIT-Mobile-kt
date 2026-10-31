@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dash_connect_title">Connect your UIT account</string>
+    <string name="dash_connect_body">Sign in to see your timetable, Moodle materials and DAA academic record.</string>
+    <string name="dash_connect_action">Connect UIT account</string>
+    <string name="dash_connect_note">Your credentials are entered on the UIT sign-in screen.</string>
+    <string name="dash_room">Room %1$s</string>
+    <string name="dash_done">Done</string>
+    <string name="dash_show_day">Show timetable for %1$s</string>
+    <string name="dash_today_marker">Today</string>
+    <string name="dash_timetable">Timetable</string>
+    <string name="dash_full_schedule">Full schedule</string>
+    <string name="dash_no_classes">No classes or exams on this day.</string>
+    <string name="dash_in_progress">In progress</string>
+    <string name="dash_due_soon">Due soon</string>
+    <string name="dash_view_all">View all</string>
+    <string name="dash_no_submissions">No pending submissions in the next 7 days.</string>
+    <string name="dash_course_materials">Course materials</string>
+    <string name="dash_no_courses">Your Moodle courses will appear after syncing.</string>
+    <string name="dash_schedule_changes">Schedule changes</string>
+    <string name="dash_announcements">Announcements</string>
+    <string name="dash_no_announcements">No saved announcements.</string>
+    <string name="dash_announcement">Announcement</string>
+    <string name="dash_academic_affairs">Academic affairs</string>
+    <string name="dash_last_saved">Last saved %1$s at %2$s · GMT+07</string>
+    <string name="dash_portals">Moodle · DAA · UIT</string>
+    <string name="dash_manage_accounts">Manage linked accounts</string>
+    <string name="dash_library">Library</string>
+    <string name="dash_refresh">Refresh workspace</string>
+    <string name="dash_moodle" translatable="false">Moodle</string>
+</resources>

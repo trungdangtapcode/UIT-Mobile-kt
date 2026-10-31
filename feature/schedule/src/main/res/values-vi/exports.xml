@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="exp_back">Lịch học</string>
+    <string name="exp_title">Xuất lịch</string>
+    <string name="exp_subtitle">Chọn các sự kiện đã lưu để đưa vào tệp .ics.</string>
+    <string name="exp_range">Khoảng ngày</string>
+    <string name="exp_range_hint">Từ 1 đến 90 ngày · giờ Việt Nam (GMT+07)</string>
+    <string name="exp_start">Ngày bắt đầu · YYYY-MM-DD</string>
+    <string name="exp_end">Ngày kết thúc · YYYY-MM-DD</string>
+    <string name="exp_7d">7 ngày</string>
+    <string name="exp_30d">30 ngày</string>
+    <string name="exp_include">Bao gồm</string>
+    <string name="exp_include_hint">Lớp học gồm cả buổi học bù và buổi nghỉ.</string>
+    <string name="exp_type_classes">Lớp học</string>
+    <string name="exp_type_exams">Thi</string>
+    <string name="exp_type_deadlines">Hạn nộp</string>
+    <string name="exp_type_other">Sự kiện khác</string>
+    <string name="exp_copy_title">Bản sao lịch đã lưu</string>
+    <string name="exp_copy_body">Tệp chứa tên sự kiện, ngày, giờ, mã lớp và phòng. Đây là bản sao không mã hoá, lưu vào vị trí bạn chọn.</string>
+    <string name="exp_copy_note">Đây là tệp xuất một lần, không phải đăng ký trực tiếp. Thay đổi, huỷ lớp hay xoá tài khoản sau này sẽ không cập nhật bản đã nhập.</string>
+    <string name="exp_snapshot">Đã lưu dữ liệu · %1$s %2$s · GMT+07</string>
+    <string name="exp_cached_note">Chỉ gồm sự kiện đã lưu. Hãy đồng bộ nếu thiếu ngày hoặc môn. Ứng dụng lịch có thể hiển thị giờ theo múi giờ riêng.</string>
+    <string name="exp_error">Không xuất được lịch đã lưu.</string>
+    <string name="exp_preview">Xem trước · %1$d sự kiện</string>
+    <string name="exp_preview_hint">Xem danh sách này trước khi chọn nơi lưu.</string>
+    <string name="exp_none_title">Không có sự kiện nào</string>
+    <string name="exp_none_body">Thử khoảng ngày hoặc loại sự kiện khác. Sẽ không có gì được xuất.</string>
+    <string name="exp_end_missing">\u0020· chưa có giờ kết thúc</string>
+    <string name="exp_room">Phòng · %1$s</string>
+    <string name="exp_saving">Đang lưu lịch…</string>
+    <string name="exp_save">Lưu tệp .ics</string>
+</resources>

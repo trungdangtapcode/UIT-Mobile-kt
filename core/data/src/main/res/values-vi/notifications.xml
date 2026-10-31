@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_channel">Hạn nộp và cập nhật học vụ UIT</string>
+    <string name="notif_due">Còn %1$d giờ</string>
+    <string name="notif_grade">Đã có điểm: %1$s</string>
+</resources>

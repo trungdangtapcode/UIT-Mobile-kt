@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
                     bars.isAppearanceLightNavigationBars = !dark
                 }
                 val dashboard = ownedViewModel { DashboardViewModel(repository) }
-                val schedule = ownedViewModel { ScheduleViewModel(repository) }
+                val schedule = ownedViewModel { ScheduleViewModel(repository, accounts) }
                 val courses = ownedViewModel { CoursesViewModel(repository) }
                 val study = ownedViewModel { StudyViewModel(studyRepository, repository) }
                 val inbox = ownedViewModel { InboxViewModel(repository) }

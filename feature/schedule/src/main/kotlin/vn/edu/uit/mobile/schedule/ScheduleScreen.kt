@@ -42,9 +42,15 @@ sealed interface ScheduleIntent {
     data class Date(val date: LocalDate) : ScheduleIntent
     data class FocusDate(val date: LocalDate) : ScheduleIntent
 }
-class ScheduleViewModel(private val repository: PortalRepository) : BaseMviViewModel<ScheduleState, ScheduleIntent, Unit>(ScheduleState()) {
+class ScheduleViewModel(private val repository: PortalRepository, accounts: AccountRepository) : BaseMviViewModel<ScheduleState, ScheduleIntent, Unit>(ScheduleState()) {
+    val freeTimePlanner = FreeTimePlanner()
     init {
-        viewModelScope.launch { repository.snapshot.collect { state.value = state.value.copy(snapshot = it) } }
+        viewModelScope.launch {
+            repository.snapshot.collect {
+                state.value = state.value.copy(snapshot = it)
+            }
+        }
+        viewModelScope.launch { accounts.accounts.collect { freeTimePlanner.onAccounts(it.map { account -> account.id }.toSet()) } }
     }
     private var pendingCalendarExport: CalendarExportPlan? = null
     fun prepareCalendarExport(plan: CalendarExportPlan): String? {
@@ -103,6 +109,8 @@ class ScheduleViewModel(private val repository: PortalRepository) : BaseMviViewM
 @Composable fun ScheduleScreen(viewModel: ScheduleViewModel, onCourse: (Course) -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var exporting by rememberSaveable { mutableStateOf(false) }
+    var finding by rememberSaveable { mutableStateOf(false) }
+    val freeTime by viewModel.freeTimePlanner.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current.applicationContext
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/calendar")) { uri -> viewModel.completeCalendarExport(context, uri) }
     if (exporting) {
@@ -115,14 +123,24 @@ class ScheduleViewModel(private val repository: PortalRepository) : BaseMviViewM
                 }
             }
         }
+    } else if (finding) {
+        val planner = viewModel.freeTimePlanner
+        val planningSession = freeTime.session
+        FreeTimeContent(state.snapshot, freeTime, {
+            planner.close()
+            finding = false
+        }, planner::date, planner::start, planner::end, planner::minimum, planner::buffer, { title, start, end -> planner.addForSession(planningSession, title, start, end) }, planner::remove)
     } else {
-        ScheduleContent(state, viewModel::onIntent, onCourse, { exporting = true })
+        ScheduleContent(state, viewModel::onIntent, onCourse, { exporting = true }, {
+            viewModel.freeTimePlanner.open(state.anchor)
+            finding = true
+        })
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {}, onCourse: (Course) -> Unit = {}, onExport: (() -> Unit)? = null) {
+fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {}, onCourse: (Course) -> Unit = {}, onExport: (() -> Unit)? = null, onFreeTime: (() -> Unit)? = null) {
     var selected by remember { mutableStateOf<ScheduleEntry?>(null) }
     var semesters by remember { mutableStateOf(false) }
     var filter by rememberSaveable { mutableStateOf("All events") }
@@ -161,6 +179,7 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
                 Column(Modifier.weight(1f)) { PageHeading("Class schedule", "Classes, rooms and schedule changes.") }
                 if (onExport != null) IconButton(onExport) { Icon(Icons.Outlined.SaveAlt, "Export calendar file") }
             }
+            if (onFreeTime != null) AssistChip(onClick = onFreeTime, shape = TechnicalShapes.Control, label = { Text("Find free time") }, leadingIcon = { Icon(Icons.Outlined.EventAvailable, null, Modifier.size(18.dp)) })
         }
         item {
             Panel {

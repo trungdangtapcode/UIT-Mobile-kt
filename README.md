@@ -149,3 +149,9 @@ and the [initial history reconstruction](docs/HISTORY.md).
 ## Calendar export
 
 Schedule exports selected saved events as an `.ics` file through Android's document picker. See [setup and limits](docs/CALENDAR-EXPORT.md).
+
+## Free-time finder
+
+Schedule finds candidate gaps between saved commitments and temporary personal
+blocks, with configurable duration and travel buffers. It runs entirely on the
+phone. See [behavior and limits](docs/FREE-TIME-FINDER.md).

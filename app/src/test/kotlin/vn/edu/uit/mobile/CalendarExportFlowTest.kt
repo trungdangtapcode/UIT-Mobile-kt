@@ -21,6 +21,11 @@ import vn.edu.uit.mobile.schedule.*
 @Config(sdk = [35], application = Application::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class CalendarExportFlowTest {
+    private class Accounts : AccountRepository {
+        override val accounts = kotlinx.coroutines.flow.MutableStateFlow(emptyList<Account>())
+        override suspend fun remove(accountId: String) = Unit
+        override suspend fun saveSessions(sessions: List<PortalSession>) = Unit
+    }
     private val dispatcher = StandardTestDispatcher()
     private val day = LocalDate(2026, 10, 26)
     private val snapshot = PortalSnapshot(events = listOf(CalendarEvent("synthetic:1", 1, "synthetic", null, "Database project", dateAt(day, LocalTime(23, 0)), deadline = true)))
@@ -37,7 +42,7 @@ class CalendarExportFlowTest {
 
     @Test fun selectedDocumentReceivesTheReviewedCalendarAndNoProviderWrite() = runTest(dispatcher) {
         val portal = FakePortalRepository().apply { this.snapshot.value = this@CalendarExportFlowTest.snapshot }
-        val vm = ScheduleViewModel(portal)
+        val vm = ScheduleViewModel(portal, Accounts())
         runCurrent()
         val plan = CalendarFileExport().plan(snapshot, options)
         val file = File(context.cacheDir, "synthetic-export.ics")
@@ -55,7 +60,7 @@ class CalendarExportFlowTest {
 
     @Test fun canceledPickerWritesNothingAndChangedSnapshotCannotExportTheOldPreview() = runTest(dispatcher) {
         val portal = FakePortalRepository().apply { this.snapshot.value = this@CalendarExportFlowTest.snapshot }
-        val vm = ScheduleViewModel(portal)
+        val vm = ScheduleViewModel(portal, Accounts())
         runCurrent()
         val plan = CalendarFileExport().plan(snapshot, options)
         vm.prepareCalendarExport(plan)
@@ -74,7 +79,7 @@ class CalendarExportFlowTest {
 
     @Test fun refreshedOversizedDataCannotCrashTheSaveAction() = runTest(dispatcher) {
         val portal = FakePortalRepository().apply { this.snapshot.value = this@CalendarExportFlowTest.snapshot }
-        val vm = ScheduleViewModel(portal)
+        val vm = ScheduleViewModel(portal, Accounts())
         runCurrent()
         val plan = CalendarFileExport().plan(snapshot, options)
         portal.snapshot.value = snapshot.copy(events = (1..2001).map { snapshot.events.single().copy(key = "synthetic:$it") })
@@ -86,7 +91,7 @@ class CalendarExportFlowTest {
 
     @Test fun recreationWithoutAPendingExportAndUnavailableDestinationsShowAnExplicitError() = runTest(dispatcher) {
         val portal = FakePortalRepository().apply { this.snapshot.value = this@CalendarExportFlowTest.snapshot }
-        val vm = ScheduleViewModel(portal)
+        val vm = ScheduleViewModel(portal, Accounts())
         runCurrent()
         val file = File(context.cacheDir, "synthetic-interrupted-export.ics")
         vm.completeCalendarExport(context, Uri.fromFile(file)).join()

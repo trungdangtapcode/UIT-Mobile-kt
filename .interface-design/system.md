@@ -143,6 +143,16 @@ offer sign-in; missing submission status stays explicit. Class taps focus their
 schedule date; deadline taps focus the appropriate queue. The pin chooser uses
 native controls and includes manual launcher instructions.
 
+Schedule planning: Find free time stays inside the schedule's single phone column
+with the five bottom destinations. Pair same-day start/end fields, then minimum
+and buffer fields in the shared panel; keep the date full width. Candidate panels
+lead with exact time bounds and minutes, with an Inspect interval action exposing
+neighboring buffered commitments. Keep the commitments and deadline lists below
+results. A compact cut-corner personal-block dialog scrolls its form and retains
+Add/Cancel actions; validation stays in the form. Unknown end times and missing
+saved data remain explicit. Account-session changes dismiss the form and clear
+personal planning drafts. These are local planning aids, not room bookings.
+
 ## References and evidence
 
 - [Research and baseline audit](../docs/design/AI-SLOP-AUDIT.md)

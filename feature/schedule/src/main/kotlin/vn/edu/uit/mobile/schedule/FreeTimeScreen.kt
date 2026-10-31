@@ -30,7 +30,7 @@ fun FreeTimeContent(snapshot: PortalSnapshot, state: FreeTimeState, onBack: () -
     var selected by remember(state.session) { mutableStateOf<FreeTimeSlot?>(null) }
     val calculation = remember(snapshot, state) { runCatching { FindFreeTimeUseCase()(snapshot, state.options(), state.personal) } }
     val result = calculation.getOrNull()
-    val hasSaved = snapshot.updatedAt > 0 || snapshot.timetable.isNotEmpty() || snapshot.events.isNotEmpty() || snapshot.exams.isNotEmpty() || snapshot.notices.isNotEmpty()
+    val hasUniversityCommitments = snapshot.timetable.isNotEmpty() || snapshot.events.isNotEmpty() || snapshot.exams.isNotEmpty() || snapshot.notices.any { it.type == ScheduleChangeType.MAKE_UP }
     LaunchedEffect(snapshot, state) { selected = null }
     BackHandler(onBack = onBack)
     LazyColumn(Modifier.fillMaxSize().testTag("free-time-content"), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -71,13 +71,13 @@ fun FreeTimeContent(snapshot: PortalSnapshot, state: FreeTimeState, onBack: () -
             }
         }
         item {
-            if (!hasSaved) InlineNotice(if (state.personal.isEmpty()) "No saved schedule is available. Sync your accounts or add personal blocks to plan from." else "Only your personal blocks are available. University commitments are not included.", true)
+            if (!hasUniversityCommitments) InlineNotice(if (state.personal.isEmpty()) "No saved university commitments are available. Schedule coverage is unverified; sync or add personal blocks to plan from." else "Only your personal blocks are available. University commitments are not included.", true)
             if (snapshot.updatedAt > 0) Text("Snapshot saved · ${dateText(snapshot.updatedAt)} ${clockText(snapshot.updatedAt)} · GMT+07", style = MaterialTheme.typography.bodySmall)
             Text("Candidate gaps reflect cached commitments, not guaranteed availability or room occupancy. Deadlines do not reserve study time automatically.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             state.message?.let { InlineNotice(it) }
             calculation.exceptionOrNull()?.let { InlineNotice(it.message ?: "The saved schedule could not be checked. Review the date and times.", true) }
         }
-        if (result != null && (hasSaved || state.personal.isNotEmpty())) {
+        if (result != null && (hasUniversityCommitments || state.personal.isNotEmpty())) {
             if (result.busy.any { it.unknownEnd }) item { InlineNotice("Some commitments have no end time. They block the rest of their UIT day and your buffer; check the commitments below.", true) }
             item { SectionHeading("Candidate gaps · ${result.slots.size}", "Tap an interval to inspect its boundaries. No event is created.") }
             if (result.slots.isEmpty()) item { EmptyState("No matching gaps", "Try a shorter minimum, a wider search window or a different date.") }

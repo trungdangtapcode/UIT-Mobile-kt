@@ -58,9 +58,12 @@ snapshot refresh with unchanged connected accounts retains personal blocks.
 ## Missing data and limits
 
 The app reads saved data and does not trigger a background sync from this screen.
-An unavailable saved schedule is shown differently from an empty synchronized day.
-If only personal blocks exist, a notice states that university commitments are not
-included. A synced empty day can return the whole search window as a candidate.
+A global snapshot timestamp can come from profile, transcript or course refreshes;
+it does not prove university schedule coverage. If no university commitments are
+cached, the screen labels coverage as unverified and offers no university-based
+gaps. If only personal blocks exist, a notice states that university commitments
+are not included. An empty day within a saved timetable can return the whole
+search window as a candidate.
 Invalid inputs or unsupported cached timestamps produce an error instead of gaps.
 Refresh the schedule when classes or changes may be missing.
 
@@ -83,7 +86,7 @@ adjacent-date events, unknown end times, inward rounding and buffer/minimum boun
 Planner tests cover explicit drafts, block limits, date/time validation and actual
 account removal without courses. Actual Compose renders and interactions cover
 360/390/412dp phones, larger text, interval inspection, invalid settings, absent
-saved data, draft validation/removal and resetting an open form on account changes.
+saved data, profile-only refreshes, personal-only planning, draft validation/removal and resetting an open form on account changes.
 
 This implements the client-side scope of
 [Free-time finder #11](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/11).

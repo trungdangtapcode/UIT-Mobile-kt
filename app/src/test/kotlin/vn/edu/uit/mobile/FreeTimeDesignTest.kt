@@ -106,8 +106,39 @@ class FreeTimeDesignTest {
 
     @Test fun missingSavedDataIsDifferentFromAnEmptySyncedDay() {
         compose.setContent { Frame { FreeTimeContent(PortalSnapshot(), FreeTimeState(date = "$day")) } }
-        compose.onNodeWithText("No saved schedule is available. Sync your accounts or add personal blocks to plan from.").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("No saved university commitments are available. Schedule coverage is unverified; sync or add personal blocks to plan from.").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Candidate gaps ·", substring = true).assertDoesNotExist()
+    }
+
+    @Test fun aProfileOnlyRefreshDoesNotEstablishScheduleCoverage() {
+        val data = PortalSnapshot(profile = StudentProfile(studentId = "synthetic"), updatedAt = snapshot.updatedAt)
+        compose.setContent { Frame { FreeTimeContent(data, FreeTimeState(date = "$day")) } }
+        compose.onNodeWithText("No saved university commitments are available. Schedule coverage is unverified; sync or add personal blocks to plan from.").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Candidate gaps ·", substring = true).assertDoesNotExist()
+        capture("free-time-unverified-390-phone")
+    }
+
+    @Test fun cancellationNoticesAloneDoNotProveAnEmptyUniversityTimetable() {
+        val canceled = ClassScheduleChangeNotice(1, ScheduleChangeType.CANCELED, slot.classCode, "Canceled", "", "$day", 1, 3)
+        val data = PortalSnapshot(notices = listOf(canceled), updatedAt = snapshot.updatedAt)
+        compose.setContent { Frame { FreeTimeContent(data, FreeTimeState(date = "$day")) } }
+        compose.onNodeWithTag("free-time-content").performScrollToNode(hasText("No saved university commitments are available. Schedule coverage is unverified; sync or add personal blocks to plan from."))
+        compose.onNodeWithText("Candidate gaps ·", substring = true).assertDoesNotExist()
+    }
+
+    @Test fun personalOnlyPlanningKeepsMissingUniversityCoverageExplicit() {
+        val block = vn.edu.uit.mobile.domain.PersonalTimeBlock("one", "Lunch and travel", dateAt(day, LocalTime(12, 0)), dateAt(day, LocalTime(13, 0)))
+        compose.setContent { Frame { FreeTimeContent(PortalSnapshot(updatedAt = snapshot.updatedAt), FreeTimeState(date = "$day", personal = listOf(block))) } }
+        compose.onNodeWithTag("free-time-content").performScrollToNode(hasText("Only your personal blocks are available. University commitments are not included."))
+        compose.onNodeWithText("Only your personal blocks are available. University commitments are not included.").assertIsDisplayed()
+        compose.onNodeWithText("Candidate gaps · 2").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test fun anEmptyDayWithinASavedTimetableCanStillOfferTheWholeWindow() {
+        compose.setContent { Frame { FreeTimeContent(snapshot, FreeTimeState(date = "2026-10-27")) } }
+        compose.onNodeWithTag("free-time-content").performScrollToNode(hasText("Candidate gaps · 1"))
+        compose.onNodeWithTag("free-time-content").performScrollToNode(hasText("08:00–18:00"))
+        compose.onNodeWithText("08:00–18:00").assertIsDisplayed()
     }
 
     @Test fun changingAccountsDismissesTheOpenPersonalFormAndClearsItsText() {

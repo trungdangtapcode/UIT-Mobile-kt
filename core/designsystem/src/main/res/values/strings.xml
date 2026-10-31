@@ -37,7 +37,7 @@
     <string name="due_hours">%1$dh left</string>
     <string name="due_days_hours">%1$dd %2$dh left</string>
 
-    <string name="date_medium_pattern">MMM d, yyyy</string>
+    <string name="date_medium_pattern">MMMM d, yyyy</string>
     <string name="date_month_year_pattern">MMMM yyyy</string>
     <string name="date_month_short_pattern">MMM</string>
     <string name="course_fallback">Course %1$d</string>

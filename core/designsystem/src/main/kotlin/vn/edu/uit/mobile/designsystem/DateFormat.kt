@@ -31,6 +31,10 @@ fun shortWeekday(day: DayOfWeek): String {
     return labels.getOrElse(day.isoDayNumber - 1) { "" }
 }
 
+/** Full weekday name, e.g. "Monday" or "Thứ Hai". */
+@Composable
+fun longWeekday(date: LocalDate): String = date.toJavaLocalDate().dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, appLocale())
+
 /** Abbreviated month label, e.g. "Oct" or "Thg 10". */
 @Composable
 fun shortMonth(date: LocalDate): String = date.toJavaLocalDate().format(DateTimeFormatter.ofPattern(stringResource(R.string.date_month_short_pattern), appLocale()))

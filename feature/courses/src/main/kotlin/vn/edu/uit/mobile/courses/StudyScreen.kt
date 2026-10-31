@@ -253,14 +253,18 @@ import vn.edu.uit.mobile.feature.courses.R
     var secret by remember { mutableStateOf("") }
     var model by remember { mutableStateOf(connection.model) }
     var error by remember { mutableStateOf<String?>(null) }
+    val errApiKey = stringResource(R.string.st_err_api_key)
+    val errModel = stringResource(R.string.st_err_model)
+    val errToken = stringResource(R.string.st_err_token)
+    val errEndpoint = stringResource(R.string.st_err_endpoint)
     fun save() {
         val credential = secret.trim()
         val modelId = model.trim()
         error = when {
-            mode == StudyConnectionMode.DIRECT && (credential.length !in 24..1024 || credential.any { it.code !in 33..126 }) -> "Enter your personal OpenAI API key without spaces."
-            mode == StudyConnectionMode.DIRECT && !modelId.matches(Regex("[A-Za-z0-9._-]{1,100}")) -> "Enter an available model ID supporting Responses and structured outputs."
-            mode == StudyConnectionMode.GATEWAY && (credential.length !in 32..512 || credential.any { it.code !in 33..126 } || credential.startsWith("sk-")) -> "Enter the gateway access token, not an OpenAI API key."
-            mode == StudyConnectionMode.GATEWAY && runCatching { StudyAiRules.endpoint(endpoint) }.isFailure -> "Enter a valid HTTPS gateway origin without a path or query."
+            mode == StudyConnectionMode.DIRECT && (credential.length !in 24..1024 || credential.any { it.code !in 33..126 }) -> errApiKey
+            mode == StudyConnectionMode.DIRECT && !modelId.matches(Regex("[A-Za-z0-9._-]{1,100}")) -> errModel
+            mode == StudyConnectionMode.GATEWAY && (credential.length !in 32..512 || credential.any { it.code !in 33..126 } || credential.startsWith("sk-")) -> errToken
+            mode == StudyConnectionMode.GATEWAY && runCatching { StudyAiRules.endpoint(endpoint) }.isFailure -> errEndpoint
             else -> null
         }
         if (error == null) onSave(mode, endpoint.trim(), credential, modelId)

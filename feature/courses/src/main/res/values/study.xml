@@ -79,4 +79,8 @@
     <string name="st_credentials_note">Credentials are encrypted on this phone. Use a personal key for direct mode; never distribute a shared key in the APK. A compromised device can still expose stored credentials.</string>
     <string name="st_clear">Clear connection</string>
     <string name="st_save_conn">Save connection</string>
+    <string name="st_err_api_key">Enter your personal OpenAI API key without spaces.</string>
+    <string name="st_err_model">Enter an available model ID supporting Responses and structured outputs.</string>
+    <string name="st_err_token">Enter the gateway access token, not an OpenAI API key.</string>
+    <string name="st_err_endpoint">Enter a valid HTTPS gateway origin without a path or query.</string>
 </resources>

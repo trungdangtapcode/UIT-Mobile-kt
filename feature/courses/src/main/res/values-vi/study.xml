@@ -77,4 +77,8 @@
     <string name="st_credentials_note">Thông tin được mã hoá trên máy. Dùng khoá cá nhân cho chế độ trực tiếp; không phát tán khoá chung trong APK. Thiết bị bị xâm nhập vẫn có thể lộ thông tin đã lưu.</string>
     <string name="st_clear">Xoá kết nối</string>
     <string name="st_save_conn">Lưu kết nối</string>
+    <string name="st_err_api_key">Nhập API key OpenAI cá nhân, không có dấu cách.</string>
+    <string name="st_err_model">Nhập model ID khả dụng hỗ trợ Responses và structured outputs.</string>
+    <string name="st_err_token">Nhập token gateway, không phải API key OpenAI.</string>
+    <string name="st_err_endpoint">Nhập origin HTTPS hợp lệ, không kèm path hay query.</string>
 </resources>

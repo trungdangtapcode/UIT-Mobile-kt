@@ -158,7 +158,11 @@ JAVA_HOME=/tmp/uit-jdk ./gradlew :app:testDebugUnitTest \
 ```
 
 See the [design gallery](design/README.md) for the images and interaction coverage.
-These are static previews with synthetic test data, not a live-updating app session.
+The checked-in preview tests use synthetic data. An authorized private harness can
+also exercise production readers over real HTTPS and render authenticated state.
+See [testing without a local Android device](HOST-ANDROID-TESTING.md) for the
+architecture, commands, environment-variable tips and limits of that workflow.
+Both produce static images rather than a live-updating app session.
 
 ## Browser-based preview
 

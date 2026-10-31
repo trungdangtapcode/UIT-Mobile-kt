@@ -54,6 +54,7 @@ class OfflinePortalRepository(
                     sections = entries.flatMap { it.sections.entries }.associate { it.toPair() }, assignments = entries.flatMap { it.assignments },
                     courseNews = entries.flatMap { it.courseNews }.sortedByDescending { it.created },
                     studentServices = entries.firstNotNullOfOrNull { it.studentServices },
+                    daaSearchSources = sessions.indices.filter { sessions[it].account.portal == PortalType.DAA }.map { DaaSearchSource(sessions[it].account.id, entries[it].announcements, entries[it].notices) },
                     portalLinked = sessions.any { it.account.portal == PortalType.UIT_PORTAL },
                     grades = entries.flatMap { it.grades.entries }.associate { it.toPair() }, updatedAt = entries.maxOfOrNull { it.updatedAt } ?: 0
                 )

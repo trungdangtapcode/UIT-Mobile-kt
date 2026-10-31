@@ -101,13 +101,13 @@ import vn.edu.uit.mobile.model.*
                     TextButton({
                         selected = null
                         section = null
-                    }, shape = TechnicalShapes.Control) { Text("Change course") }
-                    OutlinedButton({ onLoadCourse(course) }, enabled = state.ready, shape = TechnicalShapes.Control) { Text("Load course file metadata") }
+                    }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.dl_change_course)) }
+                    OutlinedButton({ onLoadCourse(course) }, enabled = state.ready, shape = TechnicalShapes.Control) { Text(stringResource(R.string.dl_load_meta)) }
                     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(selected = section == null, onClick = {
                             section = null
                             selectedFiles = null
-                        }, label = { Text("All saved sections") }, shape = TechnicalShapes.Control)
+                        }, label = { Text(stringResource(R.string.dl_all_sections)) }, shape = TechnicalShapes.Control)
                         specs.distinctBy { it.section }.forEach { source ->
                             FilterChip(selected = section == source.section, onClick = {
                                 section = source.section
@@ -115,17 +115,17 @@ import vn.edu.uit.mobile.model.*
                             }, label = { Text(source.sectionName) }, shape = TechnicalShapes.Control)
                         }
                     }
-                    Text("${chosen.size} of ${pack.size} files selected · sizes may be unreported", style = MaterialTheme.typography.bodyMedium)
-                    Button({ onEnqueue(chosen) }, enabled = state.ready && chosen.size in 1..100, shape = TechnicalShapes.Control) { Text("Queue this pack") }
-                    if (chosen.size > 100) Text("Select at most 100 files before queuing.", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.dl_selected, chosen.size, pack.size), style = MaterialTheme.typography.bodyMedium)
+                    Button({ onEnqueue(chosen) }, enabled = state.ready && chosen.size in 1..100, shape = TechnicalShapes.Control) { Text(stringResource(R.string.dl_queue)) }
+                    if (chosen.size > 100) Text(stringResource(R.string.dl_limit), style = MaterialTheme.typography.bodySmall)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton({ selectedFiles = null }, shape = TechnicalShapes.Control) { Text("Select all") }
+                        TextButton({ selectedFiles = null }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.dl_select_all)) }
                         TextButton({
                             selectedFiles = emptyList()
                             choosingFiles = true
-                        }, shape = TechnicalShapes.Control) { Text("Clear selection") }
+                        }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.dl_clear)) }
                     }
-                    TextButton({ choosingFiles = !choosingFiles }, shape = TechnicalShapes.Control) { Text(if (choosingFiles) "Hide file selection" else "Choose individual files") }
+                    TextButton({ choosingFiles = !choosingFiles }, shape = TechnicalShapes.Control) { Text(stringResource(if (choosingFiles) R.string.dl_hide_files else R.string.dl_choose_files)) }
                 }
             }
             if (choosingFiles || pack.size > 100) {
@@ -134,10 +134,11 @@ import vn.edu.uit.mobile.model.*
                         Panel(Modifier.fillMaxWidth()) {
                             Row {
                                 val checked = selectedFiles == null || spec.id in selectedFiles.orEmpty()
+                                val selectLabel = stringResource(R.string.dl_select_file, spec.file.name)
                                 Checkbox(checked, { enabled ->
                                     val current = selectedFiles ?: pack.map { it.id }
                                     selectedFiles = if (enabled) (current + spec.id).distinct() else current - spec.id
-                                }, enabled = checked || chosen.size < 100, modifier = Modifier.semantics { contentDescription = "Select ${spec.file.name}" })
+                                }, enabled = checked || chosen.size < 100, modifier = Modifier.semantics { contentDescription = selectLabel })
                                 Column(Modifier.weight(1f)) {
                                     Text(spec.file.name, style = MaterialTheme.typography.titleSmall)
                                     Text(spec.sectionName, style = MaterialTheme.typography.bodySmall)

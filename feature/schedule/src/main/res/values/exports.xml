@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="exp_back">Schedule</string>
+    <string name="exp_title">Export calendar</string>
+    <string name="exp_subtitle">Choose the saved events to include in an .ics file.</string>
+    <string name="exp_range">Date range</string>
+    <string name="exp_range_hint">One to 90 days · Vietnam time (GMT+07)</string>
+    <string name="exp_start">Start date · YYYY-MM-DD</string>
+    <string name="exp_end">End date · YYYY-MM-DD</string>
+    <string name="exp_7d">7 days</string>
+    <string name="exp_30d">30 days</string>
+    <string name="exp_include">Include</string>
+    <string name="exp_include_hint">Classes include make-up and canceled meetings.</string>
+    <string name="exp_type_classes">Classes</string>
+    <string name="exp_type_exams">Exams</string>
+    <string name="exp_type_deadlines">Deadlines</string>
+    <string name="exp_type_other">Other events</string>
+    <string name="exp_copy_title">A copy of your saved schedule</string>
+    <string name="exp_copy_body">The file contains event titles, dates, times, class codes and rooms. It is an unencrypted copy saved to the location you choose.</string>
+    <string name="exp_copy_note">This is a file export, not a live subscription. Later changes, cancellations and account removal will not update an imported copy.</string>
+    <string name="exp_snapshot">Snapshot saved · %1$s %2$s · GMT+07</string>
+    <string name="exp_cached_note">Only cached events are included. Sync first if dates or courses are missing. Your calendar app may display times in its own time zone.</string>
+    <string name="exp_error">The saved schedule could not be exported.</string>
+    <string name="exp_preview">Preview · %1$d events</string>
+    <string name="exp_preview_hint">Review this list before choosing a file location.</string>
+    <string name="exp_none_title">No events in this selection</string>
+    <string name="exp_none_body">Try another date range or event type. Nothing will be exported.</string>
+    <string name="exp_end_missing"> · end time not provided</string>
+    <string name="exp_room">Room · %1$s</string>
+    <string name="exp_saving">Saving calendar…</string>
+    <string name="exp_save">Save .ics file</string>
+</resources>

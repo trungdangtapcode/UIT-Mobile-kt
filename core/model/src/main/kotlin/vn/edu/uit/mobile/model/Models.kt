@@ -152,6 +152,8 @@ data class DeadlineReminder(val key: String, val event: CalendarEvent, val hours
 data class H5pEntry(val title: String, val text: List<String>, val media: List<String>)
 data class H5pSummary(val title: String, val library: String, val entries: List<H5pEntry>)
 data class DownloadedFile(val path: String, val sha256: String)
+data class DaaSearchSource(val accountId: String, val announcements: List<DaaAnnouncement>, val notices: List<ClassScheduleChangeNotice>)
+
 data class PortalSnapshot(
     val courses: List<Course> = emptyList(),
     val timetable: List<DaaTimetableSlot> = emptyList(),
@@ -167,5 +169,6 @@ data class PortalSnapshot(
     val updatedAt: Long = 0,
     val courseNews: List<Discussion> = emptyList(),
     val studentServices: StudentServicesSnapshot? = null,
-    val portalLinked: Boolean = false
+    val portalLinked: Boolean = false,
+    val daaSearchSources: List<DaaSearchSource> = emptyList()
 )

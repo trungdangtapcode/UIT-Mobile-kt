@@ -59,6 +59,7 @@ class MainActivity : ComponentActivity() {
                 }
                 val dashboard = ownedViewModel { DashboardViewModel(repository) }
                 val schedule = ownedViewModel { ScheduleViewModel(repository, accounts) }
+                val search = ownedViewModel { WorkspaceSearchViewModel(repository, accounts) }
                 val courses = ownedViewModel { CoursesViewModel(repository) }
                 val study = ownedViewModel { StudyViewModel(studyRepository, repository) }
                 val inbox = ownedViewModel { InboxViewModel(repository) }
@@ -83,7 +84,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, courses, study, inbox, academic, studentProfile, widgetRoute, {
+                UitShell(repository, dashboard, schedule, courses, search, study, inbox, academic, studentProfile, widgetRoute, {
                     showWidgets = false
                     widgetRoute = null
                     setIntent(
@@ -134,6 +135,7 @@ private fun UitShell(
     dashboard: DashboardViewModel,
     schedule: ScheduleViewModel,
     courses: CoursesViewModel,
+    search: WorkspaceSearchViewModel,
     study: StudyViewModel,
     inbox: InboxViewModel,
     academic: AcademicViewModel,
@@ -143,10 +145,15 @@ private fun UitShell(
     accounts: @Composable ((vn.edu.uit.mobile.model.Account) -> Unit) -> Unit
 ) {
     var selected by rememberSaveable { mutableIntStateOf(0) }
+    var returnToSearch by rememberSaveable { mutableStateOf(false) }
+    var showSearch by rememberSaveable { mutableStateOf(false) }
     var showAccounts by rememberSaveable { mutableStateOf(false) }
     var showProfile by rememberSaveable { mutableStateOf(false) }
     var profileAccountId by rememberSaveable { mutableStateOf<String?>(null) }
     fun openProfile(account: vn.edu.uit.mobile.model.Account? = null) {
+        returnToSearch = false
+        search.close()
+        showSearch = false
         showAccounts = false
         showProfile = true
         profileAccountId = account?.id
@@ -160,6 +167,9 @@ private fun UitShell(
     LaunchedEffect(Unit) { if (showProfile) studentProfile.onIntent(StudentProfileIntent.Open(profileAccountId)) }
     LaunchedEffect(widgetRoute) {
         val route = widgetRoute ?: return@LaunchedEffect
+        returnToSearch = false
+        search.close()
+        showSearch = false
         closeProfile()
         showAccounts = false
         when (route.destination) {
@@ -182,13 +192,31 @@ private fun UitShell(
     WorkspaceFrame(
         selected, {
             selected = it
+            returnToSearch = false
+            search.close()
+            showSearch = false
             closeProfile()
         }, { openProfile() }, snapshot.profile.fullName,
         connected = snapshot.updatedAt > 0, syncing = sync.syncing, lastSync = snapshot.updatedAt,
         deadlineCount = snapshot.events.count { it.deadline && it.needsAction && it.start in now..(now + 7 * 86400) },
-        errorMessage = sync.error?.text()
+        errorMessage = sync.error?.text(),
+        onSearch = {
+            returnToSearch = false
+            closeProfile()
+            showSearch = true
+        }
     ) {
-        if (showProfile) {
+        if (showSearch) {
+            WorkspaceSearchScreen(search, {
+                search.close()
+                showSearch = false
+            }, { course ->
+                courses.onIntent(CoursesIntent.Select(course))
+                selected = 2
+                showSearch = false
+                returnToSearch = true
+            })
+        } else if (showProfile) {
             StudentProfileScreen(studentProfile, onBack = { closeProfile() }, onManageAccounts = { showAccounts = true })
         } else {
             when (selected) {
@@ -200,7 +228,20 @@ private fun UitShell(
                     courses.onIntent(CoursesIntent.Select(it))
                     selected = 2
                 }
-                2 -> CoursesScreen(courses, study)
+                2 -> CoursesScreen(
+                    courses,
+                    study,
+                    if (returnToSearch) {
+                        (
+                            {
+                                returnToSearch = false
+                                showSearch = true
+                            }
+                            )
+                    } else {
+                        null
+                    }
+                )
                 3 -> InboxScreen(inbox)
                 else -> AcademicScreen(academic, accountContent)
             }

@@ -39,6 +39,7 @@ fun WorkspaceFrame(
     lastSync: Long,
     deadlineCount: Int = 0,
     errorMessage: String? = null,
+    onSearch: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
@@ -70,6 +71,7 @@ fun WorkspaceFrame(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
+                            if (onSearch != null) IconButton(onSearch) { Icon(Icons.Outlined.Search, "Search saved workspace") }
                             IconButton(onClick = { onSelect(3) }) {
                                 BadgedBox(badge = { if (deadlineCount > 0) Badge { Text(if (deadlineCount > 9) "9+" else "$deadlineCount") } }) {
                                     Icon(Icons.Outlined.NotificationsNone, "Open deadlines and inbox", Modifier.size(22.dp))

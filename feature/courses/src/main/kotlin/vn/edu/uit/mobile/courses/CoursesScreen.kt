@@ -35,7 +35,7 @@ import kotlinx.coroutines.*
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.model.*
 
-@Composable fun CoursesScreen(viewModel: CoursesViewModel, study: StudyViewModel? = null) {
+@Composable fun CoursesScreen(viewModel: CoursesViewModel, study: StudyViewModel? = null, onReturnToSearch: (() -> Unit)? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val studyState = study?.uiState?.collectAsStateWithLifecycle()?.value
     LaunchedEffect(state.selected?.accountId, state.selected?.id) {
@@ -45,7 +45,8 @@ import vn.edu.uit.mobile.model.*
         StudyScreen(study)
         return
     }
-    BackHandler(enabled = state.selected != null) { viewModel.onIntent(CoursesIntent.Back) }
+    val navigate: (CoursesIntent) -> Unit = { intent -> if (intent == CoursesIntent.Back && onReturnToSearch != null) onReturnToSearch() else viewModel.onIntent(intent) }
+    BackHandler(enabled = state.selected != null || onReturnToSearch != null) { navigate(CoursesIntent.Back) }
     val snack = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -100,7 +101,7 @@ import vn.edu.uit.mobile.model.*
         Box(Modifier.padding(padding)) {
             CoursesContent(
                 state,
-                viewModel::onIntent,
+                navigate,
                 onPickFile = { assignment ->
                     pendingAssignment = assignment
                     picker.launch(arrayOf("*/*"))

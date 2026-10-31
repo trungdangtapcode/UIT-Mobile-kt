@@ -1,0 +1,119 @@
+package vn.edu.uit.mobile.courses
+
+import android.text.Html
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import vn.edu.uit.mobile.designsystem.*
+import vn.edu.uit.mobile.domain.*
+import vn.edu.uit.mobile.model.*
+
+@Composable fun WorkspaceSearchScreen(viewModel: WorkspaceSearchViewModel, onClose: () -> Unit, onCourse: (Course) -> Unit) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val snack = remember { SnackbarHostState() }
+    LaunchedEffect(viewModel) { viewModel.files.collect { if (viewModel.canOpen(it) && !openSavedCourseFile(context, it.path)) snack.showSnackbar("File saved. Install an app that can open this format.") } }
+    Box {
+        WorkspaceSearchContent(state, { if (state.selected != null) viewModel.back() else onClose() }, viewModel::query, viewModel::open, viewModel::download, onCourse)
+        SnackbarHost(snack)
+    }
+}
+
+@Composable fun WorkspaceSearchContent(state: WorkspaceSearchState, onBack: () -> Unit = {}, onQuery: (String) -> Unit = {}, onOpen: (String) -> Unit = {}, onDownload: (CourseFile) -> Unit = {}, onCourse: ((Course) -> Unit)? = null) {
+    val selected = state.hits.firstOrNull { it.key == state.selected }
+    var filter by rememberSaveable { mutableStateOf<WorkspaceSearchKind?>(null) }
+    val results = remember(state.hits, state.query) { SearchWorkspaceUseCase()(state.hits, state.query) }
+    val resultsScroll = rememberLazyListState()
+    val detailScroll = rememberLazyListState()
+    BackHandler(onBack = onBack)
+    LazyColumn(Modifier.fillMaxSize().testTag("workspace-search-content"), state = if (selected == null) resultsScroll else detailScroll, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        item {
+            TextButton(onBack, shape = TechnicalShapes.Control) {
+                Icon(Icons.AutoMirrored.Outlined.ArrowBack, null)
+                Text(if (selected == null) "Workspace" else "Search results")
+            }
+            PageHeading(if (selected == null) "Search workspace" else selected.title, if (selected == null) "Courses, materials, assignments and notices" else selected.context)
+        }
+        if (selected == null) {
+            item {
+                SearchField(state.query, onQuery, "Search saved names and course codes")
+                Text("Saved metadata only. Load a course to include its materials and assignments. Document contents are not indexed.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (state.unownedNotices) InlineNotice("Notices without saved account provenance are excluded. Refresh to load attributable notices.")
+                state.message?.let { InlineNotice(it) }
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(selected = filter == null, onClick = { filter = null }, label = { Text("All") }, shape = TechnicalShapes.Control)
+                    WorkspaceSearchKind.entries.forEach { kind -> FilterChip(selected = filter == kind, onClick = { filter = kind }, label = { Text(searchKindLabel(kind)) }, shape = TechnicalShapes.Control) }
+                }
+            }
+            when {
+                state.hits.isEmpty() -> item { EmptyState("No saved searchable data", "Connect an account and load courses or notices. A profile refresh alone does not populate search.") }
+                state.query.isBlank() -> item { EmptyState("Search your saved workspace", "Try a course code, document name, assignment or notice title. Queries stay on this phone.") }
+                results.none { filter == null || it.kind == filter } -> item { EmptyState("No matching saved results", "Try fewer words, another category or load more course data.") }
+            }
+            WorkspaceSearchKind.entries.filter { filter == null || it == filter }.forEach { kind ->
+                val group = results.filter { it.kind == kind }
+                if (group.isNotEmpty()) {
+                    item(key = "group:$kind") { SectionHeading("${searchKindLabel(kind)} · ${group.size}", if (group.size > 20) "Showing the first 20 matches; refine your query." else null) }
+                    group.take(20).forEach { hit ->
+                        item(key = hit.key) {
+                            Panel(Modifier.fillMaxWidth()) {
+                                Text(hit.title, style = MaterialTheme.typography.titleMedium)
+                                Text(hit.context, style = MaterialTheme.typography.bodySmall)
+                                TextButton({ onOpen(hit.key) }, shape = TechnicalShapes.Control) { Text("Open saved result") }
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            item {
+                Panel(Modifier.fillMaxWidth()) {
+                    Text(searchKindLabel(selected.kind), style = MaterialTheme.typography.labelMedium)
+                    val body = selected.assignment?.intro ?: selected.module?.description ?: selected.announcement?.bodyHtml.orEmpty()
+                    if (body.isNotBlank()) Text(Html.fromHtml(body, Html.FROM_HTML_MODE_LEGACY).toString(), style = MaterialTheme.typography.bodyMedium)
+                    selected.course?.let { course ->
+                        Text("${course.shortname} · ${course.fullname}", style = MaterialTheme.typography.bodyMedium)
+                        if (onCourse != null) OutlinedButton({ onCourse(course) }, shape = TechnicalShapes.Control) { Text("Open course workspace") }
+                    }
+                    selected.assignment?.let { if (it.due > 0) Text("Due · ${dateText(it.due)} ${clockText(it.due)} · GMT+07") }
+                    selected.notice?.let {
+                        Text("${it.targetDate} · periods ${it.lessonStart}–${it.lessonEnd}")
+                        if (it.room.isNotBlank()) Text("Room · ${it.room}")
+                    }
+                    Text("Saved content. Official submissions, dates and university records are unchanged.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    state.message?.let { InlineNotice(it, true) }
+                }
+            }
+            val files = (listOfNotNull(selected.file) + if (selected.file == null) selected.module?.files.orEmpty() + selected.assignment?.files.orEmpty() else emptyList()).distinctBy { it.url }
+            files.forEach { file ->
+                item(key = "download:${file.url}") {
+                    Panel(Modifier.fillMaxWidth()) {
+                        Text(file.name, style = MaterialTheme.typography.titleMedium)
+                        Text(if (file.size > 0) "${file.size} reported bytes" else "Size not reported", style = MaterialTheme.typography.bodySmall)
+                        Button({ onDownload(file) }, enabled = !state.busy, shape = TechnicalShapes.Control) { Text(if (state.busy) "Opening…" else "Open file on this device") }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun searchKindLabel(kind: WorkspaceSearchKind) = when (kind) {
+    WorkspaceSearchKind.COURSES -> "Courses"
+    WorkspaceSearchKind.MATERIALS -> "Materials"
+    WorkspaceSearchKind.ASSIGNMENTS -> "Assignments"
+    WorkspaceSearchKind.NOTICES -> "Notices"
+}

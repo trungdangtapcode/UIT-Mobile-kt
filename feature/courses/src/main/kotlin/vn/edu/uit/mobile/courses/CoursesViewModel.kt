@@ -44,7 +44,17 @@ sealed interface CoursesEffect {
 class CoursesViewModel(private val repository: PortalRepository) : BaseMviViewModel<CoursesState, CoursesIntent, CoursesEffect>(CoursesState()) {
     private var selection: Job? = null
     init {
-        viewModelScope.launch { repository.snapshot.collect { state.value = state.value.copy(snapshot = it) } }
+        viewModelScope.launch {
+            repository.snapshot.collect { snapshot ->
+                val selected = state.value.selected
+                if (selected != null && snapshot.courses.none { it.id == selected.id && it.accountId == selected.accountId }) {
+                    selection?.cancel()
+                    state.value = CoursesState(snapshot = snapshot)
+                } else {
+                    state.value = state.value.copy(snapshot = snapshot)
+                }
+            }
+        }
     }
     override fun onIntent(intent: CoursesIntent) {
         when (intent) {

@@ -155,3 +155,8 @@ Schedule exports selected saved events as an `.ics` file through Android's docum
 Schedule finds candidate gaps between saved commitments and temporary personal
 blocks, with configurable duration and travel buffers. It runs entirely on the
 phone. See [behavior and limits](docs/FREE-TIME-FINDER.md).
+
+## Workspace search
+
+The toolbar searches saved course, material, assignment and notice metadata locally.
+See [search scope and account isolation](docs/UNIFIED-SEARCH.md).

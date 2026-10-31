@@ -27,6 +27,7 @@ appearance choices remain unchanged.
 | Screen | Preview |
 | --- | --- |
 | Class schedule | [Day](previews/schedule-phone.png) · [Week agenda](previews/schedule-week-phone.png) · [Month](previews/schedule-month-phone.png) |
+| Workspace search | [390dp](previews/search-390-phone.png) · [Saved detail](previews/search-assignment-390-phone.png) · [360dp unavailable](previews/search-unavailable-360-phone.png) · [412dp larger text](previews/search-412-large-text-phone.png) |
 | Free-time finder | [360dp](previews/free-time-360-phone.png) · [390dp](previews/free-time-390-phone.png) · [Intervals](previews/free-time-results-390-phone.png) · [Unverified coverage](previews/free-time-unverified-390-phone.png) · [Personal-block validation](previews/free-time-personal-block-360-phone.png) · [412dp larger text](previews/free-time-412-large-text-phone.png) |
 | Calendar export | [360dp](previews/calendar-export-360-phone.png) · [390dp](previews/calendar-export-390-phone.png) · [Preview](previews/calendar-export-preview-390-phone.png) · [412dp larger text](previews/calendar-export-412-large-text-phone.png) |
 | Courses | [Course list](previews/courses-phone.png) · [Materials](previews/course-materials-phone.png) |

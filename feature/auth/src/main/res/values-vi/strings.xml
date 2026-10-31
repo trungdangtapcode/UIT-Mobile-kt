@@ -24,4 +24,20 @@
     <string name="auth_remove_body">Xoá %1$s và dữ liệu môn học đã lưu khỏi thiết bị?</string>
     <string name="auth_remove_confirm">Xoá tài khoản</string>
     <string name="auth_remove_keep">Giữ tài khoản</string>
+    <string name="profile_title">Hồ sơ sinh viên</string>
+    <string name="profile_back">Quay lại từ hồ sơ sinh viên</string>
+    <string name="profile_refresh">Làm mới hồ sơ sinh viên</string>
+    <string name="profile_settings">Quản lý tài khoản và giao diện</string>
+    <string name="profile_connect_heading">Kết nối tài khoản sinh viên</string>
+    <string name="profile_connect_body">Đăng nhập UIT SSO để xem hồ sơ sinh viên.</string>
+    <string name="profile_loading">Đang tải hồ sơ UIT Portal…</string>
+    <string name="profile_loaded">Đã tải %1$s lúc %2$s · GMT+07</string>
+    <string name="profile_err_signin">Đăng nhập lại để tải hồ sơ sinh viên.</string>
+    <string name="profile_err_offline">Không kết nối được UIT Portal. Kiểm tra mạng và thử lại.</string>
+    <string name="profile_err_generic">Không tải được hồ sơ sinh viên. Hãy thử lại.</string>
+    <string name="profile_cached">Đang hiển thị hồ sơ đã tải trong phiên này.</string>
+    <string name="profile_try_again">Thử lại</string>
+    <string name="profile_account_settings">Cài đặt tài khoản</string>
+    <string name="profile_view_scan">Xem bản scan</string>
+    <string name="profile_no_scan">Chưa có bản scan</string>
 </resources>

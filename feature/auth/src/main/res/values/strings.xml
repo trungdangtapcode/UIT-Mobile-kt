@@ -26,4 +26,20 @@
     <string name="auth_remove_body">Remove %1$s and its saved course data from this device?</string>
     <string name="auth_remove_confirm">Remove account</string>
     <string name="auth_remove_keep">Keep account</string>
+    <string name="profile_title">Student profile</string>
+    <string name="profile_back">Back from student profile</string>
+    <string name="profile_refresh">Refresh student profile</string>
+    <string name="profile_settings">Manage accounts and appearance</string>
+    <string name="profile_connect_heading">Connect your student account</string>
+    <string name="profile_connect_body">Sign in with UIT SSO to view your student profile.</string>
+    <string name="profile_loading">Loading your UIT Portal profile…</string>
+    <string name="profile_loaded">Loaded %1$s at %2$s · GMT+07</string>
+    <string name="profile_err_signin">Sign in again to load this student profile.</string>
+    <string name="profile_err_offline">Cannot reach UIT Portal. Check your connection and try again.</string>
+    <string name="profile_err_generic">The student profile could not be loaded. Try again.</string>
+    <string name="profile_cached">Showing the profile already loaded in this session.</string>
+    <string name="profile_try_again">Try again</string>
+    <string name="profile_account_settings">Account settings</string>
+    <string name="profile_view_scan">View scan</string>
+    <string name="profile_no_scan">No scan uploaded</string>
 </resources>

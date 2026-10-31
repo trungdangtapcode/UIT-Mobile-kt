@@ -20,10 +20,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import vn.edu.uit.mobile.common.*
 import vn.edu.uit.mobile.designsystem.*
+import vn.edu.uit.mobile.feature.auth.R
 
 @Composable fun StudentProfileScreen(viewModel: StudentProfileViewModel, onBack: () -> Unit, onManageAccounts: () -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -42,18 +44,18 @@ import vn.edu.uit.mobile.designsystem.*
     LazyColumn(Modifier.fillMaxSize().testTag("student-profile-content"), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back from student profile") }
-                Text("Student profile", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-                IconButton(onClick = onRefresh, enabled = state.account != null && !state.loading) { Icon(Icons.Outlined.Refresh, "Refresh student profile") }
-                IconButton(onClick = onManageAccounts) { Icon(Icons.Outlined.Settings, "Manage accounts and appearance") }
+                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.profile_back)) }
+                Text(stringResource(R.string.profile_title), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                IconButton(onClick = onRefresh, enabled = state.account != null && !state.loading) { Icon(Icons.Outlined.Refresh, stringResource(R.string.profile_refresh)) }
+                IconButton(onClick = onManageAccounts) { Icon(Icons.Outlined.Settings, stringResource(R.string.profile_settings)) }
             }
         }
         if (state.account == null) {
             item {
                 Panel {
-                    SectionHeading("Connect your student account")
-                    Text("Sign in with UIT SSO to view your student profile.")
-                    Button(onClick = onManageAccounts, shape = TechnicalShapes.Field) { Text("Sign in with UIT SSO") }
+                    SectionHeading(stringResource(R.string.profile_connect_heading))
+                    Text(stringResource(R.string.profile_connect_body))
+                    Button(onClick = onManageAccounts, shape = TechnicalShapes.Field) { Text(stringResource(R.string.auth_sign_in)) }
                 }
             }
         } else {
@@ -79,7 +81,7 @@ import vn.edu.uit.mobile.designsystem.*
             if (state.loading) {
                 item {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
-                    Text("Loading your UIT Portal profile…", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.profile_loading), style = MaterialTheme.typography.bodySmall)
                 }
             }
             if (state.error != null) {
@@ -88,17 +90,17 @@ import vn.edu.uit.mobile.designsystem.*
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
                                 when (val error = state.error) {
-                                    AppError.SessionExpired -> "Sign in again to load this student profile."
-                                    AppError.NetworkOffline -> "Cannot reach UIT Portal. Check your connection and try again."
+                                    AppError.SessionExpired -> stringResource(R.string.profile_err_signin)
+                                    AppError.NetworkOffline -> stringResource(R.string.profile_err_offline)
                                     is AppError.ValidationError -> error.message
-                                    else -> "The student profile could not be loaded. Try again."
+                                    else -> stringResource(R.string.profile_err_generic)
                                 },
                                 color = MaterialTheme.colorScheme.onErrorContainer
                             )
-                            if (details != null) Text("Showing the profile already loaded in this session.", style = MaterialTheme.typography.bodySmall)
+                            if (details != null) Text(stringResource(R.string.profile_cached), style = MaterialTheme.typography.bodySmall)
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                TextButton(onClick = onRefresh, enabled = !state.loading, shape = TechnicalShapes.Control) { Text("Try again") }
-                                TextButton(onClick = onManageAccounts, shape = TechnicalShapes.Control) { Text("Account settings") }
+                                TextButton(onClick = onRefresh, enabled = !state.loading, shape = TechnicalShapes.Control) { Text(stringResource(R.string.profile_try_again)) }
+                                TextButton(onClick = onManageAccounts, shape = TechnicalShapes.Control) { Text(stringResource(R.string.profile_account_settings)) }
                             }
                         }
                     }
@@ -106,7 +108,7 @@ import vn.edu.uit.mobile.designsystem.*
             }
             if (details != null) {
                 item {
-                    Text("Loaded ${dateText(details.fetchedAt)} at ${clockText(details.fetchedAt)} · GMT+07", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.profile_loaded, dateText(details.fetchedAt), clockText(details.fetchedAt)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(Modifier.fillMaxWidth().testTag("student-profile-sections").horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         details.sections.forEach { tab -> FilterChip(selected = tab.id == section?.id, onClick = { selected = tab.id }, shape = TechnicalShapes.Control, label = { Text(tab.title) }) }
                     }
@@ -136,7 +138,7 @@ import vn.edu.uit.mobile.designsystem.*
                             OutlinedButton(onClick = { onOpenScan(document.id) }, enabled = document.available && !state.loading, shape = TechnicalShapes.Field) {
                                 Icon(Icons.Outlined.Image, null, Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
-                                Text(if (document.available) "View scan" else "No scan uploaded")
+                                Text(stringResource(if (document.available) R.string.profile_view_scan else R.string.profile_no_scan))
                             }
                         }
                     }

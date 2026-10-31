@@ -175,15 +175,19 @@ import vn.edu.uit.mobile.model.*
         }
     }
 }
-fun offlineStatusLabel(status: OfflineDownloadStatus) = when (status) {
-    OfflineDownloadStatus.QUEUED -> "Queued"
-    OfflineDownloadStatus.DOWNLOADING -> "Downloading"
-    OfflineDownloadStatus.WAITING_WIFI -> "Waiting for Wi-Fi"
-    OfflineDownloadStatus.SAVED -> "Verified saved copy"
-    OfflineDownloadStatus.FAILED -> "Needs retry"
-    OfflineDownloadStatus.CANCELED -> "Canceled"
-    OfflineDownloadStatus.REMOVING -> "Removing"
-}
+
+@Composable
+fun offlineStatusLabel(status: OfflineDownloadStatus): String = stringResource(
+    when (status) {
+        OfflineDownloadStatus.QUEUED -> R.string.dl_status_queued
+        OfflineDownloadStatus.DOWNLOADING -> R.string.dl_status_downloading
+        OfflineDownloadStatus.WAITING_WIFI -> R.string.dl_status_waiting_wifi
+        OfflineDownloadStatus.SAVED -> R.string.dl_status_saved
+        OfflineDownloadStatus.FAILED -> R.string.dl_status_failed
+        OfflineDownloadStatus.CANCELED -> R.string.dl_status_canceled
+        OfflineDownloadStatus.REMOVING -> R.string.dl_status_removing
+    }
+)
 
 private fun offlineSize(bytes: Long): String = when {
     bytes < 1024 -> "$bytes B"

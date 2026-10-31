@@ -38,4 +38,11 @@
     <string name="dl_cancel">Huỷ tệp</string>
     <string name="dl_retry">Thử lại tệp</string>
     <string name="dl_remove">Xoá tệp</string>
+    <string name="dl_status_queued">Trong hàng đợi</string>
+    <string name="dl_status_downloading">Đang tải</string>
+    <string name="dl_status_waiting_wifi">Chờ Wi-Fi</string>
+    <string name="dl_status_saved">Bản đã lưu hợp lệ</string>
+    <string name="dl_status_failed">Cần thử lại</string>
+    <string name="dl_status_canceled">Đã huỷ</string>
+    <string name="dl_status_removing">Đang xoá</string>
 </resources>

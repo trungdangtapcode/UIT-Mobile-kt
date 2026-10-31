@@ -38,4 +38,11 @@
     <string name="dl_cancel">Cancel file</string>
     <string name="dl_retry">Retry file</string>
     <string name="dl_remove">Remove file</string>
+    <string name="dl_status_queued">Queued</string>
+    <string name="dl_status_downloading">Downloading</string>
+    <string name="dl_status_waiting_wifi">Waiting for Wi-Fi</string>
+    <string name="dl_status_saved">Verified saved copy</string>
+    <string name="dl_status_failed">Needs retry</string>
+    <string name="dl_status_canceled">Canceled</string>
+    <string name="dl_status_removing">Removing</string>
 </resources>

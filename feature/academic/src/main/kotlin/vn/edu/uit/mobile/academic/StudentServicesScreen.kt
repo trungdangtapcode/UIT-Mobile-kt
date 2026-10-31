@@ -227,15 +227,15 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
             Icon(if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null)
         }
         if (expanded) {
-            ValueRow("Prior debt", money(term.priorDebt))
+            ValueRow(stringResource(R.string.svc_prior_debt), money(term.priorDebt))
             term.charges.forEach { charge ->
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Text(charge.courseName.ifBlank { charge.courseCode }, style = MaterialTheme.typography.titleSmall)
-                Text(listOf(charge.courseCode, charge.credits?.let { "$it credits" }.orEmpty()).filter(String::isNotBlank).joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(listOf(charge.courseCode, charge.credits?.let { stringResource(R.string.svc_credits, it) }.orEmpty()).filter(String::isNotBlank).joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(money(charge.amount), style = MaterialTheme.typography.titleMedium)
             }
-            SectionHeading("Payment records")
-            if (term.payments.isEmpty()) Text("No payment records were returned for this term.", style = MaterialTheme.typography.bodySmall)
+            SectionHeading(stringResource(R.string.svc_payment_records))
+            if (term.payments.isEmpty()) Text(stringResource(R.string.svc_no_payments), style = MaterialTheme.typography.bodySmall)
             term.payments.forEach { payment ->
                 ValueRow(money(payment.amount), date(payment.paidAt))
                 Text(listOf(payment.bank, payment.status).filter(String::isNotBlank).joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -250,21 +250,21 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
     Panel(Modifier.animateContentSize()) {
         SectionHeading(section.kind.title)
         Updated(section.fetchedAt)
-        if (section.windowOpen != null) Text(if (section.windowOpen == true) "Application window open" else "Application window closed", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
-        if (section.windowStart.isNotBlank()) ValueRow("Opens", date(section.windowStart))
-        if (section.windowEnd.isNotBlank()) ValueRow("Closes", date(section.windowEnd))
+        if (section.windowOpen != null) Text(stringResource(if (section.windowOpen == true) R.string.svc_window_open else R.string.svc_window_closed), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
+        if (section.windowStart.isNotBlank()) ValueRow(stringResource(R.string.svc_opens), date(section.windowStart))
+        if (section.windowEnd.isNotBlank()) ValueRow(stringResource(R.string.svc_closes), date(section.windowEnd))
         if (section.explanation.isNotBlank()) Text(section.explanation, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        if (section.records.isEmpty()) Text("No saved requests returned by UIT Portal.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (section.records.isEmpty()) Text(stringResource(R.string.svc_no_requests), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         section.records.forEach { record ->
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Text(record.title, style = MaterialTheme.typography.titleSmall)
             if (record.reference.isNotBlank()) Text(record.reference, style = MaterialTheme.typography.bodySmall)
-            Text(record.status.ifBlank { "Status not provided" }, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
+            Text(record.status.ifBlank { stringResource(R.string.svc_status_missing) }, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
             if (record.date.isNotBlank()) Text(date(record.date), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (record.note.isNotBlank()) Text(record.note, style = MaterialTheme.typography.bodySmall)
         }
         if (section.options.isNotEmpty()) {
-            TextButton(onClick = { expanded = !expanded }, shape = TechnicalShapes.Control) { Text(if (expanded) "Hide document types" else "Document types & fees") }
+            TextButton(onClick = { expanded = !expanded }, shape = TechnicalShapes.Control) { Text(stringResource(if (expanded) R.string.svc_hide_doc_types else R.string.svc_doc_types)) }
             if (expanded) {
                 section.options.forEach { option ->
                     Column {
@@ -279,36 +279,41 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
 
 @Composable private fun GraduationOverview(data: GraduationSummary) {
     Panel {
-        SectionHeading(data.period.ifBlank { "Graduation assessment" })
+        SectionHeading(data.period.ifBlank { stringResource(R.string.svc_grad_fallback) })
         Text(
             when (data.alreadyRegistered) {
-                true -> "Registration recorded"
-                false -> "No registration recorded"
-                null -> "Registration status unavailable"
+                true -> stringResource(R.string.svc_reg_recorded)
+                false -> stringResource(R.string.svc_no_reg)
+                null -> stringResource(R.string.svc_reg_unavailable)
             },
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.primary
         )
         if (data.registrationStatus.isNotBlank()) Text(data.registrationStatus)
-        if (data.windowStatus.isNotBlank()) ValueRow("Assessment window", data.windowStatus)
-        if (data.windowStart.isNotBlank()) ValueRow("Opens", date(data.windowStart))
-        if (data.windowEnd.isNotBlank()) ValueRow("Closes", date(data.windowEnd))
+        if (data.windowStatus.isNotBlank()) ValueRow(stringResource(R.string.svc_assessment_window), data.windowStatus)
+        if (data.windowStart.isNotBlank()) ValueRow(stringResource(R.string.svc_opens), date(data.windowStart))
+        if (data.windowEnd.isNotBlank()) ValueRow(stringResource(R.string.svc_closes), date(data.windowEnd))
         ValueRow(
-            "Registration eligibility",
+            stringResource(R.string.svc_reg_eligibility),
             when (data.canRegister) {
-                true -> "Allowed by Portal"
-                false -> "Not currently allowed"
-                null -> "Not provided"
+                true -> stringResource(R.string.svc_allowed)
+                false -> stringResource(R.string.svc_not_allowed)
+                null -> stringResource(R.string.svc_not_provided)
             }
         )
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        listOf("Documents" to data.documentGate, "Fees" to data.feeGate, "Credits" to data.creditGate, "Contact phone" to data.phoneGate).forEach { (label, satisfied) ->
+        listOf(
+            stringResource(R.string.svc_documents) to data.documentGate,
+            stringResource(R.string.svc_fees) to data.feeGate,
+            stringResource(R.string.svc_credits_gate) to data.creditGate,
+            stringResource(R.string.svc_contact_phone) to data.phoneGate
+        ).forEach { (label, satisfied) ->
             ValueRow(
                 label,
                 when (satisfied) {
-                    true -> "Satisfied"
-                    false -> "Needs attention"
-                    null -> "Not provided"
+                    true -> stringResource(R.string.svc_satisfied)
+                    false -> stringResource(R.string.svc_needs_attention)
+                    null -> stringResource(R.string.svc_not_provided)
                 }
             )
         }

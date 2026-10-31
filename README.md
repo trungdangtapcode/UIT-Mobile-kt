@@ -145,3 +145,7 @@ test coverage and remaining live validation.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), the [commit contract](docs/COMMIT-CONTRACT.md)
 and the [initial history reconstruction](docs/HISTORY.md).
+
+## Calendar export
+
+Schedule exports selected saved events as an `.ics` file through Android's document picker. See [setup and limits](docs/CALENDAR-EXPORT.md).

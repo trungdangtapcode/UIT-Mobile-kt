@@ -268,7 +268,7 @@ import vn.edu.uit.mobile.feature.courses.R
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.padding(16.dp).widthIn(max = 480.dp).fillMaxWidth().fillMaxHeight(0.9f), shape = TechnicalShapes.Dialog, color = MaterialTheme.colorScheme.surface) {
             Column(Modifier.padding(20.dp)) {
-                Text("AI connection", style = MaterialTheme.typography.headlineSmall)
+                Text(stringResource(R.string.st_conn_title), style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(16.dp))
                 Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).testTag("ai-connection-form"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     StudyConnectionMode.entries.forEach { option ->
@@ -279,25 +279,25 @@ import vn.edu.uit.mobile.feature.courses.R
                         }, shape = TechnicalShapes.Field, modifier = Modifier.fillMaxWidth()) {
                             RadioButton(selected = mode == option, onClick = null)
                             Spacer(Modifier.width(8.dp))
-                            Text(if (option == StudyConnectionMode.DIRECT) "Direct OpenAI" else "Gateway")
+                            Text(stringResource(if (option == StudyConnectionMode.DIRECT) R.string.st_direct_mode else R.string.st_gateway_mode))
                         }
                     }
                     if (mode == StudyConnectionMode.DIRECT) {
-                        Text("Connect from this phone to OpenAI. No backend to host. Use your own API key and API billing account; this is separate from ChatGPT sign-in.", style = MaterialTheme.typography.bodySmall)
-                        OutlinedTextField(model, { model = it.take(100) }, modifier = Modifier.fillMaxWidth(), label = { Text("OpenAI model ID") }, supportingText = { Text("Use a model available to your API project with structured outputs.") }, singleLine = true, shape = TechnicalShapes.Field)
+                        Text(stringResource(R.string.st_direct_body), style = MaterialTheme.typography.bodySmall)
+                        OutlinedTextField(model, { model = it.take(100) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.st_model_id)) }, supportingText = { Text(stringResource(R.string.st_model_hint)) }, singleLine = true, shape = TechnicalShapes.Field)
                     } else {
-                        Text("Use an HTTPS gateway to keep the OpenAI key on your server. Enter its separate gateway token here.", style = MaterialTheme.typography.bodySmall)
-                        OutlinedTextField(endpoint, { endpoint = it }, modifier = Modifier.fillMaxWidth(), label = { Text("HTTPS gateway address") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), singleLine = true, shape = TechnicalShapes.Field)
+                        Text(stringResource(R.string.st_gateway_body), style = MaterialTheme.typography.bodySmall)
+                        OutlinedTextField(endpoint, { endpoint = it }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.st_endpoint)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), singleLine = true, shape = TechnicalShapes.Field)
                     }
-                    OutlinedTextField(secret, { secret = it.take(1024) }, modifier = Modifier.fillMaxWidth(), label = { Text(if (mode == StudyConnectionMode.DIRECT) "Your OpenAI API key" else "Gateway access token") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), visualTransformation = PasswordVisualTransformation(), singleLine = true, shape = TechnicalShapes.Field)
-                    Text("Credentials are encrypted on this phone. Use a personal key for direct mode; never distribute a shared key in the APK. A compromised device can still expose stored credentials.", style = MaterialTheme.typography.bodySmall)
+                    OutlinedTextField(secret, { secret = it.take(1024) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(if (mode == StudyConnectionMode.DIRECT) R.string.st_api_key else R.string.st_token)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), visualTransformation = PasswordVisualTransformation(), singleLine = true, shape = TechnicalShapes.Field)
+                    Text(stringResource(R.string.st_credentials_note), style = MaterialTheme.typography.bodySmall)
                     error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                    if (connection.configured) TextButton(onDisconnect, shape = TechnicalShapes.Control) { Text("Clear connection") }
+                    if (connection.configured) TextButton(onDisconnect, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_clear)) }
                 }
                 Spacer(Modifier.height(12.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onDismiss, shape = TechnicalShapes.Control) { Text("Cancel") }
-                    TextButton(::save, enabled = secret.isNotBlank(), shape = TechnicalShapes.Control) { Text("Save connection") }
+                    TextButton(onDismiss, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_cancel)) }
+                    TextButton(::save, enabled = secret.isNotBlank(), shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_save_conn)) }
                 }
             }
         }

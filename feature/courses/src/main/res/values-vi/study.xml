@@ -64,4 +64,17 @@
     <string name="st_source_body">Nội dung nguồn</string>
     <string name="st_add_source">Thêm nguồn</string>
     <string name="st_cancel">Huỷ</string>
+    <string name="st_conn_title">Kết nối AI</string>
+    <string name="st_direct_mode">OpenAI trực tiếp</string>
+    <string name="st_gateway_mode">Gateway</string>
+    <string name="st_direct_body">Kết nối từ điện thoại tới OpenAI, không cần máy chủ. Dùng API key và tài khoản thanh toán của bạn; tách biệt với đăng nhập ChatGPT.</string>
+    <string name="st_model_id">Model OpenAI</string>
+    <string name="st_model_hint">Dùng model mà dự án API của bạn có quyền, hỗ trợ structured outputs.</string>
+    <string name="st_gateway_body">Dùng gateway HTTPS để giữ khoá OpenAI trên máy chủ của bạn. Nhập token gateway riêng ở đây.</string>
+    <string name="st_endpoint">Địa chỉ gateway HTTPS</string>
+    <string name="st_api_key">API key OpenAI của bạn</string>
+    <string name="st_token">Token truy cập gateway</string>
+    <string name="st_credentials_note">Thông tin được mã hoá trên máy. Dùng khoá cá nhân cho chế độ trực tiếp; không phát tán khoá chung trong APK. Thiết bị bị xâm nhập vẫn có thể lộ thông tin đã lưu.</string>
+    <string name="st_clear">Xoá kết nối</string>
+    <string name="st_save_conn">Lưu kết nối</string>
 </resources>

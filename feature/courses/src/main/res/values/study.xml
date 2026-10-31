@@ -66,4 +66,17 @@
     <string name="st_source_body">Source text</string>
     <string name="st_add_source">Add source</string>
     <string name="st_cancel">Cancel</string>
+    <string name="st_conn_title">AI connection</string>
+    <string name="st_direct_mode">Direct OpenAI</string>
+    <string name="st_gateway_mode">Gateway</string>
+    <string name="st_direct_body">Connect from this phone to OpenAI. No backend to host. Use your own API key and API billing account; this is separate from ChatGPT sign-in.</string>
+    <string name="st_model_id">OpenAI model ID</string>
+    <string name="st_model_hint">Use a model available to your API project with structured outputs.</string>
+    <string name="st_gateway_body">Use an HTTPS gateway to keep the OpenAI key on your server. Enter its separate gateway token here.</string>
+    <string name="st_endpoint">HTTPS gateway address</string>
+    <string name="st_api_key">Your OpenAI API key</string>
+    <string name="st_token">Gateway access token</string>
+    <string name="st_credentials_note">Credentials are encrypted on this phone. Use a personal key for direct mode; never distribute a shared key in the APK. A compromised device can still expose stored credentials.</string>
+    <string name="st_clear">Clear connection</string>
+    <string name="st_save_conn">Save connection</string>
 </resources>

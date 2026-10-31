@@ -13,12 +13,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
+import vn.edu.uit.mobile.feature.courses.R
 import vn.edu.uit.mobile.model.*
 
 @Composable fun OfflineDownloadsScreen(viewModel: OfflineDownloadsViewModel, onBack: () -> Unit) {
@@ -51,33 +53,33 @@ import vn.edu.uit.mobile.model.*
         item {
             TextButton(onBack, shape = TechnicalShapes.Control) {
                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, null)
-                Text("Courses")
+                Text(stringResource(R.string.dl_back))
             }
-            PageHeading("Offline downloads", "Saved course packs on this phone")
+            PageHeading(stringResource(R.string.dl_title), stringResource(R.string.dl_subtitle))
         }
         item {
             Panel(Modifier.fillMaxWidth()) {
-                Text("${state.items.count { it.status == OfflineDownloadStatus.SAVED }} of ${state.items.size} files saved", style = MaterialTheme.typography.titleLarge)
-                Text("Resource storage · ${offlineSize(state.usedBytes)}", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.dl_summary, state.items.count { it.status == OfflineDownloadStatus.SAVED }, state.items.size), style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.dl_storage, offlineSize(state.usedBytes)), style = MaterialTheme.typography.bodyMedium)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Wi-Fi only for packs", Modifier.weight(1f))
+                    Text(stringResource(R.string.dl_wifi_only), Modifier.weight(1f))
                     Switch(state.wifiOnly, onWifi, enabled = state.ready)
                 }
-                Text(if (state.wifi) "Wi-Fi connection detected" else "Wi-Fi unavailable", style = MaterialTheme.typography.bodySmall)
-                Text("Saved files are verified before opening. Keep UIT Mobile running for queued packs; reopen and Retry interrupted files if Android closes the app. Wi-Fi only applies to these packs; opening files elsewhere may use mobile data.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                TextButton(onVerify, enabled = state.ready, shape = TechnicalShapes.Control) { Text("Verify saved copies") }
+                Text(stringResource(if (state.wifi) R.string.dl_wifi_yes else R.string.dl_wifi_no), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.dl_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                TextButton(onVerify, enabled = state.ready, shape = TechnicalShapes.Control) { Text(stringResource(R.string.dl_verify)) }
                 state.message?.let { InlineNotice(it) }
             }
         }
         if (!state.ready) {
             item {
                 CircularProgressIndicator()
-                Text("Reading the saved download list…")
+                Text(stringResource(R.string.dl_reading))
             }
         }
         if (course == null) {
-            item { SectionHeading("Choose a course", "Select a course, then all saved sections or a section/week pack.") }
-            if (courses.isEmpty()) item { EmptyState("No connected course files", "Connect Moodle and load your courses first.") }
+            item { SectionHeading(stringResource(R.string.dl_choose_course), stringResource(R.string.dl_choose_course_hint)) }
+            if (courses.isEmpty()) item { EmptyState(stringResource(R.string.dl_no_courses_title), stringResource(R.string.dl_no_courses_body)) }
             courses.forEach { candidate ->
                 item(key = "course:${candidate.accountId}:${candidate.id}") {
                     Panel(Modifier.fillMaxWidth()) {
@@ -88,7 +90,7 @@ import vn.edu.uit.mobile.model.*
                             section = null
                             selectedFiles = null
                             choosingFiles = false
-                        }, shape = TechnicalShapes.Control) { Text("Choose file pack") }
+                        }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.dl_choose_pack)) }
                     }
                 }
             }
@@ -147,25 +149,25 @@ import vn.edu.uit.mobile.model.*
             }
             if (specs.isEmpty()) item { EmptyState("No file metadata saved", "Load the course above to discover downloadable files. No files are downloaded until you queue them.") }
         }
-        item { SectionHeading("Download queue", "Cancel keeps existing saved copies; Remove deletes only that resource and its checksum.") }
-        if (state.items.isEmpty()) item { EmptyState("No queued files", "Choose a course pack above. Nothing downloads automatically.") }
+        item { SectionHeading(stringResource(R.string.dl_queue_heading), stringResource(R.string.dl_queue_hint)) }
+        if (state.items.isEmpty()) item { EmptyState(stringResource(R.string.dl_empty_title), stringResource(R.string.dl_empty_body)) }
         state.items.forEach { item ->
             item(key = item.id) {
                 Panel(Modifier.fillMaxWidth()) {
                     Text(item.spec.file.name, style = MaterialTheme.typography.titleMedium)
                     Text("${item.spec.course.shortname} · ${item.spec.sectionName}", style = MaterialTheme.typography.bodySmall)
                     Text(offlineStatusLabel(item.status), style = MaterialTheme.typography.labelLarge)
-                    if (item.status == OfflineDownloadStatus.SAVED) Text("${offlineSize(item.bytes)} verified", style = MaterialTheme.typography.bodySmall)
+                    if (item.status == OfflineDownloadStatus.SAVED) Text(stringResource(R.string.dl_verified, offlineSize(item.bytes)), style = MaterialTheme.typography.bodySmall)
                     if (item.status == OfflineDownloadStatus.DOWNLOADING) LinearProgressIndicator(Modifier.fillMaxWidth())
                     item.message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
                     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         when (item.status) {
-                            OfflineDownloadStatus.SAVED -> TextButton({ onOpen(item.id) }, shape = TechnicalShapes.Control) { Text("Open saved file") }
-                            OfflineDownloadStatus.QUEUED, OfflineDownloadStatus.DOWNLOADING, OfflineDownloadStatus.WAITING_WIFI -> TextButton({ onCancel(item.id) }, shape = TechnicalShapes.Control) { Text("Cancel file") }
-                            OfflineDownloadStatus.FAILED, OfflineDownloadStatus.CANCELED -> TextButton({ onRetry(item.id) }, shape = TechnicalShapes.Control) { Text("Retry file") }
+                            OfflineDownloadStatus.SAVED -> TextButton({ onOpen(item.id) }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.dl_open)) }
+                            OfflineDownloadStatus.QUEUED, OfflineDownloadStatus.DOWNLOADING, OfflineDownloadStatus.WAITING_WIFI -> TextButton({ onCancel(item.id) }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.dl_cancel)) }
+                            OfflineDownloadStatus.FAILED, OfflineDownloadStatus.CANCELED -> TextButton({ onRetry(item.id) }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.dl_retry)) }
                             else -> Unit
                         }
-                        TextButton({ onRemove(item.id) }, enabled = item.status != OfflineDownloadStatus.REMOVING, shape = TechnicalShapes.Control) { Text("Remove file") }
+                        TextButton({ onRemove(item.id) }, enabled = item.status != OfflineDownloadStatus.REMOVING, shape = TechnicalShapes.Control) { Text(stringResource(R.string.dl_remove)) }
                     }
                 }
             }

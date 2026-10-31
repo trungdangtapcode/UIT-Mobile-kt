@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dl_back">Courses</string>
+    <string name="dl_title">Offline downloads</string>
+    <string name="dl_subtitle">Saved course packs on this phone</string>
+    <string name="dl_summary">%1$d of %2$d files saved</string>
+    <string name="dl_storage">Resource storage · %1$s</string>
+    <string name="dl_wifi_only">Wi-Fi only for packs</string>
+    <string name="dl_wifi_yes">Wi-Fi connection detected</string>
+    <string name="dl_wifi_no">Wi-Fi unavailable</string>
+    <string name="dl_note">Saved files are verified before opening. Keep UIT Mobile running for queued packs; reopen and Retry interrupted files if Android closes the app. Wi-Fi only applies to these packs; opening files elsewhere may use mobile data.</string>
+    <string name="dl_verify">Verify saved copies</string>
+    <string name="dl_reading">Reading the saved download list…</string>
+    <string name="dl_choose_course">Choose a course</string>
+    <string name="dl_choose_course_hint">Select a course, then all saved sections or a section/week pack.</string>
+    <string name="dl_no_courses_title">No connected course files</string>
+    <string name="dl_no_courses_body">Connect Moodle and load your courses first.</string>
+    <string name="dl_choose_pack">Choose file pack</string>
+    <string name="dl_change_course">Change course</string>
+    <string name="dl_load_meta">Load course file metadata</string>
+    <string name="dl_all_sections">All saved sections</string>
+    <string name="dl_selected">%1$d of %2$d files selected · sizes may be unreported</string>
+    <string name="dl_queue">Queue this pack</string>
+    <string name="dl_limit">Select at most 100 files before queuing.</string>
+    <string name="dl_select_all">Select all</string>
+    <string name="dl_clear">Clear selection</string>
+    <string name="dl_hide_files">Hide file selection</string>
+    <string name="dl_choose_files">Choose individual files</string>
+    <string name="dl_select_file">Select %1$s</string>
+    <string name="dl_no_meta_title">No file metadata saved</string>
+    <string name="dl_no_meta_body">Load the course above to discover downloadable files. No files are downloaded until you queue them.</string>
+    <string name="dl_queue_heading">Download queue</string>
+    <string name="dl_queue_hint">Cancel keeps existing saved copies; Remove deletes only that resource and its checksum.</string>
+    <string name="dl_empty_title">No queued files</string>
+    <string name="dl_empty_body">Choose a course pack above. Nothing downloads automatically.</string>
+    <string name="dl_verified">%1$s verified</string>
+    <string name="dl_open">Open saved file</string>
+    <string name="dl_cancel">Cancel file</string>
+    <string name="dl_retry">Retry file</string>
+    <string name="dl_remove">Remove file</string>
+</resources>

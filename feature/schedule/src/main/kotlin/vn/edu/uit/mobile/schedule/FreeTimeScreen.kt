@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -22,6 +23,7 @@ import kotlinx.datetime.*
 import vn.edu.uit.mobile.common.*
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
+import vn.edu.uit.mobile.feature.schedule.R
 import vn.edu.uit.mobile.model.*
 
 @Composable
@@ -37,37 +39,37 @@ fun FreeTimeContent(snapshot: PortalSnapshot, state: FreeTimeState, onBack: () -
         item {
             TextButton(onBack, shape = TechnicalShapes.Control) {
                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, null)
-                Text("Schedule")
+                Text(stringResource(R.string.ft_back))
             }
-            PageHeading("Find free time", "Check your saved commitments · GMT+07")
+            PageHeading(stringResource(R.string.ft_title), stringResource(R.string.ft_subtitle))
         }
         item {
             Panel(Modifier.fillMaxWidth()) {
-                Text("Search window", style = MaterialTheme.typography.titleMedium)
-                OutlinedTextField(state.date, onDate, modifier = Modifier.fillMaxWidth(), label = { Text("Date · YYYY-MM-DD") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii), shape = TechnicalShapes.Field)
+                Text(stringResource(R.string.ft_window), style = MaterialTheme.typography.titleMedium)
+                OutlinedTextField(state.date, onDate, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.ft_date)) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii), shape = TechnicalShapes.Field)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    PlannerField(state.start, onStart, "From · HH:mm", Modifier.weight(1f))
-                    PlannerField(state.end, onEnd, "Until · HH:mm", Modifier.weight(1f))
+                    PlannerField(state.start, onStart, stringResource(R.string.ft_from), Modifier.weight(1f))
+                    PlannerField(state.end, onEnd, stringResource(R.string.ft_until), Modifier.weight(1f))
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    PlannerField(state.minimum, onMinimum, "Minimum (min)", Modifier.weight(1f), true)
-                    PlannerField(state.buffer, onBuffer, "Buffer (min)", Modifier.weight(1f), true)
+                    PlannerField(state.minimum, onMinimum, stringResource(R.string.ft_minimum), Modifier.weight(1f), true)
+                    PlannerField(state.buffer, onBuffer, stringResource(R.string.ft_buffer), Modifier.weight(1f), true)
                 }
-                Text("Reserve the buffer before and after each commitment. Only gaps at least as long as your minimum are shown.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.ft_buffer_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         item {
-            SectionHeading("Personal time blocks", "Drafts stay on this screen's planning session and clear when you close it. Nothing is added to UIT or a calendar.")
+            SectionHeading(stringResource(R.string.ft_blocks_title), stringResource(R.string.ft_blocks_hint))
             OutlinedButton(onClick = { adding = true }, enabled = state.personal.size < 10, shape = TechnicalShapes.Control) {
                 Icon(Icons.Outlined.Add, null)
-                Text("Add personal block")
+                Text(stringResource(R.string.ft_add_block))
             }
         }
         items(state.personal, key = { "personal:${it.id}" }) { entry ->
             Panel(Modifier.fillMaxWidth()) {
                 Text(entry.title, style = MaterialTheme.typography.titleMedium)
                 Text("${dateText(entry.start)} · ${clockText(entry.start)}–${clockText(entry.end)}", style = MaterialTheme.typography.bodyMedium)
-                TextButton({ onRemove(entry.id) }, shape = TechnicalShapes.Control) { Text("Remove personal block") }
+                TextButton({ onRemove(entry.id) }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.ft_remove_block)) }
             }
         }
         item {
@@ -79,13 +81,13 @@ fun FreeTimeContent(snapshot: PortalSnapshot, state: FreeTimeState, onBack: () -
         }
         if (result != null && (hasUniversityCommitments || state.personal.isNotEmpty())) {
             if (result.busy.any { it.unknownEnd }) item { InlineNotice("Some commitments have no end time. They block the rest of their UIT day and your buffer; check the commitments below.", true) }
-            item { SectionHeading("Candidate gaps · ${result.slots.size}", "Tap an interval to inspect its boundaries. No event is created.") }
-            if (result.slots.isEmpty()) item { EmptyState("No matching gaps", "Try a shorter minimum, a wider search window or a different date.") }
+            item { SectionHeading(stringResource(R.string.ft_gaps, result.slots.size), stringResource(R.string.ft_gaps_hint)) }
+            if (result.slots.isEmpty()) item { EmptyState(stringResource(R.string.ft_no_gaps_title), stringResource(R.string.ft_no_gaps_body)) }
             items(result.slots, key = { "gap:${it.start}:${it.end}" }) { slot ->
                 Panel(Modifier.fillMaxWidth()) {
                     Text("${clockText(slot.start)}–${clockText(slot.end)}", style = MaterialTheme.typography.titleLarge)
                     Text("${slot.minutes} minutes · ${dateText(slot.start)}", style = MaterialTheme.typography.bodyMedium)
-                    TextButton({ selected = slot }, shape = TechnicalShapes.Control) { Text("Inspect interval") }
+                    TextButton({ selected = slot }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.ft_inspect)) }
                 }
             }
             item { SectionHeading("Commitments used · ${result.busy.size}", "${result.canceledCount} canceled meetings excluded. Times below include the buffer within your window.") }
@@ -108,14 +110,14 @@ fun FreeTimeContent(snapshot: PortalSnapshot, state: FreeTimeState, onBack: () -
     if (slot != null && result != null) {
         val before = result.busy.filter { it.bufferedEnd <= slot.start }.maxByOrNull { it.bufferedEnd }
         val after = result.busy.filter { it.bufferedStart >= slot.end }.minByOrNull { it.bufferedStart }
-        AlertDialog(onDismissRequest = { selected = null }, shape = TechnicalShapes.Dialog, title = { Text("Candidate interval") }, text = {
+        AlertDialog(onDismissRequest = { selected = null }, shape = TechnicalShapes.Dialog, title = { Text(stringResource(R.string.ft_interval)) }, text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("${dateText(slot.start)} · ${clockText(slot.start)}–${clockText(slot.end)} · ${slot.minutes} minutes")
-                Text(before?.let { "After ${it.title} · buffer ends ${clockText(it.bufferedEnd)}" } ?: "Starts at your search window boundary.")
-                Text(after?.let { "Before ${it.title} · buffer begins ${clockText(it.bufferedStart)}" } ?: "Ends at your search window boundary.")
-                Text("This is a gap in the checked data. No event or room booking has been created.", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.ft_interval_body, dateText(slot.start), clockText(slot.start), clockText(slot.end), slot.minutes))
+                Text(before?.let { stringResource(R.string.ft_after, it.title, clockText(it.bufferedEnd)) } ?: stringResource(R.string.ft_window_start))
+                Text(after?.let { stringResource(R.string.ft_before, it.title, clockText(it.bufferedStart)) } ?: stringResource(R.string.ft_window_end))
+                Text(stringResource(R.string.ft_gap_note), style = MaterialTheme.typography.bodySmall)
             }
-        }, confirmButton = { TextButton({ selected = null }, shape = TechnicalShapes.Control) { Text("Close interval") } })
+        }, confirmButton = { TextButton({ selected = null }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.ft_close_interval)) } })
     }
 }
 
@@ -131,21 +133,21 @@ fun FreeTimeContent(snapshot: PortalSnapshot, state: FreeTimeState, onBack: () -
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.padding(16.dp).widthIn(max = 480.dp).fillMaxWidth().heightIn(max = 600.dp), shape = TechnicalShapes.Dialog, color = MaterialTheme.colorScheme.surface) {
             Column(Modifier.padding(20.dp)) {
-                Text("Personal time block", style = MaterialTheme.typography.headlineSmall)
+                Text(stringResource(R.string.ft_dialog_title), style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(16.dp))
                 Column(Modifier.weight(1f, fill = false).fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("$date · GMT+07 · planning draft only", style = MaterialTheme.typography.bodySmall)
-                    OutlinedTextField(title, { title = it.take(80) }, modifier = Modifier.fillMaxWidth(), label = { Text("Block title") }, singleLine = true, shape = TechnicalShapes.Field)
-                    OutlinedTextField(start, { start = it.take(5) }, modifier = Modifier.fillMaxWidth(), label = { Text("Block start · HH:mm") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii), shape = TechnicalShapes.Field)
-                    OutlinedTextField(end, { end = it.take(5) }, modifier = Modifier.fillMaxWidth(), label = { Text("Block end · HH:mm") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii), shape = TechnicalShapes.Field)
+                    Text(stringResource(R.string.ft_dialog_draft, date), style = MaterialTheme.typography.bodySmall)
+                    OutlinedTextField(title, { title = it.take(80) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.ft_block_title)) }, singleLine = true, shape = TechnicalShapes.Field)
+                    OutlinedTextField(start, { start = it.take(5) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.ft_block_start)) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii), shape = TechnicalShapes.Field)
+                    OutlinedTextField(end, { end = it.take(5) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.ft_block_end)) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii), shape = TechnicalShapes.Field)
                     error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClose, shape = TechnicalShapes.Control) { Text("Cancel") }
+                    TextButton(onClose, shape = TechnicalShapes.Control) { Text(stringResource(R.string.ft_cancel)) }
                     TextButton({
                         error = onAdd(title, start, end)
                         if (error == null) onClose()
-                    }, enabled = title.isNotBlank(), shape = TechnicalShapes.Control) { Text("Add draft block") }
+                    }, enabled = title.isNotBlank(), shape = TechnicalShapes.Control) { Text(stringResource(R.string.ft_add_draft)) }
                 }
             }
         }

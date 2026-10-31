@@ -16,6 +16,8 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import vn.edu.uit.mobile.designsystem.AppLanguage
+import vn.edu.uit.mobile.designsystem.LanguagePreference
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.model.*
 import vn.edu.uit.mobile.widgets.WidgetRoute
@@ -29,6 +31,8 @@ class WidgetNavigationTest {
     private val repository = FakePortalRepository().apply { snapshot.value = WorkspacePreviewData.snapshot }
 
     @Before fun inject() {
+        // Assertions name English interface text, so pin the language before the Activity starts.
+        LanguagePreference.write(ApplicationProvider.getApplicationContext(), AppLanguage.ENGLISH)
         startKoin {
             modules(
                 module {

@@ -11,4 +11,14 @@
     <string name="widget_connect">Connect your account</string>
     <string name="widget_sync">Sync your timetable</string>
     <string name="widget_saved_schedule">Your saved schedule</string>
+    <string name="wd_title">Home screen widgets</string>
+    <string name="wd_body">See your saved timetable without opening UIT Mobile.</string>
+    <string name="wd_next">Next class · 4 × 2</string>
+    <string name="wd_today">Today · 4 × 3</string>
+    <string name="wd_next_desc">Class, room and closest deadline</string>
+    <string name="wd_today_desc">Remaining classes and closest deadline</string>
+    <string name="wd_note">Widgets use your saved schedule and GMT+07. Android controls background update timing.</string>
+    <string name="wd_manual">You can also long-press your home screen, choose Widgets, then UIT Mobile.</string>
+    <string name="wd_add">Add to home screen</string>
+    <string name="wd_close">Close</string>
 </resources>

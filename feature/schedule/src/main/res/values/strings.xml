@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sched_title">Class schedule</string>
+    <string name="sched_subtitle">Classes, rooms and schedule changes.</string>
+    <string name="sched_export">Export calendar file</string>
+    <string name="sched_free_time">Find free time</string>
+    <string name="sched_events">%1$d events · GMT+07</string>
+    <string name="sched_previous">Previous</string>
+    <string name="sched_next">Next</string>
+    <string name="sched_mode_day">Day</string>
+    <string name="sched_mode_week">Week</string>
+    <string name="sched_mode_month">Month</string>
+    <string name="sched_today">Today</string>
+    <string name="sched_show_day">Show schedule for %1$s</string>
+    <string name="sched_semester">Semester</string>
+    <string name="sched_select_semester">Select semester</string>
+    <string name="sched_semester_from">Semester from %1$s</string>
+    <string name="sched_sync_daa">Sync DAA to load semesters</string>
+    <string name="sched_filter_all">All events</string>
+    <string name="sched_filter_classes">Classes</string>
+    <string name="sched_filter_exams">Exams</string>
+    <string name="sched_filter_deadlines">Deadlines</string>
+    <string name="sched_empty_title">No scheduled events</string>
+    <string name="sched_empty_body">No events match this %1$s. Try another date or filter.</string>
+    <string name="sched_week_count">%1$d events</string>
+    <string name="sched_day_events">%1$s, %2$d events</string>
+    <string name="sched_vietnam_time">%1$s · Vietnam time</string>
+    <string name="sched_class">Class</string>
+    <string name="sched_room">Room</string>
+    <string name="sched_lecturer">Lecturer</string>
+    <string name="sched_updates">Schedule updates</string>
+    <string name="sched_open_course">Open course workspace</string>
+    <string-array name="month_weekdays">
+        <item>M</item>
+        <item>T</item>
+        <item>W</item>
+        <item>T</item>
+        <item>F</item>
+        <item>S</item>
+        <item>S</item>
+    </string-array>
+</resources>

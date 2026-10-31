@@ -23,6 +23,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -32,6 +34,7 @@ import kotlinx.datetime.*
 import vn.edu.uit.mobile.common.*
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
+import vn.edu.uit.mobile.feature.schedule.R
 import vn.edu.uit.mobile.model.*
 
 @Immutable data class ScheduleState(val snapshot: PortalSnapshot = PortalSnapshot(), val anchor: LocalDate = today(), val monthly: Boolean = false, val focusRequest: Int = 0, val calendarExportBusy: Boolean = false, val calendarExportMessage: String? = null)
@@ -176,20 +179,20 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
     LazyColumn(Modifier.fillMaxSize().testTag("schedule-content"), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) { PageHeading("Class schedule", "Classes, rooms and schedule changes.") }
-                if (onExport != null) IconButton(onExport) { Icon(Icons.Outlined.SaveAlt, "Export calendar file") }
+                Column(Modifier.weight(1f)) { PageHeading(stringResource(R.string.sched_title), stringResource(R.string.sched_subtitle)) }
+                if (onExport != null) IconButton(onExport) { Icon(Icons.Outlined.SaveAlt, stringResource(R.string.sched_export)) }
             }
-            if (onFreeTime != null) AssistChip(onClick = onFreeTime, shape = TechnicalShapes.Control, label = { Text("Find free time") }, leadingIcon = { Icon(Icons.Outlined.EventAvailable, null, Modifier.size(18.dp)) })
+            if (onFreeTime != null) AssistChip(onClick = onFreeTime, shape = TechnicalShapes.Control, label = { Text(stringResource(R.string.sched_free_time)) }, leadingIcon = { Icon(Icons.Outlined.EventAvailable, null, Modifier.size(18.dp)) })
         }
         item {
             Panel {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Column(Modifier.weight(1f)) {
-                        Text("${state.anchor.month.name.lowercase().replaceFirstChar(Char::uppercase)} ${state.anchor.year}", style = MaterialTheme.typography.titleLarge)
-                        Text("${entries.size} events · GMT+07", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(monthYear(state.anchor), style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.sched_events, entries.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    IconButton(onClick = { if (mode == "Day") onIntent(ScheduleIntent.Date(state.anchor.minus(1, DateTimeUnit.DAY))) else onIntent(ScheduleIntent.Move(-1)) }) { Icon(Icons.Outlined.ChevronLeft, "Previous ${mode.lowercase()}") }
-                    IconButton(onClick = { if (mode == "Day") onIntent(ScheduleIntent.Date(state.anchor.plus(1, DateTimeUnit.DAY))) else onIntent(ScheduleIntent.Move(1)) }) { Icon(Icons.Outlined.ChevronRight, "Next ${mode.lowercase()}") }
+                    IconButton(onClick = { if (mode == "Day") onIntent(ScheduleIntent.Date(state.anchor.minus(1, DateTimeUnit.DAY))) else onIntent(ScheduleIntent.Move(-1)) }) { Icon(Icons.Outlined.ChevronLeft, stringResource(R.string.sched_previous)) }
+                    IconButton(onClick = { if (mode == "Day") onIntent(ScheduleIntent.Date(state.anchor.plus(1, DateTimeUnit.DAY))) else onIntent(ScheduleIntent.Move(1)) }) { Icon(Icons.Outlined.ChevronRight, stringResource(R.string.sched_next)) }
                 }
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SingleChoiceSegmentedButtonRow(Modifier.weight(1f)) {
@@ -197,26 +200,27 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
                             SegmentedButton(selected = mode == label, onClick = {
                                 mode = label
                                 if ((label == "Month") != state.monthly) onIntent(ScheduleIntent.Toggle)
-                            }, shape = TechnicalShapes.Control, label = { Text(label) })
+                            }, shape = TechnicalShapes.Control, label = { Text(modeLabel(label)) })
                         }
                     }
-                    TextButton(shape = TechnicalShapes.Control, onClick = { onIntent(ScheduleIntent.Date(today())) }) { Text("Today") }
+                    TextButton(shape = TechnicalShapes.Control, onClick = { onIntent(ScheduleIntent.Date(today())) }) { Text(stringResource(R.string.sched_today)) }
                 }
                 if (mode == "Day") {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         repeat(7) { offset ->
                             val date = week.plus(offset, DateTimeUnit.DAY)
                             val active = date == state.anchor
+                            val dayDescription = stringResource(R.string.sched_show_day, date.toString())
                             Column(
                                 Modifier.weight(1f).clip(TechnicalShapes.Control).background(if (active) MaterialTheme.colorScheme.primary else Color.Transparent)
                                     .clickable { onIntent(ScheduleIntent.Date(date)) }.padding(vertical = 10.dp).semantics {
                                         this.selected = active
-                                        contentDescription = "Show schedule for $date"
+                                        contentDescription = dayDescription
                                     },
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                                Text(date.dayOfWeek.name.take(2), style = MaterialTheme.typography.labelSmall, color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(shortWeekday(date.dayOfWeek), style = MaterialTheme.typography.labelSmall, color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text("${date.dayOfMonth}", style = MaterialTheme.typography.titleMedium, color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
                             }
                         }
@@ -227,18 +231,18 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
         item {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box {
-                    AssistChip(shape = TechnicalShapes.Control, onClick = { semesters = true }, label = { Text("Semester") }, leadingIcon = { Icon(Icons.Outlined.Tune, "Select semester", Modifier.size(16.dp)) })
+                    AssistChip(shape = TechnicalShapes.Control, onClick = { semesters = true }, label = { Text(stringResource(R.string.sched_semester)) }, leadingIcon = { Icon(Icons.Outlined.Tune, stringResource(R.string.sched_select_semester), Modifier.size(16.dp)) })
                     DropdownMenu(semesters, { semesters = false }) {
                         state.snapshot.timetable.map { it.startDate }.distinct().sortedDescending().forEach { date ->
-                            DropdownMenuItem(text = { Text("Semester from $date") }, onClick = {
+                            DropdownMenuItem(text = { Text(stringResource(R.string.sched_semester_from, date)) }, onClick = {
                                 onIntent(ScheduleIntent.Semester(LocalDate.parse(date)))
                                 semesters = false
                             })
                         }
-                        if (state.snapshot.timetable.isEmpty()) DropdownMenuItem(text = { Text("Sync DAA to load semesters") }, onClick = { semesters = false }, enabled = false)
+                        if (state.snapshot.timetable.isEmpty()) DropdownMenuItem(text = { Text(stringResource(R.string.sched_sync_daa)) }, onClick = { semesters = false }, enabled = false)
                     }
                 }
-                listOf("All events", "Classes", "Exams", "Deadlines").forEach { label -> FilterChip(shape = TechnicalShapes.Control, selected = filter == label, onClick = { filter = label }, label = { Text(label) }) }
+                listOf("All events", "Classes", "Exams", "Deadlines").forEach { label -> FilterChip(shape = TechnicalShapes.Control, selected = filter == label, onClick = { filter = label }, label = { Text(filterLabel(label)) }) }
             }
         }
         if (mode == "Month") {
@@ -250,9 +254,9 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
                 }
             }
         }
-        if (entries.isEmpty()) item { EmptyState("No scheduled events", "No events match this ${mode.lowercase()}. Try another date or filter.") }
+        if (entries.isEmpty()) item { EmptyState(stringResource(R.string.sched_empty_title), stringResource(R.string.sched_empty_body, modeLabel(mode))) }
         entries.groupBy { dateText(it.start) }.forEach { (date, rows) ->
-            item(key = "date:$date") { SectionHeading(friendlyDate(LocalDate.parse(date)), if (mode == "Week") "${rows.size} events" else null) }
+            item(key = "date:$date") { SectionHeading(friendlyDate(LocalDate.parse(date)), if (mode == "Week") stringResource(R.string.sched_week_count, rows.size) else null) }
             rows.forEach { entry -> item(key = entry.key) { ScheduleCard(entry) { selected = entry } } }
         }
     }
@@ -265,15 +269,15 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
                     IconTile(Icons.Outlined.Schedule, scheduleColor(entry.kind))
                     Column {
                         Text(friendlyDate(Instant.fromEpochSeconds(entry.start).toLocalDateTime(UitTimeZone).date), style = MaterialTheme.typography.titleSmall)
-                        Text("${clockText(entry.start)}${if (entry.end > entry.start) "–${clockText(entry.end)}" else ""} · Vietnam time", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.sched_vietnam_time, "${clockText(entry.start)}${if (entry.end > entry.start) "–${clockText(entry.end)}" else ""}"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
-                if (entry.classCode.isNotBlank()) DetailLine(Icons.Outlined.Class, "Class", entry.classCode)
-                if (entry.room.isNotBlank()) DetailLine(Icons.Outlined.LocationOn, "Room", entry.room)
-                state.snapshot.timetable.firstOrNull { it.classCode == entry.classCode }?.lecturerName?.takeIf(String::isNotBlank)?.let { DetailLine(Icons.Outlined.PersonOutline, "Lecturer", it) }
+                if (entry.classCode.isNotBlank()) DetailLine(Icons.Outlined.Class, stringResource(R.string.sched_class), entry.classCode)
+                if (entry.room.isNotBlank()) DetailLine(Icons.Outlined.LocationOn, stringResource(R.string.sched_room), entry.room)
+                state.snapshot.timetable.firstOrNull { it.classCode == entry.classCode }?.lecturerName?.takeIf(String::isNotBlank)?.let { DetailLine(Icons.Outlined.PersonOutline, stringResource(R.string.sched_lecturer), it) }
                 val notices = state.snapshot.notices.filter { it.classCode == entry.classCode }
                 if (notices.isNotEmpty()) {
-                    SectionHeading("Schedule updates")
+                    SectionHeading(stringResource(R.string.sched_updates))
                     notices.forEach { InlineNotice("${it.title} · ${it.targetDate}", it.type == ScheduleChangeType.CANCELED) }
                 }
                 entry.course?.let { course ->
@@ -281,7 +285,7 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
                         selected = null
                         onCourse(course)
                     }, modifier = Modifier.fillMaxWidth(), shape = TechnicalShapes.Control) {
-                        Text("Open course workspace")
+                        Text(stringResource(R.string.sched_open_course))
                         Spacer(Modifier.width(8.dp))
                         Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, Modifier.size(18.dp))
                     }
@@ -291,6 +295,23 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
         }
     }
 }
+
+@Composable private fun modeLabel(key: String): String = stringResource(
+    when (key) {
+        "Week" -> R.string.sched_mode_week
+        "Month" -> R.string.sched_mode_month
+        else -> R.string.sched_mode_day
+    }
+)
+
+@Composable private fun filterLabel(key: String): String = stringResource(
+    when (key) {
+        "Classes" -> R.string.sched_filter_classes
+        "Exams" -> R.string.sched_filter_exams
+        "Deadlines" -> R.string.sched_filter_deadlines
+        else -> R.string.sched_filter_all
+    }
+)
 
 @Composable private fun DetailLine(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -304,7 +325,7 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
     val offset = month.dayOfWeek.isoDayNumber - 1
     val days = month.plus(1, DateTimeUnit.MONTH).toEpochDays() - month.toEpochDays()
     Panel {
-        Row(Modifier.fillMaxWidth()) { listOf("M", "T", "W", "T", "F", "S", "S").forEach { Text(it, Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center) } }
+        Row(Modifier.fillMaxWidth()) { stringArrayResource(R.array.month_weekdays).forEach { Text(it, Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center) } }
         repeat((offset + days + 6) / 7) { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 repeat(7) { column ->
@@ -314,9 +335,10 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
                     } else {
                         val date = month.plus(index, DateTimeUnit.DAY)
                         val events = entries.filter { dateText(it.start) == date.toString() }
+                        val dayDescription = stringResource(R.string.sched_day_events, date.toString(), events.size)
                         Column(
                             Modifier.weight(1f).height(54.dp).clip(TechnicalShapes.Field).background(if (date == selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
-                                .clickable { onDate(date) }.semantics { contentDescription = "$date, ${events.size} events" },
+                                .clickable { onDate(date) }.semantics { contentDescription = dayDescription },
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {

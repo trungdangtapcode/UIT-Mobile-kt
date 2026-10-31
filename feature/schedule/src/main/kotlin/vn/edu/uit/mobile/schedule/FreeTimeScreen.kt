@@ -73,34 +73,34 @@ fun FreeTimeContent(snapshot: PortalSnapshot, state: FreeTimeState, onBack: () -
             }
         }
         item {
-            if (!hasUniversityCommitments) InlineNotice(if (state.personal.isEmpty()) "No saved university commitments are available. Schedule coverage is unverified; sync or add personal blocks to plan from." else "Only your personal blocks are available. University commitments are not included.", true)
-            if (snapshot.updatedAt > 0) Text("Snapshot saved · ${dateText(snapshot.updatedAt)} ${clockText(snapshot.updatedAt)} · GMT+07", style = MaterialTheme.typography.bodySmall)
-            Text("Candidate gaps reflect cached commitments, not guaranteed availability or room occupancy. Deadlines do not reserve study time automatically.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (!hasUniversityCommitments) InlineNotice(if (state.personal.isEmpty()) stringResource(R.string.ft_no_commit) else stringResource(R.string.ft_personal_only), true)
+            if (snapshot.updatedAt > 0) Text(stringResource(R.string.ft_snapshot, dateText(snapshot.updatedAt), clockText(snapshot.updatedAt)), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.ft_cached_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             state.message?.let { InlineNotice(it) }
-            calculation.exceptionOrNull()?.let { InlineNotice(it.message ?: "The saved schedule could not be checked. Review the date and times.", true) }
+            calculation.exceptionOrNull()?.let { InlineNotice(it.message ?: stringResource(R.string.ft_error), true) }
         }
         if (result != null && (hasUniversityCommitments || state.personal.isNotEmpty())) {
-            if (result.busy.any { it.unknownEnd }) item { InlineNotice("Some commitments have no end time. They block the rest of their UIT day and your buffer; check the commitments below.", true) }
+            if (result.busy.any { it.unknownEnd }) item { InlineNotice(stringResource(R.string.ft_unknown_end), true) }
             item { SectionHeading(stringResource(R.string.ft_gaps, result.slots.size), stringResource(R.string.ft_gaps_hint)) }
             if (result.slots.isEmpty()) item { EmptyState(stringResource(R.string.ft_no_gaps_title), stringResource(R.string.ft_no_gaps_body)) }
             items(result.slots, key = { "gap:${it.start}:${it.end}" }) { slot ->
                 Panel(Modifier.fillMaxWidth()) {
                     Text("${clockText(slot.start)}–${clockText(slot.end)}", style = MaterialTheme.typography.titleLarge)
-                    Text("${slot.minutes} minutes · ${dateText(slot.start)}", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.ft_minutes, slot.minutes, dateText(slot.start)), style = MaterialTheme.typography.bodyMedium)
                     TextButton({ selected = slot }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.ft_inspect)) }
                 }
             }
-            item { SectionHeading("Commitments used · ${result.busy.size}", "${result.canceledCount} canceled meetings excluded. Times below include the buffer within your window.") }
-            if (result.busy.isEmpty()) item { Text("No saved timed commitments overlap this window.", style = MaterialTheme.typography.bodyMedium) }
+            item { SectionHeading(stringResource(R.string.ft_used, result.busy.size), stringResource(R.string.ft_used_hint, result.canceledCount)) }
+            if (result.busy.isEmpty()) item { Text(stringResource(R.string.ft_no_busy), style = MaterialTheme.typography.bodyMedium) }
             items(result.busy, key = { "busy:${it.key}:${it.start}:${it.end}" }) { block ->
                 Panel(Modifier.fillMaxWidth()) {
                     Text(block.title, style = MaterialTheme.typography.titleMedium)
-                    Text("${clockText(block.bufferedStart)}–${clockText(block.bufferedEnd)} · ${if (block.kind == "PERSONAL") "Personal block" else block.kind.lowercase().replaceFirstChar(Char::uppercase)}", style = MaterialTheme.typography.bodyMedium)
-                    if (block.unknownEnd) Text("End time missing · reserved through the end of its UIT day", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                    Text("${clockText(block.bufferedStart)}–${clockText(block.bufferedEnd)} · ${if (block.kind == "PERSONAL") stringResource(R.string.ft_personal_kind) else block.kind.lowercase().replaceFirstChar(Char::uppercase)}", style = MaterialTheme.typography.bodyMedium)
+                    if (block.unknownEnd) Text(stringResource(R.string.ft_end_missing), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                 }
             }
             if (result.deadlines.isNotEmpty()) {
-                item { SectionHeading("Deadlines on this date", "Add a personal block if you want to reserve preparation time.") }
+                item { SectionHeading(stringResource(R.string.ft_deadlines), stringResource(R.string.ft_deadlines_hint)) }
                 items(result.deadlines, key = { "deadline:${it.key}" }) { deadline -> Text("${clockText(deadline.start)} · ${deadline.title}", style = MaterialTheme.typography.bodyMedium) }
             }
         }

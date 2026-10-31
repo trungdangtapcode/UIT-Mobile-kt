@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="srch_title">Không gian</string>
+    <string name="srch_page_title">Tìm kiếm</string>
+    <string name="srch_page_subtitle">Môn học, tài liệu, bài tập và thông báo</string>
+    <string name="srch_field_hint">Tìm tên đã lưu và mã môn</string>
+    <string name="srch_unowned">Thông báo không rõ tài khoản sẽ bị loại. Làm mới để tải thông báo có nguồn.</string>
+    <string name="srch_results">Kết quả tìm kiếm</string>
+    <string name="srch_hint">Chỉ dữ liệu đã lưu. Tải môn học để có tài liệu và bài tập. Nội dung tệp không được đánh chỉ mục.</string>
+    <string name="srch_all">Tất cả</string>
+    <string name="srch_kind_courses">Môn học</string>
+    <string name="srch_kind_materials">Tài liệu</string>
+    <string name="srch_kind_assignments">Bài tập</string>
+    <string name="srch_kind_notices">Thông báo</string>
+    <string name="srch_empty_title">Chưa có dữ liệu để tìm</string>
+    <string name="srch_empty_body">Kết nối tài khoản và tải môn học hoặc thông báo. Chỉ làm mới hồ sơ sẽ không có dữ liệu tìm kiếm.</string>
+    <string name="srch_prompt_title">Tìm trong dữ liệu đã lưu</string>
+    <string name="srch_prompt_body">Thử mã môn, tên tài liệu, bài tập hoặc tiêu đề thông báo. Truy vấn chỉ nằm trên máy này.</string>
+    <string name="srch_none_title">Không có kết quả phù hợp</string>
+    <string name="srch_none_body">Thử ít từ hơn, chọn nhóm khác hoặc tải thêm dữ liệu môn học.</string>
+    <string name="srch_open_result">Mở kết quả đã lưu</string>
+    <string name="srch_open_course">Mở không gian môn học</string>
+    <string name="srch_due">Hạn · %1$s %2$s · GMT+07</string>
+    <string name="srch_periods">%1$s · tiết %2$d–%3$d</string>
+    <string name="srch_room">Phòng · %1$s</string>
+    <string name="srch_saved_note">Nội dung đã lưu. Bài nộp, ngày và hồ sơ chính thức không thay đổi.</string>
+    <string name="srch_size_reported">%1$d byte được báo</string>
+    <string name="srch_size_missing">Không có kích thước</string>
+    <string name="srch_opening">Đang mở…</string>
+    <string name="srch_open_file">Mở tệp trên thiết bị</string>
+    <string name="srch_file_error">Đã lưu tệp. Hãy cài ứng dụng mở được định dạng này.</string>
+</resources>

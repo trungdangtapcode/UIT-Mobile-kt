@@ -15,17 +15,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
+import vn.edu.uit.mobile.feature.courses.R
 import vn.edu.uit.mobile.model.*
 
 @Composable fun WorkspaceSearchScreen(viewModel: WorkspaceSearchViewModel, onClose: () -> Unit, onCourse: (Course) -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snack = remember { SnackbarHostState() }
-    LaunchedEffect(viewModel) { viewModel.files.collect { if (viewModel.canOpen(it) && !openSavedCourseFile(context, it.path)) snack.showSnackbar("File saved. Install an app that can open this format.") } }
+    val fileError = stringResource(R.string.srch_file_error)
+    LaunchedEffect(viewModel) { viewModel.files.collect { if (viewModel.canOpen(it) && !openSavedCourseFile(context, it.path)) snack.showSnackbar(fileError) } }
     Box {
         WorkspaceSearchContent(state, { if (state.selected != null) viewModel.back() else onClose() }, viewModel::query, viewModel::open, viewModel::download, onCourse)
         SnackbarHost(snack)
@@ -43,25 +46,25 @@ import vn.edu.uit.mobile.model.*
         item {
             TextButton(onBack, shape = TechnicalShapes.Control) {
                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, null)
-                Text(if (selected == null) "Workspace" else "Search results")
+                Text(stringResource(if (selected == null) R.string.srch_title else R.string.srch_results))
             }
-            PageHeading(if (selected == null) "Search workspace" else selected.title, if (selected == null) "Courses, materials, assignments and notices" else selected.context)
+            PageHeading(if (selected == null) stringResource(R.string.srch_page_title) else selected.title, if (selected == null) stringResource(R.string.srch_page_subtitle) else selected.context)
         }
         if (selected == null) {
             item {
-                SearchField(state.query, onQuery, "Search saved names and course codes")
-                Text("Saved metadata only. Load a course to include its materials and assignments. Document contents are not indexed.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (state.unownedNotices) InlineNotice("Notices without saved account provenance are excluded. Refresh to load attributable notices.")
+                SearchField(state.query, onQuery, stringResource(R.string.srch_field_hint))
+                Text(stringResource(R.string.srch_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (state.unownedNotices) InlineNotice(stringResource(R.string.srch_unowned))
                 state.message?.let { InlineNotice(it) }
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = filter == null, onClick = { filter = null }, label = { Text("All") }, shape = TechnicalShapes.Control)
+                    FilterChip(selected = filter == null, onClick = { filter = null }, label = { Text(stringResource(R.string.srch_all)) }, shape = TechnicalShapes.Control)
                     WorkspaceSearchKind.entries.forEach { kind -> FilterChip(selected = filter == kind, onClick = { filter = kind }, label = { Text(searchKindLabel(kind)) }, shape = TechnicalShapes.Control) }
                 }
             }
             when {
-                state.hits.isEmpty() -> item { EmptyState("No saved searchable data", "Connect an account and load courses or notices. A profile refresh alone does not populate search.") }
-                state.query.isBlank() -> item { EmptyState("Search your saved workspace", "Try a course code, document name, assignment or notice title. Queries stay on this phone.") }
-                results.none { filter == null || it.kind == filter } -> item { EmptyState("No matching saved results", "Try fewer words, another category or load more course data.") }
+                state.hits.isEmpty() -> item { EmptyState(stringResource(R.string.srch_empty_title), stringResource(R.string.srch_empty_body)) }
+                state.query.isBlank() -> item { EmptyState(stringResource(R.string.srch_prompt_title), stringResource(R.string.srch_prompt_body)) }
+                results.none { filter == null || it.kind == filter } -> item { EmptyState(stringResource(R.string.srch_none_title), stringResource(R.string.srch_none_body)) }
             }
             WorkspaceSearchKind.entries.filter { filter == null || it == filter }.forEach { kind ->
                 val group = results.filter { it.kind == kind }

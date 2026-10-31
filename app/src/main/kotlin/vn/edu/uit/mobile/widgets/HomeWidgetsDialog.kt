@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import vn.edu.uit.mobile.R
 import vn.edu.uit.mobile.designsystem.TechnicalShapes
 
 @Composable fun HomeWidgetsDialog(onDismiss: () -> Unit) {

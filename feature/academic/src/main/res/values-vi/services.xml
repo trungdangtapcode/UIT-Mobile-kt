@@ -69,4 +69,11 @@
     <string name="svc_fees">Lệ phí</string>
     <string name="svc_credits_gate">Tín chỉ</string>
     <string name="svc_contact_phone">Số điện thoại</string>
+    <string name="proc_tuition_extension">Gia hạn học phí</string>
+    <string name="proc_certificates">Giấy xác nhận sinh viên</string>
+    <string name="proc_transcripts">Xin bảng điểm</string>
+    <string name="proc_appeals">Phúc khảo điểm</string>
+    <string name="proc_exams">Hoãn thi &amp; thi lại</string>
+    <string name="proc_credentials">Xác nhận chứng chỉ</string>
+    <string name="proc_leave">Thôi học &amp; bảo lưu</string>
 </resources>

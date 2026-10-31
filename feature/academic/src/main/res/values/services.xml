@@ -69,4 +69,11 @@
     <string name="svc_fees">Fees</string>
     <string name="svc_credits_gate">Credits</string>
     <string name="svc_contact_phone">Contact phone</string>
+    <string name="proc_tuition_extension">Tuition extensions</string>
+    <string name="proc_certificates">Student certificates</string>
+    <string name="proc_transcripts">Official transcripts</string>
+    <string name="proc_appeals">Grade appeals</string>
+    <string name="proc_exams">Exam deferral &amp; re-examination</string>
+    <string name="proc_credentials">Certificate verification</string>
+    <string name="proc_leave">Leave &amp; withdrawal</string>
 </resources>

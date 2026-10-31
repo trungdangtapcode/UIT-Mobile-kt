@@ -124,7 +124,7 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
                         ServiceProblem(services?.issues?.firstOrNull { it.key == kind.name }, data != null, onRefresh)
                         if (data == null) {
                             Panel {
-                                SectionHeading(kind.title)
+                                SectionHeading(procedureKindLabel(kind))
                                 NotLoaded(state.servicesLoading, stringResource(R.string.svc_history_unloaded))
                             }
                         } else {
@@ -183,6 +183,18 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
         }
     }
 }
+
+@Composable private fun procedureKindLabel(kind: ProcedureKind): String = stringResource(
+    when (kind) {
+        ProcedureKind.TUITION_EXTENSION -> R.string.proc_tuition_extension
+        ProcedureKind.CERTIFICATES -> R.string.proc_certificates
+        ProcedureKind.TRANSCRIPTS -> R.string.proc_transcripts
+        ProcedureKind.APPEALS -> R.string.proc_appeals
+        ProcedureKind.EXAMS -> R.string.proc_exams
+        ProcedureKind.CREDENTIALS -> R.string.proc_credentials
+        ProcedureKind.LEAVE -> R.string.proc_leave
+    }
+)
 
 @Composable private fun Updated(timestamp: Long) {
     if (timestamp > 0) Text(stringResource(R.string.svc_updated, dateText(timestamp), clockText(timestamp)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -248,7 +260,7 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
 @Composable private fun ProcedurePanel(section: ProcedureSection) {
     var expanded by rememberSaveable(section.kind) { mutableStateOf(false) }
     Panel(Modifier.animateContentSize()) {
-        SectionHeading(section.kind.title)
+        SectionHeading(procedureKindLabel(section.kind))
         Updated(section.fetchedAt)
         if (section.windowOpen != null) Text(stringResource(if (section.windowOpen == true) R.string.svc_window_open else R.string.svc_window_closed), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
         if (section.windowStart.isNotBlank()) ValueRow(stringResource(R.string.svc_opens), date(section.windowStart))

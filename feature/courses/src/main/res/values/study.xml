@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="st_back">Course</string>
+    <string name="st_settings_desc">AI connection settings</string>
+    <string name="st_title_ask">Ask course text</string>
+    <string name="st_title_analyze">Analyze assignment</string>
+    <string name="st_due">Moodle due · %1$s · %2$s</string>
+    <string name="st_disclaimer">AI suggestions are personal study aids. Your official dates and submission status stay in Moodle.</string>
+    <string name="st_sources">Selected sources</string>
+    <string name="st_sources_hint">Choose up to 5 texts. Review each source before sending.</string>
+    <string name="st_version_note">This version reads saved descriptions and pasted excerpts. PDF files and scans are not included.</string>
+    <string name="st_no_sources_title">No readable text saved</string>
+    <string name="st_no_sources_body">Add a course excerpt below, or load a Moodle activity with a description.</string>
+    <string name="st_select_source">Select source %1$s</string>
+    <string name="st_too_long">Too long · add a shorter excerpt</string>
+    <string name="st_chars">%1$d characters</string>
+    <string name="st_review">Review source</string>
+    <string name="st_add_excerpt">Add text excerpt</string>
+    <string name="st_selected">%1$d selected · %2$d characters</string>
+    <string name="st_connect_title">Connect study AI</string>
+    <string name="st_connect_body">Connect directly with your own OpenAI API key and model. A hosted gateway is optional.</string>
+    <string name="st_configure">Configure AI connection</string>
+    <string name="st_processor">Processor</string>
+    <string name="st_direct">Direct OpenAI · %1$s</string>
+    <string name="st_gateway">Gateway · %1$s</string>
+    <string name="st_direct_note">Only the checked texts and your question are sent directly to OpenAI using your API account. No UIT Mobile backend is involved.</string>
+    <string name="st_gateway_note">Only the checked texts and your question are sent to this gateway and OpenAI. Gateway source text is held for the request; OpenAI processing follows your provider account settings.</string>
+    <string name="st_question">Question about the selected text</string>
+    <string name="st_language_en" translatable="false">English</string>
+    <string name="st_language_vi" translatable="false">Vietnamese</string>
+    <string name="st_send">Send selected text</string>
+    <string name="st_generate_again">Generate again</string>
+</resources>

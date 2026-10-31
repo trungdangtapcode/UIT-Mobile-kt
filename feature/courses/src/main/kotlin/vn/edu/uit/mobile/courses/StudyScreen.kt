@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -27,6 +28,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
+import vn.edu.uit.mobile.feature.courses.R
 
 @Composable fun StudyScreen(viewModel: StudyViewModel) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -74,59 +76,60 @@ import vn.edu.uit.mobile.domain.*
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = back, shape = TechnicalShapes.Control) {
                     Icon(Icons.AutoMirrored.Outlined.ArrowBack, null)
-                    Text("Course")
+                    Text(stringResource(R.string.st_back))
                 }
                 Spacer(Modifier.weight(1f))
-                IconButton(onClick = onSettings, enabled = !state.busy) { Icon(Icons.Outlined.Settings, "AI connection settings") }
+                IconButton(onClick = onSettings, enabled = !state.busy) { Icon(Icons.Outlined.Settings, stringResource(R.string.st_settings_desc)) }
             }
-            PageHeading(if (state.assignment == null) "Ask course text" else "Analyze assignment", state.course?.shortname.orEmpty())
+            PageHeading(if (state.assignment == null) stringResource(R.string.st_title_ask) else stringResource(R.string.st_title_analyze), state.course?.shortname.orEmpty())
         }
         state.assignment?.let { assignment ->
             item {
                 Panel {
                     Text(assignment.name, style = MaterialTheme.typography.titleLarge)
-                    if (assignment.due > 0) Text("Moodle due · ${dateText(assignment.due)} · ${clockText(assignment.due)}", style = MaterialTheme.typography.bodyMedium)
-                    Text("AI suggestions are personal study aids. Your official dates and submission status stay in Moodle.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (assignment.due > 0) Text(stringResource(R.string.st_due, dateText(assignment.due), clockText(assignment.due)), style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.st_disclaimer), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
         item {
-            SectionHeading("Selected sources", "Choose up to 5 texts. Review each source before sending.")
-            Text("This version reads saved descriptions and pasted excerpts. PDF files and scans are not included.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            SectionHeading(stringResource(R.string.st_sources), stringResource(R.string.st_sources_hint))
+            Text(stringResource(R.string.st_version_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        if (state.sources.isEmpty()) item { EmptyState("No readable text saved", "Add a course excerpt below, or load a Moodle activity with a description.") }
+        if (state.sources.isEmpty()) item { EmptyState(stringResource(R.string.st_no_sources_title), stringResource(R.string.st_no_sources_body)) }
         itemsIndexed(state.sources, key = { _, source -> source.id }) { _, source ->
             Panel {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(source.id in state.selected, { onSelect(source.id) }, modifier = Modifier.semantics { contentDescription = "Select source ${source.title}" }, enabled = !state.busy && (source.id in state.selected || (source.text.length <= 12000 && state.selected.size < 5)))
+                    val selectSource = stringResource(R.string.st_select_source, source.title)
+                    Checkbox(source.id in state.selected, { onSelect(source.id) }, modifier = Modifier.semantics { contentDescription = selectSource }, enabled = !state.busy && (source.id in state.selected || (source.text.length <= 12000 && state.selected.size < 5)))
                     Column(Modifier.weight(1f)) {
                         Text(source.title, style = MaterialTheme.typography.titleSmall)
-                        Text(if (source.text.length > 12000) "Too long · add a shorter excerpt" else "${source.text.length} characters", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(if (source.text.length > 12000) stringResource(R.string.st_too_long) else stringResource(R.string.st_chars, source.text.length), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
-                TextButton(onClick = { preview = source to null }, shape = TechnicalShapes.Control) { Text("Review source") }
+                TextButton(onClick = { preview = source to null }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_review)) }
             }
         }
         item {
             OutlinedButton(onClick = { excerpt = true }, enabled = !state.busy, shape = TechnicalShapes.Field) {
                 Icon(Icons.AutoMirrored.Outlined.NoteAdd, null)
                 Spacer(Modifier.width(8.dp))
-                Text("Add text excerpt")
+                Text(stringResource(R.string.st_add_excerpt))
             }
         }
         item {
             Panel {
-                Text("${state.selected.size} selected · ${state.sources.filter { it.id in state.selected }.sumOf { it.text.length }} characters", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.st_selected, state.selected.size, state.sources.filter { it.id in state.selected }.sumOf { it.text.length }), style = MaterialTheme.typography.labelMedium)
                 if (!state.connection.configured) {
-                    Text("Connect study AI", style = MaterialTheme.typography.titleMedium)
-                    Text("Connect directly with your own OpenAI API key and model. A hosted gateway is optional.", style = MaterialTheme.typography.bodyMedium)
-                    OutlinedButton(onClick = onSettings, enabled = !state.busy, shape = TechnicalShapes.Field) { Text("Configure AI connection") }
+                    Text(stringResource(R.string.st_connect_title), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.st_connect_body), style = MaterialTheme.typography.bodyMedium)
+                    OutlinedButton(onClick = onSettings, enabled = !state.busy, shape = TechnicalShapes.Field) { Text(stringResource(R.string.st_configure)) }
                 } else {
-                    Text("Processor", style = MaterialTheme.typography.labelMedium)
-                    Text(if (state.connection.mode == StudyConnectionMode.DIRECT) "Direct OpenAI · ${state.connection.model}" else "Gateway · ${state.connection.endpoint}", style = MaterialTheme.typography.bodySmall)
-                    Text(if (state.connection.mode == StudyConnectionMode.DIRECT) "Only the checked texts and your question are sent directly to OpenAI using your API account. No UIT Mobile backend is involved." else "Only the checked texts and your question are sent to this gateway and OpenAI. Gateway source text is held for the request; OpenAI processing follows your provider account settings.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.st_processor), style = MaterialTheme.typography.labelMedium)
+                    Text(if (state.connection.mode == StudyConnectionMode.DIRECT) stringResource(R.string.st_direct, state.connection.model) else stringResource(R.string.st_gateway, state.connection.endpoint), style = MaterialTheme.typography.bodySmall)
+                    Text(if (state.connection.mode == StudyConnectionMode.DIRECT) stringResource(R.string.st_direct_note) else stringResource(R.string.st_gateway_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                if (state.assignment == null) OutlinedTextField(value = state.question, onValueChange = onQuestion, enabled = !state.busy, label = { Text("Question about the selected text") }, supportingText = { Text("${state.question.length}/1200") }, modifier = Modifier.fillMaxWidth(), shape = TechnicalShapes.Field, minLines = 2)
+                if (state.assignment == null) OutlinedTextField(value = state.question, onValueChange = onQuestion, enabled = !state.busy, label = { Text(stringResource(R.string.st_question)) }, supportingText = { Text("${state.question.length}/1200") }, modifier = Modifier.fillMaxWidth(), shape = TechnicalShapes.Field, minLines = 2)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("English", "Vietnamese").forEach { language -> FilterChip(selected = state.language == language, onClick = { onLanguage(language) }, enabled = !state.busy, label = { Text(language) }, shape = TechnicalShapes.Control) }
                 }

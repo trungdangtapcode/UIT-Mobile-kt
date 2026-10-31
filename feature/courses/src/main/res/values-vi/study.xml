@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="st_back">Môn học</string>
+    <string name="st_settings_desc">Cài đặt kết nối AI</string>
+    <string name="st_title_ask">Hỏi về nội dung môn</string>
+    <string name="st_title_analyze">Phân tích bài tập</string>
+    <string name="st_due">Hạn Moodle · %1$s · %2$s</string>
+    <string name="st_disclaimer">Gợi ý của AI chỉ là trợ giúp học tập. Ngày và trạng thái nộp chính thức vẫn ở Moodle.</string>
+    <string name="st_sources">Nguồn đã chọn</string>
+    <string name="st_sources_hint">Chọn tối đa 5 văn bản. Xem lại từng nguồn trước khi gửi.</string>
+    <string name="st_version_note">Bản này chỉ đọc mô tả đã lưu và đoạn dán vào. Chưa gồm tệp PDF và bản scan.</string>
+    <string name="st_no_sources_title">Chưa có văn bản để đọc</string>
+    <string name="st_no_sources_body">Thêm đoạn trích bên dưới hoặc tải hoạt động Moodle có mô tả.</string>
+    <string name="st_select_source">Chọn nguồn %1$s</string>
+    <string name="st_too_long">Quá dài · hãy thêm đoạn ngắn hơn</string>
+    <string name="st_chars">%1$d ký tự</string>
+    <string name="st_review">Xem nguồn</string>
+    <string name="st_add_excerpt">Thêm đoạn trích</string>
+    <string name="st_selected">Đã chọn %1$d · %2$d ký tự</string>
+    <string name="st_connect_title">Kết nối trợ lý học tập</string>
+    <string name="st_connect_body">Kết nối trực tiếp bằng API key và model OpenAI của bạn. Gateway tự dựng là tuỳ chọn.</string>
+    <string name="st_configure">Cấu hình kết nối AI</string>
+    <string name="st_processor">Bộ xử lý</string>
+    <string name="st_direct">OpenAI trực tiếp · %1$s</string>
+    <string name="st_gateway">Gateway · %1$s</string>
+    <string name="st_direct_note">Chỉ văn bản đã chọn và câu hỏi được gửi trực tiếp tới OpenAI bằng tài khoản API của bạn. Không có máy chủ UIT Mobile nào tham gia.</string>
+    <string name="st_gateway_note">Chỉ văn bản đã chọn và câu hỏi được gửi tới gateway này và OpenAI. Gateway giữ văn bản trong lúc xử lý; OpenAI xử lý theo cài đặt tài khoản của bạn.</string>
+    <string name="st_question">Câu hỏi về văn bản đã chọn</string>
+    <string name="st_send">Gửi văn bản đã chọn</string>
+    <string name="st_generate_again">Tạo lại</string>
+</resources>

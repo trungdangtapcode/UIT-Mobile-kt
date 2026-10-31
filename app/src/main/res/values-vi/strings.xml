@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_saved_time">Đã lưu %1$s %2$s · GMT+07</string>
+    <string name="widget_no_schedule">GMT+07 · Chưa có lịch đã lưu</string>
+    <string name="widget_status_exam">Thi</string>
+    <string name="widget_status_progress">Đang học</string>
+    <string name="widget_status_makeup">Học bù</string>
+    <string name="widget_status_next">Lớp tiếp theo</string>
+    <string name="widget_room_missing">Chưa có phòng</string>
+    <string name="widget_room_missing_lower">chưa có phòng</string>
+    <string name="widget_connect">Kết nối tài khoản</string>
+    <string name="widget_sync">Đồng bộ thời khoá biểu</string>
+    <string name="widget_saved_schedule">Lịch đã lưu của bạn</string>
+</resources>

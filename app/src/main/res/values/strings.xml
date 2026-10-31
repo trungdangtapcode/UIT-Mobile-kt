@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_saved_time">Saved %1$s %2$s · GMT+07</string>
+    <string name="widget_no_schedule">GMT+07 · No saved schedule</string>
+    <string name="widget_status_exam">Exam</string>
+    <string name="widget_status_progress">In progress</string>
+    <string name="widget_status_makeup">Make-up class</string>
+    <string name="widget_status_next">Next class</string>
+    <string name="widget_room_missing">Room not provided</string>
+    <string name="widget_room_missing_lower">room not provided</string>
+    <string name="widget_connect">Connect your account</string>
+    <string name="widget_sync">Sync your timetable</string>
+    <string name="widget_saved_schedule">Your saved schedule</string>
+</resources>

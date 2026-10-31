@@ -21,6 +21,7 @@ enum class ScheduleWidgetKind { NEXT, TODAY }
 object ScheduleWidgetRenderer {
     fun render(context: Context, kind: ScheduleWidgetKind, state: ScheduleWidgetState, width: Int, height: Int, now: Long): RemoteViews {
         val preferences = context.getSharedPreferences("appearance", Context.MODE_PRIVATE)
+        val localized = context.withAppLanguage(LanguagePreference.read(context))
         val colors = uitColorScheme(context, preferences.getBoolean("dark", true), preferences.getBoolean("dynamic", true))
         val views = RemoteViews(context.packageName, if (kind == ScheduleWidgetKind.NEXT) R.layout.widget_next else R.layout.widget_today)
         val ink = colors.onSurface.toArgb()
@@ -31,7 +32,7 @@ object ScheduleWidgetRenderer {
         views.setTextColor(R.id.widget_date, muted)
         views.setTextColor(R.id.widget_heading, accent)
         views.setTextColor(R.id.widget_saved, muted)
-        views.setTextViewText(R.id.widget_saved, if (state.updatedAt > 0) "Saved ${dateText(state.updatedAt).takeLast(5)} ${clockText(state.updatedAt)} · GMT+07" else "GMT+07 · No saved schedule")
+        views.setTextViewText(R.id.widget_saved, if (state.updatedAt > 0) localized.getString(R.string.widget_saved_time, dateText(state.updatedAt).takeLast(5), clockText(state.updatedAt)) else localized.getString(R.string.widget_no_schedule))
         val root = WidgetRoute(if (state.connected) "schedule" else "profile", state.date.toString()).pendingIntent(context)
         views.setOnClickPendingIntent(R.id.widget_root, root)
         val scale = context.resources.configuration.fontScale
@@ -67,23 +68,23 @@ object ScheduleWidgetRenderer {
             views.setViewPadding(row, 0, dp(context, 6), 0, dp(context, 2))
             if (entry != null) {
                 val status = when {
-                    entry.kind == ScheduleKind.EXAM -> "Exam"
-                    entry.start <= now && entry.end > now -> "In progress"
-                    entry.kind == ScheduleKind.MAKE_UP -> "Make-up class"
-                    else -> "Next class"
+                    entry.kind == ScheduleKind.EXAM -> localized.getString(R.string.widget_status_exam)
+                    entry.start <= now && entry.end > now -> localized.getString(R.string.widget_status_progress)
+                    entry.kind == ScheduleKind.MAKE_UP -> localized.getString(R.string.widget_status_makeup)
+                    else -> localized.getString(R.string.widget_status_next)
                 }
                 views.setTextViewText(meta, "$status · ${time(entry, state.date)}")
                 views.setTextViewText(title, entry.title)
-                views.setTextViewText(room, listOf(entry.classCode, entry.room.ifBlank { "Room not provided" }).filter(String::isNotBlank).joinToString(" · "))
+                views.setTextViewText(room, listOf(entry.classCode, entry.room.ifBlank { localized.getString(R.string.widget_room_missing) }).filter(String::isNotBlank).joinToString(" · "))
                 views.setOnClickPendingIntent(row, WidgetRoute("schedule", dateText(entry.start)).pendingIntent(context))
-                views.setContentDescription(row, "$status, ${entry.title}, ${time(entry, state.date)}, ${entry.room.ifBlank { "room not provided" }}")
+                views.setContentDescription(row, "$status, ${entry.title}, ${time(entry, state.date)}, ${entry.room.ifBlank { localized.getString(R.string.widget_room_missing_lower) }}")
             } else {
                 views.setTextViewText(
                     meta,
                     when {
-                        !state.connected -> "Connect your account"
-                        state.updatedAt == 0L -> "Sync your timetable"
-                        else -> "Your saved schedule"
+                        !state.connected -> localized.getString(R.string.widget_connect)
+                        state.updatedAt == 0L -> localized.getString(R.string.widget_sync)
+                        else -> localized.getString(R.string.widget_saved_schedule)
                     }
                 )
                 views.setTextViewText(

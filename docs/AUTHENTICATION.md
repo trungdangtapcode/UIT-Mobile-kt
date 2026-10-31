@@ -95,3 +95,10 @@ are excluded from source, fixtures, screenshots and CI artifacts.
 An optional local `LivePortalResponseTest` accepts a private capture directory via
 `UIT_LIVE_FIXTURES`. It is skipped by default; deterministic fixtures use synthetic
 student data. Never place private captures inside the repository.
+
+The search/offline-download follow-up used a fresh authorized Moodle login in
+headless Chromium, then exercised production readers and ViewModels on the host
+JVM. Reviewed Compose renders were published with account identity withheld.
+This separate run did not exercise Android WebView authentication or linked UIT
+Portal sign-in. See [host Android testing](HOST-ANDROID-TESTING.md) for the method,
+evidence links and device-validation boundaries.

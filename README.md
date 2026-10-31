@@ -102,6 +102,10 @@ coroutines-test and Turbine. Static checks include ktlint, Detekt's coroutine an
 potential-bug rules, and a dependency-boundary check. Room exports its versioned
 schema under `core/database/schemas/`.
 
+See [testing without a local Android device](docs/HOST-ANDROID-TESTING.md) for
+Compose image rendering, authorized live integration on the host JVM, SSH
+environment-variable tips and the distinction from CI emulator/device tests.
+
 ## Behavior
 
 * Screens observe Room snapshots immediately. Refreshes replace data in

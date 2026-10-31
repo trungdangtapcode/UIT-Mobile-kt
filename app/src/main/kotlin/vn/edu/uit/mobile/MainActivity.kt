@@ -53,61 +53,73 @@ class MainActivity : ComponentActivity() {
             var dark by rememberSaveable { mutableStateOf(preferences.getBoolean("dark", true)) }
             var dynamic by rememberSaveable { mutableStateOf(preferences.getBoolean("dynamic", true)) }
             var showWidgets by rememberSaveable { mutableStateOf(false) }
-            UitTheme(dark, dynamic) {
-                SideEffect {
-                    val bars = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
-                    bars.isAppearanceLightStatusBars = !dark
-                    bars.isAppearanceLightNavigationBars = !dark
-                }
-                val dashboard = ownedViewModel { DashboardViewModel(repository) }
-                val schedule = ownedViewModel { ScheduleViewModel(repository, accounts) }
-                val downloads = ownedViewModel { OfflineDownloadsViewModel(repository, accounts, createOfflineDownloadStorage(this), observeDownloadWifi(applicationContext)) }
-                val search = ownedViewModel { WorkspaceSearchViewModel(repository, accounts) }
-                val courses = ownedViewModel { CoursesViewModel(repository) }
-                val study = ownedViewModel { StudyViewModel(studyRepository, repository) }
-                val inbox = ownedViewModel { InboxViewModel(repository) }
-                val academic = ownedViewModel { AcademicViewModel(repository) }
-                val auth = ownedViewModel { AccountsViewModel(accounts) }
-                val studentProfile = ownedViewModel { StudentProfileViewModel(repository, accounts) }
-                val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
-                val accountState by auth.uiState.collectAsStateWithLifecycle()
-                LaunchedEffect(accountState.accounts) { if (accountState.accounts.isNotEmpty()) repository.refresh() }
-                val login: (String) -> Unit = { base ->
-                    UnifiedSsoLoginController(this).launch(base, onResult = { sessions ->
-                        lifecycleScope.launch {
-                            try {
-                                accounts.saveSessions(sessions)
-                                repository.refresh()
-                                if (Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            } catch (e: kotlinx.coroutines.CancellationException) {
-                                throw e
-                            } catch (e: Exception) {
-                                Toast.makeText(this@MainActivity, "Unable to save the session. Please try again.", Toast.LENGTH_LONG).show()
+            var languageTag by rememberSaveable { mutableStateOf(LanguagePreference.read(this).tag) }
+            val language = AppLanguage.fromTag(languageTag)
+            AppLocaleProvider(language) {
+                UitTheme(dark, dynamic) {
+                    SideEffect {
+                        val bars = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+                        bars.isAppearanceLightStatusBars = !dark
+                        bars.isAppearanceLightNavigationBars = !dark
+                    }
+                    val dashboard = ownedViewModel { DashboardViewModel(repository) }
+                    val schedule = ownedViewModel { ScheduleViewModel(repository, accounts) }
+                    val downloads = ownedViewModel { OfflineDownloadsViewModel(repository, accounts, createOfflineDownloadStorage(this), observeDownloadWifi(applicationContext)) }
+                    val search = ownedViewModel { WorkspaceSearchViewModel(repository, accounts) }
+                    val courses = ownedViewModel { CoursesViewModel(repository) }
+                    val study = ownedViewModel { StudyViewModel(studyRepository, repository) }
+                    val inbox = ownedViewModel { InboxViewModel(repository) }
+                    val academic = ownedViewModel { AcademicViewModel(repository) }
+                    val auth = ownedViewModel { AccountsViewModel(accounts) }
+                    val studentProfile = ownedViewModel { StudentProfileViewModel(repository, accounts) }
+                    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+                    val accountState by auth.uiState.collectAsStateWithLifecycle()
+                    LaunchedEffect(accountState.accounts) { if (accountState.accounts.isNotEmpty()) repository.refresh() }
+                    val login: (String) -> Unit = { base ->
+                        UnifiedSsoLoginController(this).launch(base, onResult = { sessions ->
+                            lifecycleScope.launch {
+                                try {
+                                    accounts.saveSessions(sessions)
+                                    repository.refresh()
+                                    if (Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                } catch (e: kotlinx.coroutines.CancellationException) {
+                                    throw e
+                                } catch (e: Exception) {
+                                    Toast.makeText(this@MainActivity, "Unable to save the session. Please try again.", Toast.LENGTH_LONG).show()
+                                }
                             }
-                        }
-                    }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
+                        }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
+                    }
+                    UitShell(repository, dashboard, schedule, courses, search, downloads, study, inbox, academic, studentProfile, widgetRoute, {
+                        showWidgets = false
+                        widgetRoute = null
+                        setIntent(
+                            Intent(intent).apply {
+                                data = null
+                                action = Intent.ACTION_MAIN
+                            }
+                        )
+                    }) { onProfile ->
+                        AccountsScreen(
+                            auth, login, dark, dynamic, {
+                                dark = it
+                                preferences.edit().putBoolean("dark", it).apply()
+                                WidgetRuntime.requestRender(this)
+                            }, {
+                                dynamic = it
+                                preferences.edit().putBoolean("dynamic", it).apply()
+                                WidgetRuntime.requestRender(this)
+                            }, onProfile = onProfile, onWidgets = { showWidgets = true },
+                            language = language,
+                            onLanguage = {
+                                LanguagePreference.write(this, it)
+                                languageTag = it.tag
+                                WidgetRuntime.requestRender(this)
+                            }
+                        )
+                    }
+                    if (showWidgets) HomeWidgetsDialog { showWidgets = false }
                 }
-                UitShell(repository, dashboard, schedule, courses, search, downloads, study, inbox, academic, studentProfile, widgetRoute, {
-                    showWidgets = false
-                    widgetRoute = null
-                    setIntent(
-                        Intent(intent).apply {
-                            data = null
-                            action = Intent.ACTION_MAIN
-                        }
-                    )
-                }) { onProfile ->
-                    AccountsScreen(auth, login, dark, dynamic, {
-                        dark = it
-                        preferences.edit().putBoolean("dark", it).apply()
-                        WidgetRuntime.requestRender(this)
-                    }, {
-                        dynamic = it
-                        preferences.edit().putBoolean("dynamic", it).apply()
-                        WidgetRuntime.requestRender(this)
-                    }, onProfile = onProfile, onWidgets = { showWidgets = true })
-                }
-                if (showWidgets) HomeWidgetsDialog { showWidgets = false }
             }
         }
     }

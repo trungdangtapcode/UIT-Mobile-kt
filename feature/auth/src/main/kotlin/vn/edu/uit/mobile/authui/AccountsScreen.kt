@@ -10,12 +10,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
+import vn.edu.uit.mobile.feature.auth.R
 import vn.edu.uit.mobile.model.*
 
 @Immutable data class AccountsState(val accounts: List<Account> = emptyList())
@@ -37,9 +39,9 @@ class AccountsViewModel(private val repository: AccountRepository) : BaseMviView
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun AccountsScreen(viewModel: AccountsViewModel, onLogin: (String) -> Unit, dark: Boolean, dynamic: Boolean, onDark: (Boolean) -> Unit, onDynamic: (Boolean) -> Unit, onProfile: ((Account) -> Unit)? = null, onWidgets: (() -> Unit)? = null) {
+fun AccountsScreen(viewModel: AccountsViewModel, onLogin: (String) -> Unit, dark: Boolean, dynamic: Boolean, onDark: (Boolean) -> Unit, onDynamic: (Boolean) -> Unit, onProfile: ((Account) -> Unit)? = null, onWidgets: (() -> Unit)? = null, language: AppLanguage = AppLanguage.VIETNAMESE, onLanguage: (AppLanguage) -> Unit = {}) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var removing by remember { mutableStateOf<Account?>(null) }
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -98,6 +100,18 @@ fun AccountsScreen(viewModel: AccountsViewModel, onLogin: (String) -> Unit, dark
         Text("APPEARANCE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         AppearanceSetting(Icons.Outlined.DarkMode, "Dark appearance", "Ocean dark theme", dark, onDark)
         AppearanceSetting(Icons.Outlined.Palette, "Device colors", "Match your wallpaper's color palette", dynamic, onDynamic)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        Text(stringResource(R.string.accounts_language_section), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AppLanguage.entries.forEach { option ->
+                FilterChip(
+                    selected = language == option,
+                    onClick = { onLanguage(option) },
+                    shape = TechnicalShapes.Control,
+                    label = { Text(stringResource(if (option == AppLanguage.VIETNAMESE) R.string.language_vietnamese else R.string.language_english)) }
+                )
+            }
+        }
         onWidgets?.let {
             OutlinedButton(onClick = it, shape = TechnicalShapes.Field, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Outlined.Widgets, null, Modifier.size(18.dp))

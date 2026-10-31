@@ -19,6 +19,7 @@
     <string name="srch_none_title">No matching saved results</string>
     <string name="srch_none_body">Try fewer words, another category or load more course data.</string>
     <string name="srch_open_result">Open saved result</string>
+    <string name="srch_group_more">Showing the first 20 matches; refine your query.</string>
     <string name="srch_open_course">Open course workspace</string>
     <string name="srch_due">Due · %1$s %2$s · GMT+07</string>
     <string name="srch_periods">%1$s · periods %2$d–%3$d</string>

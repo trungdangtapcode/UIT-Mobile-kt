@@ -69,13 +69,13 @@ import vn.edu.uit.mobile.model.*
             WorkspaceSearchKind.entries.filter { filter == null || it == filter }.forEach { kind ->
                 val group = results.filter { it.kind == kind }
                 if (group.isNotEmpty()) {
-                    item(key = "group:$kind") { SectionHeading("${searchKindLabel(kind)} · ${group.size}", if (group.size > 20) "Showing the first 20 matches; refine your query." else null) }
+                    item(key = "group:$kind") { SectionHeading("${searchKindLabel(kind)} · ${group.size}", if (group.size > 20) stringResource(R.string.srch_group_more) else null) }
                     group.take(20).forEach { hit ->
                         item(key = hit.key) {
                             Panel(Modifier.fillMaxWidth()) {
                                 Text(hit.title, style = MaterialTheme.typography.titleMedium)
                                 Text(hit.context, style = MaterialTheme.typography.bodySmall)
-                                TextButton({ onOpen(hit.key) }, shape = TechnicalShapes.Control) { Text("Open saved result") }
+                                TextButton({ onOpen(hit.key) }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.srch_open_result)) }
                             }
                         }
                     }
@@ -89,14 +89,14 @@ import vn.edu.uit.mobile.model.*
                     if (body.isNotBlank()) Text(Html.fromHtml(body, Html.FROM_HTML_MODE_LEGACY).toString(), style = MaterialTheme.typography.bodyMedium)
                     selected.course?.let { course ->
                         Text("${course.shortname} · ${course.fullname}", style = MaterialTheme.typography.bodyMedium)
-                        if (onCourse != null) OutlinedButton({ onCourse(course) }, shape = TechnicalShapes.Control) { Text("Open course workspace") }
+                        if (onCourse != null) OutlinedButton({ onCourse(course) }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.srch_open_course)) }
                     }
-                    selected.assignment?.let { if (it.due > 0) Text("Due · ${dateText(it.due)} ${clockText(it.due)} · GMT+07") }
+                    selected.assignment?.let { if (it.due > 0) Text(stringResource(R.string.srch_due, dateText(it.due), clockText(it.due))) }
                     selected.notice?.let {
-                        Text("${it.targetDate} · periods ${it.lessonStart}–${it.lessonEnd}")
-                        if (it.room.isNotBlank()) Text("Room · ${it.room}")
+                        Text(stringResource(R.string.srch_periods, it.targetDate, it.lessonStart, it.lessonEnd))
+                        if (it.room.isNotBlank()) Text(stringResource(R.string.srch_room, it.room))
                     }
-                    Text("Saved content. Official submissions, dates and university records are unchanged.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.srch_saved_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     state.message?.let { InlineNotice(it, true) }
                 }
             }
@@ -105,8 +105,8 @@ import vn.edu.uit.mobile.model.*
                 item(key = "download:${file.url}") {
                     Panel(Modifier.fillMaxWidth()) {
                         Text(file.name, style = MaterialTheme.typography.titleMedium)
-                        Text(if (file.size > 0) "${file.size} reported bytes" else "Size not reported", style = MaterialTheme.typography.bodySmall)
-                        Button({ onDownload(file) }, enabled = !state.busy, shape = TechnicalShapes.Control) { Text(if (state.busy) "Opening…" else "Open file on this device") }
+                        Text(if (file.size > 0) stringResource(R.string.srch_size_reported, file.size) else stringResource(R.string.srch_size_missing), style = MaterialTheme.typography.bodySmall)
+                        Button({ onDownload(file) }, enabled = !state.busy, shape = TechnicalShapes.Control) { Text(stringResource(if (state.busy) R.string.srch_opening else R.string.srch_open_file)) }
                     }
                 }
             }
@@ -114,9 +114,12 @@ import vn.edu.uit.mobile.model.*
     }
 }
 
-private fun searchKindLabel(kind: WorkspaceSearchKind) = when (kind) {
-    WorkspaceSearchKind.COURSES -> "Courses"
-    WorkspaceSearchKind.MATERIALS -> "Materials"
-    WorkspaceSearchKind.ASSIGNMENTS -> "Assignments"
-    WorkspaceSearchKind.NOTICES -> "Notices"
-}
+@Composable
+private fun searchKindLabel(kind: WorkspaceSearchKind): String = stringResource(
+    when (kind) {
+        WorkspaceSearchKind.COURSES -> R.string.srch_kind_courses
+        WorkspaceSearchKind.MATERIALS -> R.string.srch_kind_materials
+        WorkspaceSearchKind.ASSIGNMENTS -> R.string.srch_kind_assignments
+        WorkspaceSearchKind.NOTICES -> R.string.srch_kind_notices
+    }
+)

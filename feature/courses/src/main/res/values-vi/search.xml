@@ -19,6 +19,7 @@
     <string name="srch_none_title">Không có kết quả phù hợp</string>
     <string name="srch_none_body">Thử ít từ hơn, chọn nhóm khác hoặc tải thêm dữ liệu môn học.</string>
     <string name="srch_open_result">Mở kết quả đã lưu</string>
+    <string name="srch_group_more">Chỉ hiện 20 kết quả đầu; hãy thu hẹp truy vấn.</string>
     <string name="srch_open_course">Mở không gian môn học</string>
     <string name="srch_due">Hạn · %1$s %2$s · GMT+07</string>
     <string name="srch_periods">%1$s · tiết %2$d–%3$d</string>

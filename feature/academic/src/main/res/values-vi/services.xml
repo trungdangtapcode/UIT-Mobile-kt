@@ -48,7 +48,7 @@
     <string name="svc_prior_debt">Nợ trước</string>
     <string name="svc_payment_records">Lịch sử thanh toán</string>
     <string name="svc_no_payments">Không có thanh toán nào cho kỳ này.</string>
-    <string name="svc_credits">%1$d tín chỉ</string>
+    <string name="svc_credits">%1$s tín chỉ</string>
     <string name="svc_window_open">Đang mở nhận đơn</string>
     <string name="svc_window_closed">Đã đóng nhận đơn</string>
     <string name="svc_opens">Mở</string>

@@ -48,7 +48,7 @@
     <string name="svc_prior_debt">Prior debt</string>
     <string name="svc_payment_records">Payment records</string>
     <string name="svc_no_payments">No payment records were returned for this term.</string>
-    <string name="svc_credits">%1$d credits</string>
+    <string name="svc_credits">%1$s credits</string>
     <string name="svc_window_open">Application window open</string>
     <string name="svc_window_closed">Application window closed</string>
     <string name="svc_opens">Opens</string>

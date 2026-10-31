@@ -25,7 +25,7 @@
     <string name="exp_preview_hint">Review this list before choosing a file location.</string>
     <string name="exp_none_title">No events in this selection</string>
     <string name="exp_none_body">Try another date range or event type. Nothing will be exported.</string>
-    <string name="exp_end_missing"> · end time not provided</string>
+    <string name="exp_end_missing">\u0020· end time not provided</string>
     <string name="exp_room">Room · %1$s</string>
     <string name="exp_saving">Saving calendar…</string>
     <string name="exp_save">Save .ics file</string>

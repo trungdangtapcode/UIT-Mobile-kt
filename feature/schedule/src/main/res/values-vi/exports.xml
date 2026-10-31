@@ -25,7 +25,7 @@
     <string name="exp_preview_hint">Xem danh sách này trước khi chọn nơi lưu.</string>
     <string name="exp_none_title">Không có sự kiện nào</string>
     <string name="exp_none_body">Thử khoảng ngày hoặc loại sự kiện khác. Sẽ không có gì được xuất.</string>
-    <string name="exp_end_missing"> · chưa có giờ kết thúc</string>
+    <string name="exp_end_missing">\u0020· chưa có giờ kết thúc</string>
     <string name="exp_room">Phòng · %1$s</string>
     <string name="exp_saving">Đang lưu lịch…</string>
     <string name="exp_save">Lưu tệp .ics</string>

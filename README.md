@@ -176,3 +176,9 @@ Courses and workspace search offer a local bookmark collection for course conten
 assignments, attributable notices, Moodle discussions and official UIT links.
 Bookmarks stay separate for each account and do not download files or synchronize
 Forum bookmark settings. See [local bookmarks](docs/BOOKMARKS.md).
+
+## Timetable image sharing
+
+Schedule previews a one-to-seven-day PNG of saved classes with course, room and
+identity visibility choices before opening Android sharing. See
+[image contents, privacy and temporary copies](docs/TIMETABLE-IMAGE-SHARING.md).

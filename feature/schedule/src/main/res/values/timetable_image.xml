@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ti_entry">Share timetable image</string>
+    <string name="ti_back">Schedule</string>
+    <string name="ti_title">Share timetable</string>
+    <string name="ti_subtitle">Choose what appears in your image.</string>
+    <string name="ti_range">Date range</string>
+    <string name="ti_range_hint">One to seven days · Vietnam time (GMT+07)</string>
+    <string name="ti_from">From · YYYY-MM-DD</string>
+    <string name="ti_through">Through · YYYY-MM-DD</string>
+    <string name="ti_day">Selected day</string>
+    <string name="ti_week">Next seven days</string>
+    <string name="ti_include">Include in image</string>
+    <string name="ti_privacy">Your name and student ID are hidden by default.</string>
+    <string name="ti_names">Course names and class codes</string>
+    <string name="ti_rooms">Rooms</string>
+    <string name="ti_identity">Student name and ID</string>
+    <string name="ti_preview">Preview</string>
+    <string name="ti_scope">Saved classes, cancellations and make-up lessons only. Exams and deadlines are excluded.</string>
+    <string name="ti_no_data">Load your timetable before creating an image.</string>
+    <string name="ti_invalid">Choose valid YYYY-MM-DD dates spanning one to seven days. If this range has too many classes, choose fewer days.</string>
+    <string name="ti_render_error">This image could not be prepared. Choose fewer days and try again.</string>
+    <string name="ti_view_image">View image</string>
+    <string name="ti_read_text">Read image contents</string>
+    <string name="ti_preview_description">Timetable image preview from %1$s through %2$s. Use Read image contents for a text version.</string>
+    <string name="ti_share_note">Share sends only this image to an app you choose. Recipients can save or forward it.</string>
+    <string name="ti_share_error">The image was not shared. The schedule may have changed or no sharing app is available. Review the preview and try again.</string>
+    <string name="ti_share">Share PNG</string>
+    <string name="ti_sharing">Preparing share…</string>
+    <string name="ti_chooser">Share timetable image</string>
+    <string name="ti_image_title">Timetable</string>
+    <string name="ti_image_scope">Saved classes · Vietnam time (GMT+07)</string>
+    <string name="ti_image_empty">No classes in saved data.</string>
+    <string name="ti_image_room">Room · %1$s</string>
+    <string name="ti_image_saved">Saved %1$s · %2$s GMT+07</string>
+    <string name="ti_image_footer">Snapshot only. Check UIT Mobile for schedule changes.</string>
+    <string name="ti_class">Class</string>
+    <string name="ti_canceled">Canceled class</string>
+    <string name="ti_makeup">Make-up class</string>
+</resources>

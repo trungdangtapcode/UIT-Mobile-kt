@@ -135,6 +135,7 @@ class ScheduleWidgetRendererTest {
 
     @Test
     @Config(sdk = [26])
+    @GraphicsMode(GraphicsMode.Mode.LEGACY)
     fun androidEightCanInflateTheWidgetAndUseTheUitPalette() {
         context.getSharedPreferences("appearance", Context.MODE_PRIVATE).edit().putBoolean("dynamic", true).commit()
         val view = render(ScheduleWidgetKind.NEXT, state, 360, 144)

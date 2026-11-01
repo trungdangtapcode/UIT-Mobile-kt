@@ -27,11 +27,12 @@ val detektCheck by tasks.registering(JavaExec::class) {
     mainClass.set("io.gitlab.arturbosch.detekt.cli.Main")
     args("--input", "core,feature,app", "--excludes", "**/build/**", "--config", "config/detekt.yml", "--report", "html:build/reports/detekt.html")
 }
+val pythonCommand = if (System.getProperty("os.name").lowercase().contains("win")) "python" else "python3"
 val verifyArchitecture by tasks.registering(Exec::class) {
-    commandLine("python3", "scripts/check-architecture.py")
+    commandLine(pythonCommand, "scripts/check-architecture.py")
 }
 val verifyStudyGateway by tasks.registering(Exec::class) {
-    commandLine("python3", "-m", "unittest", "discover", "-s", "server")
+    commandLine(pythonCommand, "-m", "unittest", "discover", "-s", "server")
 }
 tasks.named("check") { dependsOn(verifyArchitecture, ktlintCheck, detektCheck) }
 tasks.named("check") { dependsOn(verifyStudyGateway) }

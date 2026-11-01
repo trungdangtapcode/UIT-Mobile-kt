@@ -87,6 +87,12 @@ SSO pages in Android WebView on API 30. It verifies that the password form rende
 CI receives no student credentials and does not claim to test an authenticated
 student session. Its screenshots contain only the public login pages.
 
+The smoke test writes screenshots to AGP's `additionalTestOutputDir`, allowing
+the test runner to copy them to the host before device teardown. CI then runs
+`scripts/collect-sign-in-artifacts.py`, which requires both nonempty PNG captures
+under `app/build/outputs/connected_android_test_additional_output` before upload.
+It does not require an ADB connection after the Gradle test task completes.
+
 Full authenticated Moodle-to-Portal login was separately tested interactively with
 an authorized UIT account. Timetable, transcript and profile responses were used
 for local parser validation. Private responses, credentials and session values

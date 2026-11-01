@@ -44,8 +44,10 @@ time zone and canceled meetings before relying on it.
 Choose a client that supports `.ics` import. Support varies by app/version. Google's
 [documented Google Calendar import workflow](https://support.google.com/calendar/answer/37118?hl=en)
 uses its computer interface; this feature does not promise that every Android
-calendar app will import a file directly. UIT Mobile does not select a calendar,
-insert events into Android's Calendar Provider or keep copies synchronized.
+calendar app will import a file directly. You can also tap **Add to device
+calendar** on any previewed event to open the phone's calendar insert screen for
+that occurrence without granting `WRITE_CALENDAR` permission. UIT Mobile does not
+keep exported copies synchronized automatically.
 
 The file is unencrypted and contains personal schedule information, even though
 `CLASS:PRIVATE` requests private treatment by a calendar client. That property is

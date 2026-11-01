@@ -1,5 +1,7 @@
 package vn.edu.uit.mobile.schedule
 
+import android.content.Intent
+import android.provider.CalendarContract
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -25,8 +27,20 @@ import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.schedule.R
 import vn.edu.uit.mobile.model.*
 
+fun calendarInsertIntent(entry: ScheduleEntry, updatedAt: Long = 0): Intent {
+    val event = CalendarFileExport().deviceEvent(entry, updatedAt)
+    return Intent(Intent.ACTION_INSERT, CalendarContract.Events.CONTENT_URI).apply {
+        putExtra(CalendarContract.Events.TITLE, event.title)
+        if (event.location.isNotBlank()) putExtra(CalendarContract.Events.EVENT_LOCATION, event.location)
+        putExtra(CalendarContract.Events.DESCRIPTION, event.description)
+        putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, event.startMillis)
+        event.endMillis?.let { putExtra(CalendarContract.EXTRA_EVENT_END_TIME, it) }
+        putExtra(CalendarContract.Events.AVAILABILITY, if (event.free) CalendarContract.Events.AVAILABILITY_FREE else CalendarContract.Events.AVAILABILITY_BUSY)
+    }
+}
+
 @Composable
-fun CalendarExportContent(snapshot: PortalSnapshot, anchor: LocalDate, busy: Boolean = false, message: String? = null, onBack: () -> Unit = {}, onSave: (CalendarExportPlan) -> Unit = {}) {
+fun CalendarExportContent(snapshot: PortalSnapshot, anchor: LocalDate, busy: Boolean = false, message: String? = null, onBack: () -> Unit = {}, onAddDevice: ((ScheduleEntry) -> Unit)? = null, onSave: (CalendarExportPlan) -> Unit = {}) {
     var from by rememberSaveable { mutableStateOf(anchor.toString()) }
     var through by rememberSaveable { mutableStateOf(anchor.plus(6, DateTimeUnit.DAY).toString()) }
     var typeNames by rememberSaveable { mutableStateOf(CalendarExportType.entries.map { it.name }) }
@@ -96,6 +110,11 @@ fun CalendarExportContent(snapshot: PortalSnapshot, anchor: LocalDate, busy: Boo
                         Text("${dateText(entry.start)} · ${clockText(entry.start)}${if (entry.end > entry.start) "–${clockText(entry.end)}" else stringResource(R.string.exp_end_missing)}", style = MaterialTheme.typography.bodyMedium)
                         if (entry.classCode.isNotBlank()) Text(entry.classCode, style = MaterialTheme.typography.bodySmall)
                         if (entry.room.isNotBlank()) Text(stringResource(R.string.exp_room, entry.room), style = MaterialTheme.typography.bodySmall)
+                        if (onAddDevice != null) {
+                            TextButton(onClick = { onAddDevice(entry) }, enabled = !busy, shape = TechnicalShapes.Control) {
+                                Text(stringResource(R.string.exp_add_device))
+                            }
+                        }
                     }
                 }
             }

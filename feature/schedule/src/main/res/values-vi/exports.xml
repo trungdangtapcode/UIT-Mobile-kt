@@ -29,4 +29,6 @@
     <string name="exp_room">Phòng · %1$s</string>
     <string name="exp_saving">Đang lưu lịch…</string>
     <string name="exp_save">Lưu tệp .ics</string>
+    <string name="exp_add_device">Thêm vào lịch máy</string>
+    <string name="exp_no_calendar_app">Thiết bị này không có ứng dụng lịch.</string>
 </resources>

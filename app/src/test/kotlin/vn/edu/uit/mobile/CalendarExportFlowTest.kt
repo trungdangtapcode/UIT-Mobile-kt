@@ -102,4 +102,14 @@ class CalendarExportFlowTest {
         assertFalse(vm.uiState.value.calendarExportBusy)
         assertTrue(vm.uiState.value.calendarExportMessage!!.startsWith("Calendar file was not saved."))
     }
+
+    @Test fun calendarInsertIntentPopulatesCalendarContractExtrasWithoutProviderPermissions() {
+        val plan = CalendarFileExport().plan(snapshot, options)
+        val intent = calendarInsertIntent(plan.entries.single(), 1793386800L)
+        assertEquals(android.content.Intent.ACTION_INSERT, intent.action)
+        assertEquals(android.provider.CalendarContract.Events.CONTENT_URI, intent.data)
+        assertEquals("Database project", intent.getStringExtra(android.provider.CalendarContract.Events.TITLE))
+        assertEquals(plan.entries.single().start * 1000L, intent.getLongExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, 0L))
+        assertEquals(android.provider.CalendarContract.Events.AVAILABILITY_FREE, intent.getIntExtra(android.provider.CalendarContract.Events.AVAILABILITY, -1))
+    }
 }

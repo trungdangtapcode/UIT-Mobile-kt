@@ -13,6 +13,8 @@ data class FreeTimeState(
     val minimum: String = "60",
     val buffer: String = "15",
     val personal: List<PersonalTimeBlock> = emptyList(),
+    val dirty: Boolean = false,
+    val canSaveOnDevice: Boolean = false,
     val message: String? = null,
     val session: Long = 0
 ) {
@@ -37,21 +39,35 @@ fun parsePlannerTime(value: String): LocalTime {
     return requireNotNull(runCatching { LocalTime.parse(value) }.getOrNull()) { "Enter valid 24-hour times as HH:mm." }
 }
 
-/** Owned by ScheduleViewModel. Draft blocks stay in memory until this planner closes. */
-class FreeTimePlanner {
-    private val state = MutableStateFlow(FreeTimeState())
+/** Owned by ScheduleViewModel. Draft blocks stay in memory unless saved to device storage. */
+class FreeTimePlanner(private val storage: FreeTimeBlockStorage? = null) {
+    private val state = MutableStateFlow(FreeTimeState(canSaveOnDevice = storage != null))
     val uiState = state.asStateFlow()
     private var owners: Set<String>? = null
     private var session = 0L
     fun onAccounts(ids: Set<String>) {
-        if (owners != null && owners != ids) state.value = FreeTimeState(date = state.value.date, message = "Accounts changed. Personal planning drafts were cleared.", session = ++session)
+        if (owners != null && owners != ids) {
+            runCatching { storage?.clear(owners.orEmpty()) }
+            val loaded = runCatching { storage?.load(ids).orEmpty() }.getOrDefault(emptyList())
+            state.value = FreeTimeState(date = state.value.date, personal = loaded, dirty = false, canSaveOnDevice = storage != null, message = "Accounts changed. Personal planning drafts were cleared.", session = ++session)
+        }
         owners = ids.toSet()
     }
     fun open(date: LocalDate) {
-        state.value = FreeTimeState(date = date.toString(), session = ++session)
+        val saved = runCatching { storage?.load(owners.orEmpty()).orEmpty() }.getOrDefault(emptyList())
+        state.value = FreeTimeState(date = date.toString(), personal = saved, dirty = false, canSaveOnDevice = storage != null, session = ++session)
     }
     fun close() {
-        state.value = FreeTimeState(session = ++session)
+        state.value = FreeTimeState(canSaveOnDevice = storage != null, session = ++session)
+    }
+    fun saveOnDevice() {
+        val store = storage ?: return
+        try {
+            store.save(owners.orEmpty(), state.value.personal)
+            state.value = state.value.copy(dirty = false, message = "Personal blocks saved on this device.")
+        } catch (_: Exception) {
+            state.value = state.value.copy(message = "Personal blocks could not be saved on this device.")
+        }
     }
     fun date(value: String) {
         state.value = state.value.copy(date = value.take(10), message = null)
@@ -69,7 +85,7 @@ class FreeTimePlanner {
         state.value = state.value.copy(buffer = value.take(3), message = null)
     }
     fun remove(id: String) {
-        state.value = state.value.copy(personal = state.value.personal.filterNot { it.id == id }, message = null)
+        state.value = state.value.copy(personal = state.value.personal.filterNot { it.id == id }, dirty = storage != null, message = null)
     }
     fun add(title: String, start: String, end: String): String? = addForSession(state.value.session, title, start, end)
     fun addForSession(expectedSession: Long, title: String, start: String, end: String): String? = try {
@@ -81,7 +97,7 @@ class FreeTimePlanner {
         val through = parsePlannerTime(end)
         require(from < through) { "The personal block must end after its start on the same day." }
         val block = PersonalTimeBlock(UUID.randomUUID().toString(), title.trim(), dateAt(day, from), dateAt(day, through))
-        state.value = state.value.copy(personal = state.value.personal + block, message = null)
+        state.value = state.value.copy(personal = state.value.personal + block, dirty = storage != null, message = null)
         null
     } catch (e: IllegalArgumentException) {
         e.message ?: "Check the personal block's title and times."

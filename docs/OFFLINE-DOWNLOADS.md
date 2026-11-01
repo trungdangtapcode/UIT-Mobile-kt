@@ -22,11 +22,13 @@ without Wi-Fi transport evidence is treated conservatively as not Wi-Fi. Turning
 the preference off permits other available connections.
 
 This setting governs queued packs. Opening files elsewhere uses the existing
-individual-file workflow and can use mobile data. Queued work runs while the app
-process remains alive; no foreground-service or OS background-completion guarantee
-is provided. Keep UIT Mobile running while downloading. After process death, pending
-work becomes interrupted and requires explicit Retry. Configuration changes retain
-the activity-owned queue. Closing the manager screen does not cancel the queue.
+individual-file workflow and can use mobile data. Queued work runs immediately in
+the view model while the screen is active and also schedules a constrained
+`WorkManager` background job (`OfflineDownloadWorker`) so pending packs can
+continue when the user leaves the screen. After process death, any in-flight
+transfer is rechecked against its SHA-256 checksum or marked for retry.
+Configuration changes retain the activity-owned queue. Closing the manager screen
+does not cancel the queue.
 
 The queue and Wi-Fi preference use a separate Android Keystore AES-GCM journal.
 It stores resource metadata/URLs and status, not passwords, cookies or new copies

@@ -27,7 +27,7 @@ import vn.edu.uit.mobile.feature.schedule.R
 import vn.edu.uit.mobile.model.*
 
 @Composable
-fun FreeTimeContent(snapshot: PortalSnapshot, state: FreeTimeState, onBack: () -> Unit = {}, onDate: (String) -> Unit = {}, onStart: (String) -> Unit = {}, onEnd: (String) -> Unit = {}, onMinimum: (String) -> Unit = {}, onBuffer: (String) -> Unit = {}, onAdd: (String, String, String) -> String? = { _, _, _ -> null }, onRemove: (String) -> Unit = {}) {
+fun FreeTimeContent(snapshot: PortalSnapshot, state: FreeTimeState, onBack: () -> Unit = {}, onDate: (String) -> Unit = {}, onStart: (String) -> Unit = {}, onEnd: (String) -> Unit = {}, onMinimum: (String) -> Unit = {}, onBuffer: (String) -> Unit = {}, onAdd: (String, String, String) -> String? = { _, _, _ -> null }, onRemove: (String) -> Unit = {}, onSaveBlocks: (() -> Unit)? = null) {
     var adding by remember(state.session) { mutableStateOf(false) }
     var selected by remember(state.session) { mutableStateOf<FreeTimeSlot?>(null) }
     val calculation = remember(snapshot, state) { runCatching { FindFreeTimeUseCase()(snapshot, state.options(), state.personal) } }
@@ -60,9 +60,16 @@ fun FreeTimeContent(snapshot: PortalSnapshot, state: FreeTimeState, onBack: () -
         }
         item {
             SectionHeading(stringResource(R.string.ft_blocks_title), stringResource(R.string.ft_blocks_hint))
-            OutlinedButton(onClick = { adding = true }, enabled = state.personal.size < 10, shape = TechnicalShapes.Control) {
-                Icon(Icons.Outlined.Add, null)
-                Text(stringResource(R.string.ft_add_block))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = { adding = true }, enabled = state.personal.size < 10, shape = TechnicalShapes.Control) {
+                    Icon(Icons.Outlined.Add, null)
+                    Text(stringResource(R.string.ft_add_block))
+                }
+                if (state.canSaveOnDevice && onSaveBlocks != null) {
+                    OutlinedButton(onClick = onSaveBlocks, enabled = state.dirty, shape = TechnicalShapes.Control) {
+                        Text(stringResource(if (state.dirty) R.string.ft_save_blocks else R.string.ft_saved_blocks))
+                    }
+                }
             }
         }
         items(state.personal, key = { "personal:${it.id}" }) { entry ->

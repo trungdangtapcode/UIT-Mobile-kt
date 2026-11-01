@@ -45,8 +45,8 @@ sealed interface ScheduleIntent {
     data class Date(val date: LocalDate) : ScheduleIntent
     data class FocusDate(val date: LocalDate) : ScheduleIntent
 }
-class ScheduleViewModel(private val repository: PortalRepository, accounts: AccountRepository) : BaseMviViewModel<ScheduleState, ScheduleIntent, Unit>(ScheduleState()) {
-    val freeTimePlanner = FreeTimePlanner()
+class ScheduleViewModel(private val repository: PortalRepository, accounts: AccountRepository, freeTimeStorage: FreeTimeBlockStorage? = null) : BaseMviViewModel<ScheduleState, ScheduleIntent, Unit>(ScheduleState()) {
+    val freeTimePlanner = FreeTimePlanner(freeTimeStorage)
     init {
         viewModelScope.launch {
             repository.snapshot.collect {
@@ -72,6 +72,9 @@ class ScheduleViewModel(private val repository: PortalRepository, accounts: Acco
     fun calendarPickerUnavailable() {
         pendingCalendarExport = null
         state.value = state.value.copy(calendarExportBusy = false, calendarExportMessage = "No document picker is available on this device.")
+    }
+    fun calendarAppUnavailable() {
+        state.value = state.value.copy(calendarExportMessage = "No calendar app is available on this device.")
     }
     fun completeCalendarExport(context: Context, uri: Uri?) = viewModelScope.launch {
         val plan = pendingCalendarExport
@@ -114,10 +117,17 @@ class ScheduleViewModel(private val repository: PortalRepository, accounts: Acco
     var exporting by rememberSaveable { mutableStateOf(false) }
     var finding by rememberSaveable { mutableStateOf(false) }
     val freeTime by viewModel.freeTimePlanner.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current.applicationContext
+    val activityContext = LocalContext.current
+    val context = activityContext.applicationContext
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/calendar")) { uri -> viewModel.completeCalendarExport(context, uri) }
     if (exporting) {
-        CalendarExportContent(state.snapshot, state.anchor, state.calendarExportBusy, state.calendarExportMessage, { exporting = false }) { plan ->
+        CalendarExportContent(state.snapshot, state.anchor, state.calendarExportBusy, state.calendarExportMessage, { exporting = false }, { entry ->
+            try {
+                activityContext.startActivity(calendarInsertIntent(entry, state.snapshot.updatedAt))
+            } catch (_: android.content.ActivityNotFoundException) {
+                viewModel.calendarAppUnavailable()
+            }
+        }) { plan ->
             viewModel.prepareCalendarExport(plan)?.let { fileName ->
                 try {
                     picker.launch(fileName)
@@ -132,7 +142,7 @@ class ScheduleViewModel(private val repository: PortalRepository, accounts: Acco
         FreeTimeContent(state.snapshot, freeTime, {
             planner.close()
             finding = false
-        }, planner::date, planner::start, planner::end, planner::minimum, planner::buffer, { title, start, end -> planner.addForSession(planningSession, title, start, end) }, planner::remove)
+        }, planner::date, planner::start, planner::end, planner::minimum, planner::buffer, { title, start, end -> planner.addForSession(planningSession, title, start, end) }, planner::remove, planner::saveOnDevice)
     } else {
         ScheduleContent(state, viewModel::onIntent, onCourse, { exporting = true }, {
             viewModel.freeTimePlanner.open(state.anchor)

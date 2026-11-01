@@ -14,6 +14,8 @@
     <string name="ft_blocks_hint">Drafts stay on this screen\'s planning session and clear when you close it. Nothing is added to UIT or a calendar.</string>
     <string name="ft_add_block">Add personal block</string>
     <string name="ft_remove_block">Remove personal block</string>
+    <string name="ft_save_blocks">Save blocks on this device</string>
+    <string name="ft_saved_blocks">Blocks saved on this device</string>
     <string name="ft_no_commit">No saved university commitments are available. Schedule coverage is unverified; sync or add personal blocks to plan from.</string>
     <string name="ft_personal_only">Only your personal blocks are available. University commitments are not included.</string>
     <string name="ft_snapshot">Snapshot saved · %1$s %2$s · GMT+07</string>

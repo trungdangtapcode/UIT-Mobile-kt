@@ -14,6 +14,8 @@
     <string name="ft_blocks_hint">Bản nháp chỉ tồn tại trong phiên này và mất khi đóng. Không có gì được thêm vào UIT hay lịch.</string>
     <string name="ft_add_block">Thêm khung giờ cá nhân</string>
     <string name="ft_remove_block">Xoá khung giờ cá nhân</string>
+    <string name="ft_save_blocks">Lưu khung giờ trên máy</string>
+    <string name="ft_saved_blocks">Đã lưu khung giờ trên máy</string>
     <string name="ft_no_commit">Chưa có lịch trường đã lưu. Độ phủ chưa xác thực; hãy đồng bộ hoặc thêm khung cá nhân để tính.</string>
     <string name="ft_personal_only">Chỉ có khung giờ cá nhân. Lịch trường chưa được tính.</string>
     <string name="ft_snapshot">Đã lưu dữ liệu · %1$s %2$s · GMT+07</string>

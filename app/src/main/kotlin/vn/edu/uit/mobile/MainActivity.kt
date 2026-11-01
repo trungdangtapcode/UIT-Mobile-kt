@@ -32,6 +32,8 @@ import vn.edu.uit.mobile.authui.*
 import vn.edu.uit.mobile.common.*
 import vn.edu.uit.mobile.courses.*
 import vn.edu.uit.mobile.dashboard.*
+import vn.edu.uit.mobile.data.OfflineDownloadWorker
+import vn.edu.uit.mobile.data.createFreeTimeBlockStorage
 import vn.edu.uit.mobile.data.createOfflineDownloadStorage
 import vn.edu.uit.mobile.data.createStudyAiRepository
 import vn.edu.uit.mobile.data.observeDownloadWifi
@@ -68,8 +70,8 @@ class MainActivity : ComponentActivity() {
                     bars.isAppearanceLightNavigationBars = !dark
                 }
                 val dashboard = ownedViewModel { DashboardViewModel(repository) }
-                val schedule = ownedViewModel { ScheduleViewModel(repository, accounts) }
-                val downloads = ownedViewModel { OfflineDownloadsViewModel(repository, accounts, createOfflineDownloadStorage(this), observeDownloadWifi(applicationContext)) }
+                val schedule = ownedViewModel { ScheduleViewModel(repository, accounts, createFreeTimeBlockStorage(this)) }
+                val downloads = ownedViewModel { OfflineDownloadsViewModel(repository, accounts, createOfflineDownloadStorage(this), observeDownloadWifi(applicationContext)) { wifiOnly -> OfflineDownloadWorker.enqueue(applicationContext, wifiOnly) } }
                 val search = ownedViewModel { WorkspaceSearchViewModel(repository, accounts) }
                 val bookmarks = ownedViewModel { BookmarksViewModel(bookmarkRepository, repository, accounts) }
                 val courses = ownedViewModel { CoursesViewModel(repository) }

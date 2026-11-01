@@ -2,15 +2,18 @@ package vn.edu.uit.mobile.data
 
 import android.content.Context
 import android.net.*
+import androidx.work.*
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.json.*
+import vn.edu.uit.mobile.common.*
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.model.*
 
@@ -64,6 +67,62 @@ internal fun writeMaterialChecksum(file: File, checksum: String) {
     }
 }
 fun createOfflineDownloadStorage(context: Context): OfflineDownloadStorage = PrivateOfflineDownloadStorage(File(context.applicationContext.filesDir, "materials"), StudyPrivateStorage(context, "offline_downloads", "uit.offline.downloads.v1"))
+fun createFreeTimeBlockStorage(context: Context): FreeTimeBlockStorage = PrivateFreeTimeBlockStorage(StudyPrivateStorage(context, "free_time_blocks", "uit.freetime.blocks.v1"))
+
+class PrivateFreeTimeBlockStorage(private val storage: StudyStorage) : FreeTimeBlockStorage {
+    private fun keyFor(accountIds: Set<String>): String {
+        val canonical = accountIds.filter(String::isNotBlank).sorted().joinToString("\n")
+        val suffix = if (canonical.isEmpty()) "local" else MessageDigest.getInstance("SHA-256").digest(canonical.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
+        return "free-time-blocks-v1:$suffix"
+    }
+    override fun load(accountIds: Set<String>): List<PersonalTimeBlock> = runCatching {
+        val raw = storage.read(keyFor(accountIds)) ?: return emptyList()
+        require(raw.length <= 64_000)
+        val root = Json.parseToJsonElement(raw).jsonObject
+        require(root.getValue("version").jsonPrimitive.int == 1)
+        root.getValue("blocks").jsonArray.take(10).mapNotNull { element ->
+            runCatching {
+                val obj = element.jsonObject
+                val id = obj.getValue("id").jsonPrimitive.content.trim()
+                val title = obj.getValue("title").jsonPrimitive.content.trim()
+                val start = obj.getValue("start").jsonPrimitive.long
+                val end = obj.getValue("end").jsonPrimitive.long
+                require(id.length in 1..128 && title.length in 1..80 && start < end)
+                PersonalTimeBlock(id, title, start, end)
+            }.getOrNull()
+        }.distinctBy { it.id }
+    }.getOrDefault(emptyList())
+
+    override fun save(accountIds: Set<String>, blocks: List<PersonalTimeBlock>) {
+        val key = keyFor(accountIds)
+        val valid = blocks.filter { it.id.isNotBlank() && it.title.isNotBlank() && it.title.length <= 80 && it.start < it.end }.distinctBy { it.id }.take(10)
+        if (valid.isEmpty()) {
+            storage.remove(key)
+            return
+        }
+        val payload = buildJsonObject {
+            put("version", 1)
+            put(
+                "blocks",
+                JsonArray(
+                    valid.map { block ->
+                        buildJsonObject {
+                            put("id", block.id)
+                            put("title", block.title)
+                            put("start", block.start)
+                            put("end", block.end)
+                        }
+                    }
+                )
+            )
+        }
+        storage.write(key, payload.toString())
+    }
+
+    override fun clear(accountIds: Set<String>) {
+        storage.remove(keyFor(accountIds))
+    }
+}
 
 class PrivateOfflineDownloadStorage(private val root: File, private val journal: StudyStorage) : OfflineDownloadStorage {
     override suspend fun cached(course: Course, file: CourseFile): VerifiedOfflineFile? = withContext(Dispatchers.IO) {
@@ -147,3 +206,64 @@ fun observeDownloadWifi(context: Context): Flow<Boolean> = callbackFlow {
     trySend(wifi())
     awaitClose { manager.unregisterNetworkCallback(callback) }
 }.distinctUntilChanged().conflate()
+
+suspend fun runOfflineDownloadQueue(portal: PortalRepository, accounts: AccountRepository, storage: OfflineDownloadStorage, wifiAvailable: () -> Boolean): Boolean {
+    val journal = runCatching { storage.load() }.getOrElse { return false }
+    val owners = accounts.accounts.first().filter { it.portal == PortalType.MOODLE }.map { it.id }.toSet()
+    val items = journal.items.filter { it.spec.course.accountId in owners }.toMutableList()
+    var changed = items.size != journal.items.size
+    for (index in items.indices) {
+        currentCoroutineContext().ensureActive()
+        val item = items[index]
+        if (item.status !in setOf(OfflineDownloadStatus.QUEUED, OfflineDownloadStatus.WAITING_WIFI)) continue
+        val latestOwners = accounts.accounts.first().filter { it.portal == PortalType.MOODLE }.map { it.id }.toSet()
+        if (item.spec.course.accountId !in latestOwners) continue
+        val cached = storage.cached(item.spec.course, item.spec.file)
+        if (cached != null) {
+            items[index] = item.copy(status = OfflineDownloadStatus.SAVED, bytes = cached.bytes, message = null)
+            changed = true
+            storage.save(OfflineDownloadJournal(items, journal.wifiOnly))
+            continue
+        }
+        if (journal.wifiOnly && !wifiAvailable()) {
+            if (item.status != OfflineDownloadStatus.WAITING_WIFI) {
+                items[index] = item.copy(status = OfflineDownloadStatus.WAITING_WIFI)
+                changed = true
+            }
+            continue
+        }
+        val result = portal.download(item.spec.course, item.spec.file)
+        val saved = storage.cached(item.spec.course, item.spec.file)
+        items[index] = if (result is AppResult.Success && saved != null) {
+            item.copy(status = OfflineDownloadStatus.SAVED, bytes = saved.bytes, message = null)
+        } else {
+            item.copy(status = OfflineDownloadStatus.FAILED, bytes = 0, message = if (result is AppResult.Failure && result.error == AppError.SessionExpired) "Sign in again, then retry this file." else "File unavailable or download failed. Retry when connected.")
+        }
+        changed = true
+        storage.save(OfflineDownloadJournal(items, journal.wifiOnly))
+    }
+    if (changed) storage.save(OfflineDownloadJournal(items, journal.wifiOnly))
+    return items.any { it.status == OfflineDownloadStatus.WAITING_WIFI }
+}
+
+class OfflineDownloadWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
+    override suspend fun doWork(): Result {
+        val graph = UitGraph.get(applicationContext)
+        val storage = createOfflineDownloadStorage(applicationContext)
+        val manager = applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val waiting = runOfflineDownloadQueue(graph.portal, graph.accounts, storage) {
+            manager.activeNetwork?.let { manager.getNetworkCapabilities(it)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) } == true
+        }
+        return if (waiting && runAttemptCount < 3) Result.retry() else Result.success()
+    }
+    companion object {
+        fun enqueue(context: Context, wifiOnly: Boolean) {
+            val network = if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED
+            val request = OneTimeWorkRequestBuilder<OfflineDownloadWorker>()
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(network).build())
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork("uit-offline-downloads", ExistingWorkPolicy.KEEP, request)
+        }
+    }
+}

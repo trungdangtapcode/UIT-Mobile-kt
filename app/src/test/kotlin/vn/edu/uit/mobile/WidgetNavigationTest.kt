@@ -21,6 +21,8 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import vn.edu.uit.mobile.data.LocalPracticeRepository
+import vn.edu.uit.mobile.data.StudyStorage
 import vn.edu.uit.mobile.designsystem.AppLanguage
 import vn.edu.uit.mobile.designsystem.LanguagePreference
 import vn.edu.uit.mobile.domain.*
@@ -54,6 +56,22 @@ class WidgetNavigationTest {
                 module {
                     single<PortalRepository> { repository }
                     single<BookmarkRepository> { bookmarks }
+                    single<PracticeRepository> {
+                        LocalPracticeRepository(
+                            object : StudyStorage {
+                                private val values = mutableMapOf<String, String>()
+                                override fun read(key: String) = values[key]
+                                override fun write(key: String, value: String) {
+                                    values[key] = value
+                                }
+                                override fun remove(key: String) {
+                                    values.remove(key)
+                                }
+                                override fun removeAccount(accountId: String) = error("Account writes are outside this test")
+                            },
+                            get()
+                        )
+                    }
                     single<RevisionRepository> {
                         object : RevisionRepository {
                             override val accounts = owners.map { connected -> connected.filter { it.portal != PortalType.MOODLE }.map { RevisionAccount(it.id) } }
@@ -82,6 +100,23 @@ class WidgetNavigationTest {
 
     @After fun cleanup() {
         stopKoin()
+    }
+
+    @Test fun savedPracticeLibrarySurvivesActivityRecreationAndReturnsToCourses() {
+        var activity = Robolectric.buildActivity(MainActivity::class.java).setup().visible()
+        try {
+            compose.onNodeWithText("Courses", substring = false).performClick()
+            compose.onNodeWithText("Saved practice sets").performScrollTo().performClick()
+            compose.onNodeWithText("No practice sets saved").assertExists()
+            val saved = Bundle()
+            activity.saveInstanceState(saved).pause().stop().destroy()
+            activity = Robolectric.buildActivity(MainActivity::class.java).setup(saved).visible()
+            compose.onNodeWithText("No practice sets saved").assertExists()
+            compose.onNodeWithText("Back", substring = false).performClick()
+            compose.onNodeWithText("Course directory").assertExists()
+        } finally {
+            activity.pause().stop().destroy()
+        }
     }
 
     @Test fun scheduleWidgetOpensItsDateAndConsumesTheLaunchIntent() {

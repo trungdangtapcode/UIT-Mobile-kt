@@ -51,6 +51,7 @@ class MainActivity : ComponentActivity() {
     private val bookmarkRepository: BookmarkRepository by inject()
     private val workloadRepository: WorkloadRepository by inject()
     private val revisionRepository: RevisionRepository by inject()
+    private val practiceRepository: PracticeRepository by inject()
     private val studyRepository: StudyAiRepository by lazy { createStudyAiRepository(this, accounts) }
 
     override fun attachBaseContext(newBase: Context) {
@@ -82,6 +83,7 @@ class MainActivity : ComponentActivity() {
                 val bookmarks = ownedViewModel { BookmarksViewModel(bookmarkRepository, repository, accounts) }
                 val courses = ownedViewModel { CoursesViewModel(repository) }
                 val study = ownedViewModel { StudyViewModel(studyRepository, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this))) }
+                val practice = ownedViewModel { PracticeViewModel(studyRepository, practiceRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this))) }
                 val inbox = ownedViewModel { InboxViewModel(repository) }
                 val academic = ownedViewModel { AcademicViewModel(repository) }
                 val auth = ownedViewModel { AccountsViewModel(accounts) }
@@ -104,7 +106,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, inbox, academic, studentProfile, widgetRoute, {
+                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, practice, inbox, academic, studentProfile, widgetRoute, {
                     showWidgets = false
                     widgetRoute = null
                     setIntent(
@@ -169,6 +171,7 @@ private fun UitShell(
     downloads: OfflineDownloadsViewModel,
     bookmarks: BookmarksViewModel,
     study: StudyViewModel,
+    practice: PracticeViewModel,
     inbox: InboxViewModel,
     academic: AcademicViewModel,
     studentProfile: StudentProfileViewModel,
@@ -332,7 +335,8 @@ private fun UitShell(
                         showBookmarks = true
                         bookmarksFromSearch = false
                         returnToBookmarks = false
-                    }
+                    },
+                    practice = practice
                 )
                 3 -> InboxScreen(inbox)
                 else -> AcademicScreen(academic, accountContent)

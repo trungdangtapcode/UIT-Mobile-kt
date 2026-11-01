@@ -11,7 +11,7 @@ import vn.edu.uit.mobile.model.*
 
 data class OfflineDownloadsState(val snapshot: PortalSnapshot = PortalSnapshot(), val owners: Set<String> = emptySet(), val items: List<OfflineDownloadItem> = emptyList(), val wifiOnly: Boolean = true, val wifi: Boolean = false, val ready: Boolean = false, val usedBytes: Long = 0, val message: String? = null)
 data class OfflineOpenFile(val path: String, val id: String, val generation: Int)
-class OfflineDownloadsViewModel(private val repository: PortalRepository, accounts: AccountRepository, private val storage: OfflineDownloadStorage, wifi: Flow<Boolean>) : ViewModel() {
+class OfflineDownloadsViewModel(private val repository: PortalRepository, accounts: AccountRepository, private val storage: OfflineDownloadStorage, wifi: Flow<Boolean>, private val scheduleBackground: (Boolean) -> Unit = {}) : ViewModel() {
     private val state = MutableStateFlow(OfflineDownloadsState())
     val uiState = state.asStateFlow()
     private val persist = Channel<Unit>(Channel.CONFLATED)
@@ -93,6 +93,7 @@ class OfflineDownloadsViewModel(private val repository: PortalRepository, accoun
         state.value = state.value.copy(wifiOnly = value)
         changed()
         if (value && !state.value.wifi) pauseForWifi()
+        if (state.value.items.any { it.status in setOf(OfflineDownloadStatus.QUEUED, OfflineDownloadStatus.WAITING_WIFI) }) scheduleBackground(value)
         kick()
     }
     fun enqueue(specs: List<OfflineDownloadSpec>) {
@@ -107,6 +108,7 @@ class OfflineDownloadsViewModel(private val repository: PortalRepository, accoun
         selected.forEach { spec -> if (existing[spec.id]?.status !in setOf(OfflineDownloadStatus.DOWNLOADING, OfflineDownloadStatus.REMOVING)) existing[spec.id] = OfflineDownloadItem(existing[spec.id]?.spec?.copy(course = spec.course, section = spec.section, sectionName = spec.sectionName) ?: spec) }
         state.value = state.value.copy(items = existing.values.toList(), message = null)
         changed()
+        scheduleBackground(state.value.wifiOnly)
         kick()
     }
     fun cancel(id: String) {
@@ -117,6 +119,7 @@ class OfflineDownloadsViewModel(private val repository: PortalRepository, accoun
         val item = state.value.items.firstOrNull { it.id == id } ?: return
         if (item.spec.course.accountId !in state.value.owners || item.status in setOf(OfflineDownloadStatus.DOWNLOADING, OfflineDownloadStatus.REMOVING)) return
         update(id) { it.copy(status = OfflineDownloadStatus.QUEUED, message = null) }
+        scheduleBackground(state.value.wifiOnly)
         kick()
     }
     private fun kick() {

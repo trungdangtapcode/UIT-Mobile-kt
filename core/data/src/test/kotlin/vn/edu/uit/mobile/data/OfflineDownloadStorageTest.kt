@@ -54,4 +54,39 @@ class OfflineDownloadStorageTest {
         assertTrue(destination.name.endsWith(".pdf"))
         assertTrue(destination.canonicalFile.toPath().startsWith(folder.root.canonicalFile.toPath()))
     }
+
+    @Test fun freeTimeBlockStorageIsolatesAccountSetsAndClearsWhenRequested() {
+        val store = PrivateFreeTimeBlockStorage(Journal())
+        val block = PersonalTimeBlock("b1", "Study group", 1_000L, 2_000L)
+        store.save(setOf("b", "a"), listOf(block))
+        assertEquals(listOf(block), store.load(setOf("a", "b")))
+        assertTrue(store.load(setOf("a")).isEmpty())
+        store.clear(setOf("a", "b"))
+        assertTrue(store.load(setOf("a", "b")).isEmpty())
+    }
+
+    @Test fun backgroundQueueRunnerDownloadsQueuedItemsAndHonorsWifiGating() = runTest {
+        val store = PrivateOfflineDownloadStorage(folder.root, Journal())
+        val item = OfflineDownloadItem(OfflineDownloadSpec(course, "section:1", "Week 1", file), OfflineDownloadStatus.QUEUED)
+        store.save(OfflineDownloadJournal(listOf(item), wifiOnly = true))
+        val accounts = object : AccountRepository {
+            override val accounts = kotlinx.coroutines.flow.MutableStateFlow(listOf(Account("one", "https://courses.example.org", 1, "Synthetic", PortalType.MOODLE)))
+            override suspend fun remove(accountId: String) = Unit
+            override suspend fun saveSessions(sessions: List<PortalSession>) = Unit
+        }
+        val portal = object : FakePortalRepository() {
+            override suspend fun download(course: Course, file: CourseFile): vn.edu.uit.mobile.common.AppResult<DownloadedFile, vn.edu.uit.mobile.common.AppError> {
+                val dest = materialDestination(folder.root, course, file)
+                dest.parentFile!!.mkdirs()
+                dest.writeText("PDF content")
+                val hash = java.security.MessageDigest.getInstance("SHA-256").digest(dest.readBytes()).joinToString("") { "%02x".format(it) }
+                writeMaterialChecksum(dest, hash)
+                return vn.edu.uit.mobile.common.AppResult.Success(DownloadedFile(dest.path, hash))
+            }
+        }
+        assertTrue(runOfflineDownloadQueue(portal, accounts, store) { false })
+        assertEquals(OfflineDownloadStatus.WAITING_WIFI, store.load().items.single().status)
+        assertFalse(runOfflineDownloadQueue(portal, accounts, store) { true })
+        assertEquals(OfflineDownloadStatus.SAVED, store.load().items.single().status)
+    }
 }

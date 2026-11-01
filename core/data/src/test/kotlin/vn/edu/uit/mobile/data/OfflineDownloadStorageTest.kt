@@ -89,4 +89,45 @@ class OfflineDownloadStorageTest {
         assertFalse(runOfflineDownloadQueue(portal, accounts, store) { true })
         assertEquals(OfflineDownloadStatus.SAVED, store.load().items.single().status)
     }
+
+    @Test fun offlineCourseSourceLoaderExtractsVerifiedPdfAndTextFilesOnly() = runTest {
+        val store = PrivateOfflineDownloadStorage(folder.root, Journal())
+        val loader = createOfflineCourseSourceLoader(store)
+        val txtFile = CourseFile("Syllabus.md", "https://courses.example.org/syllabus.md")
+        val pdfFile = CourseFile("Slides.pdf", "https://courses.example.org/slides.pdf")
+        val unverifiedFile = CourseFile("Secret.txt", "https://courses.example.org/secret.txt")
+
+        val txtDest = materialDestination(folder.root, course, txtFile).apply {
+            parentFile!!.mkdirs()
+            writeText("# Relational Algebra\nProjection and selection operators.")
+        }
+        writeMaterialChecksum(txtDest, java.security.MessageDigest.getInstance("SHA-256").digest(txtDest.readBytes()).joinToString("") { "%02x".format(it) })
+
+        val compressedStream = java.io.ByteArrayOutputStream().use { out ->
+            java.util.zip.DeflaterOutputStream(out).use { deflater ->
+                deflater.write("BT /F1 12 Tf (Transactions preserve ACID consistency.) Tj ET".toByteArray(Charsets.ISO_8859_1))
+            }
+            out.toByteArray()
+        }
+        val pdfBytes = "%PDF-1.4\n1 0 obj\n<< /Filter /FlateDecode >>\nstream\n".toByteArray(Charsets.ISO_8859_1) +
+            compressedStream +
+            "\nendstream\nendobj\n%%EOF".toByteArray(Charsets.ISO_8859_1)
+        val pdfDest = materialDestination(folder.root, course, pdfFile).apply {
+            parentFile!!.mkdirs()
+            writeBytes(pdfBytes)
+        }
+        writeMaterialChecksum(pdfDest, java.security.MessageDigest.getInstance("SHA-256").digest(pdfDest.readBytes()).joinToString("") { "%02x".format(it) })
+
+        materialDestination(folder.root, course, unverifiedFile).apply {
+            parentFile!!.mkdirs()
+            writeText("Unverified text without checksum")
+        }
+
+        val section = CourseSection(1, "Week 1", listOf(CourseModule(10, course.id, "Materials", "resource", "", files = listOf(txtFile, pdfFile, unverifiedFile))))
+        val sources = loader.load(course, listOf(section), emptyList())
+        assertEquals(2, sources.size)
+        assertTrue(sources.all { it.id.startsWith("file:") && it.text.length <= 12000 })
+        assertTrue(sources.any { it.title == "Syllabus.md" && it.text.contains("Projection and selection operators.") })
+        assertTrue(sources.any { it.title == "Slides.pdf" && it.text.contains("Transactions preserve ACID consistency.") })
+    }
 }

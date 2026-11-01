@@ -68,6 +68,136 @@ internal fun writeMaterialChecksum(file: File, checksum: String) {
 }
 fun createOfflineDownloadStorage(context: Context): OfflineDownloadStorage = PrivateOfflineDownloadStorage(File(context.applicationContext.filesDir, "materials"), StudyPrivateStorage(context, "offline_downloads", "uit.offline.downloads.v1"))
 fun createFreeTimeBlockStorage(context: Context): FreeTimeBlockStorage = PrivateFreeTimeBlockStorage(StudyPrivateStorage(context, "free_time_blocks", "uit.freetime.blocks.v1"))
+fun createOfflineCourseSourceLoader(storage: OfflineDownloadStorage): OfflineCourseSourceLoader = OfflineCourseSourceLoader { course, sections, assignments ->
+    withContext(Dispatchers.IO) {
+        val files = buildList {
+            assignments.filter { it.accountId == course.accountId && it.courseId == course.id }.forEach { addAll(it.files) }
+            sections.flatMap { it.modules }.filter { it.courseId == course.id }.forEach { addAll(it.files) }
+        }.filter { it.name.isNotBlank() && it.url.isNotBlank() }.distinctBy { it.url }
+        files.mapNotNull { file ->
+            currentCoroutineContext().ensureActive()
+            val verified = storage.cached(course, file) ?: return@mapNotNull null
+            val local = File(verified.path)
+            if (!local.isFile || local.length() <= 0L || local.length() > 8L * 1024 * 1024) return@mapNotNull null
+            val text = runCatching { extractOfflineDocumentText(file.name, local.readBytes()) }.getOrNull()?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            StudySource("file:${offlineDownloadId(course, file).take(32)}", file.name.take(200), text)
+        }
+    }
+}
+
+internal fun extractOfflineDocumentText(fileName: String, bytes: ByteArray): String? {
+    if (bytes.isEmpty()) return null
+    val ext = fileName.substringAfterLast('.', "").lowercase()
+    val isPdf = ext == "pdf" || (bytes.size >= 5 && bytes.copyOfRange(0, 5).toString(Charsets.US_ASCII) == "%PDF-")
+    val raw = when {
+        isPdf -> extractPdfText(bytes)
+        ext in setOf("txt", "md", "markdown", "csv", "json", "xml") -> bytes.toString(Charsets.UTF_8)
+        ext in setOf("html", "htm") -> bytes.toString(Charsets.UTF_8).replace(Regex("<[^>]+>"), " ")
+        else -> return null
+    }
+    return raw.replace(Regex("[\\s\\p{Z}\\u0000-\\u001f]+"), " ").trim().take(12000).trim().takeIf { it.isNotBlank() }
+}
+
+internal fun extractPdfText(bytes: ByteArray): String {
+    val ascii = bytes.toString(Charsets.ISO_8859_1)
+    val streamRegex = Regex("stream(?:\\r\\n|\\n|\\r)([\\s\\S]*?)(?:\\r\\n|\\n|\\r)?endstream")
+    val chunks = mutableListOf<String>()
+    for (match in streamRegex.findAll(ascii)) {
+        val body = match.groupValues[1].toByteArray(Charsets.ISO_8859_1)
+        val decoded = inflatePdfStream(body, false) ?: inflatePdfStream(body, true) ?: body.toString(Charsets.ISO_8859_1)
+        extractPdfTextOperators(decoded).takeIf { it.isNotBlank() }?.let(chunks::add)
+    }
+    if (chunks.isEmpty()) {
+        extractPdfTextOperators(ascii).takeIf { it.isNotBlank() }?.let(chunks::add)
+    }
+    return chunks.joinToString(" ")
+}
+
+private fun inflatePdfStream(input: ByteArray, nowrap: Boolean): String? = runCatching {
+    val inflater = java.util.zip.Inflater(nowrap)
+    try {
+        inflater.setInput(input)
+        val out = java.io.ByteArrayOutputStream()
+        val buffer = ByteArray(8192)
+        while (!inflater.finished() && out.size() < 1024 * 1024) {
+            val count = inflater.inflate(buffer)
+            if (count <= 0) {
+                if (inflater.needsInput() || inflater.needsDictionary()) break
+            } else {
+                out.write(buffer, 0, count)
+            }
+        }
+        out.toByteArray().takeIf { it.isNotEmpty() }?.toString(Charsets.ISO_8859_1)
+    } finally {
+        inflater.end()
+    }
+}.getOrNull()
+
+private fun extractPdfTextOperators(stream: String): String {
+    val btRegex = Regex("BT\\b([\\s\\S]*?)\\bET")
+    val regions = btRegex.findAll(stream).map { it.groupValues[1] }.toList().ifEmpty { listOf(stream) }
+    val tokenRegex = Regex("\\((?:\\\\.|[^\\\\()])*\\)|<([0-9A-Fa-f\\s]{2,})>")
+    val out = StringBuilder()
+    for (region in regions) {
+        for (match in tokenRegex.findAll(region)) {
+            val value = match.value
+            val piece = if (value.startsWith("(") && value.endsWith(")")) {
+                unescapePdfLiteral(value.substring(1, value.length - 1))
+            } else {
+                decodePdfHex(match.groupValues[1])
+            }
+            if (piece.isNotBlank()) {
+                if (out.isNotEmpty()) out.append(' ')
+                out.append(piece)
+                if (out.length >= 24000) return out.toString()
+            }
+        }
+    }
+    return out.toString()
+}
+
+private fun unescapePdfLiteral(raw: String): String {
+    val sb = StringBuilder(raw.length)
+    var i = 0
+    while (i < raw.length) {
+        val c = raw[i]
+        if (c == '\\' && i + 1 < raw.length) {
+            val next = raw[i + 1]
+            when {
+                next == 'n' -> { sb.append('\n'); i += 2 }
+                next == 'r' -> { sb.append('\r'); i += 2 }
+                next == 't' -> { sb.append('\t'); i += 2 }
+                next in '0'..'7' -> {
+                    var oct = "$next"
+                    var j = i + 2
+                    while (j < raw.length && oct.length < 3 && raw[j] in '0'..'7') {
+                        oct += raw[j]
+                        j++
+                    }
+                    sb.append(oct.toInt(8).toChar())
+                    i = j
+                }
+                else -> { sb.append(next); i += 2 }
+            }
+        } else {
+            sb.append(c)
+            i++
+        }
+    }
+    return sb.toString()
+}
+
+private fun decodePdfHex(hex: String): String {
+    val clean = hex.filterNot(Char::isWhitespace)
+    if (clean.length < 2) return ""
+    val padded = if (clean.length % 2 == 1) "${clean}0" else clean
+    val bytes = ByteArray(padded.length / 2) { idx -> padded.substring(idx * 2, idx * 2 + 2).toInt(16).toByte() }
+    return if (bytes.size >= 2 && bytes[0] == 0xfe.toByte() && bytes[1] == 0xff.toByte()) {
+        String(bytes, 2, bytes.size - 2, Charsets.UTF_16BE)
+    } else {
+        bytes.toString(Charsets.ISO_8859_1)
+    }
+}
 
 class PrivateFreeTimeBlockStorage(private val storage: StudyStorage) : FreeTimeBlockStorage {
     private fun keyFor(accountIds: Set<String>): String {

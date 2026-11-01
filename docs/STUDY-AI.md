@@ -5,12 +5,16 @@ This branch adds two native Android workflows inside **Courses**:
 - **Assignments → Analyze assignment & checklist:** inspect the saved brief, send
   selected text through the configured connection, review stated requirements separately
   from suggestions, and explicitly add/edit/reorder/save a personal checklist.
-- **Ask course text:** select saved assignment/activity descriptions or add a pasted
-  excerpt, ask a question, and inspect the original text behind each citation.
+- **Ask course text:** select saved assignment/activity descriptions, verified offline
+  course documents (`.pdf`, `.txt`, `.md`, `.csv`, `.json`, `.html`) downloaded on the
+  device, or add a pasted excerpt, ask a question, and inspect the original text behind
+  each citation.
 
-The first release is text-only. It does not parse downloaded PDF files, OCR profile
-scans or retrieve material from a shared vector index. An empty description is not
-treated as an empty document. Long source text stays visible for inspection but
+Verified offline course documents from `OfflineDownloadStorage` are extracted locally
+(including `FlateDecode` PDF text streams) and truncated to 12,000 characters per file
+so they can be selected alongside Moodle activity descriptions. The assistant does not
+OCR profile scans or retrieve material from a shared vector index. An empty description
+is not treated as an empty document. Long source text stays visible for inspection but
 must be shortened into an explicit excerpt before sending. Select at most five
 sources, 12,000 characters each and 36,000 characters in total.
 

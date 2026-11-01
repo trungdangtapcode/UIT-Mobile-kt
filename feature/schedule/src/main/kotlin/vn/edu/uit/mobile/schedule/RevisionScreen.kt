@@ -73,6 +73,12 @@ fun RevisionContent(
     val plan = state.plan
     val owner = state.owner
     val workspace = state.draft?.workspace ?: state.saved
+    val unplaced = workspace.plans.filter { it.active }.flatMap { p ->
+        p.topics.mapNotNull { topic ->
+            val allocated = p.sessions.filter { it.topicId == topic.id && (it.status == RevisionStatus.COMPLETED || it.status == RevisionStatus.PLANNED && it.end > state.now) }.sumOf { it.effort }
+            (topic.minutes - allocated).takeIf { it > 0 }?.let { RevisionUnplaced(p.exam, topic.id, it) }
+        }
+    }
     val busy = state.busy || state.base.busy
     val enabled = !busy && !state.failed && owner != null
     BackHandler(onBack = onBack)
@@ -110,8 +116,8 @@ fun RevisionContent(
                         if (result.issues.any { it != WorkloadIssue.UNKNOWN_END }) InlineNotice(stringResource(R.string.rp_quality), true)
                         if (WorkloadIssue.UNKNOWN_END in result.issues) Text(stringResource(R.string.rp_unknown_end), style = MaterialTheme.typography.bodySmall)
                     }
+                    Text(stringResource(if (state.draft == null) R.string.rp_unreserved else R.string.rp_unplaced, unplaced.sumOf { it.minutes }), style = MaterialTheme.typography.titleMedium)
                     if (state.draft != null) {
-                        Text(stringResource(R.string.rp_unplaced, state.draft.unplaced.sumOf { it.minutes }), style = MaterialTheme.typography.titleMedium)
                         state.draft.problems.forEach { problem -> InlineNotice(revisionProblem(problem), true) }
                         Row {
                             Button(onSaveDraft, enabled = enabled && state.draft.problems.isEmpty(), shape = TechnicalShapes.Control) { Text(stringResource(R.string.rp_save_draft)) }
@@ -165,7 +171,6 @@ fun RevisionContent(
                     }
                 }
             }
-            val unplaced = state.draft?.unplaced.orEmpty()
             if (unplaced.isNotEmpty()) {
                 item {
                     Panel(Modifier.fillMaxWidth()) {

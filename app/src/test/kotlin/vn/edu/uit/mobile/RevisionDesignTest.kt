@@ -54,6 +54,7 @@ class RevisionDesignTest {
         var generated = false
         compose.setContent { Frame { RevisionContent(RevisionPreview.state, onGenerate = { generated = true }) } }
         compose.onNodeWithText("30 of 360 effort min completed").assertExists()
+        compose.onNodeWithText("270 effort min without a current reservation").assertExists()
         compose.onNodeWithText("Save draft on device").assertDoesNotExist()
         capture("revision-overview-390-phone")
         compose.onNodeWithText("Generate / replan all exams").performScrollTo().performClick()

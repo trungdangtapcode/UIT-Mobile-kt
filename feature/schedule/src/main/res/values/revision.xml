@@ -79,4 +79,5 @@
     <string name="rp_session_limit">The 2,048-session storage limit was reached. Remove an old local plan deliberately before retrying.</string>
     <string name="rp_option_conflict">Maximum session length must be at least the configured minimum.</string>
     <string name="rp_search_limit">Planning reached its search limit. Shorten the horizon or simplify fixed reservations, then try again. This draft was not saved.</string>
+    <string name="rp_unreserved">%1$d effort min without a current reservation</string>
 </resources>

@@ -27,6 +27,9 @@ The algorithm constructs sessions together and validates their shared constraint
 It is a heuristic, not an optimal scheduler: unplaced work does not prove that no
 alternative arrangement exists. A partial valid draft can be saved, retaining its
 unplaced topic effort for the next attempt. No academic completion is inferred.
+Saved plans continue to show effort without a current reservation, including work
+whose session has expired without a completion report. Recorded future reservations
+are not a guarantee against later source changes; inspect conflicts and replan.
 
 A final topic remainder shorter than the minimum reserves a full minimum-length
 session, but credits only its actual entered effort. For example, 20 minutes of

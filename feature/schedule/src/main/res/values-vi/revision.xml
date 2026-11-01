@@ -79,4 +79,5 @@
     <string name="rp_session_limit">Đã chạm giới hạn lưu 2.048 phiên. Chủ động xóa kế hoạch cũ trên máy trước khi thử lại.</string>
     <string name="rp_option_conflict">Độ dài tối đa của phiên phải bằng hoặc lớn hơn mức tối thiểu đã cấu hình.</string>
     <string name="rp_search_limit">Đã chạm giới hạn tìm kiếm. Rút ngắn khoảng ngày hoặc giảm số phiên cố định rồi thử lại. Bản nháp này chưa được lưu.</string>
+    <string name="rp_unreserved">Còn %1$d phút ôn tập chưa có phiên hiện tại</string>
 </resources>

@@ -140,12 +140,13 @@ import vn.edu.uit.mobile.model.*
     )
 }
 
-@Composable fun CourseCard(course: Course, onClick: () -> Unit) {
+@Composable fun CourseCard(course: Course, trailingAction: @Composable (() -> Unit)? = null, onClick: () -> Unit) {
     Surface(onClick = onClick, color = MaterialTheme.colorScheme.surface, shape = TechnicalShapes.Panel, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = .55f)), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(courseIcon(course.shortname), null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(course.shortname.ifBlank { stringResource(R.string.course_fallback, course.id.toInt()) }, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall.copy(fontFamily = CampusMono), color = MaterialTheme.colorScheme.primary)
+                trailingAction?.invoke()
                 Icon(Icons.Outlined.ChevronRight, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
             }
             Text(course.fullname, style = MaterialTheme.typography.titleMedium)

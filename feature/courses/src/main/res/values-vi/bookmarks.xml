@@ -1,0 +1,37 @@
+<resources>
+    <string name="bm_list_unavailable">Chưa đọc được danh sách đã ghim</string>
+    <string name="bm_title">Mục đã ghim</string>
+    <string name="bm_subtitle">Bộ sưu tập học tập cá nhân</string>
+    <string name="bm_local_note">Chỉ ghim mục; cần tải tệp riêng. Tối đa 200 mục mỗi tài khoản, lưu trên điện thoại và không đồng bộ với diễn đàn.</string>
+    <string name="bm_workspace">Không gian học tập</string>
+    <string name="bm_add_link">Thêm liên kết UIT</string>
+    <string name="bm_reload">Đọc lại danh sách</string>
+    <string name="bm_search">Tìm mục đã ghim</string>
+    <string name="bm_all">Tất cả</string>
+    <string name="bm_courses">Môn học</string>
+    <string name="bm_materials">Tài liệu</string>
+    <string name="bm_assignments">Bài tập</string>
+    <string name="bm_notices">Thông báo</string>
+    <string name="bm_discussions">Thảo luận</string>
+    <string name="bm_links">Liên kết UIT</string>
+    <string name="bm_pin">Ghim %1$s</string>
+    <string name="bm_unpin">Bỏ ghim %1$s</string>
+    <string name="bm_open">Mở mục đã lưu</string>
+    <string name="bm_browser">Mở bản gốc trên trình duyệt</string>
+    <string name="bm_unavailable">Nguồn chưa có trong dữ liệu đã lưu. Hãy tải thông tin môn học, làm mới nguồn hoặc bỏ ghim.</string>
+    <string name="bm_external_note">Mở trang của trường; có thể cần mạng hoặc đăng nhập trong trình duyệt.</string>
+    <string name="bm_empty">Chưa có mục đã ghim</string>
+    <string name="bm_no_match">Không tìm thấy mục phù hợp</string>
+    <string name="bm_empty_body">Ghim từ tìm kiếm hoặc thảo luận môn học. Bạn cũng có thể thêm liên kết UIT tại đây.</string>
+    <string name="bm_connect">Kết nối tài khoản trong phần cài đặt hồ sơ để lưu riêng các mục đã ghim.</string>
+    <string name="bm_link_hint">Chọn tài khoản sở hữu dấu ghim cục bộ. Chỉ nhận liên kết HTTPS công khai thuộc miền UIT; không dán liên kết đăng nhập hoặc chứa thông tin phiên.</string>
+    <string name="bm_link_title">Tiêu đề</string>
+    <string name="bm_link_url">Địa chỉ HTTPS của UIT</string>
+    <string name="bm_save_link">Lưu liên kết</string>
+    <string name="bm_cancel">Hủy</string>
+    <string name="bm_load_error">Không đọc được một số mục đã ghim. Dữ liệu cũ được giữ lại; hãy thử đọc lại danh sách.</string>
+    <string name="bm_save_error">Không lưu hoặc bỏ ghim được. Kiểm tra tài khoản đã kết nối và giới hạn 200 mục, rồi thử lại.</string>
+    <string name="bm_link_error">Nhập tiêu đề và liên kết HTTPS công khai của UIT, không chứa mật khẩu, token hoặc tham số đăng nhập.</string>
+    <string name="bm_source_error">Nguồn không còn trong không gian đã lưu của tài khoản kết nối. Hãy làm mới môn học hoặc bỏ ghim.</string>
+    <string name="bm_browser_error">Không mở được liên kết. Hãy cài đặt hoặc bật trình duyệt rồi thử lại.</string>
+</resources>

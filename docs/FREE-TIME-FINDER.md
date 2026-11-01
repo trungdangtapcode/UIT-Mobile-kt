@@ -44,9 +44,11 @@ switching the search date so their date stays visible and they can be removed.
 
 Drafts and settings live in the schedule ViewModel's in-memory planner. They survive
 configuration changes while the activity and planner are retained. Explicitly
-closing the planner resets them; opening it again begins from the schedule's
-selected date. Process death removes drafts. They are not written into university
-services, AI prompts, calendar files, app preferences or backup storage.
+closing the planner resets unsaved drafts; opening it again begins from the schedule's
+selected date and restores any blocks explicitly saved on the device with **Save
+blocks on this device**. Saved blocks use a dedicated Android Keystore AES-GCM
+store scoped to the connected-account ID set. They are not written into university
+services, AI prompts, calendar files or backup storage.
 
 The actual connected-account ID set scopes a planning session. Adding/removing
 an account clears drafts, including accounts that have no cached courses. The

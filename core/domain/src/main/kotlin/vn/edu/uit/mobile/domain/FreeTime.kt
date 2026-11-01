@@ -6,6 +6,11 @@ import vn.edu.uit.mobile.model.*
 
 data class FreeTimeOptions(val date: LocalDate, val start: LocalTime = LocalTime(8, 0), val end: LocalTime = LocalTime(18, 0), val minimumMinutes: Int = 60, val bufferMinutes: Int = 15)
 data class PersonalTimeBlock(val id: String, val title: String, val start: Long, val end: Long)
+interface FreeTimeBlockStorage {
+    fun load(accountIds: Set<String>): List<PersonalTimeBlock>
+    fun save(accountIds: Set<String>, blocks: List<PersonalTimeBlock>)
+    fun clear(accountIds: Set<String>)
+}
 data class FreeTimeSlot(val start: Long, val end: Long) {
     val minutes: Long get() = (end - start) / 60
 }

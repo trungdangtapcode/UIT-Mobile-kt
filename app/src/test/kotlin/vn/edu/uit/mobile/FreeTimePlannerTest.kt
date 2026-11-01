@@ -67,4 +67,30 @@ class FreeTimePlannerTest {
         assertEquals(30, options.minimumMinutes)
         assertEquals(10, options.bufferMinutes)
     }
+
+    @Test fun savedPersonalBlocksRestoreWhenReopenedAndClearOnAccountChange() {
+        val store = object : FreeTimeBlockStorage {
+            val saved = mutableMapOf<Set<String>, List<PersonalTimeBlock>>()
+            override fun load(accountIds: Set<String>) = saved[accountIds].orEmpty()
+            override fun save(accountIds: Set<String>, blocks: List<PersonalTimeBlock>) {
+                saved[accountIds] = blocks
+            }
+            override fun clear(accountIds: Set<String>) {
+                saved.remove(accountIds)
+            }
+        }
+        val planner = FreeTimePlanner(store)
+        planner.onAccounts(setOf("one"))
+        planner.open(day)
+        assertNull(planner.add("Gym", "17:00", "18:00"))
+        assertTrue(planner.uiState.value.dirty)
+        planner.saveOnDevice()
+        assertFalse(planner.uiState.value.dirty)
+        planner.close()
+        planner.open(day)
+        assertEquals("Gym", planner.uiState.value.personal.single().title)
+        planner.onAccounts(setOf("two"))
+        assertTrue(planner.uiState.value.personal.isEmpty())
+        assertTrue(store.load(setOf("one")).isEmpty())
+    }
 }

@@ -8,6 +8,7 @@ data class FreeTimeOptions(val date: LocalDate, val start: LocalTime = LocalTime
 data class PersonalTimeBlock(val id: String, val title: String, val start: Long, val end: Long)
 interface FreeTimeBlockStorage {
     fun load(accountIds: Set<String>): List<PersonalTimeBlock>
+    fun loadStrict(accountIds: Set<String>): List<PersonalTimeBlock> = load(accountIds)
     fun save(accountIds: Set<String>, blocks: List<PersonalTimeBlock>)
     fun clear(accountIds: Set<String>)
 }
@@ -64,7 +65,7 @@ class FindFreeTimeUseCase {
         )
     }
 
-    private fun remainingClassPeriods(snapshot: PortalSnapshot, entry: ScheduleEntry): List<ScheduleEntry> {
+    internal fun remainingClassPeriods(snapshot: PortalSnapshot, entry: ScheduleEntry): List<ScheduleEntry> {
         val date = Instant.fromEpochSeconds(entry.start).toLocalDateTime(UitTimeZone).date
         val slots = snapshot.timetable.filter { "class:${it.classCode}:$date:${it.lessonStart}" == entry.key }
         if (slots.isEmpty()) return listOf(entry.copy(kind = ScheduleKind.CLASS))

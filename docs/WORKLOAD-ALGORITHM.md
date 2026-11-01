@@ -11,6 +11,66 @@ the recorded capacity before my upcoming planning cutoffs?** It also lists exams
 and deadlines without inventing effort estimates. It does not automatically place
 study sessions, predict grades, change official deadlines or submit coursework.
 
+## Visual walkthrough
+
+These figures use executable synthetic fixtures, with numerical results exported
+from the production Kotlin engine. The [figure guide](figures/workload/README.md)
+records inputs, TSV data, PNG/SVG copies and reproduction commands. No real
+student data is published.
+
+### Equation reference
+
+![Rendered cutoff, demand, missing-effort and capacity equations](figures/workload/equations.png)
+
+`d_i` and `t_i` are Unix timestamps in seconds; `L`, `e_i`, `B_d`, `m`, gap lengths,
+`D` and `C` use minutes. `I(t)` contains upcoming items not unambiguously submitted
+whose personal cutoff is at or before `t`. `H` is the configured set of UIT dates;
+`s` selects a capacity scenario. Sections 3–6 define clipping and classification.
+
+### A later free afternoon cannot repair a noon deadline
+
+![Engine-derived demand and capacity curves with a noon deficit and an unknown-end exam scenario](figures/workload/cutoff-pressure.png)
+
+At noon, 180 entered minutes are due but only 120 recorded minutes are usable:
+the shortfall is 60. At 15:00 the known-duration scenario reaches `D=C=240`, but
+the overview retains the earlier shortfall. An unknown exam end gives a 60–240
+minute capacity range at 15:00; it does not justify inventing an exam duration.
+
+### Busy records are subtracted once; separate sessions respect their minimum
+
+![Overlapping busy records, buffered union, free gaps and two fragmented-budget examples](figures/workload/busy-union-and-fragments.png)
+
+Two overlapping busy records with 15-minute buffers leave two 45-minute gaps in
+the first example, giving 90 usable minutes. In the second, two 30-minute gaps
+yield only 30 usable minutes under a 50-minute budget and 30-minute minimum.
+Increasing the budget to 60 permits both gaps.
+
+### Independent checkpoint checks are not a constructive scheduler
+
+![Both cutoff checks pass independently, but the remaining budget is too short for a second session](figures/workload/prefix-counterexample.png)
+
+The early check has `D=C=30`; the later check has `D=C=50`. Spending 30 early leaves
+only 20 budget minutes, below the 30-minute minimum for a later session. The UI's
+“within entered budget” statement is conditional on an independent cutoff check;
+it is not a claim that a complete session schedule exists.
+
+```mermaid
+flowchart TD
+    S[Original per-account snapshots] --> W[Canonical work and submission evidence]
+    E[Personal remaining estimates] --> D[Cumulative demand and missing counts]
+    W --> D
+    P[Confirmed windows, budgets, minimum session and lead] --> D
+    S --> B[Known and unknown-end busy records]
+    T[Saved personal blocks] --> B
+    B --> U[Buffer, union and subtract in two scenarios]
+    P --> U
+    U --> C[Daily capacity and clipped cutoff queries]
+    D --> R[Shortfall, uncertainty or within entered budget]
+    C --> R
+    Q[Source quality and freshness] --> R
+    R --> O[Worst checkpoint and contributing items]
+```
+
 ## 1. Inputs and ownership
 
 Inputs are per-account snapshots from `SnapshotStore`, connected-account metadata,

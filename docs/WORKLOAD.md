@@ -43,5 +43,6 @@ per-cutoff capacity, fragmentation can prevent a feasible sequence of sessions;
 this feature does not automatically schedule study work.
 
 See the [algorithm, formulas, examples and invariants](WORKLOAD-ALGORITHM.md) and
+the [rendered figures and reproduction guide](figures/workload/README.md), plus
 the [phone gallery](design/README.md). Implements
 [issue #10](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/10).

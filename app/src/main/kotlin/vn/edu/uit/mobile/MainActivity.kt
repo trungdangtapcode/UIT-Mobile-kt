@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.os.BundleCompat
@@ -175,6 +176,7 @@ private fun UitShell(
     var showBookmarks by rememberSaveable { mutableStateOf(false) }
     var bookmarksFromSearch by rememberSaveable { mutableStateOf(false) }
     var returnToBookmarks by rememberSaveable { mutableStateOf(false) }
+    val bookmarkScreenState = rememberSaveableStateHolder()
     var showAccounts by rememberSaveable { mutableStateOf(false) }
     var showProfile by rememberSaveable { mutableStateOf(false) }
     var profileAccountId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -243,18 +245,21 @@ private fun UitShell(
         }
     ) {
         if (showBookmarks) {
-            BookmarksScreen(bookmarks, {
-                showBookmarks = false
-                showSearch = bookmarksFromSearch
-            }) { hit ->
-                search.back()
-                search.open(hit.key)
-                if (search.uiState.value.selected == hit.key) {
+            // Retain filters and list position while source detail replaces the collection.
+            bookmarkScreenState.SaveableStateProvider("saved-items") {
+                BookmarksScreen(bookmarks, {
                     showBookmarks = false
-                    showSearch = true
-                    returnToBookmarks = true
-                } else {
-                    bookmarks.problem(BookmarkProblem.SOURCE)
+                    showSearch = bookmarksFromSearch
+                }) { hit ->
+                    search.back()
+                    search.open(hit.key)
+                    if (search.uiState.value.selected == hit.key) {
+                        showBookmarks = false
+                        showSearch = true
+                        returnToBookmarks = true
+                    } else {
+                        bookmarks.problem(BookmarkProblem.SOURCE)
+                    }
                 }
             }
         } else if (showSearch) {

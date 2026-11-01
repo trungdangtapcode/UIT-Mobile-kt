@@ -8,6 +8,7 @@ import io.ktor.http.content.*
 import java.io.ByteArrayOutputStream
 import java.util.zip.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Assertions.*
@@ -61,8 +62,10 @@ class MoodleTest {
         var active = 0
         var peak = 0
         var calls = 0
-        val http = HttpClient(
-            MockEngine { request ->
+        val config = MockEngineConfig().apply {
+            // Keep handler counters and delays on the same scheduler as the test.
+            dispatcher = StandardTestDispatcher(testScheduler)
+            addHandler { request ->
                 active++
                 peak = maxOf(peak, active)
                 calls++
@@ -82,7 +85,8 @@ class MoodleTest {
                 active--
                 respond(JsonArray(listOf(obj("data" to data))).toString())
             }
-        )
+        }
+        val http = HttpClient(MockEngine(config))
         val session = PortalSession(Account("one", "https://courses.uit.edu.vn", 1, "Student", PortalType.MOODLE), "MoodleSession=x", "key")
         SafePortalTransport(session, http).use { transport ->
             val courses = AjaxMoodleApiClient(transport).call("core_enrol_get_users_courses").list()

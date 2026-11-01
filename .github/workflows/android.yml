@@ -55,10 +55,9 @@ jobs:
           profile: pixel_4
           disable-animations: true
           script: |
-            ./gradlew :app:connectedDebugAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true
-            mkdir -p build/auth-smoke
-            adb exec-out run-as vn.edu.uit.mobile cat files/auth-smoke/moodle-login.png > build/auth-smoke/moodle-login.png
-            adb exec-out run-as vn.edu.uit.mobile cat files/auth-smoke/sso-login.png > build/auth-smoke/sso-login.png
+            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.additionalTestOutputDir=/sdcard/Android/media/vn.edu.uit.mobile/additional_test_output
+      - name: Collect and validate sign-in screenshots
+        run: python3 scripts/collect-sign-in-artifacts.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

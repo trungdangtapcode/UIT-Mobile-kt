@@ -1,0 +1,37 @@
+<resources>
+    <string name="bm_list_unavailable">Saved list unavailable</string>
+    <string name="bm_title">Saved items</string>
+    <string name="bm_subtitle">Your local study collection</string>
+    <string name="bm_local_note">Bookmarks stay on this phone, up to 200 per account. Download files separately. Forum bookmarks are not synced.</string>
+    <string name="bm_workspace">Workspace</string>
+    <string name="bm_add_link">Add UIT link</string>
+    <string name="bm_reload">Reload saved list</string>
+    <string name="bm_search">Find a saved item</string>
+    <string name="bm_all">All</string>
+    <string name="bm_courses">Courses</string>
+    <string name="bm_materials">Materials</string>
+    <string name="bm_assignments">Assignments</string>
+    <string name="bm_notices">Notices</string>
+    <string name="bm_discussions">Discussions</string>
+    <string name="bm_links">UIT links</string>
+    <string name="bm_pin">Bookmark %1$s</string>
+    <string name="bm_unpin">Remove bookmark for %1$s</string>
+    <string name="bm_open">Open saved item</string>
+    <string name="bm_browser">Open original in browser</string>
+    <string name="bm_unavailable">Source unavailable in saved data. Load the course or refresh its source, or remove this bookmark.</string>
+    <string name="bm_external_note">Opens the university website; browser sign-in or a network connection may be required.</string>
+    <string name="bm_empty">Nothing saved yet</string>
+    <string name="bm_no_match">No matching saved items</string>
+    <string name="bm_empty_body">Bookmark items from workspace search or course discussions. Add an official UIT link here.</string>
+    <string name="bm_connect">Connect an account from your profile settings to keep its bookmarks separate.</string>
+    <string name="bm_link_hint">Choose the account that owns this local bookmark. Only public HTTPS links on UIT domains are accepted; do not paste sign-in or session links.</string>
+    <string name="bm_link_title">Title</string>
+    <string name="bm_link_url">UIT HTTPS address</string>
+    <string name="bm_save_link">Save link</string>
+    <string name="bm_cancel">Cancel</string>
+    <string name="bm_load_error">Some saved bookmarks could not be read. Existing data is retained; try Reload saved list.</string>
+    <string name="bm_save_error">The bookmark could not be saved or removed. Check the connected account and the 200-item limit, then retry.</string>
+    <string name="bm_link_error">Enter a title and a public UIT HTTPS link without passwords, tokens or sign-in parameters.</string>
+    <string name="bm_source_error">That source is no longer in the connected saved workspace. Refresh its course or remove the bookmark.</string>
+    <string name="bm_browser_error">No browser could open this link. Install or enable a browser and try again.</string>
+</resources>

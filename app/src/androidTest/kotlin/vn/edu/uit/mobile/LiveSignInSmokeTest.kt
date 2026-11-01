@@ -85,7 +85,9 @@ class LiveSignInSmokeTest {
                 assertTrue("WebView did not draw the completed page", rendered.await(15, TimeUnit.SECONDS))
                 instrumentation.waitForIdleSync()
                 Thread.sleep(150)
-                val folder = File(instrumentation.targetContext.filesDir, "auth-smoke").apply { mkdirs() }
+                val additionalOutput = InstrumentationRegistry.getArguments().getString("additionalTestOutputDir")
+                val folder = File(additionalOutput?.let(::File) ?: instrumentation.targetContext.filesDir, "auth-smoke")
+                check(folder.isDirectory || folder.mkdirs()) { "Cannot create sign-in screenshot output" }
                 val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
                 File(folder, "$name.png").outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
                 bitmap.recycle()

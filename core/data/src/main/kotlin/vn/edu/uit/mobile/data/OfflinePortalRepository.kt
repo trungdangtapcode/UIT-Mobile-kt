@@ -379,7 +379,15 @@ class UitGraph(context: Context) {
     val store: SnapshotStore = RoomSnapshotStore(database)
     val vault = EncryptedSessionVault(app)
     private val studyStorage = StudyPrivateStorage(app)
-    val accounts: AccountRepository = VaultAccountRepository(vault, store, File(app.filesDir, "materials"), studyStorage::removeAccount)
+    private val bookmarkStorage = StudyPrivateStorage(app, "bookmarks", "uit.bookmarks.v1")
+    val accounts: AccountRepository = VaultAccountRepository(vault, store, File(app.filesDir, "materials")) { id ->
+        try {
+            studyStorage.removeAccount(id)
+        } finally {
+            bookmarkStorage.removeAccount(id)
+        }
+    }
+    val bookmarks: BookmarkRepository = LocalBookmarkRepository(bookmarkStorage, accounts)
     val studyAi: StudyAiRepository = ConnectedStudyAiRepository(studyStorage, accounts)
     val portal: PortalRepository = OfflinePortalRepository(vault, store, File(app.filesDir, "materials"))
     companion object {

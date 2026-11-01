@@ -18,6 +18,7 @@ class UitApplication : Application() {
                     single { UitGraph.get(get()) }
                     single<PortalRepository> { get<UitGraph>().portal }
                     single<AccountRepository> { get<UitGraph>().accounts }
+                    single<BookmarkRepository> { get<UitGraph>().bookmarks }
                 }
             )
         }

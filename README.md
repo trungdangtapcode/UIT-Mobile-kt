@@ -102,6 +102,10 @@ coroutines-test and Turbine. Static checks include ktlint, Detekt's coroutine an
 potential-bug rules, and a dependency-boundary check. Room exports its versioned
 schema under `core/database/schemas/`.
 
+See [testing without a local Android device](docs/HOST-ANDROID-TESTING.md) for
+Compose image rendering, authorized live integration on the host JVM, SSH
+environment-variable tips and the distinction from CI emulator/device tests.
+
 ## Behavior
 
 * Screens observe Room snapshots immediately. Refreshes replace data in
@@ -165,3 +169,10 @@ See [search scope and account isolation](docs/UNIFIED-SEARCH.md).
 
 Courses can queue selected saved section files with Wi-Fi controls, per-file
 retry/cancellation and verified offline copies. See [download behavior and limits](docs/OFFLINE-DOWNLOADS.md).
+
+## Saved items
+
+Courses and workspace search offer a local bookmark collection for course content,
+assignments, attributable notices, Moodle discussions and official UIT links.
+Bookmarks stay separate for each account and do not download files or synchronize
+Forum bookmark settings. See [local bookmarks](docs/BOOKMARKS.md).

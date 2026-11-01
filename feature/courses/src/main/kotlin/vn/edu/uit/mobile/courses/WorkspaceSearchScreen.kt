@@ -23,19 +23,28 @@ import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.courses.R
 import vn.edu.uit.mobile.model.*
 
-@Composable fun WorkspaceSearchScreen(viewModel: WorkspaceSearchViewModel, onClose: () -> Unit, onCourse: (Course) -> Unit) {
+@Composable fun WorkspaceSearchScreen(viewModel: WorkspaceSearchViewModel, onClose: () -> Unit, onCourse: (Course) -> Unit, bookmarks: BookmarksViewModel? = null, onBookmarks: (() -> Unit)? = null, onReturnToBookmarks: (() -> Unit)? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val bookmarkState = bookmarks?.uiState?.collectAsStateWithLifecycle()?.value
     val context = LocalContext.current
     val snack = remember { SnackbarHostState() }
     val fileError = stringResource(R.string.srch_file_error)
     LaunchedEffect(viewModel) { viewModel.files.collect { if (viewModel.canOpen(it) && !openSavedCourseFile(context, it.path)) snack.showSnackbar(fileError) } }
     Box {
-        WorkspaceSearchContent(state, { if (state.selected != null) viewModel.back() else onClose() }, viewModel::query, viewModel::open, viewModel::download, onCourse)
+        WorkspaceSearchContent(state, {
+            if (onReturnToBookmarks != null) {
+                onReturnToBookmarks()
+            } else if (state.selected != null) {
+                viewModel.back()
+            } else {
+                onClose()
+            }
+        }, viewModel::query, viewModel::open, viewModel::download, onCourse, bookmarkState?.savedIds.orEmpty(), bookmarks?.let { it::toggleHit }, bookmarkState?.busy == true, onBookmarks, bookmarkState?.problem, onReturnToBookmarks != null)
         SnackbarHost(snack)
     }
 }
 
-@Composable fun WorkspaceSearchContent(state: WorkspaceSearchState, onBack: () -> Unit = {}, onQuery: (String) -> Unit = {}, onOpen: (String) -> Unit = {}, onDownload: (CourseFile) -> Unit = {}, onCourse: ((Course) -> Unit)? = null) {
+@Composable fun WorkspaceSearchContent(state: WorkspaceSearchState, onBack: () -> Unit = {}, onQuery: (String) -> Unit = {}, onOpen: (String) -> Unit = {}, onDownload: (CourseFile) -> Unit = {}, onCourse: ((Course) -> Unit)? = null, savedBookmarkIds: Set<String> = emptySet(), onBookmark: ((String) -> Unit)? = null, bookmarkBusy: Boolean = false, onBookmarks: (() -> Unit)? = null, bookmarkProblem: BookmarkProblem? = null, fromBookmarks: Boolean = false) {
     val selected = state.hits.firstOrNull { it.key == state.selected }
     var filter by rememberSaveable { mutableStateOf<WorkspaceSearchKind?>(null) }
     val results = remember(state.hits, state.query) { SearchWorkspaceUseCase()(state.hits, state.query) }
@@ -46,8 +55,20 @@ import vn.edu.uit.mobile.model.*
         item {
             TextButton(onBack, shape = TechnicalShapes.Control) {
                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, null)
-                Text(stringResource(if (selected == null) R.string.srch_title else R.string.srch_results))
+                Text(
+                    stringResource(
+                        if (fromBookmarks) {
+                            R.string.bm_title
+                        } else if (selected == null) {
+                            R.string.srch_title
+                        } else {
+                            R.string.srch_results
+                        }
+                    )
+                )
             }
+            if (selected == null && onBookmarks != null) TextButton(onBookmarks, shape = TechnicalShapes.Control) { Text(stringResource(R.string.bm_title)) }
+            bookmarkProblem?.let { InlineNotice(bookmarkProblemText(it), true) }
             PageHeading(if (selected == null) stringResource(R.string.srch_page_title) else selected.title, if (selected == null) stringResource(R.string.srch_page_subtitle) else selected.context)
         }
         if (selected == null) {
@@ -75,7 +96,10 @@ import vn.edu.uit.mobile.model.*
                             Panel(Modifier.fillMaxWidth()) {
                                 Text(hit.title, style = MaterialTheme.typography.titleMedium)
                                 Text(hit.context, style = MaterialTheme.typography.bodySmall)
-                                TextButton({ onOpen(hit.key) }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.srch_open_result)) }
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    TextButton({ onOpen(hit.key) }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.srch_open_result)) }
+                                    bookmarkFor(hit)?.let { item -> if (onBookmark != null) BookmarkToggle(item.id in savedBookmarkIds, hit.title, !bookmarkBusy) { onBookmark(hit.key) } }
+                                }
                             }
                         }
                     }
@@ -84,6 +108,7 @@ import vn.edu.uit.mobile.model.*
         } else {
             item {
                 Panel(Modifier.fillMaxWidth()) {
+                    bookmarkFor(selected)?.let { item -> if (onBookmark != null) BookmarkToggle(item.id in savedBookmarkIds, selected.title, !bookmarkBusy) { onBookmark(selected.key) } }
                     Text(searchKindLabel(selected.kind), style = MaterialTheme.typography.labelMedium)
                     val body = selected.assignment?.intro ?: selected.module?.description ?: selected.announcement?.bodyHtml.orEmpty()
                     if (body.isNotBlank()) Text(Html.fromHtml(body, Html.FROM_HTML_MODE_LEGACY).toString(), style = MaterialTheme.typography.bodyMedium)

@@ -21,6 +21,7 @@ class UitApplication : Application() {
                     single<AccountRepository> { get<UitGraph>().accounts }
                     single<BookmarkRepository> { get<UitGraph>().bookmarks }
                     single<WorkloadRepository> { get<UitGraph>().workload }
+                    single<RevisionRepository> { get<UitGraph>().revision }
                 }
             )
         }

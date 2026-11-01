@@ -169,3 +169,10 @@ See [search scope and account isolation](docs/UNIFIED-SEARCH.md).
 
 Courses can queue selected saved section files with Wi-Fi controls, per-file
 retry/cancellation and verified offline copies. See [download behavior and limits](docs/OFFLINE-DOWNLOADS.md).
+
+## Saved items
+
+Courses and workspace search offer a local bookmark collection for course content,
+assignments, attributable notices, Moodle discussions and official UIT links.
+Bookmarks stay separate for each account and do not download files or synchronize
+Forum bookmark settings. See [local bookmarks](docs/BOOKMARKS.md).

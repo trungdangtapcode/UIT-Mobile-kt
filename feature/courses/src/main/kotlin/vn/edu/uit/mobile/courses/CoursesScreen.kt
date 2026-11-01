@@ -35,11 +35,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.*
 import vn.edu.uit.mobile.designsystem.*
+import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.courses.R
 import vn.edu.uit.mobile.model.*
 
-@Composable fun CoursesScreen(viewModel: CoursesViewModel, study: StudyViewModel? = null, onReturnToSearch: (() -> Unit)? = null, downloads: OfflineDownloadsViewModel? = null) {
+@Composable fun CoursesScreen(viewModel: CoursesViewModel, study: StudyViewModel? = null, onReturnToSearch: (() -> Unit)? = null, downloads: OfflineDownloadsViewModel? = null, bookmarks: BookmarksViewModel? = null, onBookmarks: (() -> Unit)? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val bookmarkState = bookmarks?.uiState?.collectAsStateWithLifecycle()?.value
     var showDownloads by rememberSaveable { mutableStateOf(false) }
     if (showDownloads && downloads != null) {
         OfflineDownloadsScreen(downloads) { showDownloads = false }
@@ -115,6 +117,11 @@ import vn.edu.uit.mobile.model.*
                     picker.launch(arrayOf("*/*"))
                 },
                 onReply = { replyTo = it },
+                onBookmarks = onBookmarks,
+                onBookmarkDiscussion = bookmarks?.let { it::toggleDiscussion },
+                savedBookmarkIds = bookmarkState?.savedIds.orEmpty(),
+                bookmarkBusy = bookmarkState?.busy == true,
+                onBookmarkCourse = bookmarks?.let { it::toggleCourse },
                 onDownloads = if (downloads == null) null else ({ showDownloads = true }),
                 onStudy = if (study == null) {
                     null
@@ -185,12 +192,12 @@ import vn.edu.uit.mobile.model.*
 }
 
 @Composable
-fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, onPickFile: (Assignment) -> Unit = {}, onReply: (Discussion) -> Unit = {}, onStudy: ((Assignment?) -> Unit)? = null, onDownloads: (() -> Unit)? = null) {
+fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, onPickFile: (Assignment) -> Unit = {}, onReply: (Discussion) -> Unit = {}, onStudy: ((Assignment?) -> Unit)? = null, onDownloads: (() -> Unit)? = null, onBookmarks: (() -> Unit)? = null, onBookmarkDiscussion: ((Course, Discussion) -> Unit)? = null, savedBookmarkIds: Set<String> = emptySet(), bookmarkBusy: Boolean = false, onBookmarkCourse: ((Course) -> Unit)? = null) {
     val course = state.selected
-    if (course == null) CourseLibrary(state, onIntent, onDownloads) else CourseWorkspace(state, course, onIntent, onPickFile, onReply, onStudy)
+    if (course == null) CourseLibrary(state, onIntent, onDownloads, onBookmarks, onBookmarkCourse, savedBookmarkIds, bookmarkBusy) else CourseWorkspace(state, course, onIntent, onPickFile, onReply, onStudy, onBookmarkDiscussion, savedBookmarkIds, bookmarkBusy)
 }
 
-@Composable private fun CourseLibrary(state: CoursesState, onIntent: (CoursesIntent) -> Unit, onDownloads: (() -> Unit)?) {
+@Composable private fun CourseLibrary(state: CoursesState, onIntent: (CoursesIntent) -> Unit, onDownloads: (() -> Unit)?, onBookmarks: (() -> Unit)?, onBookmarkCourse: ((Course) -> Unit)?, savedBookmarkIds: Set<String>, bookmarkBusy: Boolean) {
     val courses = state.snapshot.courses.filter { (state.filter == "all" || it.classification == state.filter || state.filter == "hidden" && it.hidden) && "${it.shortname} ${it.fullname}".contains(state.query, true) }
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -200,6 +207,7 @@ fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, 
         ) {
             item { PageHeading(stringResource(R.string.courses_title), stringResource(R.string.courses_subtitle)) }
             if (onDownloads != null) item { OutlinedButton(onDownloads, shape = TechnicalShapes.Control) { Text(stringResource(R.string.courses_offline)) } }
+            if (onBookmarks != null) item { OutlinedButton(onBookmarks, shape = TechnicalShapes.Control) { Text(stringResource(R.string.bm_title)) } }
             item { SearchField(state.query, { onIntent(CoursesIntent.Query(it)) }, stringResource(R.string.courses_search_hint)) }
             item {
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -217,12 +225,14 @@ fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, 
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             }
             if (courses.isEmpty()) item { EmptyState(if (state.query.isBlank()) stringResource(R.string.courses_empty_title) else stringResource(R.string.courses_no_match_title), if (state.query.isBlank()) stringResource(R.string.courses_empty_body) else stringResource(R.string.courses_no_match_body)) }
-            items(courses, key = { "${it.accountId}:${it.id}" }) { item -> CourseCard(item) { onIntent(CoursesIntent.Select(item)) } }
+            items(courses, key = { "${it.accountId}:${it.id}" }) { item ->
+                CourseCard(item, trailingAction = if (onBookmarkCourse == null) null else ({ BookmarkToggle(bookmarkId(item.accountId, BookmarkKind.COURSE, "course:${item.id}") in savedBookmarkIds, item.fullname, !bookmarkBusy) { onBookmarkCourse(item) } })) { onIntent(CoursesIntent.Select(item)) }
+            }
         }
     }
 }
 
-@Composable private fun CourseWorkspace(state: CoursesState, course: Course, onIntent: (CoursesIntent) -> Unit, onPickFile: (Assignment) -> Unit, onReply: (Discussion) -> Unit, onStudy: ((Assignment?) -> Unit)?) {
+@Composable private fun CourseWorkspace(state: CoursesState, course: Course, onIntent: (CoursesIntent) -> Unit, onPickFile: (Assignment) -> Unit, onReply: (Discussion) -> Unit, onStudy: ((Assignment?) -> Unit)?, onBookmarkDiscussion: ((Course, Discussion) -> Unit)?, savedBookmarkIds: Set<String>, bookmarkBusy: Boolean) {
     var collapsed by rememberSaveable(course.accountId, course.id) { mutableStateOf(listOf<Long>()) }
     var peopleQuery by rememberSaveable(course.accountId, course.id) { mutableStateOf("") }
     val accent = WorkspaceColors.course(course.id)
@@ -331,7 +341,10 @@ fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, 
                                         if (discussion.created > 0) Text(dateText(discussion.created), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
-                                Text(discussion.name, style = MaterialTheme.typography.titleLarge)
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(discussion.name, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                                    if (onBookmarkDiscussion != null) BookmarkToggle(bookmarkId(course.accountId, BookmarkKind.DISCUSSION, "discussion:${course.id}:${discussion.id}") in savedBookmarkIds, discussion.name, !bookmarkBusy) { onBookmarkDiscussion(course, discussion) }
+                                }
                                 ExpandableText(android.text.Html.fromHtml(discussion.bodyHtml, 0).toString(), "discussion:${discussion.id}")
                                 discussion.files.forEach { FileActions(it, { onIntent(CoursesIntent.Download(it)) }, { onIntent(CoursesIntent.Inspect(it)) }) }
                                 if (discussion.postId > 0) {

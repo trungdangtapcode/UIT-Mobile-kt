@@ -44,6 +44,7 @@ class MainActivity : ComponentActivity() {
     private var widgetRoute by mutableStateOf<WidgetRoute?>(null)
     private val repository: PortalRepository by inject()
     private val accounts: AccountRepository by inject()
+    private val bookmarkRepository: BookmarkRepository by inject()
     private val studyRepository: StudyAiRepository by lazy { createStudyAiRepository(this, accounts) }
 
     override fun attachBaseContext(newBase: Context) {
@@ -70,6 +71,7 @@ class MainActivity : ComponentActivity() {
                 val schedule = ownedViewModel { ScheduleViewModel(repository, accounts) }
                 val downloads = ownedViewModel { OfflineDownloadsViewModel(repository, accounts, createOfflineDownloadStorage(this), observeDownloadWifi(applicationContext)) }
                 val search = ownedViewModel { WorkspaceSearchViewModel(repository, accounts) }
+                val bookmarks = ownedViewModel { BookmarksViewModel(bookmarkRepository, repository, accounts) }
                 val courses = ownedViewModel { CoursesViewModel(repository) }
                 val study = ownedViewModel { StudyViewModel(studyRepository, repository) }
                 val inbox = ownedViewModel { InboxViewModel(repository) }
@@ -94,7 +96,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, courses, search, downloads, study, inbox, academic, studentProfile, widgetRoute, {
+                UitShell(repository, dashboard, schedule, courses, search, downloads, bookmarks, study, inbox, academic, studentProfile, widgetRoute, {
                     showWidgets = false
                     widgetRoute = null
                     setIntent(
@@ -155,6 +157,7 @@ private fun UitShell(
     courses: CoursesViewModel,
     search: WorkspaceSearchViewModel,
     downloads: OfflineDownloadsViewModel,
+    bookmarks: BookmarksViewModel,
     study: StudyViewModel,
     inbox: InboxViewModel,
     academic: AcademicViewModel,
@@ -166,10 +169,15 @@ private fun UitShell(
     var selected by rememberSaveable { mutableIntStateOf(0) }
     var returnToSearch by rememberSaveable { mutableStateOf(false) }
     var showSearch by rememberSaveable { mutableStateOf(false) }
+    var showBookmarks by rememberSaveable { mutableStateOf(false) }
+    var bookmarksFromSearch by rememberSaveable { mutableStateOf(false) }
+    var returnToBookmarks by rememberSaveable { mutableStateOf(false) }
     var showAccounts by rememberSaveable { mutableStateOf(false) }
     var showProfile by rememberSaveable { mutableStateOf(false) }
     var profileAccountId by rememberSaveable { mutableStateOf<String?>(null) }
     fun openProfile(account: vn.edu.uit.mobile.model.Account? = null) {
+        showBookmarks = false
+        returnToBookmarks = false
         returnToSearch = false
         search.close()
         showSearch = false
@@ -186,6 +194,8 @@ private fun UitShell(
     LaunchedEffect(Unit) { if (showProfile) studentProfile.onIntent(StudentProfileIntent.Open(profileAccountId)) }
     LaunchedEffect(widgetRoute) {
         val route = widgetRoute ?: return@LaunchedEffect
+        showBookmarks = false
+        returnToBookmarks = false
         returnToSearch = false
         search.close()
         showSearch = false
@@ -211,6 +221,8 @@ private fun UitShell(
     WorkspaceFrame(
         selected, {
             selected = it
+            showBookmarks = false
+            returnToBookmarks = false
             returnToSearch = false
             search.close()
             showSearch = false
@@ -220,21 +232,60 @@ private fun UitShell(
         deadlineCount = snapshot.events.count { it.deadline && it.needsAction && it.start in now..(now + 7 * 86400) },
         errorMessage = sync.error?.text(),
         onSearch = {
+            showBookmarks = false
+            returnToBookmarks = false
             returnToSearch = false
             closeProfile()
             showSearch = true
         }
     ) {
-        if (showSearch) {
-            WorkspaceSearchScreen(search, {
-                search.close()
-                showSearch = false
-            }, { course ->
-                courses.onIntent(CoursesIntent.Select(course))
-                selected = 2
-                showSearch = false
-                returnToSearch = true
-            })
+        if (showBookmarks) {
+            BookmarksScreen(bookmarks, {
+                showBookmarks = false
+                showSearch = bookmarksFromSearch
+            }) { hit ->
+                search.back()
+                search.open(hit.key)
+                if (search.uiState.value.selected == hit.key) {
+                    showBookmarks = false
+                    showSearch = true
+                    returnToBookmarks = true
+                } else {
+                    bookmarks.problem(BookmarkProblem.SOURCE)
+                }
+            }
+        } else if (showSearch) {
+            WorkspaceSearchScreen(
+                search,
+                {
+                    search.close()
+                    showSearch = false
+                },
+                { course ->
+                    courses.onIntent(CoursesIntent.Select(course))
+                    selected = 2
+                    showSearch = false
+                    returnToSearch = true
+                },
+                bookmarks,
+                {
+                    showSearch = false
+                    showBookmarks = true
+                    bookmarksFromSearch = true
+                },
+                if (returnToBookmarks) {
+                    (
+                        {
+                            search.back()
+                            showSearch = false
+                            showBookmarks = true
+                            returnToBookmarks = false
+                        }
+                        )
+                } else {
+                    null
+                }
+            )
         } else if (showProfile) {
             StudentProfileScreen(studentProfile, onBack = { closeProfile() }, onManageAccounts = { showAccounts = true })
         } else {
@@ -253,6 +304,7 @@ private fun UitShell(
                     if (returnToSearch) {
                         (
                             {
+                                courses.onIntent(CoursesIntent.Back)
                                 returnToSearch = false
                                 showSearch = true
                             }
@@ -260,7 +312,13 @@ private fun UitShell(
                     } else {
                         null
                     },
-                    downloads
+                    downloads,
+                    bookmarks,
+                    {
+                        showBookmarks = true
+                        bookmarksFromSearch = false
+                        returnToBookmarks = false
+                    }
                 )
                 3 -> InboxScreen(inbox)
                 else -> AcademicScreen(academic, accountContent)

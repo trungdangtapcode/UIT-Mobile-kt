@@ -29,6 +29,16 @@ import vn.edu.uit.mobile.widgets.WidgetRoute
 class WidgetNavigationTest {
     @get:Rule val compose = createEmptyComposeRule()
     private val repository = FakePortalRepository().apply { snapshot.value = WorkspacePreviewData.snapshot }
+    private val owners = MutableStateFlow(emptyList<Account>())
+    private val bookmarks = object : BookmarkRepository {
+        override val collection = MutableStateFlow(BookmarkCollection())
+        override suspend fun save(bookmark: Bookmark) {
+            collection.value = collection.value.copy(items = collection.value.items.filterNot { it.id == bookmark.id } + bookmark)
+        }
+        override suspend fun remove(accountId: String, id: String) {
+            collection.value = collection.value.copy(items = collection.value.items.filterNot { it.accountId == accountId && it.id == id })
+        }
+    }
 
     @Before fun inject() {
         // Assertions name English interface text, so pin the language before the Activity starts.
@@ -37,9 +47,10 @@ class WidgetNavigationTest {
             modules(
                 module {
                     single<PortalRepository> { repository }
+                    single<BookmarkRepository> { bookmarks }
                     single<AccountRepository> {
                         object : AccountRepository {
-                            override val accounts = MutableStateFlow(emptyList<Account>())
+                            override val accounts = owners
                             override suspend fun remove(accountId: String) {}
                             override suspend fun saveSessions(sessions: List<PortalSession>) {}
                         }
@@ -95,6 +106,29 @@ class WidgetNavigationTest {
             compose.onNodeWithContentDescription("Show schedule for 2026-10-26").assertIsSelected()
             compose.onNodeWithText("See your saved timetable without opening UIT Mobile.").assertDoesNotExist()
             compose.onNodeWithText("Accounts & appearance").assertDoesNotExist()
+        } finally {
+            activity.pause().stop().destroy()
+        }
+    }
+
+    @Test fun savedItemReturnsThroughItsDetailAndCourseToTheSavedCollection() {
+        val course = repository.snapshot.value.courses.first()
+        val owner = Account(course.accountId, "https://courses.uit.edu.vn", 1, "Synthetic", PortalType.MOODLE)
+        owners.value = listOf(owner)
+        val hit = SearchWorkspaceUseCase().index(repository.snapshot.value, listOf(owner)).first { it.kind == WorkspaceSearchKind.COURSES }
+        bookmarks.collection.value = BookmarkCollection(listOf(requireNotNull(bookmarkFor(hit))))
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().visible()
+        try {
+            compose.onNodeWithText("Courses", substring = false).performClick()
+            compose.onNodeWithText("Saved items").performClick()
+            compose.onNodeWithText("Open saved item").performScrollTo().performClick()
+            compose.onNodeWithText("Open course workspace").performScrollTo().performClick()
+            compose.onNodeWithText("All courses").performScrollTo().performClick()
+            compose.onNodeWithText("Open course workspace").assertExists()
+            compose.onNodeWithText("Saved items", substring = false).performScrollTo().performClick()
+            compose.onNodeWithText("Your local study collection").assertExists()
+            compose.onNodeWithText("Workspace", substring = false).performScrollTo().performClick()
+            compose.onNodeWithText("Course directory").assertExists()
         } finally {
             activity.pause().stop().destroy()
         }

@@ -108,10 +108,19 @@ class CoursesViewModel(private val repository: PortalRepository) : BaseMviViewMo
                 }
             }
             CoursesIntent.DismissH5p -> state.value = state.value.copy(h5p = null)
+            is CoursesIntent.Forum -> {
+                val course = state.value.selected ?: return
+                if (intent.module.courseId != course.id || state.value.sections.none { section -> section.modules.any { it.id == intent.module.id && it.type == "forum" } }) return
+                selection?.cancel()
+                selection = viewModelScope.launch {
+                    val discussions = repository.discussions(course, intent.module)
+                    currentCoroutineContext().ensureActive()
+                    if (state.value.selected?.let { it.id == course.id && it.accountId == course.accountId } == true) result(discussions) { state.value = state.value.copy(tab = 2, discussions = it) }
+                }
+            }
             else -> viewModelScope.launch {
                 val course = state.value.selected ?: return@launch
                 when (intent) {
-                    is CoursesIntent.Forum -> result(repository.discussions(course, intent.module)) { state.value = state.value.copy(tab = 2, discussions = it) }
                     is CoursesIntent.Reply -> result(repository.reply(course, intent.postId, intent.message)) { effects.send(CoursesEffect.Message("Reply sent")) }
                     is CoursesIntent.Download -> result(repository.download(course, intent.file)) {
                         effects.send(CoursesEffect.Message("Saved ${intent.file.name}"))

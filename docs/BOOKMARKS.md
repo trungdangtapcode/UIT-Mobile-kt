@@ -17,6 +17,9 @@ The list supports text/category filtering and preserves each item's account labe
 Supported source items reopen their exact current saved metadata using the shared
 search detail and file-opening workflow. Back returns to Saved items; opening a
 course retains the course → detail → saved list return path.
+The collection retains its search query and category through source navigation
+and Android Activity recreation, and its scroll position when returning from a
+source.
 
 Bookmarks save references, not document contents or downloaded file copies.
 Pinning does not fetch a file. The existing explicit file action downloads or

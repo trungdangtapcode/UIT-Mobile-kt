@@ -2,9 +2,13 @@ package vn.edu.uit.mobile
 
 import android.app.Application
 import android.os.Bundle
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.test.core.app.ApplicationProvider
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.captureScreenRoboImage
+import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.*
 import org.junit.Assert.*
@@ -26,6 +30,7 @@ import vn.edu.uit.mobile.widgets.WidgetRoute
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w390dp-h844dp-mdpi", application = Application::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
+@OptIn(ExperimentalRoborazziApi::class)
 class WidgetNavigationTest {
     @get:Rule val compose = createEmptyComposeRule()
     private val repository = FakePortalRepository().apply { snapshot.value = WorkspacePreviewData.snapshot }
@@ -111,26 +116,77 @@ class WidgetNavigationTest {
         }
     }
 
-    @Test fun savedItemReturnsThroughItsDetailAndCourseToTheSavedCollection() {
+    @Test fun savedItemRetainsFiltersThroughDetailCourseAndActivityRecreation() {
         val course = repository.snapshot.value.courses.first()
         val owner = Account(course.accountId, "https://courses.uit.edu.vn", 1, "Synthetic", PortalType.MOODLE)
         owners.value = listOf(owner)
         val hit = SearchWorkspaceUseCase().index(repository.snapshot.value, listOf(owner)).first { it.kind == WorkspaceSearchKind.COURSES }
         bookmarks.collection.value = BookmarkCollection(listOf(requireNotNull(bookmarkFor(hit))))
-        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().visible()
+        var activity = Robolectric.buildActivity(MainActivity::class.java).setup().visible()
         try {
             compose.onNodeWithText("Courses", substring = false).performClick()
             compose.onNodeWithText("Saved items").performClick()
+            compose.onNodeWithText("Find a saved item").performTextInput(hit.title)
+            courseFilter().performClick().assertIsSelected()
             compose.onNodeWithText("Open saved item").performScrollTo().performClick()
             compose.onNodeWithText("Open course workspace").performScrollTo().performClick()
             compose.onNodeWithText("All courses").performScrollTo().performClick()
             compose.onNodeWithText("Open course workspace").assertExists()
             compose.onNodeWithText("Saved items", substring = false).performScrollTo().performClick()
             compose.onNodeWithText("Your local study collection").assertExists()
+            assertSavedFilters(hit.title)
+            val saved = Bundle()
+            activity.saveInstanceState(saved).pause().stop().destroy()
+            activity = Robolectric.buildActivity(MainActivity::class.java).setup(saved).visible()
+            assertSavedFilters(hit.title)
+            if (java.lang.Boolean.getBoolean("roborazzi.test.record")) {
+                compose.waitForIdle()
+                compose.mainClock.advanceTimeBy(64)
+                compose.waitForIdle()
+                captureScreenRoboImage(File(System.getProperty("uit.preview.dir"), "bookmarks-return-390-phone.png").absolutePath)
+            }
             compose.onNodeWithText("Workspace", substring = false).performScrollTo().performClick()
             compose.onNodeWithText("Course directory").assertExists()
         } finally {
             activity.pause().stop().destroy()
         }
+    }
+
+    @Test fun savedItemRetainsItsScrollPositionAfterReturningFromDetail() {
+        val original = repository.snapshot.value.courses.first()
+        val courses = (1..20).map { number -> original.copy(id = number.toLong(), shortname = "SAVED$number", fullname = "Saved course $number") }
+        repository.snapshot.value = repository.snapshot.value.copy(courses = courses)
+        val owner = Account(original.accountId, "https://courses.uit.edu.vn", 1, "Synthetic", PortalType.MOODLE)
+        owners.value = listOf(owner)
+        val hits = SearchWorkspaceUseCase().index(repository.snapshot.value, listOf(owner)).filter { it.kind == WorkspaceSearchKind.COURSES }
+        val items = hits.map { requireNotNull(bookmarkFor(it)) }
+        bookmarks.collection.value = BookmarkCollection(items)
+        val target = items.last()
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().visible()
+        try {
+            compose.onNodeWithText("Courses", substring = false).performClick()
+            compose.onNodeWithText("Saved items").performClick()
+            val list = compose.onNodeWithTag("bookmarks-content")
+            list.performScrollToNode(hasTestTag("bookmark:${target.id}"))
+            val open = compose.onNode(hasText("Open saved item") and hasAnyAncestor(hasTestTag("bookmark:${target.id}")))
+            open.performScrollTo()
+            val position = list.fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange].value()
+            assertTrue(position > 0f)
+            open.performClick()
+            compose.onNodeWithText("Saved items", substring = false).performScrollTo().performClick()
+            compose.onNodeWithTag("bookmark:${target.id}").assertIsDisplayed()
+            assertEquals(position, list.fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange].value(), 0.5f)
+        } finally {
+            activity.pause().stop().destroy()
+        }
+    }
+
+    private fun courseFilter() = compose.onNode(hasText("Courses") and hasAnyAncestor(SemanticsMatcher.keyIsDefined(SemanticsProperties.HorizontalScrollAxisRange)))
+
+    private fun assertSavedFilters(query: String) {
+        compose.onNodeWithTag("bookmarks-content").performScrollToNode(hasSetTextAction())
+        assertEquals(query, compose.onNode(hasSetTextAction()).fetchSemanticsNode().config[SemanticsProperties.EditableText].text)
+        courseFilter().assertIsSelected()
+        compose.onNodeWithText("All", substring = false).assertIsNotSelected()
     }
 }

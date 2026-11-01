@@ -218,22 +218,29 @@ class PrivateFreeTimeBlockStorage(private val storage: StudyStorage) : FreeTimeB
         return "free-time-blocks-v1:$suffix"
     }
     override fun load(accountIds: Set<String>): List<PersonalTimeBlock> = runCatching {
-        val raw = storage.read(keyFor(accountIds)) ?: return emptyList()
+        elements(accountIds)?.take(10)?.mapNotNull { runCatching { block(it) }.getOrNull() }?.distinctBy { it.id }.orEmpty()
+    }.getOrDefault(emptyList())
+    private fun elements(accountIds: Set<String>): JsonArray? {
+        val raw = storage.read(keyFor(accountIds)) ?: return null
         require(raw.length <= 64_000)
         val root = Json.parseToJsonElement(raw).jsonObject
         require(root.getValue("version").jsonPrimitive.int == 1)
-        root.getValue("blocks").jsonArray.take(10).mapNotNull { element ->
-            runCatching {
-                val obj = element.jsonObject
-                val id = obj.getValue("id").jsonPrimitive.content.trim()
-                val title = obj.getValue("title").jsonPrimitive.content.trim()
-                val start = obj.getValue("start").jsonPrimitive.long
-                val end = obj.getValue("end").jsonPrimitive.long
-                require(id.length in 1..128 && title.length in 1..80 && start < end)
-                PersonalTimeBlock(id, title, start, end)
-            }.getOrNull()
-        }.distinctBy { it.id }
-    }.getOrDefault(emptyList())
+        return root.getValue("blocks").jsonArray
+    }
+    override fun loadStrict(accountIds: Set<String>): List<PersonalTimeBlock> {
+        val values = elements(accountIds) ?: return emptyList()
+        require(values.size <= 10)
+        return values.map(::block).also { require(it.map { block -> block.id }.distinct().size == it.size) }
+    }
+    private fun block(element: JsonElement): PersonalTimeBlock {
+        val obj = element.jsonObject
+        val id = obj.getValue("id").jsonPrimitive.content.trim()
+        val title = obj.getValue("title").jsonPrimitive.content.trim()
+        val start = obj.getValue("start").jsonPrimitive.long
+        val end = obj.getValue("end").jsonPrimitive.long
+        require(id.length in 1..128 && title.length in 1..80 && start < end)
+        return PersonalTimeBlock(id, title, start, end)
+    }
 
     override fun save(accountIds: Set<String>, blocks: List<PersonalTimeBlock>) {
         val key = keyFor(accountIds)

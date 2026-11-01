@@ -147,7 +147,7 @@ fun RevisionContent(
                             TextButton({ onArchive(plan.exam) }, enabled = enabled && state.draft == null, shape = TechnicalShapes.Control) { Text(stringResource(if (plan.active) R.string.rp_archive else R.string.rp_resume)) }
                             TextButton({ relinking = true }, enabled = enabled && state.draft == null, shape = TechnicalShapes.Control) { Text(stringResource(R.string.rp_change_exam)) }
                             TextButton({ deleting = true }, enabled = enabled && state.draft == null, shape = TechnicalShapes.Control) { Text(stringResource(R.string.rp_delete_plan)) }
-                            if (state.exams.any { it.ref == plan.exam }) TextButton({ duration = true }, enabled = enabled, shape = TechnicalShapes.Control) { Text(stringResource(R.string.rp_exam_duration)) }
+                            if (state.base.result?.tasks?.any { it.item.ref == plan.exam } == true) TextButton({ duration = true }, enabled = enabled, shape = TechnicalShapes.Control) { Text(stringResource(R.string.rp_exam_duration)) }
                         }
                         Text(stringResource(R.string.rp_topics), style = MaterialTheme.typography.titleMedium)
                         if (plan.topics.isEmpty()) Text(stringResource(R.string.rp_no_topics), style = MaterialTheme.typography.bodyMedium)

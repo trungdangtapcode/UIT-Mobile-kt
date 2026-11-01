@@ -58,9 +58,11 @@ rejected. No image is exported, shared, persisted or sent to another app. Closin
 the viewer, switching accounts, refreshing or closing the profile clears scan state.
 Failed/expired reads and invalid images show retry controls instead of a blank page.
 
-The viewer supports JPEG, PNG and WebP images up to 12 MiB. Decode sampling caps
-each bitmap dimension at 4096 pixels; the existing transport limits the entire
-profile response to 25 MiB. PDF and other document formats are not rendered.
+The viewer supports JPEG, PNG, WebP and PDF scans up to 12 MiB. Decode sampling caps
+each bitmap dimension at 4096 pixels; PDF pages are rendered with Android's built-in
+`PdfRenderer` from an immediately unlinked temporary descriptor and include page
+navigation when a document has multiple pages. The existing transport limits the entire
+profile response to 25 MiB.
 
 A failed refresh can keep the same account's already loaded profile visible with
 an error and its original loaded time. A fresh offline opening has no detailed

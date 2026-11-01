@@ -24,7 +24,11 @@ data class StudyState(
     val message: String? = null
 )
 
-class StudyViewModel(private val ai: StudyAiRepository, portal: PortalRepository) : ViewModel() {
+class StudyViewModel(
+    private val ai: StudyAiRepository,
+    portal: PortalRepository,
+    private val offlineSources: OfflineCourseSourceLoader = OfflineCourseSourceLoader { _, _, _ -> emptyList() }
+) : ViewModel() {
     private val state = MutableStateFlow(StudyState())
     val uiState = state.asStateFlow()
     private var operation: Job? = null
@@ -39,8 +43,8 @@ class StudyViewModel(private val ai: StudyAiRepository, portal: PortalRepository
     }
     fun open(course: Course, sections: List<CourseSection>, assignments: List<Assignment>, assignment: Assignment? = null) {
         close()
+        val records = if (assignment == null) assignments else listOf(assignment)
         val sources = buildList {
-            val records = if (assignment == null) assignments else listOf(assignment)
             records.filter { it.accountId == course.accountId && it.courseId == course.id }.forEach { a -> source("assignment:${a.id}", a.name, a.intro)?.let(::add) }
             if (assignment == null) sections.flatMap { it.modules }.filter { it.courseId == course.id }.forEach { m -> source("module:${m.id}", m.name, m.description)?.let(::add) }
         }.distinctBy { it.id }
@@ -48,8 +52,10 @@ class StudyViewModel(private val ai: StudyAiRepository, portal: PortalRepository
         launchOperation {
             val connection = ai.connection()
             val tasks = assignment?.let { ai.tasks(course, it.id) }.orEmpty()
+            val offline = offlineSources.load(course, if (assignment == null) sections else emptyList(), records)
             currentCoroutineContext().ensureActive()
-            state.value = state.value.copy(connection = connection, tasks = tasks)
+            val merged = (state.value.sources + offline).distinctBy { it.id }
+            state.value = state.value.copy(sources = merged, connection = connection, tasks = tasks)
         }
     }
     private fun source(id: String, title: String, html: String): StudySource? {

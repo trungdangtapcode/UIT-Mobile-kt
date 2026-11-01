@@ -143,4 +143,21 @@ class StudyViewModelTest {
         assertEquals(1, ai.generated)
         assertEquals("What should I deliver?", vm.uiState.value.answeredQuestion)
     }
+
+    @Test fun openingCourseMergesVerifiedOfflineDocumentSourcesForSelection() = runTest(dispatcher) {
+        val ai = Ai()
+        val offlineSource = StudySource("file:abc12345", "Lecture01.pdf", "Deliver a report on B-tree indexing.")
+        val vm = StudyViewModel(ai, portal) { c, _, _ ->
+            if (c == course) listOf(offlineSource) else emptyList()
+        }
+        vm.open(course, emptyList(), listOf(assignment))
+        runCurrent()
+        assertEquals(listOf("assignment:2", "file:abc12345"), vm.uiState.value.sources.map { it.id })
+        vm.select("file:abc12345")
+        vm.question("What topic is covered?")
+        vm.generate()
+        runCurrent()
+        assertEquals(1, ai.generated)
+        assertNotNull(vm.uiState.value.answer)
+    }
 }

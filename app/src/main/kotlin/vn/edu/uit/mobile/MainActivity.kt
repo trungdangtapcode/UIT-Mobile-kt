@@ -35,6 +35,7 @@ import vn.edu.uit.mobile.courses.*
 import vn.edu.uit.mobile.dashboard.*
 import vn.edu.uit.mobile.data.OfflineDownloadWorker
 import vn.edu.uit.mobile.data.createFreeTimeBlockStorage
+import vn.edu.uit.mobile.data.createOfflineCourseSourceLoader
 import vn.edu.uit.mobile.data.createOfflineDownloadStorage
 import vn.edu.uit.mobile.data.createStudyAiRepository
 import vn.edu.uit.mobile.data.observeDownloadWifi
@@ -76,7 +77,7 @@ class MainActivity : ComponentActivity() {
                 val search = ownedViewModel { WorkspaceSearchViewModel(repository, accounts) }
                 val bookmarks = ownedViewModel { BookmarksViewModel(bookmarkRepository, repository, accounts) }
                 val courses = ownedViewModel { CoursesViewModel(repository) }
-                val study = ownedViewModel { StudyViewModel(studyRepository, repository) }
+                val study = ownedViewModel { StudyViewModel(studyRepository, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this))) }
                 val inbox = ownedViewModel { InboxViewModel(repository) }
                 val academic = ownedViewModel { AcademicViewModel(repository) }
                 val auth = ownedViewModel { AccountsViewModel(accounts) }

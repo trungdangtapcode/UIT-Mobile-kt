@@ -94,4 +94,20 @@ class ProfileScanTest {
         assertThrows(InvalidResponseException::class.java) { UitProfileParser.scanSource(page("/scan", "personal"), "transcript") }
         assertThrows(InvalidResponseException::class.java) { UitProfileParser.scanSource(page("/scan"), "another-document") }
     }
+
+    @Test fun `embedded and same origin PDF scans are accepted when starting with PDF magic header`() = runTest {
+        val pdf = "%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF".toByteArray(Charsets.US_ASCII)
+        val dataUrl = "data:application/pdf;base64," + Base64.getEncoder().encodeToString(pdf)
+        val http = HttpClient(
+            MockEngine { request ->
+                when (request.url.encodedPath) {
+                    "/sinh-vien/ho-so" -> respond(page(dataUrl))
+                    else -> error("Unexpected request")
+                }
+            }
+        )
+        SafePortalTransport(session, http).use {
+            assertArrayEquals(pdf, UitPortalClient(it).profileScan("transcript").bytes)
+        }
+    }
 }

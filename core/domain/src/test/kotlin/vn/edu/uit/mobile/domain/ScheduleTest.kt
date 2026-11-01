@@ -82,4 +82,16 @@ class ScheduleTest {
         assertEquals(8.1, ProjectGpaUseCase()(8.0, 27, listOf(3 to 9.0)), 0.0001)
         assertThrows(IllegalArgumentException::class.java) { ProjectGpaUseCase()(8.0, 27, listOf(3 to 11.0)) }
     }
+
+    @Test fun `UIT room decoder extracts building and floor across dotted and compact codes`() {
+        assertEquals(UitRoomLocation("A", 1), UitRoomDecoder.decode("A101"))
+        assertEquals(UitRoomLocation("B", 3), UitRoomDecoder.decode("B3.14"))
+        assertEquals(UitRoomLocation("C", 3), UitRoomDecoder.decode("C302"))
+        assertEquals(UitRoomLocation("E", 7), UitRoomDecoder.decode("E7.2"))
+        assertEquals(UitRoomLocation("E", 11), UitRoomDecoder.decode("E1104"))
+        assertEquals(UitRoomLocation("A", 2), UitRoomDecoder.decode("P.A2.1"))
+        assertEquals(UitRoomLocation("B", 4), UitRoomDecoder.decode("Phòng B4.12"))
+        assertNull(UitRoomDecoder.decode("Online"))
+        assertNull(UitRoomDecoder.decode(""))
+    }
 }

@@ -1,7 +1,9 @@
 package vn.edu.uit.mobile.domain
 
 import java.net.URI
+import vn.edu.uit.mobile.model.Assignment
 import vn.edu.uit.mobile.model.Course
+import vn.edu.uit.mobile.model.CourseSection
 
 data class StudySource(val id: String, val title: String, val text: String)
 data class StudyCitation(val sourceId: String, val quote: String)
@@ -11,6 +13,10 @@ enum class StudyConnectionMode { DIRECT, GATEWAY }
 data class StudyConnection(val endpoint: String = "https://api.openai.com", val configured: Boolean = false, val mode: StudyConnectionMode = StudyConnectionMode.DIRECT, val model: String = "")
 data class StudyTask(val text: String, val checked: Boolean = false)
 class StudyAiException(message: String) : IllegalStateException(message)
+
+fun interface OfflineCourseSourceLoader {
+    suspend fun load(course: Course, sections: List<CourseSection>, assignments: List<Assignment>): List<StudySource>
+}
 
 interface StudyAiRepository {
     suspend fun connection(): StudyConnection

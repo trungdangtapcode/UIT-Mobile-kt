@@ -196,4 +196,10 @@ class StudentProfileViewModelTest {
         assertFalse(model.uiState.value.loading)
         model.onIntent(StudentProfileIntent.Close)
     }
+
+    @Test fun pdfScanDetectionRecognizesMagicHeaderAndRejectsOtherPayloads() {
+        assertTrue(isPdfScan("%PDF-1.7\n...".toByteArray(Charsets.US_ASCII)))
+        assertFalse(isPdfScan(byteArrayOf(0xff.toByte(), 0xd8.toByte(), 0xff.toByte())))
+        assertFalse(isPdfScan(byteArrayOf(1, 2, 3)))
+    }
 }

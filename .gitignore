@@ -50,3 +50,6 @@ Desktop.ini
 
 # Intentionally versioned: Gradle wrapper JAR, Room schemas, bundled assets/fonts,
 # asset notices, and the curated phone preview gallery and historical references.
+
+# Local ad hoc image captures
+image*.png

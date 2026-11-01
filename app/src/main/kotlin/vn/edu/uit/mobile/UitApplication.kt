@@ -11,6 +11,7 @@ import vn.edu.uit.mobile.widgets.WidgetRuntime
 class UitApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+        vn.edu.uit.mobile.schedule.TimetableImageShares.cleanup(this)
         startKoin {
             androidContext(this@UitApplication)
             modules(

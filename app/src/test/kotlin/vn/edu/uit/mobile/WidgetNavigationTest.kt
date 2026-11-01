@@ -116,6 +116,20 @@ class WidgetNavigationTest {
         }
     }
 
+    @Test fun scheduleWidgetClosesTimetableImageSharingAndOpensItsDate() {
+        val context = ApplicationProvider.getApplicationContext<Application>()
+        val activity = Robolectric.buildActivity(MainActivity::class.java, WidgetRoute("schedule", "2026-10-26").intent(context)).setup().visible()
+        try {
+            compose.onNodeWithText("Share timetable image").performClick()
+            compose.onNodeWithText("Share PNG").assertExists()
+            activity.newIntent(WidgetRoute("schedule", "2026-10-27").intent(context))
+            compose.onNodeWithContentDescription("Show schedule for 2026-10-27").assertIsSelected()
+            compose.onNodeWithText("Share PNG").assertDoesNotExist()
+        } finally {
+            activity.pause().stop().destroy()
+        }
+    }
+
     @Test fun savedItemRetainsFiltersThroughDetailCourseAndActivityRecreation() {
         val course = repository.snapshot.value.courses.first()
         val owner = Account(course.accountId, "https://courses.uit.edu.vn", 1, "Synthetic", PortalType.MOODLE)

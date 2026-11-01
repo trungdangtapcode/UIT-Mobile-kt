@@ -116,11 +116,20 @@ class ScheduleViewModel(private val repository: PortalRepository, accounts: Acco
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var exporting by rememberSaveable { mutableStateOf(false) }
     var finding by rememberSaveable { mutableStateOf(false) }
+    var sharingImage by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(state.focusRequest) { if (state.focusRequest > 0) sharingImage = false }
     val freeTime by viewModel.freeTimePlanner.uiState.collectAsStateWithLifecycle()
     val activityContext = LocalContext.current
     val context = activityContext.applicationContext
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/calendar")) { uri -> viewModel.completeCalendarExport(context, uri) }
-    if (exporting) {
+    if (sharingImage) {
+        val session = freeTime.session
+        key(session) {
+            TimetableImageScreen(state.snapshot, state.anchor, { sharingImage = false }) { plan ->
+                session == viewModel.freeTimePlanner.uiState.value.session && runCatching { TimetableImageExport().plan(viewModel.uiState.value.snapshot, plan.options) == plan }.getOrDefault(false)
+            }
+        }
+    } else if (exporting) {
         CalendarExportContent(state.snapshot, state.anchor, state.calendarExportBusy, state.calendarExportMessage, { exporting = false }, { entry ->
             try {
                 activityContext.startActivity(calendarInsertIntent(entry, state.snapshot.updatedAt))
@@ -147,13 +156,13 @@ class ScheduleViewModel(private val repository: PortalRepository, accounts: Acco
         ScheduleContent(state, viewModel::onIntent, onCourse, { exporting = true }, {
             viewModel.freeTimePlanner.open(state.anchor)
             finding = true
-        })
+        }, { sharingImage = true })
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {}, onCourse: (Course) -> Unit = {}, onExport: (() -> Unit)? = null, onFreeTime: (() -> Unit)? = null) {
+fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {}, onCourse: (Course) -> Unit = {}, onExport: (() -> Unit)? = null, onFreeTime: (() -> Unit)? = null, onShareImage: (() -> Unit)? = null) {
     var selected by remember { mutableStateOf<ScheduleEntry?>(null) }
     var semesters by remember { mutableStateOf(false) }
     var filter by rememberSaveable { mutableStateOf("All events") }
@@ -193,6 +202,7 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
                 if (onExport != null) IconButton(onExport) { Icon(Icons.Outlined.SaveAlt, stringResource(R.string.sched_export)) }
             }
             if (onFreeTime != null) AssistChip(onClick = onFreeTime, shape = TechnicalShapes.Control, label = { Text(stringResource(R.string.sched_free_time)) }, leadingIcon = { Icon(Icons.Outlined.EventAvailable, null, Modifier.size(18.dp)) })
+            if (onShareImage != null) AssistChip(onClick = onShareImage, shape = TechnicalShapes.Control, label = { Text(stringResource(R.string.ti_entry)) }, leadingIcon = { Icon(Icons.Outlined.Share, null, Modifier.size(18.dp)) })
         }
         item {
             Panel {

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ti_entry">Chia sẻ ảnh thời khóa biểu</string>
+    <string name="ti_back">Lịch học</string>
+    <string name="ti_title">Chia sẻ thời khóa biểu</string>
+    <string name="ti_subtitle">Chọn nội dung xuất hiện trong ảnh.</string>
+    <string name="ti_range">Khoảng ngày</string>
+    <string name="ti_range_hint">Từ một đến bảy ngày · Giờ Việt Nam (GMT+07)</string>
+    <string name="ti_from">Từ ngày · YYYY-MM-DD</string>
+    <string name="ti_through">Đến ngày · YYYY-MM-DD</string>
+    <string name="ti_day">Ngày đang chọn</string>
+    <string name="ti_week">Bảy ngày tới</string>
+    <string name="ti_include">Nội dung trong ảnh</string>
+    <string name="ti_privacy">Mặc định ẩn tên và mã số sinh viên.</string>
+    <string name="ti_names">Tên môn và mã lớp</string>
+    <string name="ti_rooms">Phòng học</string>
+    <string name="ti_identity">Tên và mã số sinh viên</string>
+    <string name="ti_preview">Xem trước</string>
+    <string name="ti_scope">Chỉ gồm lịch học, nghỉ và học bù đã lưu. Không gồm lịch thi và hạn nộp bài.</string>
+    <string name="ti_no_data">Tải thời khóa biểu trước khi tạo ảnh.</string>
+    <string name="ti_invalid">Nhập ngày hợp lệ dạng YYYY-MM-DD, trong một đến bảy ngày. Nếu có quá nhiều buổi học, hãy chọn ít ngày hơn.</string>
+    <string name="ti_render_error">Chưa tạo được ảnh. Hãy chọn ít ngày hơn và thử lại.</string>
+    <string name="ti_view_image">Xem ảnh</string>
+    <string name="ti_read_text">Đọc nội dung ảnh</string>
+    <string name="ti_preview_description">Ảnh thời khóa biểu từ %1$s đến %2$s. Chọn Đọc nội dung ảnh để xem dạng văn bản.</string>
+    <string name="ti_share_note">Chỉ gửi ảnh này đến ứng dụng bạn chọn. Người nhận có thể lưu hoặc chuyển tiếp ảnh.</string>
+    <string name="ti_share_error">Ảnh chưa được chia sẻ. Lịch có thể đã đổi hoặc không có ứng dụng nhận chia sẻ. Hãy xem lại ảnh và thử lại.</string>
+    <string name="ti_share">Chia sẻ PNG</string>
+    <string name="ti_sharing">Đang chuẩn bị chia sẻ…</string>
+    <string name="ti_chooser">Chia sẻ ảnh thời khóa biểu</string>
+    <string name="ti_image_title">Thời khóa biểu</string>
+    <string name="ti_image_scope">Lịch đã lưu · Giờ Việt Nam (GMT+07)</string>
+    <string name="ti_image_empty">Không có buổi học trong dữ liệu đã lưu.</string>
+    <string name="ti_image_room">Phòng · %1$s</string>
+    <string name="ti_image_saved">Đã lưu %1$s · %2$s GMT+07</string>
+    <string name="ti_image_footer">Ảnh lịch tại thời điểm xuất. Xem UIT Mobile để cập nhật thay đổi.</string>
+    <string name="ti_class">Buổi học</string>
+    <string name="ti_canceled">Buổi nghỉ</string>
+    <string name="ti_makeup">Buổi học bù</string>
+</resources>

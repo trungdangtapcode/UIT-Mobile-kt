@@ -9,6 +9,8 @@
     <string name="srch_hint">Saved metadata only. Load a course to include its materials and assignments. Document contents are not indexed.</string>
     <string name="srch_all">All</string>
     <string name="srch_kind_courses">Courses</string>
+    <string name="srch_kind_classes">Classes</string>
+    <string name="srch_kind_exams">Exams</string>
     <string name="srch_kind_materials">Materials</string>
     <string name="srch_kind_assignments">Assignments</string>
     <string name="srch_kind_notices">Notices</string>

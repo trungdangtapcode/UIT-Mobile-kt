@@ -13,10 +13,27 @@ class WorkspaceSearchTest {
 
     @Test fun `metadata groups include exact owned references`() {
         val hits = search.index(snapshot, accounts)
-        assertEquals(WorkspaceSearchKind.entries.toSet(), search(hits, "database").map { it.kind }.toSet() + search(hits, "co so du lieu").map { it.kind }.toSet())
+        val expected = setOf(WorkspaceSearchKind.COURSES, WorkspaceSearchKind.MATERIALS, WorkspaceSearchKind.ASSIGNMENTS, WorkspaceSearchKind.NOTICES)
+        assertEquals(expected, search(hits, "database").map { it.kind }.toSet() + search(hits, "co so du lieu").map { it.kind }.toSet())
         assertEquals(file, search(hits, "notes").single().file)
         assertEquals(3L, search(hits, "project").single().assignment?.id)
         assertEquals(5L, search(hits, "room").single().announcement?.nodeId)
+    }
+
+    @Test fun `timetable and exams are searchable by room class code and lecturer`() {
+        val slot = DaaTimetableSlot("IT004.O21", "IT004", "Cơ sở dữ liệu", 3, 2, 1, 3, "B3.14", "Nguyễn Văn A", "2026-09-07", "2026-12-20")
+        val exam = DaaExamSlot("IT004.O21", "Cơ sở dữ liệu", 2, "2026-12-28", "A204", "1021")
+        val source = snapshot.copy(timetable = listOf(slot), exams = listOf(exam))
+        val hits = search.index(source, accounts)
+
+        assertEquals(slot.classCode, search(hits, "B3.14").single().title)
+        assertEquals("daa", search(hits, "B3.14").single().accountId)
+        assertTrue(search(hits, "nguyen van a").isNotEmpty())
+        assertTrue(search(hits, "it004o21").any { it.kind == WorkspaceSearchKind.EXAMS })
+
+        // Merged timetable rows have no owner without a portal account, so they stay out.
+        val moodleOnly = accounts.filter { it.portal == PortalType.MOODLE }
+        assertTrue(search.index(source, moodleOnly).none { it.kind == WorkspaceSearchKind.CLASSES || it.kind == WorkspaceSearchKind.EXAMS })
     }
 
     @Test fun `Vietnamese accents case and compact course codes normalize consistently`() {

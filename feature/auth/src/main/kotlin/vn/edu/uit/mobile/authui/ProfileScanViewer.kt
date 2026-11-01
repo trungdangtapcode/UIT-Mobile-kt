@@ -52,8 +52,7 @@ import vn.edu.uit.mobile.feature.auth.R
 
 private data class DecodedScan(val image: ImageBitmap?, val pageCount: Int = 1)
 
-internal fun isPdfScan(bytes: ByteArray): Boolean =
-    bytes.size >= 5 && bytes.copyOfRange(0, 5).toString(Charsets.US_ASCII) == "%PDF-"
+internal fun isPdfScan(bytes: ByteArray): Boolean = bytes.size >= 5 && bytes.copyOfRange(0, 5).toString(Charsets.US_ASCII) == "%PDF-"
 
 internal fun decodePdfScanPage(bytes: ByteArray, pageIndex: Int): Pair<ImageBitmap, Int>? = runCatching {
     val temp = File.createTempFile("uit-scan-", ".pdf")

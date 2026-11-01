@@ -164,9 +164,18 @@ private fun unescapePdfLiteral(raw: String): String {
         if (c == '\\' && i + 1 < raw.length) {
             val next = raw[i + 1]
             when {
-                next == 'n' -> { sb.append('\n'); i += 2 }
-                next == 'r' -> { sb.append('\r'); i += 2 }
-                next == 't' -> { sb.append('\t'); i += 2 }
+                next == 'n' -> {
+                    sb.append('\n')
+                    i += 2
+                }
+                next == 'r' -> {
+                    sb.append('\r')
+                    i += 2
+                }
+                next == 't' -> {
+                    sb.append('\t')
+                    i += 2
+                }
                 next in '0'..'7' -> {
                     var oct = "$next"
                     var j = i + 2
@@ -177,7 +186,10 @@ private fun unescapePdfLiteral(raw: String): String {
                     sb.append(oct.toInt(8).toChar())
                     i = j
                 }
-                else -> { sb.append(next); i += 2 }
+                else -> {
+                    sb.append(next)
+                    i += 2
+                }
             }
         } else {
             sb.append(c)

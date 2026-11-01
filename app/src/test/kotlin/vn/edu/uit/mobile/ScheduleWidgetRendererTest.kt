@@ -36,7 +36,7 @@ class ScheduleWidgetRendererTest {
     private val state get() = BuildScheduleWidgetUseCase()(data.snapshot, true, data.now)
 
     @Before fun preferences() {
-        context.getSharedPreferences("appearance", Context.MODE_PRIVATE).edit().clear().putBoolean("dark", true).putBoolean("dynamic", false).commit()
+        context.getSharedPreferences("appearance", Context.MODE_PRIVATE).edit().clear().putBoolean("dark", true).putBoolean("dynamic", false).putString("language", "en").commit()
     }
 
     @Test fun compactWidgetUsesRealRemoteViewsAndOpensTheSelectedDate() {

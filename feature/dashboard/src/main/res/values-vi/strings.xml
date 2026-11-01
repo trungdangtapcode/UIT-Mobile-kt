@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dash_connect_title">Kết nối tài khoản UIT</string>
+    <string name="dash_connect_body">Đăng nhập để xem thời khoá biểu, tài liệu Moodle và kết quả học tập.</string>
+    <string name="dash_connect_action">Kết nối tài khoản UIT</string>
+    <string name="dash_connect_note">Bạn nhập thông tin đăng nhập trên trang đăng nhập của UIT.</string>
+    <string name="dash_room">Phòng %1$s</string>
+    <string name="dash_done">Xong</string>
+    <string name="dash_show_day">Xem thời khoá biểu ngày %1$s</string>
+    <string name="dash_today_marker">Hôm nay</string>
+    <string name="dash_timetable">Thời khoá biểu</string>
+    <string name="dash_full_schedule">Toàn bộ lịch</string>
+    <string name="dash_no_classes">Không có lớp học hay kỳ thi trong ngày này.</string>
+    <string name="dash_in_progress">Đang học</string>
+    <string name="dash_due_soon">Sắp tới hạn</string>
+    <string name="dash_view_all">Xem tất cả</string>
+    <string name="dash_no_submissions">Không có bài nộp nào trong 7 ngày tới.</string>
+    <string name="dash_course_materials">Tài liệu môn học</string>
+    <string name="dash_no_courses">Môn học Moodle sẽ hiện sau khi đồng bộ.</string>
+    <string name="dash_schedule_changes">Thay đổi lịch học</string>
+    <string name="dash_announcements">Thông báo</string>
+    <string name="dash_no_announcements">Chưa có thông báo nào được lưu.</string>
+    <string name="dash_announcement">Thông báo</string>
+    <string name="dash_academic_affairs">Học vụ</string>
+    <string name="dash_last_saved">Lưu lần cuối %1$s lúc %2$s · GMT+07</string>
+    <string name="dash_portals">Moodle · DAA · UIT</string>
+    <string name="dash_manage_accounts">Quản lý tài khoản liên kết</string>
+    <string name="dash_library">Thư viện</string>
+    <string name="dash_refresh">Làm mới dữ liệu</string>
+</resources>

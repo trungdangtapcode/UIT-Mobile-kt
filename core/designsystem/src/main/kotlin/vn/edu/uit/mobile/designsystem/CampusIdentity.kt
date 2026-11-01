@@ -13,12 +13,13 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import vn.edu.uit.mobile.core.designsystem.R
 
 @Composable fun UitEmblem(modifier: Modifier = Modifier) {
     Box(modifier.size(48.dp), contentAlignment = Alignment.Center) {
-        Image(painterResource(R.drawable.uit_emblem), "UIT lotus and orbital emblem", Modifier.fillMaxSize().padding(5.dp), contentScale = ContentScale.Fit)
+        Image(painterResource(R.drawable.uit_emblem), stringResource(R.string.content_description_emblem), Modifier.fillMaxSize().padding(5.dp), contentScale = ContentScale.Fit)
     }
 }
 

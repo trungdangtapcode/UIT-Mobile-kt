@@ -18,6 +18,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,6 +27,7 @@ import kotlinx.coroutines.launch
 import vn.edu.uit.mobile.common.*
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
+import vn.edu.uit.mobile.feature.academic.R
 import vn.edu.uit.mobile.model.*
 
 @Immutable data class AcademicState(val snapshot: PortalSnapshot = PortalSnapshot(), val servicesLoading: Boolean = false, val servicesError: AppError? = null)
@@ -79,7 +81,7 @@ class AcademicViewModel(private val repository: PortalRepository) : BaseMviViewM
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("Records", "Tuition", "Procedures", "Graduation").forEachIndexed { index, label ->
-                FilterChip(selected = section == index, onClick = { section = index }, shape = TechnicalShapes.Control, label = { Text(label) })
+                FilterChip(selected = section == index, onClick = { section = index }, shape = TechnicalShapes.Control, label = { Text(academicTabLabel(index, label)) })
             }
         }
         Box(Modifier.weight(1f)) {
@@ -110,28 +112,28 @@ class AcademicViewModel(private val repository: PortalRepository) : BaseMviViewM
     Box(Modifier.fillMaxSize()) {
         LazyColumn(Modifier.fillMaxSize().testTag("academic-content"), state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
-                PageHeading("Academic record", "DAA transcript, GPA and examinations.") {
-                    IconButton(onClick = onRefresh) { Icon(Icons.Outlined.Refresh, "Refresh academic data") }
+                PageHeading(stringResource(R.string.acad_title), stringResource(R.string.acad_subtitle)) {
+                    IconButton(onClick = onRefresh) { Icon(Icons.Outlined.Refresh, stringResource(R.string.acad_refresh)) }
                 }
             }
             item { GpaOverview(transcript) }
             item {
                 Panel {
-                    SectionHeading("Semester performance", transcript.semesters.getOrNull(selected)?.let { "${it.semesterName} · GPA ${it.semesterGpa?.let { gpa -> "%.2f".format(gpa) } ?: "—"} / 10" } ?: "Semester GPA · 10-point scale")
+                    SectionHeading(stringResource(R.string.acad_semester_performance), transcript.semesters.getOrNull(selected)?.let { stringResource(R.string.acad_semester_label, it.semesterName, it.semesterGpa?.let { gpa -> "%.2f".format(java.util.Locale.US, gpa) } ?: "—") } ?: stringResource(R.string.acad_semester_gpa))
                     GpaTrend(transcript.semesters, selected) { selected = it }
                 }
             }
             item {
                 Panel {
-                    SectionHeading("Academic transcript", "Select a semester. Tap a course for its score breakdown.")
-                    if (transcript.semesters.isEmpty()) EmptyState("No transcript available", "Connect DAA to see your semester grades and earned credits.")
+                    SectionHeading(stringResource(R.string.acad_transcript), stringResource(R.string.acad_transcript_hint))
+                    if (transcript.semesters.isEmpty()) EmptyState(stringResource(R.string.acad_no_transcript_title), stringResource(R.string.acad_no_transcript_body))
                     if (transcript.semesters.isNotEmpty()) {
                         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             transcript.semesters.forEachIndexed { index, semester -> FilterChip(shape = TechnicalShapes.Control, selected = selected == index, onClick = { selected = index }, label = { Text(semester.semesterName) }) }
                         }
                         transcript.semesters.getOrNull(selected)?.let { semester ->
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Text("${semester.creditsEarned} / ${semester.creditsAttempted} credits earned", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(stringResource(R.string.acad_credits_ratio, semester.creditsEarned, semester.creditsAttempted), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 StatusPill("GPA ${semester.semesterGpa?.let { "%.2f".format(it) } ?: "—"}", WorkspaceColors.Teal)
                             }
                             semester.courses.forEach { grade -> GradeBreakdown(grade, semester.semesterName) }
@@ -147,9 +149,9 @@ class AcademicViewModel(private val repository: PortalRepository) : BaseMviViewM
                         Avatar(snapshot.profile.fullName, Modifier.size(48.dp))
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text(snapshot.profile.fullName.ifBlank { "Your student profile" }, style = MaterialTheme.typography.titleMedium)
-                            Text(listOf(snapshot.profile.studentId, snapshot.profile.faculty).filter(String::isNotBlank).joinToString(" · ").ifBlank { "Connect your account to personalize your workspace." }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(listOf(snapshot.profile.studentId, snapshot.profile.faculty).filter(String::isNotBlank).joinToString(" · ").ifBlank { stringResource(R.string.acad_profile_hint) }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        IconButton(onClick = { showAccounts = !showAccounts }) { Icon(Icons.Outlined.ManageAccounts, if (showAccounts) "Hide account settings" else "Show account settings") }
+                        IconButton(onClick = { showAccounts = !showAccounts }) { Icon(Icons.Outlined.ManageAccounts, stringResource(if (showAccounts) R.string.acad_hide_accounts else R.string.acad_show_accounts)) }
                     }
                     if (snapshot.profile.trainingProgram.isNotBlank()) Text(snapshot.profile.trainingProgram, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     AnimatedVisibility(showAccounts) { Column { accounts() } }
@@ -159,33 +161,42 @@ class AcademicViewModel(private val repository: PortalRepository) : BaseMviViewM
     }
 }
 
+@Composable private fun academicTabLabel(index: Int, @Suppress("UNUSED_PARAMETER") fallback: String): String = stringResource(
+    when (index) {
+        1 -> R.string.acad_tab_tuition
+        2 -> R.string.acad_tab_procedures
+        3 -> R.string.acad_tab_graduation
+        else -> R.string.acad_tab_records
+    }
+)
+
 @Composable private fun GpaOverview(transcript: AcademicTranscript, modifier: Modifier = Modifier) {
     Column(modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1.2f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Cumulative GPA", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.acad_cumulative), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(transcript.cumulativeGpa?.let { "%.2f".format(it) } ?: "—", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary)
-                    Text("/ 10", Modifier.padding(bottom = 4.dp), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.titleSmall)
+                    Text(transcript.cumulativeGpa?.let { "%.2f".format(java.util.Locale.US, it) } ?: "—", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.acad_scale), Modifier.padding(bottom = 4.dp), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.titleSmall)
                 }
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Credits earned", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.acad_credits_earned), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(if (transcript.semesters.isEmpty()) "—" else "${transcript.totalCreditsEarned}", style = MaterialTheme.typography.headlineMedium)
             }
         }
         transcript.graduationProgress?.let { progress ->
-            Text("Degree progress · ${progress.toInt()}%", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.acad_degree_progress, progress.toInt()), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             LinearProgressIndicator(progress = { (progress.toFloat() / 100).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth().height(3.dp), drawStopIndicator = {})
         }
-        Text("Academic record · ${transcript.semesters.size} semesters", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.acad_record_semesters, transcript.semesters.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable private fun GpaTrend(semesters: List<SemesterGradeSummary>, selected: Int, onSelect: (Int) -> Unit) {
     val points = semesters.mapIndexedNotNull { index, semester -> semester.semesterGpa?.takeIf { it.isFinite() && it in 0.0..10.0 }?.let { Triple(index, semester.semesterName, it) } }
     if (points.isEmpty()) {
-        EmptyState("Your trend will appear here", "Semester GPA values are needed to draw your learning curve.")
+        EmptyState(stringResource(R.string.acad_trend_empty_title), stringResource(R.string.acad_trend_empty_body))
         return
     }
     val primary = MaterialTheme.colorScheme.primary
@@ -255,28 +266,28 @@ class AcademicViewModel(private val repository: PortalRepository) : BaseMviViewM
     Panel(modifier) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             IconTile(Icons.Outlined.Tune)
-            SectionHeading("GPA simulator", "Credit-weighted projection")
+            SectionHeading(stringResource(R.string.acad_planner_title), stringResource(R.string.acad_planner_subtitle))
         }
-        Text("See how a new course could shape your cumulative GPA.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.acad_planner_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         OutlinedTextField(
             credits,
             { credits = it.filter(Char::isDigit).take(3) },
-            label = { Text("Planned credits") },
+            label = { Text(stringResource(R.string.acad_planned_credits)) },
             singleLine = true,
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
             shape = TechnicalShapes.Field,
             modifier = Modifier.fillMaxWidth()
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Expected score", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.acad_expected_score), style = MaterialTheme.typography.bodyMedium)
             StatusPill("${"%.1f".format(score)} / 10")
         }
         Slider(value = score, onValueChange = { score = it }, valueRange = 0f..10f, steps = 19)
         Surface(shape = TechnicalShapes.Control, color = MaterialTheme.colorScheme.primaryContainer) {
             Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text("PROJECTED GPA", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                    Text("A projection, not an official result", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.acad_projected), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.acad_projection_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Text(projection?.let { "%.2f".format(it) } ?: "—", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
             }
@@ -286,27 +297,27 @@ class AcademicViewModel(private val repository: PortalRepository) : BaseMviViewM
 
 @Composable private fun ExamPanel(exams: List<DaaExamSlot>, modifier: Modifier = Modifier) {
     Panel(modifier) {
-        SectionHeading("Examination schedule", "Published dates, shifts and rooms")
-        if (exams.isEmpty()) EmptyState("No exams scheduled", "Your exam dates will appear after syncing DAA.")
+        SectionHeading(stringResource(R.string.acad_exam_heading), stringResource(R.string.acad_exam_subtitle))
+        if (exams.isEmpty()) EmptyState(stringResource(R.string.acad_exam_empty_title), stringResource(R.string.acad_exam_empty_body))
         exams.sortedBy { it.examDate }.forEach { exam ->
             val date = parsePortalDate(exam.examDate)
             val days = date?.let { it.toEpochDays() - today().toEpochDays() }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.width(48.dp).clip(TechnicalShapes.Field).background(MaterialTheme.colorScheme.tertiaryContainer).padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(date?.month?.name?.take(3) ?: "EXAM", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary)
+                    Text(date?.month?.name?.take(3) ?: stringResource(R.string.acad_exam_badge), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary)
                     Text(date?.dayOfMonth?.toString() ?: "—", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.tertiary)
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(exam.courseName, style = MaterialTheme.typography.titleSmall)
                     Text("${exam.room} · ${UitLessonTimeCalculator.examStart(exam)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    if (exam.seatNumber.isNotBlank()) Text("Seat ${exam.seatNumber}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (exam.seatNumber.isNotBlank()) Text(stringResource(R.string.acad_seat, exam.seatNumber), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 StatusPill(
                     when {
-                        days == null -> "Scheduled"
-                        days < 0 -> "Past"
-                        days == 0 -> "Today"
-                        else -> "${days}d"
+                        days == null -> stringResource(R.string.acad_exam_scheduled)
+                        days < 0 -> stringResource(R.string.acad_past)
+                        days == 0 -> stringResource(R.string.acad_today)
+                        else -> stringResource(R.string.acad_days_left, days)
                     },
                     WorkspaceColors.Amber
                 )

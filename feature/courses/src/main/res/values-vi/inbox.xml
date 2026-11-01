@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="inbox_title">Hạn nộp &amp; hộp thư</string>
+    <string name="inbox_subtitle">Bài nộp, thông báo và tin nhắn môn học.</string>
+    <string name="inbox_refresh">Làm mới hạn nộp và hộp thư</string>
+    <string name="inbox_tab_deadlines">Hạn nộp</string>
+    <string name="inbox_tab_notifications">Thông báo</string>
+    <string name="inbox_tab_messages">Tin nhắn</string>
+    <string name="inbox_group_upcoming">Sắp tới</string>
+    <string name="inbox_group_submitted">Đã nộp</string>
+    <string name="inbox_group_overdue">Quá hạn</string>
+    <string name="inbox_group_count">%1$s (%2$d)</string>
+    <string name="inbox_empty_title">Không có mục nào trong %1$s</string>
+    <string name="inbox_empty_submitted">Chỉ bài đã có trạng thái nộp xác nhận mới hiện ở đây.</string>
+    <string name="inbox_empty_other">Không có bài nộp nào trong nhóm này. Làm mới để kiểm tra.</string>
+    <string name="inbox_updates">Cập nhật của bạn</string>
+    <string name="inbox_unread">%1$d thông báo chưa đọc</string>
+    <string name="inbox_mark_all">Đánh dấu tất cả đã đọc</string>
+    <string name="inbox_up_to_date_title">Bạn đã xem hết</string>
+    <string name="inbox_up_to_date_body">Thông báo Moodle sẽ hiện ở đây.</string>
+    <string name="inbox_notification_fallback">Thông báo Moodle</string>
+    <string name="inbox_show_less">Thu gọn</string>
+    <string name="inbox_read_more">Đọc thêm</string>
+    <string name="inbox_mark_read">Đánh dấu đã đọc</string>
+    <string name="inbox_conversations">Hội thoại</string>
+    <string name="inbox_conversations_count">%1$d trong hộp thư</string>
+    <string name="inbox_search">Tìm hội thoại</string>
+    <string name="inbox_start_title">Bắt đầu với một hội thoại</string>
+    <string name="inbox_start_body">Hội thoại Moodle sẽ hiện sau khi làm mới hộp thư.</string>
+    <string name="inbox_unread_messages">%1$d tin chưa đọc</string>
+    <string name="inbox_open_conversation">Mở hội thoại</string>
+    <string name="inbox_select_title">Chọn một hội thoại</string>
+    <string name="inbox_select_body">Chọn hội thoại để đọc và trả lời.</string>
+    <string name="inbox_back">Quay lại danh sách hội thoại</string>
+    <string name="inbox_moodle_conversation">Hội thoại Moodle</string>
+    <string name="inbox_no_messages_title">Chưa có tin nhắn</string>
+    <string name="inbox_no_messages_body">Làm mới hội thoại để tải tin nhắn.</string>
+    <string name="inbox_message_fallback">Tin nhắn</string>
+    <string name="inbox_write_hint">Viết tin nhắn…</string>
+    <string name="inbox_bytes">%1$d / 4096 byte</string>
+    <string name="inbox_send">Gửi tin nhắn</string>
+    <string name="inbox_message_sent">Đã gửi tin nhắn</string>
+</resources>

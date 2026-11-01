@@ -8,7 +8,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import vn.edu.uit.mobile.R
 import vn.edu.uit.mobile.designsystem.TechnicalShapes
 
 @Composable fun HomeWidgetsDialog(onDismiss: () -> Unit) {
@@ -31,25 +33,25 @@ import vn.edu.uit.mobile.designsystem.TechnicalShapes
         onDismissRequest = onDismiss,
         shape = TechnicalShapes.Dialog,
         modifier = Modifier.testTag("home-widget-picker"),
-        title = { Text("Home screen widgets") },
+        title = { Text(stringResource(R.string.wd_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("See your saved timetable without opening UIT Mobile.")
+                Text(stringResource(R.string.wd_body))
                 ScheduleWidgetKind.entries.forEach { option ->
                     OutlinedButton(onClick = { kind = option }, shape = TechnicalShapes.Field, modifier = Modifier.fillMaxWidth()) {
                         RadioButton(selected = kind == option, onClick = null)
                         Spacer(Modifier.width(8.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(if (option == ScheduleWidgetKind.NEXT) "Next class · 4 × 2" else "Today · 4 × 3")
-                            Text(if (option == ScheduleWidgetKind.NEXT) "Class, room and closest deadline" else "Remaining classes and closest deadline", style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(if (option == ScheduleWidgetKind.NEXT) R.string.wd_next else R.string.wd_today))
+                            Text(stringResource(if (option == ScheduleWidgetKind.NEXT) R.string.wd_next_desc else R.string.wd_today_desc), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
-                Text("Widgets use your saved schedule and GMT+07. Android controls background update timing.", style = MaterialTheme.typography.bodySmall)
-                Text("You can also long-press your home screen, choose Widgets, then UIT Mobile.", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.wd_note), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.wd_manual), style = MaterialTheme.typography.bodySmall)
             }
         },
-        confirmButton = { TextButton(onClick = { onPin(kind) }, enabled = pinSupported, shape = TechnicalShapes.Control) { Text("Add to home screen") } },
-        dismissButton = { TextButton(onClick = onDismiss, shape = TechnicalShapes.Control) { Text("Close") } }
+        confirmButton = { TextButton(onClick = { onPin(kind) }, enabled = pinSupported, shape = TechnicalShapes.Control) { Text(stringResource(R.string.wd_add)) } },
+        dismissButton = { TextButton(onClick = onDismiss, shape = TechnicalShapes.Control) { Text(stringResource(R.string.wd_close)) } }
     )
 }

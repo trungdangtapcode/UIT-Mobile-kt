@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="inbox_title">Deadlines &amp; inbox</string>
+    <string name="inbox_subtitle">Submission queue, notifications and course messages.</string>
+    <string name="inbox_refresh">Refresh deadlines and inbox</string>
+    <string name="inbox_tab_deadlines">Deadlines</string>
+    <string name="inbox_tab_notifications">Notifications</string>
+    <string name="inbox_tab_messages">Messages</string>
+    <string name="inbox_group_upcoming">Upcoming</string>
+    <string name="inbox_group_submitted">Submitted</string>
+    <string name="inbox_group_overdue">Overdue</string>
+    <string name="inbox_group_count">%1$s (%2$d)</string>
+    <string name="inbox_empty_title">Nothing in %1$s</string>
+    <string name="inbox_empty_submitted">Only assignments with confirmed submission status appear here.</string>
+    <string name="inbox_empty_other">No submissions in this category. Refresh to check for changes.</string>
+    <string name="inbox_updates">Your updates</string>
+    <string name="inbox_unread">%1$d unread notifications</string>
+    <string name="inbox_mark_all">Mark all read</string>
+    <string name="inbox_up_to_date_title">You\'re up to date</string>
+    <string name="inbox_up_to_date_body">Your Moodle notifications will appear here.</string>
+    <string name="inbox_notification_fallback">Moodle notification</string>
+    <string name="inbox_show_less">Show less</string>
+    <string name="inbox_read_more">Read more</string>
+    <string name="inbox_mark_read">Mark read</string>
+    <string name="inbox_conversations">Conversations</string>
+    <string name="inbox_conversations_count">%1$d in your inbox</string>
+    <string name="inbox_search">Search conversations</string>
+    <string name="inbox_start_title">Start with a conversation</string>
+    <string name="inbox_start_body">Your Moodle conversations will appear after refreshing your inbox.</string>
+    <string name="inbox_unread_messages">%1$d unread messages</string>
+    <string name="inbox_open_conversation">Open conversation</string>
+    <string name="inbox_select_title">Select a conversation</string>
+    <string name="inbox_select_body">Select a conversation to read and reply.</string>
+    <string name="inbox_back">Back to conversations</string>
+    <string name="inbox_moodle_conversation">Moodle conversation</string>
+    <string name="inbox_no_messages_title">No messages to show</string>
+    <string name="inbox_no_messages_body">Refresh this conversation to load its messages.</string>
+    <string name="inbox_message_fallback">Message</string>
+    <string name="inbox_write_hint">Write a message…</string>
+    <string name="inbox_bytes">%1$d / 4096 bytes</string>
+    <string name="inbox_send">Send message</string>
+    <string name="inbox_message_sent">Message sent</string>
+</resources>

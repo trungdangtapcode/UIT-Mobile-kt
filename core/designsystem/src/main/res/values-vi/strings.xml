@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_today">Hôm nay</string>
+    <string name="nav_schedule">Lịch học</string>
+    <string name="nav_courses">Môn học</string>
+    <string name="nav_inbox">Hộp thư</string>
+    <string name="nav_academic">Học vụ</string>
+
+    <string name="status_syncing">Đang đồng bộ…</string>
+    <string name="status_disconnected">Kết nối tài khoản</string>
+    <string name="status_sync_attention">Đồng bộ cần chú ý</string>
+    <string name="status_saved">Đã lưu %1$s</string>
+    <string name="status_portals">Moodle · DAA</string>
+
+    <string name="action_open_inbox">Mở hạn nộp và hộp thư</string>
+    <string name="action_open_profile">Mở hồ sơ sinh viên</string>
+    <string name="action_search">Tìm trong dữ liệu đã lưu</string>
+    <string name="workspace_student_account">Tài khoản sinh viên</string>
+    <string name="content_description_emblem">Biểu trưng hoa sen và quỹ đạo UIT</string>
+
+    <string name="badge_needs_action">Cần nộp</string>
+    <string name="badge_no_action">Không cần thao tác</string>
+
+    <string name="schedule_kind_class">Lớp học</string>
+    <string name="schedule_kind_canceled">Nghỉ học</string>
+    <string name="schedule_kind_makeup">Học bù</string>
+    <string name="schedule_kind_exam">Thi</string>
+    <string name="schedule_kind_deadline">Hạn nộp</string>
+    <string name="schedule_kind_event">Sự kiện</string>
+    <string name="schedule_status_in_progress">Đang học</string>
+    <string name="schedule_status_submitted">Đã nộp</string>
+
+    <string name="due_overdue">Quá hạn</string>
+    <string name="due_minutes">còn %1$d phút</string>
+    <string name="due_hours">còn %1$d giờ</string>
+    <string name="due_days_hours">còn %1$d ngày %2$d giờ</string>
+
+    <string name="date_medium_pattern">d \'tháng\' M, yyyy</string>
+    <string name="date_month_year_pattern">\'Tháng\' M, yyyy</string>
+    <string name="date_month_short_pattern">\'Thg\' M</string>
+    <string name="course_fallback">Môn %1$d</string>
+    <string-array name="weekdays_short">
+        <item>T2</item>
+        <item>T3</item>
+        <item>T4</item>
+        <item>T5</item>
+        <item>T6</item>
+        <item>T7</item>
+        <item>CN</item>
+    </string-array>
+</resources>

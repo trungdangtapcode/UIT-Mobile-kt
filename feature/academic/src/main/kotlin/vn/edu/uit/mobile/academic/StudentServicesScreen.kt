@@ -12,12 +12,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.util.Locale
 import vn.edu.uit.mobile.common.*
 import vn.edu.uit.mobile.designsystem.*
+import vn.edu.uit.mobile.feature.academic.R
 import vn.edu.uit.mobile.model.*
 
 private fun money(value: String?): String = value?.toBigDecimalOrNull()?.let { "${NumberFormat.getNumberInstance(Locale.forLanguageTag("vi-VN")).format(it)} ₫" } ?: "—"
@@ -26,43 +28,47 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
 @Composable fun StudentServicesContent(section: Int, state: AcademicState, onRefresh: () -> Unit = {}, onAccounts: () -> Unit = {}) {
     var selectedTermId by rememberSaveable { mutableStateOf<String?>(null) }
     val services = state.snapshot.studentServices
-    val title = when (section) {
-        1 -> "Tuition"
-        2 -> "Student procedures"
-        else -> "Graduation"
-    }
-    val subtitle = when (section) {
-        1 -> "Charges, deadlines and payment records"
-        2 -> "Your requests and university responses"
-        else -> "Assessment conditions and registration status"
-    }
+    val title = stringResource(
+        when (section) {
+            1 -> R.string.svc_title_tuition
+            2 -> R.string.svc_title_procedures
+            else -> R.string.svc_title_graduation
+        }
+    )
+    val subtitle = stringResource(
+        when (section) {
+            1 -> R.string.svc_sub_tuition
+            2 -> R.string.svc_sub_procedures
+            else -> R.string.svc_sub_graduation
+        }
+    )
     LazyColumn(Modifier.fillMaxSize().testTag("student-services-content"), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
             PageHeading(title, subtitle) {
-                IconButton(onClick = onRefresh, enabled = !state.servicesLoading && state.snapshot.portalLinked) { Icon(Icons.Outlined.Refresh, "Refresh student services") }
+                IconButton(onClick = onRefresh, enabled = !state.servicesLoading && state.snapshot.portalLinked) { Icon(Icons.Outlined.Refresh, stringResource(R.string.svc_refresh)) }
             }
         }
         if (!state.snapshot.portalLinked) {
             item {
                 Panel {
-                    SectionHeading("Connect UIT Portal")
-                    Text("Sign in with UIT SSO to see your student services.")
-                    Button(onClick = onAccounts, shape = TechnicalShapes.Field) { Text("Account settings") }
+                    SectionHeading(stringResource(R.string.svc_connect_title))
+                    Text(stringResource(R.string.svc_connect_body))
+                    Button(onClick = onAccounts, shape = TechnicalShapes.Field) { Text(stringResource(R.string.svc_account_settings)) }
                 }
             }
         } else {
             if (state.servicesLoading) {
                 item {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
-                    Text("Updating student services…", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.svc_updating), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             if (state.servicesError == AppError.SessionExpired) {
                 item {
                     Panel {
-                        Text("Your UIT Portal session has expired.", color = MaterialTheme.colorScheme.error)
-                        Text("Sign in again in Account settings to update these records.", style = MaterialTheme.typography.bodySmall)
-                        TextButton(onClick = onAccounts, shape = TechnicalShapes.Control) { Text("Account settings") }
+                        Text(stringResource(R.string.svc_expired), color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.svc_expired_hint), style = MaterialTheme.typography.bodySmall)
+                        TextButton(onClick = onAccounts, shape = TechnicalShapes.Control) { Text(stringResource(R.string.svc_account_settings)) }
                     }
                 }
             }
@@ -74,19 +80,19 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
                     item { ServiceProblem(services?.issues?.firstOrNull { it.key == "tuition" }, services?.tuition != null, onRefresh) }
                     val tuition = services?.tuition
                     if (tuition == null) {
-                        item { NotLoaded(state.servicesLoading, "Tuition records have not been loaded.") }
+                        item { NotLoaded(state.servicesLoading, stringResource(R.string.svc_tuition_unloaded)) }
                     } else {
                         item { Updated(tuition.fetchedAt) }
                         if (tuition.terms.isEmpty()) {
-                            item { EmptyState("No tuition records", "UIT Portal returned an empty tuition list.") }
+                            item { EmptyState(stringResource(R.string.svc_no_tuition_title), stringResource(R.string.svc_no_tuition_body)) }
                         } else {
                             val selected = tuition.terms.firstOrNull { it.id == selectedTermId } ?: tuition.terms.first()
                             item {
                                 var choosing by remember { mutableStateOf(false) }
                                 Box {
                                     OutlinedButton(onClick = { choosing = true }, modifier = Modifier.fillMaxWidth(), shape = TechnicalShapes.Field) {
-                                        Text(selected.label.ifBlank { "Choose tuition term" }, Modifier.weight(1f))
-                                        Icon(Icons.Outlined.ExpandMore, "Choose tuition term")
+                                        Text(selected.label.ifBlank { stringResource(R.string.svc_choose_term) }, Modifier.weight(1f))
+                                        Icon(Icons.Outlined.ExpandMore, stringResource(R.string.svc_choose_term))
                                     }
                                     DropdownMenu(expanded = choosing, onDismissRequest = { choosing = false }) {
                                         tuition.terms.forEach { term ->
@@ -100,7 +106,7 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
                             }
                             item {
                                 Panel(Modifier.fillMaxWidth()) {
-                                    Text("Remaining for this term", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(stringResource(R.string.svc_remaining_term), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Text(money(selected.remaining), style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
                                     Text(selected.label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
@@ -118,8 +124,8 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
                         ServiceProblem(services?.issues?.firstOrNull { it.key == kind.name }, data != null, onRefresh)
                         if (data == null) {
                             Panel {
-                                SectionHeading(kind.title)
-                                NotLoaded(state.servicesLoading, "This request history has not been loaded.")
+                                SectionHeading(procedureKindLabel(kind))
+                                NotLoaded(state.servicesLoading, stringResource(R.string.svc_history_unloaded))
                             }
                         } else {
                             ProcedurePanel(data)
@@ -130,18 +136,18 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
                     item { ServiceProblem(services?.issues?.firstOrNull { it.key == "graduation" }, services?.graduation != null, onRefresh) }
                     val graduation = services?.graduation
                     if (graduation == null) {
-                        item { NotLoaded(state.servicesLoading, "Graduation assessment has not been loaded.") }
+                        item { NotLoaded(state.servicesLoading, stringResource(R.string.svc_grad_unloaded)) }
                     } else {
                         item { Updated(graduation.fetchedAt) }
                         item { GraduationOverview(graduation) }
                         item {
                             Panel {
-                                SectionHeading("Assessment conditions", "Published by UIT Portal")
-                                if (graduation.conditions.isEmpty()) Text("No assessment conditions were returned.")
+                                SectionHeading(stringResource(R.string.svc_conditions), stringResource(R.string.svc_conditions_by))
+                                if (graduation.conditions.isEmpty()) Text(stringResource(R.string.svc_no_conditions))
                                 graduation.conditions.forEach { condition ->
                                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        Text(condition.name.ifBlank { "Assessment condition" }, style = MaterialTheme.typography.titleSmall)
-                                        Text(condition.status.ifBlank { "Status not provided" }, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
+                                        Text(condition.name.ifBlank { stringResource(R.string.svc_condition_fallback) }, style = MaterialTheme.typography.titleSmall)
+                                        Text(condition.status.ifBlank { stringResource(R.string.svc_status_missing) }, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
                                         if (condition.note.isNotBlank()) Text(condition.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -150,17 +156,17 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
                         }
                         item {
                             Panel {
-                                SectionHeading("Outstanding requirements")
-                                if (graduation.debts.isEmpty()) Text("No requirement rows were returned.")
+                                SectionHeading(stringResource(R.string.svc_requirements))
+                                if (graduation.debts.isEmpty()) Text(stringResource(R.string.svc_no_requirements))
                                 graduation.debts.forEach { debt ->
                                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Text(debt.name, style = MaterialTheme.typography.titleSmall)
                                         Text(
                                             debt.status.ifBlank {
                                                 when (debt.satisfied) {
-                                                    true -> "Satisfied"
-                                                    false -> "Needs attention"
-                                                    null -> "Not provided"
+                                                    true -> stringResource(R.string.svc_satisfied)
+                                                    false -> stringResource(R.string.svc_needs_attention)
+                                                    null -> stringResource(R.string.svc_not_provided)
                                                 }
                                             },
                                             color = if (debt.satisfied == false) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
@@ -178,8 +184,20 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
     }
 }
 
+@Composable private fun procedureKindLabel(kind: ProcedureKind): String = stringResource(
+    when (kind) {
+        ProcedureKind.TUITION_EXTENSION -> R.string.proc_tuition_extension
+        ProcedureKind.CERTIFICATES -> R.string.proc_certificates
+        ProcedureKind.TRANSCRIPTS -> R.string.proc_transcripts
+        ProcedureKind.APPEALS -> R.string.proc_appeals
+        ProcedureKind.EXAMS -> R.string.proc_exams
+        ProcedureKind.CREDENTIALS -> R.string.proc_credentials
+        ProcedureKind.LEAVE -> R.string.proc_leave
+    }
+)
+
 @Composable private fun Updated(timestamp: Long) {
-    if (timestamp > 0) Text("Saved ${dateText(timestamp)} at ${clockText(timestamp)} · GMT+07", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    if (timestamp > 0) Text(stringResource(R.string.svc_updated, dateText(timestamp), clockText(timestamp)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable private fun NotLoaded(loading: Boolean, message: String) {
@@ -192,15 +210,15 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 when (issue.failure) {
-                    ServiceFailureKind.SIGN_IN -> "Sign in again to update this section."
-                    ServiceFailureKind.NETWORK -> "Unable to connect to UIT Portal."
-                    ServiceFailureKind.INVALID_RESPONSE -> "UIT Portal returned data this app could not read."
-                    ServiceFailureKind.UNAVAILABLE -> "This student service is currently unavailable."
+                    ServiceFailureKind.SIGN_IN -> stringResource(R.string.svc_err_signin)
+                    ServiceFailureKind.NETWORK -> stringResource(R.string.svc_err_network)
+                    ServiceFailureKind.INVALID_RESPONSE -> stringResource(R.string.svc_err_invalid)
+                    ServiceFailureKind.UNAVAILABLE -> stringResource(R.string.svc_err_unavailable)
                 },
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
-            if (cached) Text("Showing your previously saved records.", style = MaterialTheme.typography.bodySmall)
-            TextButton(onClick = onRetry, shape = TechnicalShapes.Control) { Text("Try again") }
+            if (cached) Text(stringResource(R.string.svc_cached), style = MaterialTheme.typography.bodySmall)
+            TextButton(onClick = onRetry, shape = TechnicalShapes.Control) { Text(stringResource(R.string.svc_try_again)) }
         }
     }
 }
@@ -208,28 +226,28 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
 @Composable private fun TuitionTermPanel(term: TuitionTerm) {
     var expanded by rememberSaveable(term.id) { mutableStateOf(false) }
     Panel(Modifier.animateContentSize()) {
-        SectionHeading(term.label.ifBlank { "Tuition term" }, term.academicYear.takeIf(String::isNotBlank))
+        SectionHeading(term.label.ifBlank { stringResource(R.string.svc_term_fallback) }, term.academicYear.takeIf(String::isNotBlank))
         if (term.status.isNotBlank()) Text(term.status, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-        ValueRow("Payable", money(term.payable))
-        ValueRow("Paid", money(term.paid))
-        ValueRow("Remaining", money(term.remaining), if ((term.remaining?.toBigDecimalOrNull() ?: BigDecimal.ZERO) > BigDecimal.ZERO) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)
-        ValueRow("First deadline", date(term.dueDate))
-        if (term.secondDueDate.isNotBlank()) ValueRow("Second deadline", date(term.secondDueDate))
-        if (term.extensionDate.isNotBlank()) ValueRow("Extended until", date(term.extensionDate))
+        ValueRow(stringResource(R.string.svc_payable), money(term.payable))
+        ValueRow(stringResource(R.string.svc_paid), money(term.paid))
+        ValueRow(stringResource(R.string.svc_remaining), money(term.remaining), if ((term.remaining?.toBigDecimalOrNull() ?: BigDecimal.ZERO) > BigDecimal.ZERO) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)
+        ValueRow(stringResource(R.string.svc_first_due), date(term.dueDate))
+        if (term.secondDueDate.isNotBlank()) ValueRow(stringResource(R.string.svc_second_due), date(term.secondDueDate))
+        if (term.extensionDate.isNotBlank()) ValueRow(stringResource(R.string.svc_extended_until), date(term.extensionDate))
         TextButton(onClick = { expanded = !expanded }, shape = TechnicalShapes.Control) {
-            Text(if (expanded) "Hide charge details" else "View charge details")
+            Text(stringResource(if (expanded) R.string.svc_hide_charges else R.string.svc_view_charges))
             Icon(if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null)
         }
         if (expanded) {
-            ValueRow("Prior debt", money(term.priorDebt))
+            ValueRow(stringResource(R.string.svc_prior_debt), money(term.priorDebt))
             term.charges.forEach { charge ->
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Text(charge.courseName.ifBlank { charge.courseCode }, style = MaterialTheme.typography.titleSmall)
-                Text(listOf(charge.courseCode, charge.credits?.let { "$it credits" }.orEmpty()).filter(String::isNotBlank).joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(listOf(charge.courseCode, charge.credits?.let { stringResource(R.string.svc_credits, it) }.orEmpty()).filter(String::isNotBlank).joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(money(charge.amount), style = MaterialTheme.typography.titleMedium)
             }
-            SectionHeading("Payment records")
-            if (term.payments.isEmpty()) Text("No payment records were returned for this term.", style = MaterialTheme.typography.bodySmall)
+            SectionHeading(stringResource(R.string.svc_payment_records))
+            if (term.payments.isEmpty()) Text(stringResource(R.string.svc_no_payments), style = MaterialTheme.typography.bodySmall)
             term.payments.forEach { payment ->
                 ValueRow(money(payment.amount), date(payment.paidAt))
                 Text(listOf(payment.bank, payment.status).filter(String::isNotBlank).joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -242,23 +260,23 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
 @Composable private fun ProcedurePanel(section: ProcedureSection) {
     var expanded by rememberSaveable(section.kind) { mutableStateOf(false) }
     Panel(Modifier.animateContentSize()) {
-        SectionHeading(section.kind.title)
+        SectionHeading(procedureKindLabel(section.kind))
         Updated(section.fetchedAt)
-        if (section.windowOpen != null) Text(if (section.windowOpen == true) "Application window open" else "Application window closed", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
-        if (section.windowStart.isNotBlank()) ValueRow("Opens", date(section.windowStart))
-        if (section.windowEnd.isNotBlank()) ValueRow("Closes", date(section.windowEnd))
+        if (section.windowOpen != null) Text(stringResource(if (section.windowOpen == true) R.string.svc_window_open else R.string.svc_window_closed), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
+        if (section.windowStart.isNotBlank()) ValueRow(stringResource(R.string.svc_opens), date(section.windowStart))
+        if (section.windowEnd.isNotBlank()) ValueRow(stringResource(R.string.svc_closes), date(section.windowEnd))
         if (section.explanation.isNotBlank()) Text(section.explanation, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        if (section.records.isEmpty()) Text("No saved requests returned by UIT Portal.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (section.records.isEmpty()) Text(stringResource(R.string.svc_no_requests), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         section.records.forEach { record ->
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Text(record.title, style = MaterialTheme.typography.titleSmall)
             if (record.reference.isNotBlank()) Text(record.reference, style = MaterialTheme.typography.bodySmall)
-            Text(record.status.ifBlank { "Status not provided" }, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
+            Text(record.status.ifBlank { stringResource(R.string.svc_status_missing) }, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
             if (record.date.isNotBlank()) Text(date(record.date), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (record.note.isNotBlank()) Text(record.note, style = MaterialTheme.typography.bodySmall)
         }
         if (section.options.isNotEmpty()) {
-            TextButton(onClick = { expanded = !expanded }, shape = TechnicalShapes.Control) { Text(if (expanded) "Hide document types" else "Document types & fees") }
+            TextButton(onClick = { expanded = !expanded }, shape = TechnicalShapes.Control) { Text(stringResource(if (expanded) R.string.svc_hide_doc_types else R.string.svc_doc_types)) }
             if (expanded) {
                 section.options.forEach { option ->
                     Column {
@@ -273,36 +291,41 @@ private fun date(value: String): String = parsePortalDate(value)?.toString() ?: 
 
 @Composable private fun GraduationOverview(data: GraduationSummary) {
     Panel {
-        SectionHeading(data.period.ifBlank { "Graduation assessment" })
+        SectionHeading(data.period.ifBlank { stringResource(R.string.svc_grad_fallback) })
         Text(
             when (data.alreadyRegistered) {
-                true -> "Registration recorded"
-                false -> "No registration recorded"
-                null -> "Registration status unavailable"
+                true -> stringResource(R.string.svc_reg_recorded)
+                false -> stringResource(R.string.svc_no_reg)
+                null -> stringResource(R.string.svc_reg_unavailable)
             },
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.primary
         )
         if (data.registrationStatus.isNotBlank()) Text(data.registrationStatus)
-        if (data.windowStatus.isNotBlank()) ValueRow("Assessment window", data.windowStatus)
-        if (data.windowStart.isNotBlank()) ValueRow("Opens", date(data.windowStart))
-        if (data.windowEnd.isNotBlank()) ValueRow("Closes", date(data.windowEnd))
+        if (data.windowStatus.isNotBlank()) ValueRow(stringResource(R.string.svc_assessment_window), data.windowStatus)
+        if (data.windowStart.isNotBlank()) ValueRow(stringResource(R.string.svc_opens), date(data.windowStart))
+        if (data.windowEnd.isNotBlank()) ValueRow(stringResource(R.string.svc_closes), date(data.windowEnd))
         ValueRow(
-            "Registration eligibility",
+            stringResource(R.string.svc_reg_eligibility),
             when (data.canRegister) {
-                true -> "Allowed by Portal"
-                false -> "Not currently allowed"
-                null -> "Not provided"
+                true -> stringResource(R.string.svc_allowed)
+                false -> stringResource(R.string.svc_not_allowed)
+                null -> stringResource(R.string.svc_not_provided)
             }
         )
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        listOf("Documents" to data.documentGate, "Fees" to data.feeGate, "Credits" to data.creditGate, "Contact phone" to data.phoneGate).forEach { (label, satisfied) ->
+        listOf(
+            stringResource(R.string.svc_documents) to data.documentGate,
+            stringResource(R.string.svc_fees) to data.feeGate,
+            stringResource(R.string.svc_credits_gate) to data.creditGate,
+            stringResource(R.string.svc_contact_phone) to data.phoneGate
+        ).forEach { (label, satisfied) ->
             ValueRow(
                 label,
                 when (satisfied) {
-                    true -> "Satisfied"
-                    false -> "Needs attention"
-                    null -> "Not provided"
+                    true -> stringResource(R.string.svc_satisfied)
+                    false -> stringResource(R.string.svc_needs_attention)
+                    null -> stringResource(R.string.svc_not_provided)
                 }
             )
         }

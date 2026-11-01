@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="brand_name" translatable="false">UIT Mobile</string>
+
+    <string name="nav_today">Today</string>
+    <string name="nav_schedule">Schedule</string>
+    <string name="nav_courses">Courses</string>
+    <string name="nav_inbox">Inbox</string>
+    <string name="nav_academic">Academic</string>
+
+    <string name="status_syncing">Syncing…</string>
+    <string name="status_disconnected">Connect your account</string>
+    <string name="status_sync_attention">Sync needs attention</string>
+    <string name="status_saved">Saved %1$s</string>
+    <string name="status_portals">Moodle · DAA</string>
+
+    <string name="action_open_inbox">Open deadlines and inbox</string>
+    <string name="action_open_profile">Open student profile</string>
+    <string name="action_search">Search saved workspace</string>
+    <string name="workspace_student_account">Student account</string>
+    <string name="content_description_emblem">UIT lotus and orbital emblem</string>
+
+    <string name="badge_needs_action">Needs action</string>
+    <string name="badge_no_action">No action required</string>
+
+    <string name="schedule_kind_class">Class</string>
+    <string name="schedule_kind_canceled">Canceled</string>
+    <string name="schedule_kind_makeup">Make-up</string>
+    <string name="schedule_kind_exam">Exam</string>
+    <string name="schedule_kind_deadline">Deadline</string>
+    <string name="schedule_kind_event">Event</string>
+    <string name="schedule_status_in_progress">In progress</string>
+    <string name="schedule_status_submitted">Submitted</string>
+
+    <string name="due_overdue">Overdue</string>
+    <string name="due_minutes">%1$dm left</string>
+    <string name="due_hours">%1$dh left</string>
+    <string name="due_days_hours">%1$dd %2$dh left</string>
+
+    <string name="date_medium_pattern">MMMM d, yyyy</string>
+    <string name="date_month_year_pattern">MMMM yyyy</string>
+    <string name="date_month_short_pattern">MMM</string>
+    <string name="course_fallback">Course %1$d</string>
+    <string-array name="weekdays_short">
+        <item>Mo</item>
+        <item>Tu</item>
+        <item>We</item>
+        <item>Th</item>
+        <item>Fr</item>
+        <item>Sa</item>
+        <item>Su</item>
+    </string-array>
+</resources>

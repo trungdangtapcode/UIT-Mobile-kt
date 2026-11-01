@@ -13,10 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.*
 import kotlinx.datetime.*
 import vn.edu.uit.mobile.common.UitTimeZone
+import vn.edu.uit.mobile.core.designsystem.R
 import vn.edu.uit.mobile.model.*
 
 @Composable fun Panel(modifier: Modifier = Modifier, spacing: Dp = 12.dp, content: @Composable ColumnScope.() -> Unit) {
@@ -131,7 +133,11 @@ import vn.edu.uit.mobile.model.*
 }
 
 @Composable fun DeadlineBadge(needsAction: Boolean) {
-    StatusPill(if (needsAction) "Needs action" else "No action required", if (needsAction) WorkspaceColors.Amber else WorkspaceColors.Teal, true)
+    StatusPill(
+        if (needsAction) stringResource(R.string.badge_needs_action) else stringResource(R.string.badge_no_action),
+        if (needsAction) WorkspaceColors.Amber else WorkspaceColors.Teal,
+        true
+    )
 }
 
 @Composable fun CourseCard(course: Course, onClick: () -> Unit) {
@@ -139,7 +145,7 @@ import vn.edu.uit.mobile.model.*
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(courseIcon(course.shortname), null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(course.shortname.ifBlank { "Course ${course.id}" }, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall.copy(fontFamily = CampusMono), color = MaterialTheme.colorScheme.primary)
+                Text(course.shortname.ifBlank { stringResource(R.string.course_fallback, course.id.toInt()) }, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall.copy(fontFamily = CampusMono), color = MaterialTheme.colorScheme.primary)
                 Icon(Icons.Outlined.ChevronRight, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
             }
             Text(course.fullname, style = MaterialTheme.typography.titleMedium)
@@ -149,24 +155,29 @@ import vn.edu.uit.mobile.model.*
 }
 fun clockText(epoch: Long): String = Instant.fromEpochSeconds(epoch).toLocalDateTime(UitTimeZone).time.toString().take(5)
 fun dateText(epoch: Long): String = Instant.fromEpochSeconds(epoch).toLocalDateTime(UitTimeZone).date.toString()
-fun friendlyDate(date: LocalDate): String = "${date.month.name.lowercase().replaceFirstChar(Char::uppercase)} ${date.dayOfMonth}, ${date.year}"
-fun relativeDue(start: Long, now: Long): String {
+
+@Composable fun friendlyDate(date: LocalDate): String = mediumDate(date)
+
+@Composable fun relativeDue(start: Long, now: Long): String {
     val remaining = start - now
     return when {
-        remaining <= 0 -> "Overdue"
-        remaining < 3600 -> "${maxOf(1, remaining / 60)}m left"
-        remaining < 86400 -> "${remaining / 3600}h left"
-        else -> "${remaining / 86400}d ${(remaining % 86400) / 3600}h left"
+        remaining <= 0 -> stringResource(R.string.due_overdue)
+        remaining < 3600 -> stringResource(R.string.due_minutes, maxOf(1, remaining / 60).toInt())
+        remaining < 86400 -> stringResource(R.string.due_hours, (remaining / 3600).toInt())
+        else -> stringResource(R.string.due_days_hours, (remaining / 86400).toInt(), ((remaining % 86400) / 3600).toInt())
     }
 }
-fun scheduleLabel(kind: ScheduleKind): String = when (kind) {
-    ScheduleKind.CLASS -> "Class"
-    ScheduleKind.CANCELED -> "Canceled"
-    ScheduleKind.MAKE_UP -> "Make-up"
-    ScheduleKind.EXAM -> "Exam"
-    ScheduleKind.DEADLINE -> "Deadline"
-    ScheduleKind.EVENT -> "Event"
-}
+
+@Composable fun scheduleLabel(kind: ScheduleKind): String = stringResource(
+    when (kind) {
+        ScheduleKind.CLASS -> R.string.schedule_kind_class
+        ScheduleKind.CANCELED -> R.string.schedule_kind_canceled
+        ScheduleKind.MAKE_UP -> R.string.schedule_kind_makeup
+        ScheduleKind.EXAM -> R.string.schedule_kind_exam
+        ScheduleKind.DEADLINE -> R.string.schedule_kind_deadline
+        ScheduleKind.EVENT -> R.string.schedule_kind_event
+    }
+)
 fun scheduleColor(kind: ScheduleKind): Color = when (kind) {
     ScheduleKind.CANCELED -> WorkspaceColors.Rose
     ScheduleKind.MAKE_UP -> WorkspaceColors.Teal
@@ -201,12 +212,12 @@ fun scheduleColor(kind: ScheduleKind): Color = when (kind) {
 @Composable fun DeadlineCard(event: CalendarEvent, now: Long, courseName: String = "", modifier: Modifier = Modifier) {
     val due = Instant.fromEpochSeconds(event.start).toLocalDateTime(UitTimeZone).date
     val urgent = event.needsAction && event.start - now < 86400
-    val status = if (event.submitted == true) "Submitted" else relativeDue(event.start, now)
+    val status = if (event.submitted == true) stringResource(R.string.schedule_status_submitted) else relativeDue(event.start, now)
     Column(modifier.fillMaxWidth()) {
         Row(Modifier.padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Column(Modifier.width(36.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text("${due.dayOfMonth}", style = MaterialTheme.typography.headlineSmall.copy(fontFamily = CampusMono))
-                Text(due.month.name.take(3).lowercase().replaceFirstChar(Char::uppercase), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(shortMonth(due), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 if (courseName.isNotBlank()) Text(courseName, style = MaterialTheme.typography.bodySmall.copy(fontFamily = CampusMono), color = MaterialTheme.colorScheme.onSurfaceVariant)

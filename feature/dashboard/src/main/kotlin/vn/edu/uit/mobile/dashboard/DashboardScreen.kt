@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,7 @@ import kotlinx.datetime.*
 import vn.edu.uit.mobile.common.*
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
+import vn.edu.uit.mobile.feature.dashboard.R
 import vn.edu.uit.mobile.model.*
 
 @Immutable data class DashboardState(val snapshot: PortalSnapshot = PortalSnapshot(), val sync: SyncState = SyncState())
@@ -77,19 +79,19 @@ fun DashboardContent(
             item {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(date.dayOfWeek.name.lowercase().replaceFirstChar(Char::uppercase), style = MaterialTheme.typography.headlineMedium)
-                        Text("${date.dayOfMonth} ${date.month.name.lowercase().replaceFirstChar(Char::uppercase)} ${date.year}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(longWeekday(date), style = MaterialTheme.typography.headlineMedium)
+                        Text(mediumDate(date), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    IconButton(onClick = onRefresh, enabled = !state.sync.syncing) { Icon(Icons.Outlined.Sync, "Refresh workspace", Modifier.size(22.dp)) }
+                    IconButton(onClick = onRefresh, enabled = !state.sync.syncing) { Icon(Icons.Outlined.Sync, stringResource(R.string.dash_refresh), Modifier.size(22.dp)) }
                 }
             }
             if (!connected) {
                 item {
                     Panel(Modifier.fillMaxWidth(), spacing = 16.dp) {
-                        Text("Connect your UIT account", style = MaterialTheme.typography.headlineSmall)
-                        Text("Sign in to see your timetable, Moodle materials and DAA academic record.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Button(shape = TechnicalShapes.Control, onClick = onConnect) { Text("Connect UIT account") }
-                        Text("Your credentials are entered on the UIT sign-in screen.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.dash_connect_title), style = MaterialTheme.typography.headlineSmall)
+                        Text(stringResource(R.string.dash_connect_body), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Button(shape = TechnicalShapes.Control, onClick = onConnect) { Text(stringResource(R.string.dash_connect_action)) }
+                        Text(stringResource(R.string.dash_connect_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             } else {
@@ -112,10 +114,10 @@ fun DashboardContent(
                     Text(scheduleLabel(entry.kind), color = if (entry.kind == ScheduleKind.CANCELED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
                     Text("${dateText(entry.start)} · ${clockText(entry.start)}${if (entry.end > entry.start) "–${clockText(entry.end)}" else ""}")
                     if (entry.classCode.isNotBlank()) Text(entry.classCode)
-                    if (entry.room.isNotBlank()) Text("Room ${entry.room}")
+                    if (entry.room.isNotBlank()) Text(stringResource(R.string.dash_room, entry.room))
                 }
             },
-            confirmButton = { TextButton(shape = TechnicalShapes.Control, onClick = { detail = null }) { Text("Done") } }
+            confirmButton = { TextButton(shape = TechnicalShapes.Control, onClick = { detail = null }) { Text(stringResource(R.string.dash_done)) } }
         )
     }
 }
@@ -127,18 +129,19 @@ fun DashboardContent(
                 val date = monday.plus(offset, DateTimeUnit.DAY)
                 val active = date == selected
                 val hasClasses = entries.any { dateText(it.start) == date.toString() && it.kind != ScheduleKind.DEADLINE && it.kind != ScheduleKind.CANCELED }
+                val dayLabel = stringResource(R.string.dash_show_day, date.toString())
                 Column(
                     Modifier.weight(1f).selectable(active, role = Role.Tab, onClick = { onSelect(date) })
-                        .semantics { contentDescription = "Show timetable for $date" }
+                        .semantics { contentDescription = dayLabel }
                         .padding(top = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
-                    Text(date.dayOfWeek.name.take(3).lowercase().replaceFirstChar(Char::uppercase), style = MaterialTheme.typography.bodySmall, color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(shortWeekday(date.dayOfWeek), style = MaterialTheme.typography.bodySmall, color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("${date.dayOfMonth}", style = MaterialTheme.typography.titleLarge.copy(fontFamily = CampusMono), color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                     Text(
                         if (date == today) {
-                            "Today"
+                            stringResource(R.string.dash_today_marker)
                         } else if (hasClasses) {
                             "·"
                         } else {
@@ -157,8 +160,8 @@ fun DashboardContent(
 
 @Composable private fun DailyAgenda(entries: List<ScheduleEntry>, now: Long, onCourse: (Course) -> Unit, onSchedule: () -> Unit, onDetail: (ScheduleEntry) -> Unit) {
     Panel(Modifier.fillMaxWidth().testTag("dashboard-agenda"), spacing = 0.dp) {
-        SectionHeading("Timetable", action = "Full schedule", onAction = onSchedule)
-        if (entries.isEmpty()) Text("No classes or exams on this day.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 16.dp))
+        SectionHeading(stringResource(R.string.dash_timetable), action = stringResource(R.string.dash_full_schedule), onAction = onSchedule)
+        if (entries.isEmpty()) Text(stringResource(R.string.dash_no_classes), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 16.dp))
         entries.forEach { entry ->
             val current = entry.kind != ScheduleKind.CANCELED && entry.start <= now && entry.end > now
             val canceled = entry.kind == ScheduleKind.CANCELED
@@ -171,7 +174,7 @@ fun DashboardContent(
                 Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(entry.classCode.ifBlank { scheduleLabel(entry.kind) }, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall.copy(fontFamily = CampusMono), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (current || canceled || entry.kind != ScheduleKind.CLASS) Text(if (current) "In progress" else scheduleLabel(entry.kind), style = MaterialTheme.typography.labelMedium, color = if (canceled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+                        if (current || canceled || entry.kind != ScheduleKind.CLASS) Text(if (current) stringResource(R.string.dash_in_progress) else scheduleLabel(entry.kind), style = MaterialTheme.typography.labelMedium, color = if (canceled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
                     }
                     Text(entry.title, style = MaterialTheme.typography.titleMedium, textDecoration = if (canceled) TextDecoration.LineThrough else null)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -191,8 +194,8 @@ fun DashboardContent(
 
 @Composable private fun SubmissionQueue(events: List<CalendarEvent>, snapshot: PortalSnapshot, now: Long, onInbox: () -> Unit) {
     Panel(Modifier.fillMaxWidth().testTag("dashboard-deadlines"), spacing = 0.dp) {
-        SectionHeading("Due soon", action = "View all", onAction = onInbox)
-        if (events.isEmpty()) Text("No pending submissions in the next 7 days.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 16.dp))
+        SectionHeading(stringResource(R.string.dash_due_soon), action = stringResource(R.string.dash_view_all), onAction = onInbox)
+        if (events.isEmpty()) Text(stringResource(R.string.dash_no_submissions), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 16.dp))
         events.take(2).forEach { event ->
             Surface(onClick = onInbox, color = Color.Transparent) {
                 DeadlineCard(event, now, snapshot.courses.firstOrNull { it.id == event.courseId && it.accountId == event.accountId }?.shortname.orEmpty())
@@ -203,7 +206,7 @@ fun DashboardContent(
 
 @Composable private fun CourseIndex(courses: List<Course>, onCourse: (Course) -> Unit) {
     Panel(Modifier.fillMaxWidth(), spacing = 8.dp) {
-        Text("Course materials", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(R.string.dash_course_materials), style = MaterialTheme.typography.titleLarge)
         courses.filter { !it.hidden && it.classification != "past" }.take(4).forEach { course ->
             Surface(onClick = { onCourse(course) }, color = Color.Transparent, modifier = Modifier.fillMaxWidth()) {
                 Row(Modifier.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -216,14 +219,14 @@ fun DashboardContent(
                 }
             }
         }
-        if (courses.isEmpty()) Text("Your Moodle courses will appear after syncing.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (courses.isEmpty()) Text(stringResource(R.string.dash_no_courses), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable private fun ScheduleChanges(snapshot: PortalSnapshot) {
     if (snapshot.notices.isNotEmpty()) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Schedule changes", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.dash_schedule_changes), style = MaterialTheme.typography.titleMedium)
             snapshot.notices.take(2).forEach { notice ->
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Icon(Icons.Outlined.Info, null, Modifier.padding(top = 2.dp).size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -239,10 +242,10 @@ fun DashboardContent(
 
 @Composable private fun Announcements(snapshot: PortalSnapshot) {
     var expanded by remember { mutableStateOf<String?>(null) }
-    val stories = snapshot.courseNews.take(2).map { Triple(it.name, it.author.ifBlank { "Moodle" }, android.text.Html.fromHtml(it.bodyHtml, 0).toString()) } +
-        snapshot.announcements.take(2).map { Triple(it.title, "Academic affairs", android.text.Html.fromHtml(it.bodyHtml, 0).toString()) }
+    val stories = snapshot.courseNews.take(2).map { Triple(it.name, it.author.ifBlank { stringResource(R.string.dash_moodle) }, android.text.Html.fromHtml(it.bodyHtml, 0).toString()) } +
+        snapshot.announcements.take(2).map { Triple(it.title, stringResource(R.string.dash_academic_affairs), android.text.Html.fromHtml(it.bodyHtml, 0).toString()) }
     Panel(Modifier.fillMaxWidth()) {
-        Text("Announcements", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.dash_announcements), style = MaterialTheme.typography.titleMedium)
         stories.take(3).forEach { (title, source, body) ->
             Surface(onClick = { expanded = "$title\n\n$body" }, color = Color.Transparent, modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -251,9 +254,9 @@ fun DashboardContent(
                 }
             }
         }
-        if (stories.isEmpty()) Text("No saved announcements.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (stories.isEmpty()) Text(stringResource(R.string.dash_no_announcements), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
-    expanded?.let { text -> AlertDialog(onDismissRequest = { expanded = null }, title = { Text("Announcement") }, text = { Column(Modifier.verticalScroll(rememberScrollState())) { Text(text) } }, confirmButton = { TextButton(shape = TechnicalShapes.Control, onClick = { expanded = null }) { Text("Done") } }) }
+    expanded?.let { text -> AlertDialog(onDismissRequest = { expanded = null }, title = { Text(stringResource(R.string.dash_announcement)) }, text = { Column(Modifier.verticalScroll(rememberScrollState())) { Text(text) } }, confirmButton = { TextButton(shape = TechnicalShapes.Control, onClick = { expanded = null }) { Text(stringResource(R.string.dash_done)) } }) }
 }
 
 @Composable private fun PortalFooter(snapshot: PortalSnapshot, onConnect: () -> Unit) {
@@ -261,11 +264,11 @@ fun DashboardContent(
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .6f))
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("Moodle" to "courses.uit.edu.vn", "Academic affairs" to "daa.uit.edu.vn", "Library" to "thuvien.uit.edu.vn").forEach { (name, host) ->
+            listOf(stringResource(R.string.dash_moodle) to "courses.uit.edu.vn", stringResource(R.string.dash_academic_affairs) to "daa.uit.edu.vn", stringResource(R.string.dash_library) to "thuvien.uit.edu.vn").forEach { (name, host) ->
                 TextButton(shape = TechnicalShapes.Control, onClick = { runCatching { uri.openUri("https://$host") } }, contentPadding = PaddingValues(horizontal = 4.dp)) { Text(name, style = MaterialTheme.typography.bodySmall) }
             }
         }
-        Text(if (snapshot.updatedAt > 0) "Last saved ${dateText(snapshot.updatedAt)} at ${clockText(snapshot.updatedAt)} · GMT+07" else "Moodle · DAA · UIT", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        TextButton(shape = TechnicalShapes.Control, onClick = onConnect, contentPadding = PaddingValues(0.dp)) { Text("Manage linked accounts", style = MaterialTheme.typography.bodySmall) }
+        Text(if (snapshot.updatedAt > 0) stringResource(R.string.dash_last_saved, dateText(snapshot.updatedAt), clockText(snapshot.updatedAt)) else stringResource(R.string.dash_portals), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        TextButton(shape = TechnicalShapes.Control, onClick = onConnect, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.dash_manage_accounts), style = MaterialTheme.typography.bodySmall) }
     }
 }

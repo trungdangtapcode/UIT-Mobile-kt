@@ -22,6 +22,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.IntSize
@@ -33,6 +34,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import vn.edu.uit.mobile.common.AppError
 import vn.edu.uit.mobile.designsystem.TechnicalShapes
+import vn.edu.uit.mobile.feature.auth.R
 
 @Composable fun ProfileScanViewer(scan: ProfileScanState, onClose: () -> Unit, onRetry: () -> Unit) {
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
@@ -64,10 +66,10 @@ private data class DecodedScan(val image: ImageBitmap?)
     Surface(Modifier.fillMaxSize().testTag("profile-scan-viewer"), color = MaterialTheme.colorScheme.background) {
         Column(Modifier.fillMaxSize().safeDrawingPadding()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Close scan viewer") }
+                IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.scan_close)) }
                 Column(Modifier.weight(1f).padding(end = 16.dp)) {
                     Text(scan.document.title, style = MaterialTheme.typography.titleMedium)
-                    Text("Profile scan", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.scan_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -75,7 +77,7 @@ private data class DecodedScan(val image: ImageBitmap?)
                 scan.loading || (scan.bytes != null && decoded == null) -> Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         CircularProgressIndicator()
-                        Text("Opening scan…", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.scan_opening), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
                 image != null -> ScanImage(image, Modifier.fillMaxWidth().weight(1f))
@@ -83,14 +85,16 @@ private data class DecodedScan(val image: ImageBitmap?)
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         Icon(Icons.Outlined.BrokenImage, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(
-                            when (scan.error) {
-                                AppError.SessionExpired -> "Sign in again to view this scan."
-                                AppError.NetworkOffline -> "Cannot load this scan. Check your connection and try again."
-                                else -> "This scan could not be opened. It may be missing or use an unsupported image format."
-                            },
+                            stringResource(
+                                when (scan.error) {
+                                    AppError.SessionExpired -> R.string.scan_err_signin
+                                    AppError.NetworkOffline -> R.string.scan_err_offline
+                                    else -> R.string.scan_err_generic
+                                }
+                            ),
                             style = MaterialTheme.typography.bodyLarge
                         )
-                        OutlinedButton(onClick = onRetry, shape = TechnicalShapes.Field) { Text("Try again") }
+                        OutlinedButton(onClick = onRetry, shape = TechnicalShapes.Field) { Text(stringResource(R.string.profile_try_again)) }
                     }
                 }
             }
@@ -128,7 +132,7 @@ private data class DecodedScan(val image: ImageBitmap?)
             val density = LocalDensity.current
             Image(
                 image,
-                "Scan image",
+                stringResource(R.string.scan_image_desc),
                 Modifier.size(with(density) { fittedWidth.toDp() }, with(density) { fittedHeight.toDp() }).graphicsLayer {
                     scaleX = zoom
                     scaleY = zoom
@@ -139,11 +143,11 @@ private data class DecodedScan(val image: ImageBitmap?)
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-            IconButton(onClick = { changeZoom(zoom - 0.5f) }, enabled = zoom > 1f) { Icon(Icons.Outlined.ZoomOut, "Zoom out scan") }
+            IconButton(onClick = { changeZoom(zoom - 0.5f) }, enabled = zoom > 1f) { Icon(Icons.Outlined.ZoomOut, stringResource(R.string.scan_zoom_out)) }
             Text("${(zoom * 100).toInt()}%", Modifier.widthIn(min = 56.dp), style = MaterialTheme.typography.labelLarge)
-            IconButton(onClick = { changeZoom(zoom + 0.5f) }, enabled = zoom < 6f) { Icon(Icons.Outlined.ZoomIn, "Zoom in scan") }
-            TextButton(onClick = { changeZoom(1f) }, shape = TechnicalShapes.Control) { Text("Fit") }
+            IconButton(onClick = { changeZoom(zoom + 0.5f) }, enabled = zoom < 6f) { Icon(Icons.Outlined.ZoomIn, stringResource(R.string.scan_zoom_in)) }
+            TextButton(onClick = { changeZoom(1f) }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.scan_fit)) }
         }
-        Text("Pinch or double-tap to zoom. Drag to move.", Modifier.padding(horizontal = 16.dp).padding(bottom = 12.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.scan_hint), Modifier.padding(horizontal = 16.dp).padding(bottom = 12.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

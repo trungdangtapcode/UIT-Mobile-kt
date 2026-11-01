@@ -26,8 +26,8 @@
     <string name="st_direct_note">Only the checked texts and your question are sent directly to OpenAI using your API account. No UIT Mobile backend is involved.</string>
     <string name="st_gateway_note">Only the checked texts and your question are sent to this gateway and OpenAI. Gateway source text is held for the request; OpenAI processing follows your provider account settings.</string>
     <string name="st_question">Question about the selected text</string>
-    <string name="st_language_en" translatable="false">English</string>
-    <string name="st_language_vi" translatable="false">Vietnamese</string>
+    <string name="st_language_en">English</string>
+    <string name="st_language_vi">Vietnamese</string>
     <string name="st_send">Send selected text</string>
     <string name="st_generate_again">Generate again</string>
     <string name="st_cancel_request">Cancel request</string>

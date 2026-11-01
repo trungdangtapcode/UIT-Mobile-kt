@@ -31,8 +31,6 @@ ALLOWED_LITERALS = {
     "Day",
     "Week",
     "Month",
-    "English",
-    "Vietnamese",
     "PERSONAL",
     "Moodle",
     "UIT",

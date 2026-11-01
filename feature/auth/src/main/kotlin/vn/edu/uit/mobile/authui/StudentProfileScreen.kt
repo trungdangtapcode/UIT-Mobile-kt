@@ -65,7 +65,7 @@ import vn.edu.uit.mobile.feature.auth.R
                         if (portrait == null) {
                             Avatar(details?.fullName ?: state.account.displayName, Modifier.size(64.dp))
                         } else {
-                            Image(portrait, "Student portrait", Modifier.size(width = 64.dp, height = 84.dp).clip(TechnicalShapes.Field), contentScale = ContentScale.Crop)
+                            Image(portrait, stringResource(R.string.profile_portrait_desc), Modifier.size(width = 64.dp, height = 84.dp).clip(TechnicalShapes.Field), contentScale = ContentScale.Crop)
                         }
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(details?.fullName ?: state.account.displayName, style = MaterialTheme.typography.headlineSmall)
@@ -116,13 +116,13 @@ import vn.edu.uit.mobile.feature.auth.R
                 if (section?.failure != null) {
                     item {
                         Panel {
-                            Text(if (section.failure == vn.edu.uit.mobile.model.ServiceFailureKind.SIGN_IN) "Sign in again to update insurance information." else "Insurance information could not be loaded.", color = MaterialTheme.colorScheme.error)
-                            TextButton(onClick = onRefresh, enabled = !state.loading, shape = TechnicalShapes.Control) { Text("Try again") }
+                            Text(stringResource(if (section.failure == vn.edu.uit.mobile.model.ServiceFailureKind.SIGN_IN) R.string.profile_insurance_err_signin else R.string.profile_insurance_err_generic), color = MaterialTheme.colorScheme.error)
+                            TextButton(onClick = onRefresh, enabled = !state.loading, shape = TechnicalShapes.Control) { Text(stringResource(R.string.profile_try_again)) }
                         }
                     }
                 } else if (section?.groups.isNullOrEmpty()) {
                     item {
-                        EmptyState(section?.title ?: "Profile", "No details were supplied for this section.")
+                        EmptyState(section?.title ?: stringResource(R.string.profile_title), stringResource(R.string.profile_section_empty))
                     }
                 }
                 items(section?.groups.orEmpty()) { group ->

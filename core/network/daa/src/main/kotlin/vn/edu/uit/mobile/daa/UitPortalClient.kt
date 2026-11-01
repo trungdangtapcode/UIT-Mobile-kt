@@ -20,20 +20,27 @@ class UitPortalClient(private val transport: PortalTransport) {
         val (document, source) = UitProfileParser.scanSource(transport.request("/sinh-vien/ho-so").toString(Charsets.UTF_8), documentId)
         val bytes = if (source.startsWith("data:")) {
             val comma = source.indexOf(',')
-            if (comma < 0 || source.substring(0, comma).lowercase() !in setOf("data:image/jpeg;base64", "data:image/png;base64", "data:image/webp;base64") || source.length - comma - 1 > 16 * 1024 * 1024) throw InvalidResponseException("This scan is not a supported image")
-            runCatching { Base64.getDecoder().decode(source.substring(comma + 1)) }.getOrElse { throw InvalidResponseException("This scan contains invalid image data") }
+            if (comma < 0 || source.substring(0, comma).lowercase() !in setOf("data:image/jpeg;base64", "data:image/png;base64", "data:image/webp;base64", "data:application/pdf;base64") || source.length - comma - 1 > 16 * 1024 * 1024) throw InvalidResponseException("This scan is not a supported image or PDF")
+            runCatching { Base64.getDecoder().decode(source.substring(comma + 1)) }.getOrElse { throw InvalidResponseException("This scan contains invalid file data") }
         } else {
             val url = MoodleUrlResolver.resolve("https://portal.uit.edu.vn", source)
             OriginGuardPlugin("https://portal.uit.edu.vn").validate(url)
             transport.request(url)
         }
-        return ProfileScan(document.id, document.title, imageBytes(bytes, 12 * 1024 * 1024))
+        return ProfileScan(document.id, document.title, scanBytes(bytes, 12 * 1024 * 1024))
     }
     private fun imageBytes(bytes: ByteArray, limit: Int): ByteArray = bytes.also {
+        if (it.size > limit || !isSupportedImage(it)) throw InvalidResponseException("The profile image is unavailable or unsupported")
+    }
+    private fun scanBytes(bytes: ByteArray, limit: Int): ByteArray = bytes.also {
+        val pdf = it.size >= 5 && it.copyOfRange(0, 5).toString(Charsets.US_ASCII) == "%PDF-"
+        if (it.size > limit || !(isSupportedImage(it) || pdf)) throw InvalidResponseException("The profile scan is unavailable or unsupported")
+    }
+    private fun isSupportedImage(it: ByteArray): Boolean {
         val jpeg = it.size >= 3 && it[0] == 0xff.toByte() && it[1] == 0xd8.toByte() && it[2] == 0xff.toByte()
         val png = it.size >= 8 && it.copyOfRange(0, 8).contentEquals(byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a))
         val webp = it.size >= 12 && it.copyOfRange(0, 4).toString(Charsets.US_ASCII) == "RIFF" && it.copyOfRange(8, 12).toString(Charsets.US_ASCII) == "WEBP"
-        if (it.size > limit || !(jpeg || png || webp)) throw InvalidResponseException("The profile image is unavailable or unsupported")
+        return jpeg || png || webp
     }
     suspend fun exams(): List<DaaExamSlot> {
         val term = parseJson(transport.request("/api/sinh-vien/tkb/dang-ky"))

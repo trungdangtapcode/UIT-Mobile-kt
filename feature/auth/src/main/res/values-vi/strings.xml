@@ -49,8 +49,11 @@
     <string name="scan_opening">Đang mở bản scan…</string>
     <string name="scan_err_signin">Đăng nhập lại để xem bản scan này.</string>
     <string name="scan_err_offline">Không tải được bản scan. Kiểm tra mạng và thử lại.</string>
-    <string name="scan_err_generic">Không mở được bản scan này. Tệp có thể bị thiếu hoặc dùng định dạng ảnh chưa hỗ trợ.</string>
+    <string name="scan_err_generic">Không mở được bản scan này. Tệp có thể bị thiếu hoặc dùng định dạng chưa hỗ trợ.</string>
     <string name="scan_image_desc">Ảnh bản scan</string>
+    <string name="scan_prev_page">Trang trước</string>
+    <string name="scan_next_page">Trang tiếp</string>
+    <string name="scan_page_indicator">Trang %1$d / %2$d</string>
     <string name="scan_zoom_out">Thu nhỏ bản scan</string>
     <string name="scan_zoom_in">Phóng to bản scan</string>
     <string name="scan_fit">Vừa khung</string>

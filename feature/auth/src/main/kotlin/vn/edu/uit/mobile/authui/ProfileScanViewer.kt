@@ -1,6 +1,11 @@
 package vn.edu.uit.mobile.authui
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.pdf.PdfRenderer
+import android.os.ParcelFileDescriptor
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -8,6 +13,8 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.NavigateBefore
+import androidx.compose.material.icons.automirrored.outlined.NavigateNext
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,6 +36,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import java.io.File
 import kotlin.math.min
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -42,27 +50,64 @@ import vn.edu.uit.mobile.feature.auth.R
     }
 }
 
-private data class DecodedScan(val image: ImageBitmap?)
+private data class DecodedScan(val image: ImageBitmap?, val pageCount: Int = 1)
+
+internal fun isPdfScan(bytes: ByteArray): Boolean =
+    bytes.size >= 5 && bytes.copyOfRange(0, 5).toString(Charsets.US_ASCII) == "%PDF-"
+
+internal fun decodePdfScanPage(bytes: ByteArray, pageIndex: Int): Pair<ImageBitmap, Int>? = runCatching {
+    val temp = File.createTempFile("uit-scan-", ".pdf")
+    val descriptor = try {
+        temp.writeBytes(bytes)
+        ParcelFileDescriptor.open(temp, ParcelFileDescriptor.MODE_READ_ONLY)
+    } finally {
+        temp.delete()
+    }
+    descriptor.use { pfd ->
+        PdfRenderer(pfd).use { renderer ->
+            val total = renderer.pageCount
+            if (total <= 0) return@runCatching null
+            val safeIndex = pageIndex.coerceIn(0, total - 1)
+            renderer.openPage(safeIndex).use { page ->
+                if (page.width <= 0 || page.height <= 0) return@runCatching null
+                val scale = min(2f, min(4096f / page.width, 4096f / page.height)).coerceAtLeast(1f)
+                val width = (page.width * scale).toInt().coerceIn(1, 4096)
+                val height = (page.height * scale).toInt().coerceIn(1, 4096)
+                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                Canvas(bitmap).drawColor(Color.WHITE)
+                page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                bitmap.asImageBitmap() to total
+            }
+        }
+    }
+}.getOrNull()
 
 @Composable fun ProfileScanContent(scan: ProfileScanState, onClose: () -> Unit = {}, onRetry: () -> Unit = {}) {
-    val decoded by produceState<DecodedScan?>(null, scan.bytes) {
+    var pageIndex by remember(scan.bytes) { mutableIntStateOf(0) }
+    val decoded by produceState<DecodedScan?>(null, scan.bytes, pageIndex) {
         value = null
         val bytes = scan.bytes ?: return@produceState
         value = withContext(Dispatchers.Default) {
-            DecodedScan(
-                runCatching {
-                    val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
-                    if (options.outWidth <= 0 || options.outHeight <= 0 || options.outWidth.toLong() * options.outHeight > 200_000_000) return@runCatching null
-                    options.inSampleSize = 1
-                    while (options.outWidth / options.inSampleSize > 4096 || options.outHeight / options.inSampleSize > 4096) options.inSampleSize *= 2
-                    options.inJustDecodeBounds = false
-                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)?.asImageBitmap()
-                }.getOrNull()
-            )
+            if (isPdfScan(bytes)) {
+                val rendered = decodePdfScanPage(bytes, pageIndex)
+                DecodedScan(rendered?.first, rendered?.second ?: 1)
+            } else {
+                DecodedScan(
+                    runCatching {
+                        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+                        if (options.outWidth <= 0 || options.outHeight <= 0 || options.outWidth.toLong() * options.outHeight > 200_000_000) return@runCatching null
+                        options.inSampleSize = 1
+                        while (options.outWidth / options.inSampleSize > 4096 || options.outHeight / options.inSampleSize > 4096) options.inSampleSize *= 2
+                        options.inJustDecodeBounds = false
+                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)?.asImageBitmap()
+                    }.getOrNull()
+                )
+            }
         }
     }
     val image = decoded?.image
+    val pageCount = decoded?.pageCount ?: 1
     Surface(Modifier.fillMaxSize().testTag("profile-scan-viewer"), color = MaterialTheme.colorScheme.background) {
         Column(Modifier.fillMaxSize().safeDrawingPadding()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -80,7 +125,13 @@ private data class DecodedScan(val image: ImageBitmap?)
                         Text(stringResource(R.string.scan_opening), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
-                image != null -> ScanImage(image, Modifier.fillMaxWidth().weight(1f))
+                image != null -> ScanImage(
+                    image = image,
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    pageIndex = pageIndex.coerceIn(0, (pageCount - 1).coerceAtLeast(0)),
+                    pageCount = pageCount,
+                    onPageChange = { pageIndex = it.coerceIn(0, (pageCount - 1).coerceAtLeast(0)) }
+                )
                 else -> Box(Modifier.fillMaxWidth().weight(1f).padding(24.dp), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         Icon(Icons.Outlined.BrokenImage, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -102,7 +153,13 @@ private data class DecodedScan(val image: ImageBitmap?)
     }
 }
 
-@Composable private fun ScanImage(image: ImageBitmap, modifier: Modifier) {
+@Composable private fun ScanImage(
+    image: ImageBitmap,
+    modifier: Modifier,
+    pageIndex: Int = 0,
+    pageCount: Int = 1,
+    onPageChange: (Int) -> Unit = {}
+) {
     var zoom by remember(image) { mutableFloatStateOf(1f) }
     var offset by remember(image) { mutableStateOf(Offset.Zero) }
     var viewport by remember { mutableStateOf(IntSize.Zero) }
@@ -142,6 +199,17 @@ private data class DecodedScan(val image: ImageBitmap?)
             )
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        if (pageCount > 1) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                IconButton(onClick = { onPageChange(pageIndex - 1) }, enabled = pageIndex > 0) {
+                    Icon(Icons.AutoMirrored.Outlined.NavigateBefore, stringResource(R.string.scan_prev_page))
+                }
+                Text(stringResource(R.string.scan_page_indicator, pageIndex + 1, pageCount), Modifier.padding(horizontal = 8.dp), style = MaterialTheme.typography.labelLarge)
+                IconButton(onClick = { onPageChange(pageIndex + 1) }, enabled = pageIndex < pageCount - 1) {
+                    Icon(Icons.AutoMirrored.Outlined.NavigateNext, stringResource(R.string.scan_next_page))
+                }
+            }
+        }
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             IconButton(onClick = { changeZoom(zoom - 0.5f) }, enabled = zoom > 1f) { Icon(Icons.Outlined.ZoomOut, stringResource(R.string.scan_zoom_out)) }
             Text("${(zoom * 100).toInt()}%", Modifier.widthIn(min = 56.dp), style = MaterialTheme.typography.labelLarge)

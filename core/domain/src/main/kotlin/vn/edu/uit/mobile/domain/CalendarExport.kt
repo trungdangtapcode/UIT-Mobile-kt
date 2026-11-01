@@ -9,6 +9,7 @@ data class CalendarExportOptions(val from: LocalDate, val through: LocalDate, va
 data class CalendarExportPlan(val options: CalendarExportOptions, val entries: List<ScheduleEntry>, val updatedAt: Long) {
     val fileName: String get() = "uit-schedule-${options.from}-${options.through}.ics"
 }
+data class DeviceCalendarEvent(val title: String, val location: String, val description: String, val startMillis: Long, val endMillis: Long?, val free: Boolean)
 
 /** A finite calendar snapshot. Recurrence is expanded by the shared timetable rules. */
 class CalendarFileExport {
@@ -48,6 +49,28 @@ class CalendarFileExport {
         }
         lines += "END:VCALENDAR"
         return lines.joinToString("\r\n", postfix = "\r\n") { fold(it) }
+    }
+
+    fun deviceEvent(entry: ScheduleEntry, updatedAt: Long = 0): DeviceCalendarEvent {
+        utc(entry.start)
+        if (entry.end > entry.start) utc(entry.end)
+        val title = if (entry.kind == ScheduleKind.CANCELED) "Canceled: ${entry.title}" else entry.title
+        val description = buildString {
+            append("UIT Mobile saved schedule. Times originate in Asia/Ho_Chi_Minh (GMT+07).\n")
+            append("Type: ${label(entry.kind)}")
+            if (entry.classCode.isNotBlank()) append("\nClass: ${entry.classCode}")
+            if (entry.end <= entry.start) append("\nEnd time not provided.")
+            if (updatedAt > 0) append("\nSnapshot saved: ${Instant.fromEpochSeconds(updatedAt)}")
+            append("\nOne-time calendar copy; check UIT Mobile for subsequent updates.")
+        }
+        return DeviceCalendarEvent(
+            title = title,
+            location = entry.room,
+            description = description,
+            startMillis = Math.multiplyExact(entry.start, 1000L),
+            endMillis = if (entry.end > entry.start) Math.multiplyExact(entry.end, 1000L) else null,
+            free = entry.kind in setOf(ScheduleKind.CANCELED, ScheduleKind.DEADLINE)
+        )
     }
 
     private fun type(kind: ScheduleKind) = when (kind) {

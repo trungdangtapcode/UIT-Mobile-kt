@@ -85,4 +85,18 @@ class CalendarExportTest {
         val empty = export.plan(PortalSnapshot(), options.copy(through = day.plus(89, DateTimeUnit.DAY)))
         assertThrows(IllegalArgumentException::class.java) { export.render(empty, stamp) }
     }
+
+    @Test fun `device calendar event preserves exact epoch milliseconds and marks canceled or deadline items free`() {
+        val meeting = ScheduleEntry("class:1", "Database Systems", stamp, stamp + 5400, ScheduleKind.CLASS, "IT004.O21", "A101")
+        val device = export.deviceEvent(meeting, stamp)
+        assertEquals("Database Systems", device.title)
+        assertEquals("A101", device.location)
+        assertEquals(stamp * 1000L, device.startMillis)
+        assertEquals((stamp + 5400) * 1000L, device.endMillis)
+        assertFalse(device.free)
+        val canceled = export.deviceEvent(meeting.copy(kind = ScheduleKind.CANCELED, end = stamp), stamp)
+        assertEquals("Canceled: Database Systems", canceled.title)
+        assertNull(canceled.endMillis)
+        assertTrue(canceled.free)
+    }
 }

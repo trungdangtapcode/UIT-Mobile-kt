@@ -29,4 +29,6 @@
     <string name="exp_room">Room · %1$s</string>
     <string name="exp_saving">Saving calendar…</string>
     <string name="exp_save">Save .ics file</string>
+    <string name="exp_add_device">Add to device calendar</string>
+    <string name="exp_no_calendar_app">No calendar app is available on this device.</string>
 </resources>

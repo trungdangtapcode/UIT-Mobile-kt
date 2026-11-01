@@ -130,12 +130,8 @@ class ConnectedStudyAiRepository(
         check(accounts.accounts.first().any { it.id == course.accountId }) { "This course account was removed. Open the course again." }
     }
     override suspend fun generate(course: Course, mode: String, sources: List<StudySource>, question: String, language: String): StudyAnswer = withContext(Dispatchers.IO) {
-        requireAccount(course)
         StudyAiRules.validate(sources, mode, question)
         require(language in setOf("English", "Vietnamese")) { "Choose a supported answer language." }
-        val config = config() ?: error("Configure an AI connection before generating an answer.")
-        val direct = mode(config) == StudyConnectionMode.DIRECT
-        val endpoint = if (direct) "https://api.openai.com/v1/responses" else StudyAiRules.endpoint(config.getValue("endpoint").jsonPrimitive.content) + "/v1/study"
         val request = buildJsonObject {
             put("version", 1)
             put("mode", mode)
@@ -154,11 +150,31 @@ class ConnectedStudyAiRepository(
                 )
             )
         }
-        return@withContext try {
+        exchange(course, request) { data, direct ->
+            (if (direct) OpenAiStudyProtocol.directResult(data) else OpenAiStudyProtocol.gatewayResult(data)).also { StudyAiRules.verify(it, sources, mode) }
+        }
+    }
+    override suspend fun generatePractice(course: Course, sources: List<StudySource>, options: PracticeOptions): PracticeGeneration = withContext(Dispatchers.IO) {
+        PracticeRules.request(sources, options)
+        exchange(course, PracticeProtocol.payload(sources, options)) { data, direct -> PracticeProtocol.result(data, direct).also { PracticeRules.generation(it, sources, options) } }
+    }
+    private suspend fun <T> exchange(course: Course, request: JsonObject, decode: (JsonObject, Boolean) -> T): T {
+        requireAccount(course)
+        val config = config() ?: error("Configure an AI connection before generating an answer.")
+        val direct = mode(config) == StudyConnectionMode.DIRECT
+        val endpoint = if (direct) "https://api.openai.com/v1/responses" else StudyAiRules.endpoint(config.getValue("endpoint").jsonPrimitive.content) + "/v1/study"
+        return try {
             client.preparePost(endpoint) {
                 header("Authorization", "Bearer ${config.getValue("token").jsonPrimitive.content}")
                 header("Content-Type", "application/json")
-                setBody(if (direct) OpenAiStudyProtocol.request(config.getValue("model").jsonPrimitive.content, request).toString() else request.toString())
+                setBody(
+                    if (direct) {
+                        val model = config.getValue("model").jsonPrimitive.content
+                        if (request["mode"]?.jsonPrimitive?.content == "practice") PracticeProtocol.request(model, request).toString() else OpenAiStudyProtocol.request(model, request).toString()
+                    } else {
+                        request.toString()
+                    }
+                )
             }.execute { response ->
                 val channel = response.bodyAsChannel()
                 try {
@@ -190,8 +206,7 @@ class ConnectedStudyAiRepository(
                         bytes.write(buffer, 0, count)
                     }
                     val data = Json.parseToJsonElement(bytes.toString("UTF-8")).jsonObject
-                    val answer = if (direct) OpenAiStudyProtocol.directResult(data) else OpenAiStudyProtocol.gatewayResult(data)
-                    StudyAiRules.verify(answer, sources, mode)
+                    val answer = decode(data, direct)
                     requireAccount(course)
                     answer
                 } catch (e: CancellationException) {

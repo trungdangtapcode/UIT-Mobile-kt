@@ -1,0 +1,60 @@
+{
+  "provenance": "Authored synthetic contract fixture; human semantic quality review pending.",
+  "request": {
+    "version": 1,
+    "mode": "practice",
+    "question": "",
+    "language": "English",
+    "practice": {
+      "kind": "mixed",
+      "count": 2,
+      "topic": "Database transactions"
+    },
+    "sources": [
+      {
+        "id": "module:1",
+        "title": "Transactions · synthetic lesson",
+        "text": "A database transaction preserves consistency. Atomicity means all operations complete or none do. A stack removes the most recently added item first. A queue removes the earliest added item first."
+      }
+    ]
+  },
+  "result": {
+    "status": "ready",
+    "message": "",
+    "questions": [
+      {
+        "kind": "mcq",
+        "prompt": "What does a database transaction preserve?",
+        "choices": [
+          "Consistency",
+          "Network latency",
+          "Screen resolution",
+          "Disk capacity"
+        ],
+        "correctIndex": 0,
+        "answer": "Consistency",
+        "explanation": "The lesson explicitly states that a transaction preserves consistency.",
+        "citations": [
+          {
+            "sourceId": "module:1",
+            "quote": "A database transaction preserves consistency."
+          }
+        ]
+      },
+      {
+        "kind": "flashcard",
+        "prompt": "What does atomicity require?",
+        "choices": [],
+        "correctIndex": -1,
+        "answer": "All operations complete or none do.",
+        "explanation": "Atomicity treats the operations as one unit.",
+        "citations": [
+          {
+            "sourceId": "module:1",
+            "quote": "Atomicity means all operations complete or none do."
+          }
+        ]
+      }
+    ]
+  }
+}

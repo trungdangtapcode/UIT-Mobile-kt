@@ -382,6 +382,7 @@ class UitGraph(context: Context) {
     private val bookmarkStorage = StudyPrivateStorage(app, "bookmarks", "uit.bookmarks.v1")
     private val workloadStorage = StudyPrivateStorage(app, "workload", "uit.workload.v1")
     private val revisionStorage = StudyPrivateStorage(app, "revision", "uit.revision.v1")
+    private val practiceStorage = StudyPrivateStorage(app, "practice", "uit.practice.v1")
     val accounts: AccountRepository = VaultAccountRepository(vault, store, File(app.filesDir, "materials")) { id ->
         try {
             studyStorage.removeAccount(id)
@@ -392,7 +393,11 @@ class UitGraph(context: Context) {
                 try {
                     workloadStorage.removeAccount(id)
                 } finally {
-                    revisionStorage.removeAccount(id)
+                    try {
+                        revisionStorage.removeAccount(id)
+                    } finally {
+                        practiceStorage.removeAccount(id)
+                    }
                 }
             }
         }
@@ -400,6 +405,7 @@ class UitGraph(context: Context) {
     val bookmarks: BookmarkRepository = LocalBookmarkRepository(bookmarkStorage, accounts)
     val workload: WorkloadRepository = LocalWorkloadRepository(workloadStorage, accounts, store)
     val revision: RevisionRepository = LocalRevisionRepository(revisionStorage, accounts)
+    val practice: PracticeRepository = LocalPracticeRepository(practiceStorage, accounts)
     val studyAi: StudyAiRepository = ConnectedStudyAiRepository(studyStorage, accounts)
     val portal: PortalRepository = OfflinePortalRepository(vault, store, File(app.filesDir, "materials"))
     companion object {

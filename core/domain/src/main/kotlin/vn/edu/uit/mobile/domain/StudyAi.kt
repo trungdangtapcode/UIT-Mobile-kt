@@ -24,6 +24,7 @@ interface StudyAiRepository {
     suspend fun configureDirect(apiKey: String, model: String)
     suspend fun disconnect()
     suspend fun generate(course: Course, mode: String, sources: List<StudySource>, question: String, language: String): StudyAnswer
+    suspend fun generatePractice(course: Course, sources: List<StudySource>, options: PracticeOptions): PracticeGeneration = throw StudyAiException("Practice generation is unavailable for this connection.")
     suspend fun tasks(course: Course, assignmentId: Long): List<StudyTask>
     suspend fun saveTasks(course: Course, assignmentId: Long, tasks: List<StudyTask>)
 }
@@ -40,6 +41,9 @@ object StudyAiRules {
         require(mode in setOf("analyze", "ask")) { "Choose a supported study action." }
         require(mode != "ask" || question.isNotBlank()) { "Enter a question about the selected text." }
         require(question.length <= 1200) { "Keep the question under 1,200 characters." }
+        validateSources(sources)
+    }
+    fun validateSources(sources: List<StudySource>) {
         require(sources.size in 1..5 && sources.map { it.id }.distinct().size == sources.size) { "Select one to five different sources." }
         require(sources.all { it.id.matches(Regex("[A-Za-z0-9:_-]{1,80}")) && it.title.isNotBlank() && it.title.length <= 200 && it.text.isNotBlank() && it.text.length <= 12000 }) { "Each source needs a title and at most 12,000 characters of text." }
         require(sources.sumOf { it.text.length } <= 36000) { "Select at most 36,000 characters in total." }

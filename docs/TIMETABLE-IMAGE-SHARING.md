@@ -29,6 +29,7 @@ The exact preview bitmap is encoded as PNG; changing visible source data, option
 locale or font scale prepares a new preview. The current plan and local account
 session are checked before and after encoding, before the chooser opens. An
 account-session change resets the form and cancels an unfinished share.
+Opening a schedule widget closes the image screen and focuses the requested date.
 
 The chooser sends only an `image/png` stream via the existing `FileProvider`, with
 a temporary read grant and matching ClipData. It does not send timetable text in

@@ -117,6 +117,7 @@ class ScheduleViewModel(private val repository: PortalRepository, accounts: Acco
     var exporting by rememberSaveable { mutableStateOf(false) }
     var finding by rememberSaveable { mutableStateOf(false) }
     var sharingImage by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(state.focusRequest) { if (state.focusRequest > 0) sharingImage = false }
     val freeTime by viewModel.freeTimePlanner.uiState.collectAsStateWithLifecycle()
     val activityContext = LocalContext.current
     val context = activityContext.applicationContext

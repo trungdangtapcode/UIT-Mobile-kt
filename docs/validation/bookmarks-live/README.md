@@ -41,3 +41,18 @@ Submission, messaging, profile/account edits, completion actions, remote bookmar
 changes, activity views, discussion threads and downloads were blocked or never
 requested. Normal login and access logs can still be recorded by UIT. No account
 session, password, raw response or private test harness is committed here.
+
+## Independent visual review
+
+A separate subagent inspected all four checked-in collection/search previews at
+360/390/412dp and the sanitized authenticated collection captures. It also rendered
+the add-link dialog with synthetic accounts at 360dp, Vietnamese, 1.3x font size,
+and an additional constrained 500dp viewport. The dialog fields scroll and the
+Save/Cancel controls remain visible. The short viewport is host coverage, not an
+actual Android keyboard/device test.
+
+The review reproduced a medium-priority navigation issue: Saved items loses its
+query/category state after opening an item and returning. The local filter state
+is scoped to `BookmarksContent`, which is removed from composition during the
+detail route. Bookmark records are preserved. This review records the finding;
+it does not change the production implementation.

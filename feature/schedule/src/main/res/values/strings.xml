@@ -27,6 +27,7 @@
     <string name="sched_vietnam_time">%1$s · Vietnam time</string>
     <string name="sched_class">Class</string>
     <string name="sched_room">Room</string>
+    <string name="sched_room_decoded">%1$s · Building %2$s, Floor %3$d</string>
     <string name="sched_lecturer">Lecturer</string>
     <string name="sched_updates">Schedule updates</string>
     <string name="sched_open_course">Open course workspace</string>

@@ -108,3 +108,20 @@ class ProjectGpaUseCase {
         return (currentGpa * earnedCredits + planned.sumOf { it.first * it.second }) / credits
     }
 }
+
+data class UitRoomLocation(val building: String, val floor: Int)
+
+object UitRoomDecoder {
+    private val prefixRegex = Regex("^(?:PH[OÒ]NG\\s+|P\\.?\\s*)", RegexOption.IGNORE_CASE)
+    private val dottedRegex = Regex("^([A-Z])(\\d{1,2})\\.\\d+[A-Z0-9]*$")
+    private val compactRegex = Regex("^([A-Z])(\\d{1,2})\\d{2}[A-Z]?$")
+
+    fun decode(rawRoom: String): UitRoomLocation? {
+        val normalized = rawRoom.trim().replace(prefixRegex, "").trim().uppercase()
+        if (normalized.isEmpty()) return null
+        val match = dottedRegex.matchEntire(normalized) ?: compactRegex.matchEntire(normalized) ?: return null
+        val building = match.groupValues[1]
+        val floor = match.groupValues[2].toIntOrNull()?.takeIf { it > 0 } ?: return null
+        return UitRoomLocation(building = building, floor = floor)
+    }
+}

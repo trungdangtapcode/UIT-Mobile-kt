@@ -27,6 +27,7 @@
     <string name="sched_vietnam_time">%1$s · giờ Việt Nam</string>
     <string name="sched_class">Lớp</string>
     <string name="sched_room">Phòng</string>
+    <string name="sched_room_decoded">%1$s · Tòa %2$s, Tầng %3$d</string>
     <string name="sched_lecturer">Giảng viên</string>
     <string name="sched_updates">Cập nhật lịch</string>
     <string name="sched_open_course">Mở không gian môn học</string>

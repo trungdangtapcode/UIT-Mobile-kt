@@ -283,7 +283,12 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
                     }
                 }
                 if (entry.classCode.isNotBlank()) DetailLine(Icons.Outlined.Class, stringResource(R.string.sched_class), entry.classCode)
-                if (entry.room.isNotBlank()) DetailLine(Icons.Outlined.LocationOn, stringResource(R.string.sched_room), entry.room)
+                if (entry.room.isNotBlank()) {
+                    val roomText = UitRoomDecoder.decode(entry.room)?.let {
+                        stringResource(R.string.sched_room_decoded, entry.room, it.building, it.floor)
+                    } ?: entry.room
+                    DetailLine(Icons.Outlined.LocationOn, stringResource(R.string.sched_room), roomText)
+                }
                 state.snapshot.timetable.firstOrNull { it.classCode == entry.classCode }?.lecturerName?.takeIf(String::isNotBlank)?.let { DetailLine(Icons.Outlined.PersonOutline, stringResource(R.string.sched_lecturer), it) }
                 val notices = state.snapshot.notices.filter { it.classCode == entry.classCode }
                 if (notices.isNotEmpty()) {

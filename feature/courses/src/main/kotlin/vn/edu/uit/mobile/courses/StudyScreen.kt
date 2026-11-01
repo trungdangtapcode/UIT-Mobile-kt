@@ -131,7 +131,9 @@ import vn.edu.uit.mobile.feature.courses.R
                 }
                 if (state.assignment == null) OutlinedTextField(value = state.question, onValueChange = onQuestion, enabled = !state.busy, label = { Text(stringResource(R.string.st_question)) }, supportingText = { Text("${state.question.length}/1200") }, modifier = Modifier.fillMaxWidth(), shape = TechnicalShapes.Field, minLines = 2)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("English", "Vietnamese").forEach { language -> FilterChip(selected = state.language == language, onClick = { onLanguage(language) }, enabled = !state.busy, label = { Text(language) }, shape = TechnicalShapes.Control) }
+                    listOf("English" to R.string.st_language_en, "Vietnamese" to R.string.st_language_vi).forEach { (language, labelRes) ->
+                        FilterChip(selected = state.language == language, onClick = { onLanguage(language) }, enabled = !state.busy, label = { Text(stringResource(labelRes)) }, shape = TechnicalShapes.Control)
+                    }
                 }
                 Button(onClick = onGenerate, enabled = state.connection.configured && !state.busy && state.selected.isNotEmpty() && (state.assignment != null || state.question.isNotBlank()), modifier = Modifier.fillMaxWidth(), shape = TechnicalShapes.Field) {
                     Text(stringResource(if (state.answer == null) R.string.st_send else R.string.st_generate_again))

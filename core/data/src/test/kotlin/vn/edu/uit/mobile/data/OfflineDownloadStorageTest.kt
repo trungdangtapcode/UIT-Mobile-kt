@@ -52,6 +52,6 @@ class OfflineDownloadStorageTest {
         val destination = materialDestination(folder.root, course, file.copy(name = "../" + "Tài liệu ".repeat(70) + ".pdf"))
         assertTrue(destination.name.toByteArray().size <= 213)
         assertTrue(destination.name.endsWith(".pdf"))
-        assertTrue(destination.canonicalPath.startsWith(folder.root.canonicalPath + "/"))
+        assertTrue(destination.canonicalFile.toPath().startsWith(folder.root.canonicalFile.toPath()))
     }
 }

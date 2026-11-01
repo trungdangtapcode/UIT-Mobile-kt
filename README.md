@@ -51,6 +51,13 @@ no hosted backend. Personal checklists
 are saved locally; PDF ingestion is not part of this first version. See
 [Study AI setup and limits](docs/STUDY-AI.md).
 
+**AI quiz & flashcards** creates an editable, source-linked draft from explicitly
+selected cached text. Save reviewed sets for offline practice, inspect historical
+evidence and track multiple-choice correctness separately from flashcard recall.
+See [practice setup and data boundaries](docs/AI-PRACTICE.md) and the
+[evaluation record](docs/AI-PRACTICE-EVALUATION.md). Human semantic quality review
+of the synthetic evaluation fixtures is still pending.
+
 See the [phone preview gallery](docs/design/README.md) and
 [mobile scope](docs/design/MOBILE.md). Previews render on a rootless server without
 an emulator. Older layout experiments are historical, not current product targets.

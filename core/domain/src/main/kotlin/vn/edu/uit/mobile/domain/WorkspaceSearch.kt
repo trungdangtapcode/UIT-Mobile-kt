@@ -5,7 +5,7 @@ import java.text.Normalizer
 import java.util.Locale
 import vn.edu.uit.mobile.model.*
 
-enum class WorkspaceSearchKind { COURSES, MATERIALS, ASSIGNMENTS, NOTICES }
+enum class WorkspaceSearchKind { COURSES, CLASSES, EXAMS, MATERIALS, ASSIGNMENTS, NOTICES }
 data class WorkspaceSearchHit(
     val key: String,
     val kind: WorkspaceSearchKind,
@@ -44,6 +44,36 @@ class SearchWorkspaceUseCase {
             val ownerId = source.accountId
             source.announcements.forEach { notice -> add(WorkspaceSearchHit("announcement:$ownerId:${notice.nodeId}", WorkspaceSearchKind.NOTICES, ownerId, notice.title, "DAA announcement", announcement = notice)) }
             source.notices.forEach { notice -> add(WorkspaceSearchHit("notice:$ownerId:${notice.nodeId}:${notice.classCode}:${notice.targetDate}:${notice.lessonStart}:${notice.lessonEnd}", WorkspaceSearchKind.NOTICES, ownerId, notice.title, "${notice.classCode} · ${notice.targetDate}", notice = notice)) }
+        }
+        // Timetable and exam rows carry no account id, so they belong to the linked portal
+        // account. Without one, the merged rows have no owner and stay out of the index.
+        val portalOwner = accounts.firstOrNull { it.portal != PortalType.MOODLE }?.id
+        if (portalOwner != null) {
+            val linker = CourseCrossLinker()
+            snapshot.timetable.forEach { slot ->
+                add(
+                    WorkspaceSearchHit(
+                        "class:$portalOwner:${slot.classCode}:${slot.dayOfWeek}:${slot.lessonStart}:${slot.lessonEnd}",
+                        WorkspaceSearchKind.CLASSES,
+                        portalOwner,
+                        slot.classCode,
+                        listOf(slot.courseName, slot.room, slot.lecturerName).filter(String::isNotBlank).joinToString(" · "),
+                        course = linker.match(slot.classCode, snapshot.courses)
+                    )
+                )
+            }
+            snapshot.exams.forEach { exam ->
+                add(
+                    WorkspaceSearchHit(
+                        "exam:$portalOwner:${exam.classCode}:${exam.examDate}:${exam.examShift}",
+                        WorkspaceSearchKind.EXAMS,
+                        portalOwner,
+                        exam.courseName,
+                        listOf(exam.classCode, exam.room, exam.examDate).filter(String::isNotBlank).joinToString(" · "),
+                        course = linker.match(exam.classCode, snapshot.courses)
+                    )
+                )
+            }
         }
     }.distinctBy { it.key }
 

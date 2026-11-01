@@ -9,6 +9,8 @@
     <string name="srch_hint">Chỉ dữ liệu đã lưu. Tải môn học để có tài liệu và bài tập. Nội dung tệp không được đánh chỉ mục.</string>
     <string name="srch_all">Tất cả</string>
     <string name="srch_kind_courses">Môn học</string>
+    <string name="srch_kind_classes">Lớp học</string>
+    <string name="srch_kind_exams">Lịch thi</string>
     <string name="srch_kind_materials">Tài liệu</string>
     <string name="srch_kind_assignments">Bài tập</string>
     <string name="srch_kind_notices">Thông báo</string>

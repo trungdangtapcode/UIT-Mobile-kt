@@ -118,6 +118,8 @@ import vn.edu.uit.mobile.model.*
 private fun searchKindLabel(kind: WorkspaceSearchKind): String = stringResource(
     when (kind) {
         WorkspaceSearchKind.COURSES -> R.string.srch_kind_courses
+        WorkspaceSearchKind.CLASSES -> R.string.srch_kind_classes
+        WorkspaceSearchKind.EXAMS -> R.string.srch_kind_exams
         WorkspaceSearchKind.MATERIALS -> R.string.srch_kind_materials
         WorkspaceSearchKind.ASSIGNMENTS -> R.string.srch_kind_assignments
         WorkspaceSearchKind.NOTICES -> R.string.srch_kind_notices

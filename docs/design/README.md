@@ -74,6 +74,8 @@ from an installed APK. No authored topic or response is substituted.
 | Current public topics | [Latest](previews/forum-real-latest.png) |
 | Public category hierarchy | [Categories](previews/forum-real-categories.png) |
 | Official 2026–2027 gift announcement | [Topic](previews/forum-real-announcement.png) · [Body](previews/forum-real-announcement-body.png) |
+| Actual uploaded image | [Fullscreen](previews/forum-real-image-fullscreen.png) · [Zoom](previews/forum-real-image-zoom.png) |
+| Official announcement revision | [Changes](previews/forum-real-history.png) · [Before](previews/forum-real-history-before.png) · [After](previews/forum-real-history-after.png) |
 
 [Capture provenance and SHA-256 hashes](previews/forum-real-provenance.json)
 identify the sources and capture time. The announcement is available at

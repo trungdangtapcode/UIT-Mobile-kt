@@ -1,6 +1,5 @@
 package vn.edu.uit.mobile.forum
 
-import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -14,13 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,8 +40,9 @@ import vn.edu.uit.mobile.feature.forum.R
         { raw ->
             val target = ForumUrls.target(raw)
             if (target != null) viewModel.topic(target.topicId, target.postNumber) else ForumUrls.safe(raw)?.let { link = it }
-        }, viewModel::image, { url -> ForumUrls.safe(url)?.let { link = it } }
+        }, viewModel::image, { url -> ForumUrls.safe(url)?.let { link = it } }, { post -> viewModel.history(post) }
     )
+    if (state.historyPost != null) ForumHistoryDialog(state, viewModel::history, viewModel::closeHistory, { url -> ForumUrls.safe(url)?.let { link = it } }, viewModel::image)
     link?.let { url ->
         val handler = LocalUriHandler.current
         var failed by remember(url) { mutableStateOf(false) }
@@ -89,7 +86,8 @@ import vn.edu.uit.mobile.feature.forum.R
     onClear: () -> Unit = {},
     onLink: (String) -> Unit = {},
     imageLoader: suspend (String) -> ByteArray = { throw ForumException(ForumFailure.NETWORK) },
-    onBrowser: (String) -> Unit = onLink
+    onBrowser: (String) -> Unit = onLink,
+    onHistory: (ForumPost) -> Unit = {}
 ) {
     val listState = rememberLazyListState()
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -137,7 +135,7 @@ import vn.edu.uit.mobile.feature.forum.R
         if (state.fetchedAt > 0) Text(stringResource(if (state.offline) R.string.f_cached else R.string.f_retrieved, date(state.fetchedAt)), style = MaterialTheme.typography.labelSmall, color = if (state.offline) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant)
         val topic = state.topic
         if (topic != null) {
-            ForumReader(state, onTopic, onSave, onWindow, onPosition, onLink, imageLoader, onBrowser)
+            ForumReader(state, onTopic, onSave, onWindow, onPosition, onLink, imageLoader, onBrowser, onHistory)
         } else {
             var query by rememberSaveable { mutableStateOf(state.query) }
             if (state.tab == ForumTab.SEARCH) {
@@ -216,7 +214,7 @@ import vn.edu.uit.mobile.feature.forum.R
     HorizontalDivider()
 }
 
-@Composable private fun ColumnScope.ForumReader(state: ForumState, onTopic: (Long, Int, Int) -> Unit, onSave: (ForumTopic) -> Unit, onWindow: (Boolean) -> Unit, onPosition: (ForumPost, Int) -> Unit, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, onBrowser: (String) -> Unit) {
+@Composable private fun ColumnScope.ForumReader(state: ForumState, onTopic: (Long, Int, Int) -> Unit, onSave: (ForumTopic) -> Unit, onWindow: (Boolean) -> Unit, onPosition: (ForumPost, Int) -> Unit, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, onBrowser: (String) -> Unit, onHistory: (ForumPost) -> Unit) {
     val topic = state.topic ?: return
     val list = rememberLazyListState()
     val density = LocalDensity.current
@@ -266,6 +264,14 @@ import vn.edu.uit.mobile.feature.forum.R
                     Text(stringResource(R.string.f_post, post.number), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                 }
                 Text(isoDate(post.created), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                post.replyTo?.let { parent -> TextButton(onClick = { onTopic(topic.id, parent, 0) }) { Text(stringResource(R.string.f_reply_to, parent)) } }
+                if (post.version > 1) {
+                    if (post.canViewHistory) {
+                        TextButton(onClick = { onHistory(post) }, modifier = Modifier.testTag("forum-history-${post.id}")) { Text(stringResource(R.string.f_history, post.version)) }
+                    } else {
+                        Text(stringResource(R.string.f_edited), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
                 SelectionContainerCompat { post.blocks.forEach { block -> ForumBlockView(block, onLink, imageLoader, topic.url + "/${post.number}", onBrowser) } }
             }
         }
@@ -278,61 +284,6 @@ import vn.edu.uit.mobile.feature.forum.R
     androidx.compose.foundation.text.selection.SelectionContainer { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { content() } }
 }
 
-@Composable private fun ForumBlockView(block: ForumBlock, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, source: String, onBrowser: (String) -> Unit) {
-    when (block.kind) {
-        ForumBlockKind.CODE -> Surface(modifier = Modifier.fillMaxWidth(), shape = TechnicalShapes.Control, color = MaterialTheme.colorScheme.surfaceContainerHighest) { Text(block.text, Modifier.horizontalScroll(rememberScrollState()).padding(12.dp), fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodyMedium) }
-        ForumBlockKind.QUOTE -> Surface(shape = TechnicalShapes.Control, color = MaterialTheme.colorScheme.surfaceContainerHigh) { Text(block.text, Modifier.padding(12.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        ForumBlockKind.HEADING -> Text(block.text, style = MaterialTheme.typography.titleMedium)
-        ForumBlockKind.DETAILS -> {
-            var expanded by remember { mutableStateOf(false) }
-            TextButton(onClick = { expanded = !expanded }) { Text(stringResource(R.string.f_details)) }
-            if (expanded) Text(block.text)
-        }
-        ForumBlockKind.TABLE -> Column(Modifier.horizontalScroll(rememberScrollState())) {
-            block.rows.forEach { row ->
-                Row { row.forEach { cell -> Text(cell, Modifier.width(160.dp).padding(8.dp), style = MaterialTheme.typography.bodyMedium) } }
-                HorizontalDivider()
-            }
-        }
-        ForumBlockKind.IMAGE -> ForumImage(block, imageLoader, onLink)
-        ForumBlockKind.OMITTED -> TextButton(onClick = { onBrowser(source) }) { Text(stringResource(R.string.f_abbreviated)) }
-        ForumBlockKind.UNSUPPORTED -> TextButton(onClick = { onBrowser(source) }) { Text(stringResource(R.string.f_unsupported)) }
-        else -> if (block.text.isNotBlank()) Text(block.text, style = MaterialTheme.typography.bodyLarge)
-    }
-    if (block.kind != ForumBlockKind.IMAGE) block.links.forEach { link -> TextButton(onClick = { onLink(link.url) }, contentPadding = PaddingValues(0.dp)) { Text(link.label + " ↗", style = MaterialTheme.typography.bodyMedium) } }
-}
-
-@Composable private fun ForumImage(block: ForumBlock, loader: suspend (String) -> ByteArray, onLink: (String) -> Unit) {
-    val url = block.links.firstOrNull()?.url ?: return
-    var requested by remember(url) { mutableStateOf(false) }
-    var bitmap by remember(url) { mutableStateOf<ImageBitmap?>(null) }
-    var failed by remember(url) { mutableStateOf(false) }
-    val supported = ForumUrls.image(url) != null
-    LaunchedEffect(url, requested) {
-        if (requested && supported) {
-            try {
-                bitmap = withContext(Dispatchers.IO) {
-                    val bytes = loader(url)
-                    require(bytes.size <= 3 * 1024 * 1024)
-                    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
-                    require(bounds.outWidth in 1..4096 && bounds.outHeight in 1..4096 && bounds.outWidth.toLong() * bounds.outHeight <= 8000000)
-                    val options = BitmapFactory.Options().apply { inSampleSize = if (maxOf(bounds.outWidth, bounds.outHeight) > 2048) 2 else 1 }
-                    requireNotNull(BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)).asImageBitmap()
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                failed = true
-            }
-        }
-    }
-    bitmap?.let { Image(it, block.text, Modifier.fillMaxWidth().heightIn(max = 480.dp)) }
-    if (bitmap == null) OutlinedButton(onClick = { if (supported) requested = true else onLink(url) }, enabled = !requested, shape = TechnicalShapes.Control) { Text(stringResource(if (supported) R.string.f_image else R.string.f_external_image)) }
-    if (failed) Text(stringResource(R.string.f_image_failed), style = MaterialTheme.typography.bodySmall)
-    if (block.text.isNotBlank()) Text(block.text, style = MaterialTheme.typography.labelSmall)
-}
-
 @Composable private fun EmptyForum() {
     Text(stringResource(R.string.f_empty), Modifier.padding(vertical = 24.dp), style = MaterialTheme.typography.bodyLarge)
 }
@@ -342,7 +293,7 @@ private fun tabLabel(tab: ForumTab) = when (tab) {
     ForumTab.SEARCH -> R.string.f_search
     ForumTab.SAVED -> R.string.f_saved
 }
-private fun errorLabel(error: ForumFailure) = when (error) {
+internal fun errorLabel(error: ForumFailure) = when (error) {
     ForumFailure.NETWORK -> R.string.f_network
     ForumFailure.RATE_LIMIT -> R.string.f_rate
     ForumFailure.UNAVAILABLE -> R.string.f_unavailable
@@ -351,4 +302,4 @@ private fun errorLabel(error: ForumFailure) = when (error) {
     ForumFailure.CAPACITY -> R.string.f_capacity
 }
 private fun date(epoch: Long): String = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(epoch * 1000))
-private fun isoDate(raw: String): String = runCatching { date(Instant.parse(raw).epochSecond) }.getOrDefault(raw)
+internal fun isoDate(raw: String): String = runCatching { date(Instant.parse(raw).epochSecond) }.getOrDefault(raw)

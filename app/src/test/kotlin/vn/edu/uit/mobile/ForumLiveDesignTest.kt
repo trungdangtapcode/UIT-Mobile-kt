@@ -26,6 +26,7 @@ import vn.edu.uit.mobile.forum.network.*
 @OptIn(ExperimentalRoborazziApi::class)
 class ForumLiveDesignTest {
     @get:Rule val compose = createComposeRule()
+
     @Test fun realServerThroughProductionReader() {
         Assume.assumeTrue(java.lang.Boolean.getBoolean("uit.forum.live"))
         val output = File(requireNotNull(System.getProperty("uit.forum.live.dir"))).apply { mkdirs() }
@@ -41,8 +42,12 @@ class ForumLiveDesignTest {
         val storage = object : StudyStorage {
             val entries = mutableMapOf<String, String>()
             override fun read(key: String) = entries[key]
-            override fun write(key: String, value: String) { entries[key] = value }
-            override fun remove(key: String) { entries.remove(key) }
+            override fun write(key: String, value: String) {
+                entries[key] = value
+            }
+            override fun remove(key: String) {
+                entries.remove(key)
+            }
             override fun removeAccount(accountId: String) = error("No account operation allowed")
         }
         val vm = ForumViewModel(LocalForumRepository(transport, storage))
@@ -62,52 +67,104 @@ class ForumLiveDesignTest {
         }
         try {
             compose.setContent { UitTheme(dark = true, dynamic = false) { WorkspaceFrame(3, {}, {}, "", false, false, 0) { ForumScreen(vm) } } }
-            compose.runOnIdle { vm.open() }; settled()
+            compose.runOnIdle { vm.open() }
+            settled()
             val feed = vm.uiState.value.topics
             assertTrue(feed.isNotEmpty())
             capture("forum-real-latest")
-            compose.runOnIdle { vm.tab(ForumTab.CATEGORIES) }; settled()
+            compose.runOnIdle { vm.tab(ForumTab.CATEGORIES) }
+            settled()
             capture("forum-real-categories")
-            compose.runOnIdle { vm.tab(ForumTab.SEARCH) }; settled()
+            compose.runOnIdle { vm.tab(ForumTab.SEARCH) }
+            settled()
             compose.onNodeWithTag("forum-query").performTextInput("uit")
             compose.onAllNodesWithText("Tìm kiếm").onLast().performClick()
             settled()
             assertTrue(vm.uiState.value.hits.isNotEmpty())
             capture("forum-real-search")
             val selected = feed.maxBy { it.posts }
-            compose.runOnIdle { vm.topic(selected.id) }; settled()
+            compose.runOnIdle { vm.topic(selected.id) }
+            settled()
             val initial = vm.uiState.value
             assertTrue(initial.posts.isNotEmpty())
             assertTrue(initial.stream.size > initial.posts.size)
             capture("forum-real-topic")
             compose.onNodeWithTag("forum-reader").performScrollToIndex(1)
             capture("forum-real-first-post")
-            compose.runOnIdle { vm.window(true) }; settled()
+            compose.runOnIdle { vm.window(true) }
+            settled()
             assertTrue(vm.uiState.value.end > initial.end)
             val jump = (selected.posts / 2).coerceAtLeast(1)
-            compose.runOnIdle { vm.topic(selected.id, jump) }; settled()
+            compose.runOnIdle { vm.topic(selected.id, jump) }
+            settled()
             assertTrue(vm.uiState.value.posts.any { it.number >= jump - 10 })
             capture("forum-real-jump")
             val jumpedNumbers = vm.uiState.value.posts.map { it.number }
             val announcement = feed.firstOrNull { it.title.startsWith("Thông báo") }
             if (announcement != null) {
-                compose.runOnIdle { vm.topic(announcement.id) }; settled()
+                compose.runOnIdle { vm.topic(announcement.id) }
+                settled()
                 assertTrue(vm.uiState.value.posts.isNotEmpty())
                 capture("forum-real-announcement")
                 compose.onNodeWithTag("forum-reader").performScrollToIndex(1)
                 capture("forum-real-announcement-body")
+                compose.onNodeWithTag("forum-reader").performScrollToNode(hasText("Tải ảnh"))
+                compose.onAllNodesWithText("Tải ảnh").onFirst().performClick()
+                compose.waitUntil(30000) {
+                    org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+                    compose.onAllNodesWithTag("forum-image-open").fetchSemanticsNodes().isNotEmpty()
+                }
+                compose.onAllNodesWithTag("forum-image-open").onFirst().performScrollTo().performClick()
+                compose.onNodeWithTag("forum-image-viewer").assertIsDisplayed()
+                compose.waitUntil(30000) {
+                    org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+                    compose.onAllNodesWithTag("forum-image-loading").fetchSemanticsNodes().isEmpty()
+                }
+                compose.onNodeWithText("Ảnh không khả dụng hoặc vượt giới hạn kích thước an toàn.").assertDoesNotExist()
+                capture("forum-real-image-fullscreen")
+                compose.onNodeWithText("Phóng to").performClick()
+                capture("forum-real-image-zoom")
+                compose.onNodeWithText("Đóng ảnh").performClick()
             }
-            File(output, "provenance.txt").writeText(buildString {
-                appendLine("Captured: ${Instant.now()}")
-                appendLine("Runtime: actual production Compose/ForumViewModel/LocalForumRepository/AnonymousForumClient on Robolectric")
-                appendLine("Network: live HTTPS to https://forum.uit.edu.vn; no fixture response substitution")
-                appendLine("Account: anonymous; this does not verify app SSO or an installed Android device")
-                appendLine("Local persistence for this host test: in-memory StudyStorage; no Android Keystore claim")
-                appendLine("Topic: ${selected.url}; stream IDs: ${initial.stream.size}; initial bodies: ${initial.posts.size}")
-                appendLine("Announcement: ${announcement?.url ?: "none in current feed"}")
-                appendLine("Jump requested: $jump; loaded numbers: ${jumpedNumbers}")
-                appendLine("Requests: ${synchronized(requests) { requests.toList() }}")
-            })
-        } finally { compose.runOnIdle { models.clear() } }
+            var edited: ForumPost? = null
+            for (candidate in feed.filter { it.title.startsWith("Thông báo") }.take(4)) {
+                compose.runOnIdle { vm.topic(candidate.id) }
+                settled()
+                edited = vm.uiState.value.posts.firstOrNull { it.number == 1 && it.canViewHistory && it.version > 1 }
+                if (edited != null) break
+            }
+            val historyPost = requireNotNull(edited) { "No editable official post available for live history verification" }
+            compose.onNodeWithTag("forum-reader").performScrollToNode(hasTestTag("forum-history-${historyPost.id}"))
+            compose.onNodeWithTag("forum-history-${historyPost.id}").performClick()
+            compose.waitUntil(30000) {
+                org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+                !vm.uiState.value.historyLoading
+            }
+            assertNull(vm.uiState.value.historyError)
+            assertEquals(historyPost.id, vm.uiState.value.history?.postId)
+            compose.onNodeWithTag("forum-history-reader").assertIsDisplayed()
+            capture("forum-real-history")
+            compose.onNodeWithText("Trước").performClick()
+            capture("forum-real-history-before")
+            compose.onNodeWithText("Sau").performClick()
+            capture("forum-real-history-after")
+            compose.runOnIdle { vm.closeHistory() }
+            File(output, "provenance.txt").writeText(
+                buildString {
+                    appendLine("Captured: ${Instant.now()}")
+                    appendLine("Runtime: actual production Compose/ForumViewModel/LocalForumRepository/AnonymousForumClient on Robolectric")
+                    appendLine("Network: live HTTPS to https://forum.uit.edu.vn; no fixture response substitution")
+                    appendLine("Account: anonymous; this does not verify app SSO or an installed Android device")
+                    appendLine("Local persistence for this host test: in-memory StudyStorage; no Android Keystore claim")
+                    appendLine("Topic: ${selected.url}; stream IDs: ${initial.stream.size}; initial bodies: ${initial.posts.size}")
+                    appendLine("History: https://forum.uit.edu.vn/t/${historyPost.topicId}/${historyPost.number}; post ID ${historyPost.id}; version ${historyPost.version}")
+                    appendLine("Announcement: ${announcement?.url ?: "none in current feed"}")
+                    appendLine("Jump requested: $jump; loaded numbers: $jumpedNumbers")
+                    appendLine("Requests: ${synchronized(requests) { requests.toList() }}")
+                }
+            )
+        } finally {
+            compose.runOnIdle { models.clear() }
+        }
     }
 }

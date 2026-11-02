@@ -5,6 +5,11 @@ Research date: 2026-11-03, Asia/Tokyo. App baseline: `1417d5c` on
 public reader to the full student-facing UIT Forum experience. It does not claim
 that the missing functionality has been implemented.
 
+Current implementation increments are tracked separately in
+[Forum parity progress](../FORUM-PARITY-PROGRESS.md). The table below retains the
+explicit research baseline; the progress document records changed behavior and
+remaining acceptance gaps.
+
 ## What full parity means
 
 A student should be able to complete the workflows available to that same account

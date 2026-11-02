@@ -35,12 +35,20 @@ data class ForumState(
     val fetchedAt: Long = 0,
     val error: ForumFailure? = null,
     val retryAt: Long = 0,
+    val historyPost: ForumPost? = null,
+    val history: ForumRevision? = null,
+    val historyLoading: Boolean = false,
+    val historyError: ForumFailure? = null,
+    val historyRetryAt: Long = 0,
+    val historyRequestedVersion: Int = 0,
     val readerSession: String = UUID.randomUUID().toString()
 )
 
 class ForumViewModel(private val repository: ForumRepository, private val clock: () -> Long = { System.currentTimeMillis() / 1000 }) : ViewModel() {
     private val state = MutableStateFlow(ForumState())
     val uiState = state.asStateFlow()
+    private var historyWork: Job? = null
+    private var historySerial = 0L
     private var work: Job? = null
     private var positionWork: Job? = null
     private var saveWork: Job? = null
@@ -55,6 +63,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         if (state.value.fetchedAt == 0L && state.value.topics.isEmpty()) latest() else refreshLocal()
     }
     fun close() {
+        closeHistory()
         work?.cancel()
         serial++
         state.value = state.value.copy(open = false, loading = false)
@@ -171,6 +180,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
     }
     fun topic(id: Long, number: Int = 1, offsetDp: Int = 0) {
         if (id <= 0 || number <= 0 || state.value.retryAt > clock()) return
+        closeHistory()
         flushPosition()
         val same = state.value.topic?.id == id
         if (!same) state.value = state.value.copy(topic = ForumTopic(id, "", 0, 0, ""), posts = emptyList(), stream = emptyList(), unavailable = 0)
@@ -209,6 +219,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         }
     }
     fun back() {
+        closeHistory()
         work?.cancel()
         serial++
         flushPosition()
@@ -275,6 +286,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         positionWork = viewModelScope.launch { persistPosition() }
     }
     fun clear() {
+        closeHistory()
         work?.cancel()
         positionWork?.cancel()
         saveWork?.cancel()
@@ -285,6 +297,31 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
             repository.clear()
             attemptedCategories.clear()
             state.value = ForumState(open = true, tab = ForumTab.SAVED)
+        }
+    }
+    fun closeHistory() {
+        historyWork?.cancel()
+        historySerial++
+        state.value = state.value.copy(historyPost = null, history = null, historyLoading = false, historyError = null, historyRetryAt = 0)
+    }
+    fun history(post: ForumPost, version: Int = post.version) {
+        if (!post.canViewHistory || version < 2 || post.topicId != state.value.topic?.id || state.value.historyRetryAt > clock()) return
+        historyWork?.cancel()
+        val serial = ++historySerial
+        state.value = state.value.copy(historyPost = post, history = null, historyLoading = true, historyError = null, historyRequestedVersion = version)
+        historyWork = viewModelScope.launch {
+            try {
+                val result = repository.load(ForumRequest.Revision(post.topicId, post.id, version)).document.revision ?: throw ForumException(ForumFailure.INVALID)
+                if (serial == historySerial) state.value = state.value.copy(history = result)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: ForumException) {
+                if (serial == historySerial) state.value = state.value.copy(historyError = e.reason, historyRetryAt = if (e.reason == ForumFailure.RATE_LIMIT) clock() + (e.retryAfterSeconds ?: 30) else 0)
+            } catch (_: Exception) {
+                if (serial == historySerial) state.value = state.value.copy(historyError = ForumFailure.INVALID)
+            } finally {
+                if (serial == historySerial) state.value = state.value.copy(historyLoading = false)
+            }
         }
     }
     suspend fun image(url: String) = repository.image(url)

@@ -17,10 +17,45 @@ data class ForumTopic(val id: Long, val title: String, val categoryId: Long, val
     val url: String get() = "${ForumLimits.ORIGIN}/t/$id"
 }
 data class ForumHit(val id: Long, val topic: ForumTopic, val postNumber: Int, val excerpt: String)
-enum class ForumBlockKind { TEXT, HEADING, QUOTE, CODE, TABLE, DETAILS, IMAGE, LINK, UNSUPPORTED, OMITTED }
+enum class ForumBlockKind { TEXT, HEADING, QUOTE, CODE, TABLE, DETAILS, SPOILER, IMAGE, LINK, UNSUPPORTED, OMITTED }
 data class ForumLink(val label: String, val url: String)
-data class ForumBlock(val kind: ForumBlockKind, val text: String, val links: List<ForumLink> = emptyList(), val rows: List<List<String>> = emptyList())
-data class ForumPost(val id: Long, val topicId: Long, val number: Int, val author: String, val created: String, val blocks: List<ForumBlock>)
+data class ForumInline(
+    val text: String,
+    val bold: Boolean = false,
+    val italic: Boolean = false,
+    val code: Boolean = false,
+    val strike: Boolean = false,
+    val underline: Boolean = false,
+    val link: String? = null,
+    val spoiler: Boolean = false,
+    val change: Int = 0
+)
+data class ForumBlock(
+    val kind: ForumBlockKind,
+    val text: String,
+    val links: List<ForumLink> = emptyList(),
+    val rows: List<List<String>> = emptyList(),
+    val inline: List<ForumInline> = emptyList(),
+    val children: List<ForumBlock> = emptyList(),
+    val cells: List<List<List<ForumBlock>>> = emptyList(),
+    val label: String = "",
+    val original: String? = null,
+    val level: Int = 0
+)
+data class ForumPost(val id: Long, val topicId: Long, val number: Int, val author: String, val created: String, val blocks: List<ForumBlock>, val version: Int = 1, val updated: String = "", val canViewHistory: Boolean = false, val replyTo: Int? = null)
+data class ForumRevision(
+    val postId: Long,
+    val version: Int,
+    val previous: Int?,
+    val next: Int?,
+    val author: String,
+    val created: String,
+    val reason: String,
+    val blocks: List<ForumBlock>,
+    val title: List<ForumBlock> = emptyList(),
+    val diffUnavailable: Boolean = false,
+    val displayVersion: Int = version
+)
 data class ForumDocument(
     val categories: List<ForumCategory> = emptyList(),
     val topics: List<ForumTopic> = emptyList(),
@@ -28,7 +63,8 @@ data class ForumDocument(
     val topic: ForumTopic? = null,
     val stream: List<Long> = emptyList(),
     val posts: List<ForumPost> = emptyList(),
-    val more: Boolean = false
+    val more: Boolean = false,
+    val revision: ForumRevision? = null
 )
 sealed interface ForumRequest {
     data object Categories : ForumRequest
@@ -36,6 +72,7 @@ sealed interface ForumRequest {
     data class Latest(val categoryId: Long? = null, val page: Int = 0) : ForumRequest
     data class Search(val query: String, val page: Int = 1) : ForumRequest
     data class Topic(val id: Long, val postNumber: Int = 1) : ForumRequest
+    data class Revision(val topicId: Long, val postId: Long, val version: Int) : ForumRequest
     data class Posts(val topicId: Long, val ids: List<Long>) : ForumRequest
 }
 enum class ForumFailure { NETWORK, RATE_LIMIT, UNAVAILABLE, INVALID, STORAGE, CAPACITY }
@@ -82,6 +119,7 @@ object ForumUrls {
         is ForumRequest.Latest -> "latest:${request.categoryId}:${request.page}"
         is ForumRequest.Search -> "search:${request.page}:${request.query}"
         is ForumRequest.Topic -> "topic:${request.id}:${request.postNumber}"
+        is ForumRequest.Revision -> "revision:${request.topicId}:${request.postId}:${request.version}"
         is ForumRequest.Posts -> "posts:${request.topicId}:${request.ids.joinToString(",")}"
     }
 }

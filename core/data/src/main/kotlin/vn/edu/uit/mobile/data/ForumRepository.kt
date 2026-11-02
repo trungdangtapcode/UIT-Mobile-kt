@@ -90,6 +90,9 @@ class LocalForumRepository(private val remote: ForumTransport, private val stora
         storage.write("cache", encoded)
     }
     override suspend fun load(request: ForumRequest): ForumLoaded = withContext(Dispatchers.IO) {
+        // Revision permissions may change independently of cached topic metadata.
+        // Never persist or replay history offline after a permission revocation.
+        if (request is ForumRequest.Revision) return@withContext ForumLoaded(ForumParser.parse(request, remote.get(request)), now())
         val key = ForumUrls.key(request)
         val epoch = mutex.withLock { generation }
         try {

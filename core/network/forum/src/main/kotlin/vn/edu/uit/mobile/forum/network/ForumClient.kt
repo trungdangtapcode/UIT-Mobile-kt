@@ -53,6 +53,10 @@ class AnonymousForumClient(
                 require(request.id > 0 && request.postNumber > 0)
                 if (request.postNumber == 1) "/t/${request.id}.json" else "/t/${request.id}/${request.postNumber}.json"
             }
+            is ForumRequest.Revision -> {
+                require(request.topicId > 0 && request.postId > 0 && request.version > 1)
+                "/posts/${request.postId}/revisions/${request.version}.json"
+            }
             is ForumRequest.Posts -> {
                 require(request.topicId > 0 && request.ids.size in 1..ForumLimits.BATCH && request.ids.all { it > 0 })
                 "/t/${request.topicId}/posts.json"

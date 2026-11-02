@@ -21,10 +21,15 @@ class ForumViewModelTest {
         val calls = mutableListOf<ForumRequest>()
         var local = ForumLocalState()
         var failure: ForumFailure? = null
+        var revisionGate: CompletableDeferred<Unit>? = null
         override suspend fun load(request: ForumRequest): ForumLoaded {
             calls += request
             failure?.let { throw ForumException(it, 10) }
             val d = when (request) {
+                is ForumRequest.Revision -> {
+                    revisionGate?.let { withContext(NonCancellable) { it.await() } }
+                    ForumDocument(revision = ForumRevision(request.postId, request.version, null, null, "author", "", "", emptyList()))
+                }
                 is ForumRequest.Category -> ForumDocument()
                 ForumRequest.Categories -> ForumDocument(categories = listOf(ForumCategory(1, "Public")))
                 is ForumRequest.Latest -> ForumDocument(topics = listOf(ForumTopic(1, "Topic", 1, 1000, "")), more = true)
@@ -49,6 +54,48 @@ class ForumViewModelTest {
         override suspend fun clear() {
             local = ForumLocalState()
         }
+    }
+
+    @Test fun historyRespectsPermissionRateLimitAndIgnoresLateResultsAfterDismissal() = runTest(dispatcher) {
+        val repo = Repo()
+        var now = 100L
+        val vm = ForumViewModel(repo) { now }
+        vm.topic(1)
+        runCurrent()
+        val post = vm.uiState.value.posts.first().copy(version = 3, canViewHistory = true)
+        val count = repo.calls.size
+        vm.history(post.copy(canViewHistory = false))
+        runCurrent()
+        vm.history(post.copy(topicId = 99))
+        runCurrent()
+        assertEquals(count, repo.calls.size)
+        repo.failure = ForumFailure.RATE_LIMIT
+        vm.history(post)
+        runCurrent()
+        assertEquals(ForumFailure.RATE_LIMIT, vm.uiState.value.historyError)
+        vm.history(post)
+        runCurrent()
+        assertEquals(count + 1, repo.calls.size)
+        now = 111
+        repo.failure = null
+        val gate = CompletableDeferred<Unit>()
+        repo.revisionGate = gate
+        vm.history(post)
+        runCurrent()
+        assertTrue(vm.uiState.value.historyLoading)
+        vm.closeHistory()
+        gate.complete(Unit)
+        runCurrent()
+        assertNull(vm.uiState.value.history)
+        assertNull(vm.uiState.value.historyPost)
+        assertFalse(vm.uiState.value.historyLoading)
+    }
+
+    @Test fun revisionBeforeAndAfterViewsDoNotExposeRemovedOrAddedTextOnWrongSide() {
+        val b = ForumBlock(ForumBlockKind.TEXT, "beforeoldnew", inline = listOf(ForumInline("before"), ForumInline("old", strike = true, change = -1), ForumInline("new", underline = true, change = 1)))
+        assertEquals("beforeold", revisionSide(b, 1).text)
+        assertEquals("beforenew", revisionSide(b, 2).text)
+        assertTrue(revisionSide(b, 2).inline.all { it.change == 0 })
     }
 
     @Test fun noRequestBeforeEntryAndSearchOpensMatchedReply() = runTest(dispatcher) {

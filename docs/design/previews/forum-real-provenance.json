@@ -1,5 +1,5 @@
 {
-  "captured_at_utc": "2026-11-02T18:51:26.673089932Z",
+  "captured_at_utc": "2026-11-02T19:37:48.300324468Z",
   "origin": "https://forum.uit.edu.vn",
   "data": "Live HTTPS responses; no fixture substitution or edited content",
   "runtime": "Production Compose, ViewModel, repository, parser and anonymous client on Robolectric",
@@ -16,22 +16,47 @@
     {
       "file": "forum-real-latest.png",
       "primary_source": "https://forum.uit.edu.vn/latest.json?page=0",
-      "sha256": "6710b303c71a3fd2ec692f2a581c3d3e26cdc02645f51a2fcbb8626536268a51"
+      "sha256": "584351b630c793ea8df99b27cc1018e74f68bc8496b4ca96a1d382906fea75a3"
     },
     {
       "file": "forum-real-categories.png",
       "primary_source": "https://forum.uit.edu.vn/site.json",
-      "sha256": "a4ec8317d5cfd0ff03f6e374ba51d2d67fb2e5ce197a3fe45ea750499d84b96d"
+      "sha256": "769882f2a3ff47b42a43ef0607415d38dad3e923df8b2607414d42b976aa1ae2"
     },
     {
       "file": "forum-real-announcement.png",
       "primary_source": "https://forum.uit.edu.vn/t/164929.json",
-      "sha256": "ead02d58c99685768d6db93a2cbe19883aed2630979c2c452ca993d6b516dbd7"
+      "sha256": "3569c4373aa3c772a9c09fa6a81f1b584c19d05126f1e3fcdbfe406e410e9d4a"
     },
     {
       "file": "forum-real-announcement-body.png",
       "primary_source": "https://forum.uit.edu.vn/t/164929.json",
-      "sha256": "065c02eb53a69ada32e53953d480bc33c8018e35010525865b170c5746d89874"
+      "sha256": "8024bdcb748bb31fa706544e55db1eadcae1aa46278e02275c7d83af17864bbf"
+    },
+    {
+      "file": "forum-real-image-fullscreen.png",
+      "primary_source": "https://forum.uit.edu.vn/t/164929.json",
+      "sha256": "941c25e5ddd4fc1e7b338534add09b61b10fc2903ad7ec8050e8d8136bcb3c28"
+    },
+    {
+      "file": "forum-real-image-zoom.png",
+      "primary_source": "https://forum.uit.edu.vn/t/164929.json",
+      "sha256": "257d0d4beb8e31159c5e995b1ac85a4873297c3fde1cfc4e8237ef1620505667"
+    },
+    {
+      "file": "forum-real-history.png",
+      "primary_source": "https://forum.uit.edu.vn/posts/452924/revisions/2.json",
+      "sha256": "8a37852ba14de1e1e9192b2d5016f53356a890751393e034f6fe72135a412028"
+    },
+    {
+      "file": "forum-real-history-before.png",
+      "primary_source": "https://forum.uit.edu.vn/posts/452924/revisions/2.json",
+      "sha256": "7c3780db349537a451074c54eacd53f0081d849106d8c5aa87ec93e125352d07"
+    },
+    {
+      "file": "forum-real-history-after.png",
+      "primary_source": "https://forum.uit.edu.vn/posts/452924/revisions/2.json",
+      "sha256": "df90843a1cb1c5735e736ed20ac47346dafa633e21f337122019c49a7cf44fbf"
     }
   ]
 }

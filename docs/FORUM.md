@@ -3,7 +3,8 @@
 This document describes the current initial reader, not the completed product
 target. The required target is full student-facing UIT web parity. Track missing
 capabilities, research and acceptance gates in the
-[Forum parity matrix](research/UIT-FORUM-PARITY.md).
+[Forum parity matrix](research/UIT-FORUM-PARITY.md), with current implementation
+changes in [parity progress](FORUM-PARITY-PROGRESS.md).
 
 Open **Inbox → UIT Forum**. University sign-in is not required. Forum is a
 dedicated native phone workspace inside the existing five-destination shell;

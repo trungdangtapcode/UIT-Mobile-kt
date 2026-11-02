@@ -18,7 +18,19 @@ The implementation for #32 is on `feat/course-pdf-reader`, stacked on latest par
 
 The Android instrumentation APK builds locally; the new native cases run in the
 normal GitHub Android 11/API 30 job alongside the eight existing native tests.
-Final-head results and captured native pages are linked on the PR after CI completes.
+Final-head CI reports and artifacts are linked on the PR.
+Run [41393627597](https://github.com/trungdangtapcode/UIT-Mobile-kt/actions/runs/41393627597)
+at `a65c19aff3f288eb84d85e74d682005fd38f81e3` passed **11/11 Android tests**
+with zero failures/errors/skips. Its verify job separately rejected test formatting;
+that formatting was then corrected and the complete local check passed.
+The [actual Android page](design/previews/reading-native-api30-page.png) below
+is the unedited device screenshot from that run, using production PdfRenderer.
+The artifact also contains a valid synthetic JSON export: page 2, 200% zoom,
+bookmark 2 and the saved centered note. The restored screenshot from that run caught
+a stale loading frame, so it is excluded from the gallery. Native captures now
+assert the page is visible and capture the current rendered Compose root.
+
+![Actual Android 11/API 30 course PDF](design/previews/reading-native-api30-page.png)
 No paid model test or university credential is required for this feature.
 
 The initial native runs passed 10 of 11 cases, including the renderer and encrypted

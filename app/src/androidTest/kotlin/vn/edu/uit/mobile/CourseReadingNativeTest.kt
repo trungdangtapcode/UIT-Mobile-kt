@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelStore
@@ -134,6 +135,7 @@ class CourseReadingNativeTest {
             compose.setContent { UitTheme(dark = true, dynamic = false) { WorkspaceFrame(2, {}, {}, "Synthetic student", true, false, 1793586000) { CourseReadingScreen(vm) } } }
             compose.runOnIdle { vm.open(ReadingFixtures.course, ReadingFixtures.file) }
             ready(vm)
+            compose.onNodeWithTag("reading-page").assertIsDisplayed()
             screenshot("reading-native-page")
             compose.onNodeWithContentDescription("Next page").performScrollTo().performClick()
             ready(vm, 2)
@@ -148,8 +150,10 @@ class CourseReadingNativeTest {
             compose.onNodeWithTag("reading-page").performScrollTo().performTouchInput {
                 // Start on the page, outside the centered note's native touch target at any density.
                 pinch(
-                    start0 = center - Offset(width * .25f, 0f), end0 = center - Offset(width * .4f, 0f),
-                    start1 = center + Offset(width * .25f, 0f), end1 = center + Offset(width * .4f, 0f)
+                    start0 = center - Offset(width * .25f, 0f),
+                    end0 = center - Offset(width * .4f, 0f),
+                    start1 = center + Offset(width * .25f, 0f),
+                    end1 = center + Offset(width * .4f, 0f)
                 )
             }
             compose.waitUntil(15000) { vm.uiState.value.position.zoom > 1.2f }
@@ -165,6 +169,7 @@ class CourseReadingNativeTest {
             assertEquals(1, vm.uiState.value.record!!.notes.size)
             assertEquals(setOf(2), vm.uiState.value.record!!.bookmarks)
             assertEquals(2f, vm.uiState.value.position.zoom)
+            compose.onNodeWithTag("reading-page").assertIsDisplayed()
             screenshot("reading-native-restored")
             compose.runOnIdle { vm.export { _, _ -> } }
             compose.waitUntil(15000) { vm.pendingExport != null }
@@ -194,7 +199,9 @@ class CourseReadingNativeTest {
     private fun screenshot(name: String) {
         compose.waitForIdle()
         val destination = File(context.filesDir, "auth-smoke/$name.png").apply { parentFile!!.mkdirs() }
-        val bitmap = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+        // Capture the current rendered Compose root rather than a possibly stale
+        // compositor frame immediately after asynchronous document restoration.
+        val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
         destination.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 }

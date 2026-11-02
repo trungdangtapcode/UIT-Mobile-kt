@@ -218,9 +218,11 @@ class ReadingDesignTest {
         click("Read in app")
         compose.onNodeWithTag("reading-page").performScrollTo().performTouchInput {
             pinch(
-                    start0 = center - Offset(width * .25f, 0f), end0 = center - Offset(width * .4f, 0f),
-                    start1 = center + Offset(width * .25f, 0f), end1 = center + Offset(width * .4f, 0f)
-                )
+                start0 = center - Offset(width * .25f, 0f),
+                end0 = center - Offset(width * .4f, 0f),
+                start1 = center + Offset(width * .25f, 0f),
+                end1 = center + Offset(width * .4f, 0f)
+            )
         }
         pump()
         assertTrue("Pinch must also start at fit-page scale", vm.uiState.value.position.zoom > 1.2f)
@@ -232,8 +234,10 @@ class ReadingDesignTest {
         val before = vm.uiState.value.position.zoom
         compose.onNodeWithTag("reading-page").performTouchInput {
             pinch(
-                start0 = center - Offset(40f, 0f), end0 = center - Offset(80f, 0f),
-                start1 = center + Offset(40f, 0f), end1 = center + Offset(80f, 0f)
+                start0 = center - Offset(40f, 0f),
+                end0 = center - Offset(80f, 0f),
+                start1 = center + Offset(40f, 0f),
+                end1 = center + Offset(80f, 0f)
             )
         }
         pump()

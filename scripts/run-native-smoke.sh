@@ -10,6 +10,8 @@ native_status=0
   -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true || native_status=$?
 mkdir -p build/auth-smoke
 for capture in moodle-login.png sso-login.png reading-native-page.png reading-native-restored.png reading-native-failure.png reading-export.json; do
-  adb exec-out run-as vn.edu.uit.mobile cat "files/auth-smoke/$capture" > "build/auth-smoke/$capture" || rm -f "build/auth-smoke/$capture"
+  if adb shell run-as vn.edu.uit.mobile test -f "files/auth-smoke/$capture"; then
+    adb exec-out run-as vn.edu.uit.mobile cat "files/auth-smoke/$capture" > "build/auth-smoke/$capture" || rm -f "build/auth-smoke/$capture"
+  fi
 done
 exit "$native_status"

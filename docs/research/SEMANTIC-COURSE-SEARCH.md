@@ -29,6 +29,11 @@ and lose the location needed to inspect a result.
 This extends shared ingestion work in #46 and evaluation work in #47. It also
 provides a stronger retrieval basis for #49 without adding another chat interface.
 
+The companion [knowledge visualization proposal](KNOWLEDGE-VISUALIZATION.md)
+describes inspectable concept maps and a later interactive algorithm walkthrough.
+It reuses passage evidence while keeping relationship generation and teaching
+visualizations separate from search ranking.
+
 ## What exists, and what is missing
 
 | Existing component | Verified behavior at the audited revision | Consequence |

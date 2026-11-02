@@ -102,6 +102,23 @@ class WidgetNavigationTest {
         stopKoin()
     }
 
+    @Test fun readingLibraryOpensFromCoursesAndBottomNavigationCanLeaveIt() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().visible()
+        try {
+            compose.onNodeWithText("Courses", substring = false).performClick()
+            compose.onNodeWithText("Reading workspace").performScrollTo().performClick()
+            compose.onNodeWithText("Verified saved PDFs").assertExists()
+            compose.onNodeWithText("Schedule", substring = false).performClick()
+            compose.onNodeWithText("Verified saved PDFs").assertDoesNotExist()
+            compose.onNodeWithText("Courses", substring = false).performClick()
+            compose.onNodeWithText("Reading workspace").performScrollTo().performClick()
+            compose.onNodeWithText("Back", substring = false).performClick()
+            compose.onNodeWithText("Course directory").assertExists()
+        } finally {
+            activity.pause().stop().destroy()
+        }
+    }
+
     @Test fun codeTutorRetainsActivityMemoryButExcludesPrivateCodeFromSavedState() {
         var activity = Robolectric.buildActivity(MainActivity::class.java).setup().visible()
         try {

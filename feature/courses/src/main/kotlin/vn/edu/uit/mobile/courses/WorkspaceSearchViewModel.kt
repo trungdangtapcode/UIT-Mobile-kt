@@ -11,7 +11,7 @@ import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.model.*
 
 data class WorkspaceSearchState(val hits: List<WorkspaceSearchHit> = emptyList(), val query: String = "", val selected: String? = null, val busy: Boolean = false, val message: String? = null, val unownedNotices: Boolean = false)
-data class WorkspaceSearchFile(val path: String, val key: String, val generation: Int)
+data class WorkspaceSearchFile(val path: String, val key: String, val generation: Int, val course: Course? = null, val file: CourseFile? = null)
 class WorkspaceSearchViewModel(private val repository: PortalRepository, accounts: AccountRepository) : ViewModel() {
     private val state = MutableStateFlow(WorkspaceSearchState())
     val uiState = state.asStateFlow()
@@ -61,7 +61,7 @@ class WorkspaceSearchViewModel(private val repository: PortalRepository, account
                 when (val result = repository.download(course, file)) {
                     is AppResult.Success -> {
                         currentCoroutineContext().ensureActive()
-                        if (epoch == expected && state.value.hits.any { it.key == hit.key }) effects.send(WorkspaceSearchFile(result.data.path, hit.key, expected))
+                        if (epoch == expected && state.value.hits.any { it.key == hit.key }) effects.send(WorkspaceSearchFile(result.data.path, hit.key, expected, course, file))
                     }
                     is AppResult.Failure -> if (epoch == expected) state.value = state.value.copy(message = result.error.text())
                 }

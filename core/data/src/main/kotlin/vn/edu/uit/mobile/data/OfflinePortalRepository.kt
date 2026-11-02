@@ -24,9 +24,18 @@ class VaultAccountRepository(private val vault: SessionStore, private val store:
     }
     override suspend fun remove(accountId: String) {
         vault.remove(accountId)
-        withContext(Dispatchers.IO) { onRemove(accountId) }
-        store.delete(accountId)
-        materials?.let { root -> File(root, accountFolder(accountId)).deleteRecursively() }
+        // Once the session is removed, cancellation must not skip its local-data cleanup.
+        withContext(NonCancellable + Dispatchers.IO) {
+            try {
+                onRemove(accountId)
+            } finally {
+                try {
+                    store.delete(accountId)
+                } finally {
+                    materials?.let { root -> File(root, accountFolder(accountId)).deleteRecursively() }
+                }
+            }
+        }
     }
 }
 
@@ -383,6 +392,7 @@ class UitGraph(context: Context) {
     private val workloadStorage = StudyPrivateStorage(app, "workload", "uit.workload.v1")
     private val revisionStorage = StudyPrivateStorage(app, "revision", "uit.revision.v1")
     private val practiceStorage = StudyPrivateStorage(app, "practice", "uit.practice.v1")
+    private val readingStorage = StudyPrivateStorage(app, "reading", "uit.reading.v1")
     val accounts: AccountRepository = VaultAccountRepository(vault, store, File(app.filesDir, "materials")) { id ->
         try {
             studyStorage.removeAccount(id)
@@ -396,7 +406,11 @@ class UitGraph(context: Context) {
                     try {
                         revisionStorage.removeAccount(id)
                     } finally {
-                        practiceStorage.removeAccount(id)
+                        try {
+                            practiceStorage.removeAccount(id)
+                        } finally {
+                            readingStorage.removeAccount(id)
+                        }
                     }
                 }
             }
@@ -406,6 +420,7 @@ class UitGraph(context: Context) {
     val workload: WorkloadRepository = LocalWorkloadRepository(workloadStorage, accounts, store)
     val revision: RevisionRepository = LocalRevisionRepository(revisionStorage, accounts)
     val practice: PracticeRepository = LocalPracticeRepository(practiceStorage, accounts)
+    val reading: ReadingRepository = LocalReadingRepository(readingStorage, accounts)
     val studyAi: StudyAiRepository = ConnectedStudyAiRepository(studyStorage, accounts)
     val portal: PortalRepository = OfflinePortalRepository(vault, store, File(app.filesDir, "materials"))
     companion object {

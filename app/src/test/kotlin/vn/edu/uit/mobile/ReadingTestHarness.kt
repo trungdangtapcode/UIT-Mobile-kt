@@ -24,6 +24,7 @@ internal class ReadingTestHarness(private val root: File, dispatcher: CoroutineD
     }
     var failWrite = false
     var committedFailure = false
+    var afterWrite: (() -> Unit)? = null
     var failRead = false
     val values = mutableMapOf<String, String>()
     private val storage = object : StudyStorage {
@@ -34,6 +35,7 @@ internal class ReadingTestHarness(private val root: File, dispatcher: CoroutineD
         override fun write(key: String, value: String) {
             check(!failWrite)
             values[key] = value
+            afterWrite?.invoke()
             check(!committedFailure)
         }
         override fun remove(key: String) {

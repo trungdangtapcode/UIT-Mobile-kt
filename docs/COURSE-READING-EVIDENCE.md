@@ -10,8 +10,8 @@ The implementation for #32 is on `feat/course-pdf-reader`, stacked on latest par
 | --- | --- |
 | Domain, 3 tests | Position/page geometry, pin/text bounds, identity/version separation, duplicate/owner/collection limits |
 | Data, 14 tests | Position/bookmark/note restoration; exact revisions and uncertain-write retry; owner removal and late writes; old versions; corrupt-owner isolation; export schema/privacy; note order round trips; captured-byte verification/cache replacement; cleanup despite cancellation or another cleanup-hook failure |
-| ViewModel, 14 tests | Local library; explicit open; saved viewport restoration/coalescing; bookmark/note CRUD; retained failed drafts; idempotent retry; save-before-leave; late owner removal; version replacement; deleted-file records; unreadable storage; PDF/page failure; guarded export/writer failure; full storage remains readable and can be left |
-| Compose, 7 tests | Full phone flow; compact failed-save retry; version/archive review; Vietnamese 1.3× text; fit-width/pinch/pan/fit-page and parent scrolling; missing/unsupported PDF; canceled loading and readable PDF with local-store failure |
+| ViewModel, 15 tests | Local library; explicit open; saved viewport restoration/coalescing; bookmark/note CRUD; retained failed drafts; idempotent retry; interrupted-autosave resolution before a note revision; save-before-leave; late owner removal; version replacement; deleted-file records; unreadable storage; PDF/page failure; guarded export/writer failure; full storage remains readable and can be left |
+| Compose, 7 tests | Full phone flow; compact failed-save retry; version/archive review; Vietnamese 1.3× text; pinch from fit-page and fit-width, pan, fit-page and parent scrolling; missing/unsupported PDF; canceled loading and readable PDF with local-store failure |
 | Activity, 1 additional test | Courses reading-library route, bottom-navigation leave and Back |
 | Course routing, 1 additional test | Exact course/file metadata carried into native opening; obsolete download cannot open after selection changes |
 | Android instrumentation, 3 new tests | Actual PdfRenderer pages/corrupt/locked PDFs and descriptor recovery; real Keystore restoration/export/owner removal; actual reader page navigation, pin note, bookmark, pinch/double-tap, restoration/export and removal |
@@ -21,12 +21,16 @@ normal GitHub Android 11/API 30 job alongside the eight existing native tests.
 Final-head results and captured native pages are linked on the PR after CI completes.
 No paid model test or university credential is required for this feature.
 
-The first native run passed 10 of 11 cases, including the renderer and encrypted
-storage tests. The reader workflow timed out during pinch after creating a centered
-note. Its gesture coordinates were changed to scale with the visible page and
-avoid the annotation button's touch target; the canvas is scrolled into view before
-gestures. Failure captures are now collected without masking the test exit status.
-See the PR's final-head report for the subsequent complete native result.
+The initial native runs passed 10 of 11 cases, including the renderer and encrypted
+storage tests. The reader workflow exposed a test-input error: `pinch` takes
+`start0, end0, start1, end1`, while the original call grouped starts then ends.
+That translated both fingers instead of increasing their separation. Named
+arguments now express the actual pinch; the host flow also checks zooming from
+fit-page scale and requires a material increase, rather than floating-point drift.
+Coordinates avoid the centered note's touch target and the canvas scrolls into view.
+A single shell script collects screenshots even after failed instrumentation and
+preserves its exit status; the emulator action executes multiline entries as
+separate shells. See the PR's final-head report for the complete native result.
 
 ## Host rendering boundary
 

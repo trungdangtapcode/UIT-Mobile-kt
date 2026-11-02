@@ -63,15 +63,7 @@ jobs:
           heap-size: 256M
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
           disable-animations: true
-          script: |
-            adb wait-for-device
-            reading_native_status=0
-            ./gradlew :app:connectedDebugAndroidTest --no-daemon -Dorg.gradle.jvmargs="-Xmx1536m -Dfile.encoding=UTF-8" -Dkotlin.daemon.jvmargs="-Xmx512m" -Dorg.gradle.workers.max=2 -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true || reading_native_status=$?
-            mkdir -p build/auth-smoke
-            for capture in moodle-login.png sso-login.png reading-native-page.png reading-native-restored.png reading-native-failure.png reading-export.json; do
-              adb exec-out run-as vn.edu.uit.mobile cat "files/auth-smoke/$capture" > "build/auth-smoke/$capture" || true
-            done
-            exit "$reading_native_status"
+          script: sh scripts/run-native-smoke.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:

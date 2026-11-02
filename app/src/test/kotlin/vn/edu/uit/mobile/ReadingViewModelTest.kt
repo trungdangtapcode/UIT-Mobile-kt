@@ -247,6 +247,25 @@ class ReadingViewModelTest {
         assertEquals(2, vm.uiState.value.position.page)
     }
 
+    @Test fun aNoteSaveResolvesAnInterruptedAutosaveBeforeBuildingTheNextRevision() = checkModel {
+        open()
+        h.afterWrite = {
+            h.afterWrite = null
+            vm.viewport(ReadingPosition(1, 3f))
+        }
+        vm.viewport(ReadingPosition(1, 2f))
+        advanceTimeBy(501)
+        runCurrent()
+        vm.editNote()
+        vm.draftText("Keep this note after the interrupted position write.")
+        vm.saveDraft()
+        runCurrent()
+        assertNull(vm.uiState.value.draft)
+        assertFalse(vm.uiState.value.pendingSave)
+        assertEquals(1, vm.uiState.value.record!!.notes.size)
+        assertEquals(3f, vm.uiState.value.record!!.position.zoom)
+    }
+
     @Test fun fullReadingStorageStillAllowsReadOnlyPdfNavigationAndLeaving() = checkModel {
         repeat(50) { index ->
             val record = ReadingFixtures.initial.copy(identity = ReadingFixtures.identity.copy(documentId = index.toString(16).padStart(64, '0')))

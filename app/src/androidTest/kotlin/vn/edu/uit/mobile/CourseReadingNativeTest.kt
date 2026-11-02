@@ -147,12 +147,15 @@ class CourseReadingNativeTest {
             compose.waitUntil(15000) { vm.uiState.value.record?.notes?.size == 1 && vm.uiState.value.draft == null && !vm.uiState.value.saving }
             compose.onNodeWithTag("reading-page").performScrollTo().performTouchInput {
                 // Start on the page, outside the centered note's native touch target at any density.
-                pinch(center - Offset(width * .25f, 0f), center + Offset(width * .25f, 0f), center - Offset(width * .4f, 0f), center + Offset(width * .4f, 0f))
+                pinch(
+                    start0 = center - Offset(width * .25f, 0f), end0 = center - Offset(width * .4f, 0f),
+                    start1 = center + Offset(width * .25f, 0f), end1 = center + Offset(width * .4f, 0f)
+                )
             }
-            compose.waitUntil(15000) { vm.uiState.value.position.zoom > 1f }
+            compose.waitUntil(15000) { vm.uiState.value.position.zoom > 1.2f }
             compose.onNodeWithText("Fit page").performScrollTo().performClick()
             compose.onNodeWithTag("reading-page").performScrollTo().performTouchInput { doubleClick(Offset(width * .2f, height * .2f)) }
-            compose.waitUntil(15000) { vm.uiState.value.position.zoom > 1f }
+            compose.waitUntil(15000) { vm.uiState.value.position.zoom > 1.2f }
             compose.runOnIdle { vm.savePosition() }
             compose.waitUntil(15000) { !vm.uiState.value.dirty && !vm.uiState.value.saving }
             compose.runOnIdle { vm.libraryFromDocument() }

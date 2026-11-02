@@ -224,12 +224,15 @@ class CourseReadingViewModel(
         }
     }
     private suspend fun persistPosition(): Boolean = writes.withLock {
-        val pending = pendingWrite
-        if (pending != null && !save(pending.expected, pending.value, pending.done)) return@withLock false
+        if (!resolvePending()) return@withLock false
         val current = state.value
         val record = current.record ?: return@withLock !current.dirty
         if (!current.dirty) return@withLock true
         return@withLock save(record, record.copy(position = current.position))
+    }
+    private suspend fun resolvePending(): Boolean {
+        val pending = pendingWrite ?: return true
+        return save(pending.expected, pending.value, pending.done)
     }
     private suspend fun save(expected: ReadingRecord, next: ReadingRecord, done: () -> Unit = {}): Boolean {
         val token = epoch
@@ -300,6 +303,7 @@ class CourseReadingViewModel(
         viewModelScope.launch {
             writes.withLock {
                 if (token != epoch || state.value.record?.identity != current.record.identity) return@withLock
+                if (!resolvePending()) return@withLock
                 val record = state.value.record ?: return@withLock
                 val next = try {
                     block(record.copy(position = if (state.value.archived) record.position else state.value.position)).also(ReadingRules::record)
@@ -359,9 +363,11 @@ class CourseReadingViewModel(
         viewModelScope.launch {
             writes.withLock {
                 if (token != epoch) return@withLock
+                if (!resolvePending()) return@withLock
+                val latest = state.value.record?.takeIf { it.identity == record.identity } ?: return@withLock
                 state.value = state.value.copy(saving = true)
                 try {
-                    repository.remove(record)
+                    repository.remove(latest)
                     currentCoroutineContext().ensureActive()
                     if (token == epoch) {
                         clear(true)

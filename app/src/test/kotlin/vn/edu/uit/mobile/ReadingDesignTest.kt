@@ -216,16 +216,28 @@ class ReadingDesignTest {
     @Test fun fitWidthPinchPanAndFitPageKeepReadingControlsUsable() {
         open()
         click("Read in app")
+        compose.onNodeWithTag("reading-page").performScrollTo().performTouchInput {
+            pinch(
+                    start0 = center - Offset(width * .25f, 0f), end0 = center - Offset(width * .4f, 0f),
+                    start1 = center + Offset(width * .25f, 0f), end1 = center + Offset(width * .4f, 0f)
+                )
+        }
+        pump()
+        assertTrue("Pinch must also start at fit-page scale", vm.uiState.value.position.zoom > 1.2f)
+        click("Fit page")
         click("Fit width")
         assertTrue(vm.uiState.value.position.zoom > 1f)
         assertTrue(vm.uiState.value.position.panY >= 0f)
         capture("reading-fit-width-390-phone")
         val before = vm.uiState.value.position.zoom
         compose.onNodeWithTag("reading-page").performTouchInput {
-            pinch(center - Offset(40f, 0f), center + Offset(40f, 0f), center - Offset(80f, 0f), center + Offset(80f, 0f))
+            pinch(
+                start0 = center - Offset(40f, 0f), end0 = center - Offset(80f, 0f),
+                start1 = center + Offset(40f, 0f), end1 = center + Offset(80f, 0f)
+            )
         }
         pump()
-        assertTrue(vm.uiState.value.position.zoom > before)
+        assertTrue(vm.uiState.value.position.zoom > before * 1.2f)
         compose.onNodeWithTag("reading-page").performTouchInput { swipe(center, center + Offset(40f, 40f)) }
         pump()
         assertTrue(vm.uiState.value.position.panX != 0f || vm.uiState.value.position.panY != 0f)

@@ -1,5 +1,9 @@
 # Public UIT Forum reader research
 
+This is the initial anonymous-reader investigation. Its exclusions describe that
+increment only. The user's full-web-parity requirement and subsequent UIT
+capability survey are tracked in [UIT-FORUM-PARITY.md](UIT-FORUM-PARITY.md).
+
 Verified anonymously on 2026-11-03. No university credentials or authenticated
 sessions were used. Public GET requests can still affect server access logs and
 anonymous view counters; this is not a claim of zero server-side effects.

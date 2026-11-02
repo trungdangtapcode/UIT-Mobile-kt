@@ -1,0 +1,307 @@
+{
+  "checked_at_utc": "2026-11-02T19:04:11.961596+00:00",
+  "mode": "bounded anonymous GET-only; no recursive crawl",
+  "credentials_used": false,
+  "raw_bodies_retained": false,
+  "requests": [
+    {
+      "path": "/site.json",
+      "status": 200,
+      "content_type": "application/json; charset=utf-8"
+    },
+    {
+      "path": "/latest.json?page=0",
+      "status": 200,
+      "content_type": "application/json; charset=utf-8"
+    },
+    {
+      "path": "/t/164929.json",
+      "status": 200,
+      "content_type": "application/json; charset=utf-8"
+    },
+    {
+      "path": "/posts/453770/revisions/2.json",
+      "status": 200,
+      "content_type": "application/json; charset=utf-8"
+    },
+    {
+      "path": "/uploads/default/optimized/3X/6/b/6bea85169a6dc2687d27e5659be6b00eb5edf9a9_2_517x291.jpeg",
+      "status": 200,
+      "content_type": "image/jpeg"
+    },
+    {
+      "path": "/tags.json",
+      "status": 200,
+      "content_type": "application/json; charset=utf-8"
+    },
+    {
+      "path": "/top.json?period=weekly",
+      "status": 200,
+      "content_type": "application/json; charset=utf-8"
+    },
+    {
+      "path": "/t/164929.md",
+      "status": 301,
+      "content_type": "text/html; charset=utf-8"
+    },
+    {
+      "path": "/t/thong-bao-nhan-qua-tang-dau-nam-hoc-2026-2027/164929.md",
+      "status": 200,
+      "content_type": "text/markdown; charset=utf-8"
+    }
+  ],
+  "site": {
+    "category_count": 38,
+    "advertised_filters": [
+      "latest",
+      "unread",
+      "new",
+      "unseen",
+      "top",
+      "read",
+      "posted",
+      "bookmarks",
+      "hot",
+      "votes"
+    ],
+    "post_action_types": [
+      "notify_user",
+      "off_topic",
+      "inappropriate",
+      "spam",
+      "illegal",
+      "notify_moderators",
+      "like"
+    ],
+    "auth_provider_count": 0
+  },
+  "latest": {
+    "topic_count": 30,
+    "topic_fields": [
+      "archetype",
+      "archived",
+      "bookmarked",
+      "bumped",
+      "bumped_at",
+      "can_vote",
+      "category_id",
+      "closed",
+      "created_at",
+      "fancy_title",
+      "featured_link",
+      "has_accepted_answer",
+      "has_summary",
+      "highest_post_number",
+      "id",
+      "image_url",
+      "last_posted_at",
+      "last_poster_username",
+      "like_count",
+      "liked",
+      "op_like_count",
+      "pinned",
+      "pinned_globally",
+      "posters",
+      "posts_count",
+      "reply_count",
+      "slug",
+      "tags",
+      "tags_descriptions",
+      "title",
+      "unpinned",
+      "unseen",
+      "views",
+      "visible"
+    ]
+  },
+  "announcement": {
+    "topic_id": 164929,
+    "post_count_returned": 5,
+    "stream_count": 5,
+    "post_fields": [
+      "accepted_answer",
+      "actions_summary",
+      "admin",
+      "avatar_template",
+      "badges_granted",
+      "bookmarked",
+      "can_accept_answer",
+      "can_delete",
+      "can_edit",
+      "can_recover",
+      "can_see_hidden_post",
+      "can_unaccept_answer",
+      "can_view_edit_history",
+      "can_vote",
+      "can_wiki",
+      "cooked",
+      "created_at",
+      "current_user_reaction",
+      "current_user_used_main_reaction",
+      "deleted_at",
+      "display_username",
+      "edit_reason",
+      "flair_bg_color",
+      "flair_color",
+      "flair_group_id",
+      "flair_name",
+      "flair_url",
+      "hidden",
+      "id",
+      "incoming_link_count",
+      "link_counts",
+      "moderator",
+      "name",
+      "post_number",
+      "post_type",
+      "post_url",
+      "posts_count",
+      "primary_group_name",
+      "quote_count",
+      "reaction_users_count",
+      "reactions",
+      "read",
+      "readers_count",
+      "reads",
+      "reply_count",
+      "reply_to_post_number",
+      "score",
+      "staff",
+      "title_is_group",
+      "topic_accepted_answer",
+      "topic_id",
+      "topic_slug",
+      "trust_level",
+      "updated_at",
+      "user_deleted",
+      "user_id",
+      "user_title",
+      "username",
+      "version",
+      "wiki",
+      "yours"
+    ],
+    "raw_in_first_post": false,
+    "cooked_in_first_post": true,
+    "html_tags": {
+      "p": 20,
+      "br": 2,
+      "em": 2,
+      "strong": 6,
+      "a": 4,
+      "div": 4,
+      "img": 2,
+      "svg": 4,
+      "use": 4,
+      "span": 4,
+      "ul": 2,
+      "li": 4
+    },
+    "html_classes": [
+      "d-icon",
+      "d-icon-discourse-expand",
+      "d-icon-far-image",
+      "fa",
+      "filename",
+      "informations",
+      "inline-onebox",
+      "lightbox",
+      "lightbox-wrapper",
+      "meta",
+      "svg-icon"
+    ],
+    "image_metadata": [
+      {
+        "source_origin": "forum.uit.edu.vn",
+        "width": "517",
+        "height": "291"
+      },
+      {
+        "source_origin": "forum.uit.edu.vn",
+        "width": "690",
+        "height": "352"
+      }
+    ],
+    "revision_versions": [
+      1,
+      2,
+      1,
+      1,
+      1
+    ]
+  },
+  "revision": {
+    "post_id": 453770,
+    "version": 2,
+    "response_fields": [
+      "acting_user_name",
+      "avatar_template",
+      "body_changes",
+      "can_edit",
+      "created_at",
+      "current_hidden",
+      "current_revision",
+      "current_version",
+      "display_username",
+      "edit_reason",
+      "first_revision",
+      "last_revision",
+      "next_revision",
+      "post_id",
+      "previous_hidden",
+      "previous_revision",
+      "username",
+      "version_count"
+    ],
+    "diff_formats": [
+      "inline",
+      "side_by_side",
+      "side_by_side_markdown"
+    ]
+  },
+  "image": {
+    "bytes": 54191,
+    "status": 200
+  },
+  "tags": {
+    "status": 200,
+    "count": 3386
+  },
+  "top": {
+    "status": 200,
+    "topic_count": 23
+  },
+  "markdown_endpoint": {
+    "status": 301,
+    "content_type": "text/html; charset=utf-8",
+    "canonical_status": 200,
+    "canonical_content_type": "text/markdown; charset=utf-8",
+    "canonical_path": "/t/thong-bao-nhan-qua-tang-dau-nam-hoc-2026-2027/164929.md"
+  },
+  "browser": {
+    "checked_at_utc": "2026-11-02T19:05:02.458287+00:00",
+    "viewport": [
+      390,
+      844
+    ],
+    "authentication": "anonymous",
+    "non_read_requests": "blocked",
+    "generator": "Discourse 2026.10.0-latest - https://github.com/discourse/discourse version b81bee142d364526b432788251986871952b5ddb",
+    "site_settings": {
+      "chat_enabled": true,
+      "poll_enabled": true,
+      "discourse_reactions_enabled": true,
+      "solved_enabled": true,
+      "tagging_enabled": true,
+      "enable_markdown_endpoints": true,
+      "login_required": false,
+      "enable_discourse_connect": false,
+      "enable_local_logins": true,
+      "discourse_math_enabled": false,
+      "topic_voting_enabled": true,
+      "discourse_reactions_enabled_reactions": "+1|laughing|open_mouth|clap|confetti_ball|hugs"
+    },
+    "announcement_lightbox_count": 1,
+    "scope": "settings advertise availability; account and per-category permission not proven"
+  }
+}

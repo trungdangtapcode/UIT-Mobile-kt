@@ -1,5 +1,10 @@
 # UIT Forum: native phone workspace
 
+This direction currently covers the initial reader. Full student-facing web
+parity remains the target; use the [parity matrix](../research/UIT-FORUM-PARITY.md)
+to design the missing workflows and verify actual UIT behavior before expanding
+the interface. A browser handoff does not complete a native parity requirement.
+
 The reader serves a student looking for a campus answer, following a long support
 thread, or returning to a saved post. It is a dedicated workspace reached from
 Inbox, including when signed out. The five existing bottom destinations remain.

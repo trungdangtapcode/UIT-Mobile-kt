@@ -1,10 +1,10 @@
 package vn.edu.uit.mobile
 
+import android.accessibilityservice.AccessibilityService
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.view.KeyEvent
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -14,6 +14,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.ByteArrayOutputStream
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -64,7 +65,8 @@ class ProfileScanViewerTest {
         compose.onNodeWithText("Fit", substring = false).performClick()
         compose.onNodeWithTag("profile-scan-image").performTouchInput { doubleClick(center) }
         compose.onNodeWithText("300%").assertIsDisplayed()
-        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+        assertTrue(InstrumentationRegistry.getInstrumentation().uiAutomation.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK))
+        compose.waitUntil(10_000) { compose.onAllNodesWithTag("profile-scan-viewer").fetchSemanticsNodes().isEmpty() }
         compose.onNodeWithTag("profile-scan-viewer").assertDoesNotExist()
         compose.onNodeWithText("Open test scan").assertIsDisplayed()
     }

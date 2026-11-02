@@ -161,6 +161,15 @@ unknowns using text labels. Short evidence dialogs wrap content; long proposals
 scroll with Copy/Close actions retained. Preserve physical bottom-right cuts and
 native controls. No chat bubbles, execution buttons or automatic edit application.
 
+Course PDF reading: the original rectangular page dominates a quiet navy canvas.
+Keep native previous/page-index/next/bookmark controls compact; secondary notes and
+bookmarks use horizontal cut-corner tabs in the same phone column. Fit-page leaves
+parent scrolling available; enlarged pages pan within bounds. Numbered 48dp note
+pins map to normalized page coordinates. Reuse bounded native dialogs for editing
+and export; retain explicit Save/Delete and confirm record deletion. Old-version
+notes remain separate from the current PDF. No desktop sidebar or automatic AI
+processing belongs in this reading flow.
+
 ## References and evidence
 
 - [Research and baseline audit](../docs/design/AI-SLOP-AUDIT.md)

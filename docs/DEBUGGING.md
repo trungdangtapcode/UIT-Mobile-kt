@@ -173,3 +173,18 @@ target or a remotely accessible Android Studio and device/emulator environment.
 Neither has been configured in this repository. A browser-based device viewer
 would stream the native Android app; it would not turn the app into a web product.
 See the [research comparison](REMOTE-DEV-RESEARCH.md) for the practical options.
+
+## Native PDF rendering versus host page previews
+
+Course reading uses Android `PdfRenderer`. Robolectric SDK 35 on the host JDK
+cannot construct its PDF processor (`FileDescriptor.getOwnerId$()` is unavailable),
+even when native Compose graphics work. The reading design suite therefore uses
+prerendered pages of the authored, hash-checked PDF fixture to exercise production
+Compose/ViewModel behavior. This is not evidence that PdfRenderer ran on Linux.
+
+`CourseReadingNativeTest` exercises the real renderer, locked/corrupt PDF failures,
+page navigation, bookmark/pin-note restoration, Keystore persistence and export on
+Android. The existing GitHub emulator job runs these tests and collects
+`reading-native-page.png`, `reading-native-restored.png` and `reading-export.json`
+with the native test reports. These contain synthetic material only. See the
+[reading evidence](COURSE-READING-EVIDENCE.md) for the exact boundaries.

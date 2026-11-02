@@ -7,7 +7,16 @@ The current stack is:
 | 1 | `feat/configurable-workload` | [#71](https://github.com/trungdangtapcode/UIT-Mobile-kt/pull/71) / #10 | `main` |
 | 2 | `feat/exam-revision-planner` | [#72](https://github.com/trungdangtapcode/UIT-Mobile-kt/pull/72) / #12 | `feat/configurable-workload` |
 | 3 | `feat/ai-practice-sets` | [#73](https://github.com/trungdangtapcode/UIT-Mobile-kt/pull/73) / [#50](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/50) | `feat/exam-revision-planner` |
-| 4 | `feat/ai-code-tutor` | AI Code Tutor / [#54](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/54) | `feat/ai-practice-sets` |
+| 4 | `feat/ai-code-tutor` | [#74](https://github.com/trungdangtapcode/UIT-Mobile-kt/pull/74) / [#54](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/54) | `feat/ai-practice-sets` |
+| 5 | `feat/course-pdf-reader` | Course PDF reading / [#32](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/32) | `feat/ai-code-tutor` |
+
+The course PDF reader branch forked from latest Code Tutor at
+`04ddce6bc20ca0189f4a8e35555524913f41e289`. Its PR targets
+`feat/ai-code-tutor` while #74 remains open. Landing order continues
+#71 → #72 → #73 → #74 → course PDF reader. The reader reuses PDF groundwork
+already landed in #68; it does not require another university integration or AI
+provider. Keep the child comparison scoped to reading and follow the same
+post-parent-merge comparison/rebase procedure below.
 
 The Code Tutor branch forked from AI practice at
 `54143a2ae6c7bb4dd62a55de957a5ee1073962bf`. Its PR targets

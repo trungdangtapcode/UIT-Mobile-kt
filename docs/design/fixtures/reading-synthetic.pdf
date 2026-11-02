@@ -1,0 +1,120 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 420 594] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1193 >>
+stream
+0.03 0.41 0.71 rg 32 552 356 6 re f
+BT /F1 11 Tf 32 530 Td (UIT / IT003 / Synthetic study material) Tj ET
+BT /F1 22 Tf 32 492 Td (Breadth-first search) Tj ET
+BT /F1 10 Tf 32 470 Td (Use a queue to visit the graph level by level.) Tj ET
+0.65 0.72 0.78 RG 1 w 52 428 m 368 428 l S
+0.03 0.41 0.71 RG 1.5 w 92 354 m 200 392 l 316 354 l S 92 354 m 200 302 l 316 354 l S
+0.92 0.96 0.99 rg 186 378 28 28 re f
+0.03 0.41 0.71 RG 186 378 28 28 re S
+0.06 0.16 0.26 rg BT /F1 13 Tf 195 386 Td (A) Tj ET
+0.92 0.96 0.99 rg 78 340 28 28 re f
+0.03 0.41 0.71 RG 78 340 28 28 re S
+0.06 0.16 0.26 rg BT /F1 13 Tf 87 348 Td (B) Tj ET
+0.92 0.96 0.99 rg 302 340 28 28 re f
+0.03 0.41 0.71 RG 302 340 28 28 re S
+0.06 0.16 0.26 rg BT /F1 13 Tf 311 348 Td (C) Tj ET
+0.92 0.96 0.99 rg 186 288 28 28 re f
+0.03 0.41 0.71 RG 186 288 28 28 re S
+0.06 0.16 0.26 rg BT /F1 13 Tf 195 296 Td (D) Tj ET
+BT /F1 11 Tf 32 240 Td (Queue: [A] -> [B, C] -> [D]) Tj ET
+BT /F1 11 Tf 32 210 Td (Mark a vertex when it enters the queue.) Tj ET
+BT /F1 11 Tf 32 180 Td (A visited set prevents repeated work.) Tj ET
+0.4 0.46 0.5 rg BT /F1 9 Tf 32 48 Td (Authored fixture / No university account data) Tj ET
+BT /F1 10 Tf 354 48 Td (1 / 3) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 420 594] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1218 >>
+stream
+0.03 0.41 0.71 rg 32 552 356 6 re f
+BT /F1 11 Tf 32 530 Td (UIT / IT003 / Synthetic study material) Tj ET
+BT /F1 22 Tf 32 492 Td (Depth-first search) Tj ET
+BT /F1 10 Tf 32 470 Td (Use a stack or recursion to explore one branch first.) Tj ET
+0.65 0.72 0.78 RG 1 w 52 428 m 368 428 l S
+0.03 0.41 0.71 RG 1.5 w 92 354 m 200 392 l 316 354 l S 92 354 m 200 302 l 316 354 l S
+0.92 0.96 0.99 rg 186 378 28 28 re f
+0.03 0.41 0.71 RG 186 378 28 28 re S
+0.06 0.16 0.26 rg BT /F1 13 Tf 195 386 Td (A) Tj ET
+0.92 0.96 0.99 rg 78 340 28 28 re f
+0.03 0.41 0.71 RG 78 340 28 28 re S
+0.06 0.16 0.26 rg BT /F1 13 Tf 87 348 Td (B) Tj ET
+0.92 0.96 0.99 rg 302 340 28 28 re f
+0.03 0.41 0.71 RG 302 340 28 28 re S
+0.06 0.16 0.26 rg BT /F1 13 Tf 311 348 Td (C) Tj ET
+0.92 0.96 0.99 rg 186 288 28 28 re f
+0.03 0.41 0.71 RG 186 288 28 28 re S
+0.06 0.16 0.26 rg BT /F1 13 Tf 195 296 Td (D) Tj ET
+BT /F1 11 Tf 32 240 Td (Stack: [A] -> [C, B] -> [C, D]) Tj ET
+BT /F1 11 Tf 32 210 Td (Track visited vertices before following an edge.) Tj ET
+BT /F1 11 Tf 32 180 Td (Traversal order depends on neighbor ordering.) Tj ET
+0.4 0.46 0.5 rg BT /F1 9 Tf 32 48 Td (Authored fixture / No university account data) Tj ET
+BT /F1 10 Tf 354 48 Td (2 / 3) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 420 594] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1265 >>
+stream
+0.03 0.41 0.71 rg 32 552 356 6 re f
+BT /F1 11 Tf 32 530 Td (UIT / IT003 / Synthetic study material) Tj ET
+BT /F1 22 Tf 32 492 Td (Complexity and invariants) Tj ET
+BT /F1 10 Tf 32 470 Td (With adjacency lists, traversal visits vertices and edges.) Tj ET
+0.65 0.72 0.78 RG 1 w 52 428 m 368 428 l S
+0.03 0.41 0.71 RG 1.5 w 92 354 m 200 392 l 316 354 l S 92 354 m 200 302 l 316 354 l S
+0.92 0.96 0.99 rg 186 378 28 28 re f
+0.03 0.41 0.71 RG 186 378 28 28 re S
+0.06 0.16 0.26 rg BT /F1 13 Tf 195 386 Td (A) Tj ET
+0.92 0.96 0.99 rg 78 340 28 28 re f
+0.03 0.41 0.71 RG 78 340 28 28 re S
+0.06 0.16 0.26 rg BT /F1 13 Tf 87 348 Td (B) Tj ET
+0.92 0.96 0.99 rg 302 340 28 28 re f
+0.03 0.41 0.71 RG 302 340 28 28 re S
+0.06 0.16 0.26 rg BT /F1 13 Tf 311 348 Td (C) Tj ET
+0.92 0.96 0.99 rg 186 288 28 28 re f
+0.03 0.41 0.71 RG 186 288 28 28 re S
+0.06 0.16 0.26 rg BT /F1 13 Tf 195 296 Td (D) Tj ET
+BT /F1 11 Tf 32 240 Td (Time: O\(V + E\) for an adjacency-list traversal.) Tj ET
+BT /F1 11 Tf 32 210 Td (Auxiliary space: O\(V\) for visited state and frontier.) Tj ET
+BT /F1 11 Tf 32 180 Td (Disconnected graphs require additional start vertices.) Tj ET
+0.4 0.46 0.5 rg BT /F1 9 Tf 32 48 Td (Authored fixture / No university account data) Tj ET
+BT /F1 10 Tf 354 48 Td (3 / 3) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000001497 00000 n 
+0000001623 00000 n 
+0000002892 00000 n 
+0000003018 00000 n 
+0000004334 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+4404
+%%EOF

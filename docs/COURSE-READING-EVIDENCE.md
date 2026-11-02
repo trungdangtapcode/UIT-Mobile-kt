@@ -21,6 +21,13 @@ normal GitHub Android 11/API 30 job alongside the eight existing native tests.
 Final-head results and captured native pages are linked on the PR after CI completes.
 No paid model test or university credential is required for this feature.
 
+The first native run passed 10 of 11 cases, including the renderer and encrypted
+storage tests. The reader workflow timed out during pinch after creating a centered
+note. Its gesture coordinates were changed to scale with the visible page and
+avoid the annotation button's touch target; the canvas is scrolled into view before
+gestures. Failure captures are now collected without masking the test exit status.
+See the PR's final-head report for the subsequent complete native result.
+
 ## Host rendering boundary
 
 The 25 host captures below use the production Compose screens and ViewModel with

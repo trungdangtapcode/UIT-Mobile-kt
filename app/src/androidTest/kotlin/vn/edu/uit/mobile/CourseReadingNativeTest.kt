@@ -145,12 +145,13 @@ class CourseReadingNativeTest {
             compose.onNodeWithTag("reading-note-editor").performTextInput("Synthetic native page note")
             compose.onNodeWithTag("reading-save-note").performClick()
             compose.waitUntil(15000) { vm.uiState.value.record?.notes?.size == 1 && vm.uiState.value.draft == null && !vm.uiState.value.saving }
-            compose.onNodeWithTag("reading-page").performTouchInput {
-                pinch(center - Offset(40f, 0f), center + Offset(40f, 0f), center - Offset(100f, 0f), center + Offset(100f, 0f))
+            compose.onNodeWithTag("reading-page").performScrollTo().performTouchInput {
+                // Start on the page, outside the centered note's native touch target at any density.
+                pinch(center - Offset(width * .25f, 0f), center + Offset(width * .25f, 0f), center - Offset(width * .4f, 0f), center + Offset(width * .4f, 0f))
             }
             compose.waitUntil(15000) { vm.uiState.value.position.zoom > 1f }
             compose.onNodeWithText("Fit page").performScrollTo().performClick()
-            compose.onNodeWithTag("reading-page").performScrollTo().performTouchInput { doubleClick(center) }
+            compose.onNodeWithTag("reading-page").performScrollTo().performTouchInput { doubleClick(Offset(width * .2f, height * .2f)) }
             compose.waitUntil(15000) { vm.uiState.value.position.zoom > 1f }
             compose.runOnIdle { vm.savePosition() }
             compose.waitUntil(15000) { !vm.uiState.value.dirty && !vm.uiState.value.saving }
@@ -175,6 +176,9 @@ class CourseReadingNativeTest {
             assertArrayEquals(ReadingFixtures.pdf, pdf.readBytes())
             compose.runOnIdle { connected.value = emptyList() }
             compose.waitUntil(15000) { vm.uiState.value.image == null && vm.uiState.value.record == null }
+        } catch (failure: Throwable) {
+            runCatching { screenshot("reading-native-failure") }
+            throw failure
         } finally {
             InstrumentationRegistry.getInstrumentation().runOnMainSync { models.clear() }
             root.deleteRecursively()

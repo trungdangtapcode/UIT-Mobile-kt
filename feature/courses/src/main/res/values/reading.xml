@@ -57,7 +57,7 @@
     <string name="rd_archived">Saved record · page images are not opened. Notes below belong to this exact document version.</string>
     <string name="rd_export">Export reading notes</string>
     <string name="rd_export_title">Export preview</string>
-    <string name="rd_export_help">Create a JSON file containing the document name/version, reading position, page bookmarks and note text/pins. It contains no PDF bytes, account ID, source URL or credentials. The exported file is outside app storage.</string>
+    <string name="rd_export_help">Create a JSON file containing the document name/version, reading position, page bookmarks and note text/pins. The app adds no PDF bytes, account ID, source URL or credentials. Note text is exported as written. The file is outside app storage.</string>
     <string name="rd_export_file">Choose export location</string>
     <string name="rd_export_done">Reading notes exported.</string>
     <string name="rd_delete_record">Delete local reading record</string>

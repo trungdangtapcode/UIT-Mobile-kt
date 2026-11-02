@@ -65,13 +65,13 @@ jobs:
           disable-animations: true
           script: |
             adb wait-for-device
-            ./gradlew :app:connectedDebugAndroidTest --no-daemon -Dorg.gradle.jvmargs="-Xmx1536m -Dfile.encoding=UTF-8" -Dkotlin.daemon.jvmargs="-Xmx512m" -Dorg.gradle.workers.max=2 -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true
+            reading_native_status=0
+            ./gradlew :app:connectedDebugAndroidTest --no-daemon -Dorg.gradle.jvmargs="-Xmx1536m -Dfile.encoding=UTF-8" -Dkotlin.daemon.jvmargs="-Xmx512m" -Dorg.gradle.workers.max=2 -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true || reading_native_status=$?
             mkdir -p build/auth-smoke
-            adb exec-out run-as vn.edu.uit.mobile cat files/auth-smoke/moodle-login.png > build/auth-smoke/moodle-login.png
-            adb exec-out run-as vn.edu.uit.mobile cat files/auth-smoke/sso-login.png > build/auth-smoke/sso-login.png
-            adb exec-out run-as vn.edu.uit.mobile cat files/auth-smoke/reading-native-page.png > build/auth-smoke/reading-native-page.png
-            adb exec-out run-as vn.edu.uit.mobile cat files/auth-smoke/reading-native-restored.png > build/auth-smoke/reading-native-restored.png
-            adb exec-out run-as vn.edu.uit.mobile cat files/auth-smoke/reading-export.json > build/auth-smoke/reading-export.json
+            for capture in moodle-login.png sso-login.png reading-native-page.png reading-native-restored.png reading-native-failure.png reading-export.json; do
+              adb exec-out run-as vn.edu.uit.mobile cat "files/auth-smoke/$capture" > "build/auth-smoke/$capture" || true
+            done
+            exit "$reading_native_status"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

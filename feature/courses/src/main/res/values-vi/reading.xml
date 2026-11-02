@@ -57,7 +57,7 @@
     <string name="rd_archived">Bản ghi đã lưu · chưa mở ảnh trang. Ghi chú bên dưới thuộc đúng phiên bản tài liệu này.</string>
     <string name="rd_export">Xuất ghi chú đọc</string>
     <string name="rd_export_title">Xem trước bản xuất</string>
-    <string name="rd_export_help">Tạo file JSON gồm tên/phiên bản tài liệu, vị trí đọc, dấu trang và nội dung/ghim ghi chú. Không chứa PDF, mã tài khoản, URL nguồn hay thông tin đăng nhập. File xuất nằm ngoài bộ nhớ ứng dụng.</string>
+    <string name="rd_export_help">Tạo file JSON gồm tên/phiên bản tài liệu, vị trí đọc, dấu trang và nội dung/ghim ghi chú. Ứng dụng không thêm PDF, mã tài khoản, URL nguồn hay thông tin đăng nhập. Nội dung ghi chú được xuất nguyên văn. File xuất nằm ngoài bộ nhớ ứng dụng.</string>
     <string name="rd_export_file">Chọn nơi xuất</string>
     <string name="rd_export_done">Đã xuất ghi chú đọc.</string>
     <string name="rd_delete_record">Xóa lịch sử đọc cục bộ</string>

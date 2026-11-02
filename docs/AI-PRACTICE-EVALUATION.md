@@ -122,6 +122,23 @@ suite. The local rootless server builds its APK but cannot execute Android
 Keystore instrumentation. CI's existing sign-in smoke opens public unauthenticated
 forms; it does not receive a student password or submit a student login.
 
+## Additional local regression review
+
+A follow-up review reproduced three further bugs before fixing them:
+
+| Reproduction | Corrected behavior |
+| --- | --- |
+| Cached instructions change while the offline source loader is suspended | Reject the stale selection, require explicit reload and send no AI request |
+| Reload a saved library scoped to a course | Keep the library open and retain saved records; do not switch to generation |
+| A supplementary Unicode character straddles the notebook text cap | Preserve a valid UTF-8-round-trippable prefix instead of splitting a surrogate pair |
+
+The three regression tests failed against the preceding implementation. The phone
+flow also clicks Reload local library and checks that it remains in the library.
+This review uses local test adapters and the already downloaded notebook; it
+requires no university login or new paid model call. Literal Markdown/LaTeX is
+preserved for source matching, but the UI does not yet provide rich Markdown or
+mathematical typesetting. Human semantic quality evaluation remains pending.
+
 ## Full phone flow
 
 `PracticeDesignTest` uses the real `PracticeViewModel`, `LocalPracticeRepository`,

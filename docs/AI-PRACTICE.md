@@ -87,7 +87,10 @@ Quotation validation stays literal after whitespace normalization. Both direct
 and gateway instructions require copied Markdown emphasis, backticks, LaTeX and
 punctuation, in the source's language even when the answer uses Vietnamese.
 Formatting-stripped or translated quotes are rejected rather than treated as
-verified evidence.
+verified evidence. Model output remains structured JSON; Markdown may appear
+inside its text fields. The current phone UI displays literal source/answer text,
+not rendered Markdown, syntax-highlighted code or typeset LaTeX. Preserving source
+markup for evidence is separate from adding a rich-text renderer.
 
 ## Contract and mechanical validation
 
@@ -142,6 +145,10 @@ source ID, title and text. Question version includes its content and citations;
 set version includes owner/course, title, language, source version and ordered
 question versions. IDs and generation timestamps are not used for content
 deduplication. There is no claim that a hash proves semantic correctness.
+
+Source loading rechecks the cached metadata after asynchronous reads. If it changed
+mid-load, the selection is rejected and must be explicitly reloaded. Reloading a
+course-scoped saved library refreshes local records without opening generation.
 
 While a course is open, loaded cache changes invalidate an unsaved draft and
 require source reload before generation. Saved sets retain their historical

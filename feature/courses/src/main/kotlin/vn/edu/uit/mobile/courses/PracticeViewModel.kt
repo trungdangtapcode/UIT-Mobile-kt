@@ -159,7 +159,7 @@ class PracticeViewModel(private val ai: StudyAiRepository, private val library: 
     override fun reload() {
         if (state.value.busy)return
         val course = state.value.course
-        if (course == null) {
+        if (course == null || state.value.stage == PracticeStage.LIBRARY) {
             launch(PracticeProblem.LOAD) {
                 val data = library.collections.first()
                 val connection = ai.connection()
@@ -175,10 +175,19 @@ class PracticeViewModel(private val ai: StudyAiRepository, private val library: 
             val snapshot = portal.snapshot.first()
             val localSections = snapshot.sections["${course.accountId}:${course.id}"] ?: sections
             val localAssignments = snapshot.assignments.filter { it.accountId == course.accountId && it.courseId == course.id }.ifEmpty { assignments.filter { it.accountId == course.accountId && it.courseId == course.id } }
-            val sources = withContext(io) { catalog(course, localSections, localAssignments) + offline.load(course, localSections, localAssignments) }
+            val (sources, sourceStamp) = withContext(io) {
+                val stamp = stamp(snapshot, course)
+                (catalog(course, localSections, localAssignments) + offline.load(course, localSections, localAssignments)) to stamp
+            }
             val connection = ai.connection()
+            val latest = portal.snapshot.first()
             currentCoroutineContext().ensureActive()
-            metadata = stamp(snapshot, course)
+            if (sourceStamp != stamp(latest, course)) {
+                metadata = ""
+                state.value = state.value.copy(sources = emptyList(), selected = emptySet(), draft = null, sourceChanged = true, catalogChecked = false, problem = PracticeProblem.CHANGED, stage = PracticeStage.SELECT)
+                return@launch
+            }
+            metadata = sourceStamp
             state.value = state.value.copy(sources = sources.distinctBy { it.id }, selected = emptySet(), draft = null, generationMessage = "", connection = connection, sourceChanged = false, catalogChecked = true, stage = PracticeStage.SELECT)
         }
     }

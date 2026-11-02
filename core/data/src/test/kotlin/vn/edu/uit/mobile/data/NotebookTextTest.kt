@@ -48,4 +48,16 @@ class NotebookTextTest {
         assertFalse(text.contains("OUTPUT_SENTINEL"))
         assertNull(extractNotebookText(ByteArray(8 * 1024 * 1024 + 1)))
     }
+
+    @Test fun truncationCannotSplitASupplementaryUnicodeCharacter() {
+        val heading = "[Markdown cell 1]\n"
+        val cell = buildJsonObject {
+            put("cell_type", "markdown")
+            put("source", "a".repeat(12_000 - heading.length - 1) + "😀 trailing text")
+        }
+        val text = requireNotNull(extractNotebookText(notebook(cell.toString())))
+        assertFalse(text.last().isHighSurrogate())
+        assertEquals(text, text.toByteArray(Charsets.UTF_8).toString(Charsets.UTF_8))
+        assertTrue(text.length <= 12_000)
+    }
 }

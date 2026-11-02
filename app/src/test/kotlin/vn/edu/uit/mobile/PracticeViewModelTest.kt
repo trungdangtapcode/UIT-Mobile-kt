@@ -52,6 +52,7 @@ class PracticeViewModelTest {
         override fun removeAccount(accountId: String) = error("Account removal is not invoked by this test adapter")
     }
     private val local = LocalPracticeRepository(storage, owners, io = dispatcher) { 1793386800 }
+    private var sourcePending: CompletableDeferred<List<StudySource>>? = null
     private val ai = object : StudyAiRepository {
         var calls = 0
         var fail = false
@@ -73,7 +74,7 @@ class PracticeViewModelTest {
 
     @Before fun setup() {
         Dispatchers.setMain(dispatcher)
-        vm = PracticeViewModel(ai, local, owners, portal, OfflineCourseSourceLoader { _, _, _ -> listOf(PracticeFixtures.source) }, io = dispatcher)
+        vm = PracticeViewModel(ai, local, owners, portal, OfflineCourseSourceLoader { _, _, _ -> sourcePending?.await() ?: listOf(PracticeFixtures.source) }, io = dispatcher)
         store.put("practice", vm)
     }
 
@@ -122,6 +123,41 @@ class PracticeViewModelTest {
         assertEquals(PracticeStage.PREVIEW, vm.uiState.value.stage)
         assertTrue(vm.uiState.value.records.isEmpty())
         assertTrue(universityCalls.all { it in setOf("getSnapshot", "getSyncState") })
+    }
+
+    @Test fun metadataChangingDuringSourceLoadingCannotBecomeACurrentSelection() = checkModel {
+        runCurrent()
+        sourcePending = CompletableDeferred()
+        vm.open(course, emptyList(), emptyList())
+        runCurrent()
+        assertTrue(vm.uiState.value.busy)
+        snapshot.value = snapshot.value.copy(assignments = listOf(Assignment(1, 1, 1, "Changed brief", "New cached instructions", 0, accountId = course.accountId)))
+        runCurrent()
+        sourcePending!!.complete(listOf(PracticeFixtures.source))
+        runCurrent()
+        assertTrue(vm.uiState.value.sourceChanged)
+        assertEquals(PracticeProblem.CHANGED, vm.uiState.value.problem)
+        vm.select(PracticeFixtures.source.id)
+        vm.options(PracticeOptions(count = 2))
+        vm.generate()
+        runCurrent()
+        assertEquals(0, ai.calls)
+        assertNull(vm.uiState.value.draft)
+        sourcePending = null
+        vm.reload()
+        runCurrent()
+        assertFalse(vm.uiState.value.sourceChanged)
+        assertTrue(vm.uiState.value.sources.any { it.id == "assignment:1" })
+    }
+
+    @Test fun reloadingACourseScopedLibraryKeepsTheSavedLibraryOpen() = checkModel {
+        val record = saved()
+        assertEquals(PracticeStage.LIBRARY, vm.uiState.value.stage)
+        vm.reload()
+        runCurrent()
+        assertEquals(PracticeStage.LIBRARY, vm.uiState.value.stage)
+        assertEquals(record, vm.uiState.value.records.single())
+        assertEquals(1, ai.calls)
     }
 
     @Test fun editsReorderAndDeletionStayInTheDraftUntilExplicitSave() = checkModel {

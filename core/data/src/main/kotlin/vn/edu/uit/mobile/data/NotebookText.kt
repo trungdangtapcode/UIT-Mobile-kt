@@ -32,8 +32,10 @@ internal fun extractNotebookText(bytes: ByteArray): String? = runCatching {
         if (source.isBlank()) continue
         val heading = if (type == "code") "Code" else "Markdown"
         val part = "${if (out.isEmpty()) "" else "\n\n"}[$heading cell ${index + 1}]\n$source"
-        out.append(part.take(12_000 - out.length))
-        if (out.length == 12_000) break
+        val end = minOf(part.length, 12_000 - out.length)
+        val safeEnd = if (end > 0 && end < part.length && part[end - 1].isHighSurrogate() && part[end].isLowSurrogate()) end - 1 else end
+        out.append(part, 0, safeEnd)
+        if (end < part.length || out.length == 12_000) break
     }
     out.toString().trim().takeIf { it.isNotBlank() }
 }.getOrNull()

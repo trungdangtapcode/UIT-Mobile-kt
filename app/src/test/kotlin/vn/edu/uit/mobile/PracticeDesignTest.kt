@@ -139,6 +139,8 @@ class PracticeDesignTest {
         compose.onNodeWithText("Close", substring = false).performClick()
         pump()
         click("Save reviewed set")
+        click("Reload local library")
+        assertEquals(PracticeStage.LIBRARY, vm.uiState.value.stage)
         capture("practice-bank-390-phone")
         assertEquals(1, vm.uiState.value.records.size)
         click("Practice")

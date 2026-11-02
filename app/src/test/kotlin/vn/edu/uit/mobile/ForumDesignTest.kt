@@ -4,9 +4,6 @@ import android.app.Application
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
-import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
-import com.github.takahirom.roborazzi.captureScreenRoboImage
-import java.io.File
 import org.junit.*
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -20,7 +17,7 @@ import vn.edu.uit.mobile.forum.network.ForumParser
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w390dp-h844dp-mdpi", application = Application::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@OptIn(ExperimentalRoborazziApi::class)
+/** Fixture-based behavior checks only; published Forum captures must use live UIT responses. */
 class ForumDesignTest {
     @get:Rule val compose = createComposeRule()
 
@@ -31,24 +28,13 @@ class ForumDesignTest {
     private fun show(state: ForumState) {
         compose.setContent { UitTheme(dark = true, dynamic = false) { WorkspaceFrame(3, {}, {}, "", false, false, 0) { ForumContent(state) } } }
     }
-    private fun capture(name: String) {
-        if (java.lang.Boolean.getBoolean("roborazzi.test.record")) {
-            compose.waitForIdle()
-            compose.mainClock.advanceTimeBy(64)
-            compose.waitForIdle()
-            captureScreenRoboImage(File(System.getProperty("uit.preview.dir"), "$name.png").absolutePath)
-        }
-    }
-
     @Test fun publicFeed390() {
         show(state())
         compose.onNodeWithText(ForumFixtures.TITLE).assertExists()
-        capture("forum-latest-390-phone")
     }
 
     @Test fun categoryHierarchy390() {
         show(state().copy(tab = ForumTab.CATEGORIES))
-        capture("forum-categories-390-phone")
     }
 
     @Test
@@ -57,18 +43,14 @@ class ForumDesignTest {
         val doc = ForumParser.parse(ForumRequest.Search("small input"), ForumFixtures.SEARCH)
         show(state().copy(tab = ForumTab.SEARCH, query = "small input", hits = doc.hits))
         compose.onNodeWithText("Post #99").assertExists()
-        capture("forum-search-412-phone")
     }
 
     @Test fun topicAndRichBody390() {
         val request = ForumRequest.Topic(901)
         val doc = ForumParser.parse(request, ForumFixtures.response(request))
         show(state().copy(topic = doc.topic, posts = doc.posts, stream = doc.stream, start = 0, end = 20))
-        capture("forum-topic-390-phone")
         compose.onNodeWithTag("forum-reader").performScrollToNode(hasText("Prepare your workspace"))
-        capture("forum-rich-content-390-phone")
         compose.onNodeWithText("Load image").performScrollTo().assertIsDisplayed()
-        capture("forum-table-images-390-phone")
     }
 
     @Test fun refreshingLocalLibraryKeepsItsDestination() {
@@ -98,7 +80,6 @@ class ForumDesignTest {
     fun localLibrary360VietnameseLargeText() {
         RuntimeEnvironment.setFontScale(1.3f)
         show(state().copy(tab = ForumTab.SAVED, offline = true, local = ForumLocalState(saved = listOf(ForumFixtures.topic), positions = listOf(ForumPosition(ForumFixtures.topic, 1050, 99, 16)), savedAt = mapOf(901L to ForumFixtures.AT - 3600))))
-        capture("forum-saved-360-vi-large-phone")
     }
 
     @Test
@@ -106,11 +87,9 @@ class ForumDesignTest {
     fun unavailable360() {
         show(state().copy(topic = ForumFixtures.topic, error = ForumFailure.UNAVAILABLE, posts = emptyList()))
         compose.onNodeWithText("This content is private, removed or unavailable to an anonymous reader.").assertExists()
-        capture("forum-unavailable-360-phone")
     }
 
     @Test fun rateLimit390() {
         show(state().copy(error = ForumFailure.RATE_LIMIT))
-        capture("forum-rate-limit-390-phone")
     }
 }

@@ -29,4 +29,8 @@ browser handoff showing the destination. No WebView executes forum content.
 
 Validate 360dp, 390dp and 412dp portraits, Vietnamese with larger text, search
 matches, long-topic navigation, local saved state, offline and unavailable states.
-Synthetic fixtures keep personal information out of review screenshots.
+Published Forum screenshots must come from live UIT Forum responses through the
+production client, parser, repository and Compose reader. Behavior tests may use
+fixtures but must not export screenshots. Inspect public captures before
+publishing; account screenshots and student support replies remain local.
+See the gallery provenance manifest for source routes, capture time and hashes.

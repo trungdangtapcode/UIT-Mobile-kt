@@ -1,0 +1,37 @@
+{
+  "captured_at_utc": "2026-11-02T18:51:26.673089932Z",
+  "origin": "https://forum.uit.edu.vn",
+  "data": "Live HTTPS responses; no fixture substitution or edited content",
+  "runtime": "Production Compose, ViewModel, repository, parser and anonymous client on Robolectric",
+  "viewport_dp": [
+    390,
+    844
+  ],
+  "locale": "vi-VN",
+  "account_mode": "anonymous public reader",
+  "device_capture": false,
+  "persistence": "in-memory test storage",
+  "command": "./gradlew :app:testDebugUnitTest --tests '*ForumLiveDesignTest' -PforumLive=true -PrecordUi=true",
+  "captures": [
+    {
+      "file": "forum-real-latest.png",
+      "primary_source": "https://forum.uit.edu.vn/latest.json?page=0",
+      "sha256": "6710b303c71a3fd2ec692f2a581c3d3e26cdc02645f51a2fcbb8626536268a51"
+    },
+    {
+      "file": "forum-real-categories.png",
+      "primary_source": "https://forum.uit.edu.vn/site.json",
+      "sha256": "a4ec8317d5cfd0ff03f6e374ba51d2d67fb2e5ce197a3fe45ea750499d84b96d"
+    },
+    {
+      "file": "forum-real-announcement.png",
+      "primary_source": "https://forum.uit.edu.vn/t/164929.json",
+      "sha256": "ead02d58c99685768d6db93a2cbe19883aed2630979c2c452ca993d6b516dbd7"
+    },
+    {
+      "file": "forum-real-announcement-body.png",
+      "primary_source": "https://forum.uit.edu.vn/t/164929.json",
+      "sha256": "065c02eb53a69ada32e53953d480bc33c8018e35010525865b170c5746d89874"
+    }
+  ]
+}

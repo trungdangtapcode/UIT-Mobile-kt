@@ -5,14 +5,12 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import androidx.activity.ComponentActivity
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.security.KeyStore
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
@@ -91,8 +89,6 @@ class ForumNativeTest {
             compose.waitUntil(15000) { !vm.uiState.value.loading && vm.uiState.value.offline }
             compose.onNodeWithTag("forum-reader").performScrollToNode(hasText("Prepare your workspace"))
             compose.onNodeWithContentDescription("Authored lab diagram").performScrollTo().assertIsDisplayed()
-            val destination = File(context.filesDir, "auth-smoke/forum-native-reader.png").apply { parentFile!!.mkdirs() }
-            destination.outputStream().use { compose.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it) }
             compose.runOnIdle {
                 vm.back()
                 vm.tab(ForumTab.SAVED)

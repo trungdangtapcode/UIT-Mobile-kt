@@ -53,8 +53,9 @@ appearance choices remain unchanged.
 | Data states | [Sign-in](previews/dashboard-connect-phone.png) · [Canceled class](previews/dashboard-canceled-phone.png) · [Empty day](previews/dashboard-empty-day-phone.png) · [Overdue work](previews/dashboard-overdue-phone.png) |
 
 These are the actual Compose components rendered with Robolectric native graphics
-and Roborazzi. Names, grades, courses and messages are synthetic test fixtures;
-production screens read repository data. No credentials are needed to render them.
+and Roborazzi. Unless a section identifies live sources (as the Forum gallery
+does), names, grades, courses and messages are synthetic test fixtures;
+production screens read repository data. Each section states its evidence scope.
 Screenshots and passing tests do not constitute visual approval.
 
 Widget images inflate and draw the actual Android RemoteViews, with a 16dp outer
@@ -63,20 +64,28 @@ screenshots of an installed launcher. The widget pin chooser uses actual Compose
 
 ## UIT Forum
 
-The dedicated public reader preserves the five bottom destinations. These are
-actual Compose phone renders with authored content and no university credentials.
-The entry capture uses the Activity's device palette; the reader gallery pins the
-UIT blue palette for consistent review.
+The gallery below uses **real responses from https://forum.uit.edu.vn**, loaded
+by the production anonymous client, parser, repository, ViewModel and Compose UI.
+These are 390 × 844 dp Vietnamese phone renders on Robolectric, not screenshots
+from an installed APK. No authored topic or response is substituted.
 
-| State | Phone render |
+| Actual UIT content | Phone render |
 | --- | --- |
-| Entry and feed | [Inbox entry](previews/forum-inbox-entry-390-phone.png) · [Latest, 390dp](previews/forum-latest-390-phone.png) |
-| Discovery | [Categories](previews/forum-categories-390-phone.png) · [Post-level search, 412dp](previews/forum-search-412-phone.png) |
-| Topic | [Title and first post](previews/forum-topic-390-phone.png) · [Quote and code](previews/forum-rich-content-390-phone.png) · [Table and opt-in image](previews/forum-table-images-390-phone.png) |
-| Local and failures | [Saved, Vietnamese 1.3× at 360dp](previews/forum-saved-360-vi-large-phone.png) · [Unavailable, 360dp](previews/forum-unavailable-360-phone.png) · [Rate limit](previews/forum-rate-limit-390-phone.png) |
+| Current public topics | [Latest](previews/forum-real-latest.png) |
+| Public category hierarchy | [Categories](previews/forum-real-categories.png) |
+| Official 2026–2027 gift announcement | [Topic](previews/forum-real-announcement.png) · [Body](previews/forum-real-announcement-body.png) |
 
-See [Forum behavior and limits](../FORUM.md), [research](../research/UIT-FORUM-READER.md)
-and [design](UIT-FORUM.md). Host renders do not establish device networking behavior.
+[Capture provenance and SHA-256 hashes](previews/forum-real-provenance.json)
+identify the sources and capture time. The announcement is available at
+[UIT Forum topic 164929](https://forum.uit.edu.vn/t/164929).
+The former fixture screenshots have been removed; behavior tests no longer
+export Forum screenshots. Missing/error/local states have automated coverage,
+not fabricated screenshots in this gallery.
+
+See [Forum behavior and reproduction](../FORUM.md),
+[research](../research/UIT-FORUM-READER.md) and [design](UIT-FORUM.md).
+The app's Forum client is anonymous; these images do not establish app SSO,
+Android Keystore behavior or device networking.
 
 ## Render on a rootless server
 

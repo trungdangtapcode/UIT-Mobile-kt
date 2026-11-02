@@ -128,10 +128,6 @@ class WidgetNavigationTest {
         try {
             compose.onNodeWithText("Inbox", substring = false).performClick()
             compose.onNodeWithText("Public campus discussions · no sign-in needed").assertExists()
-            if (java.lang.Boolean.getBoolean("roborazzi.test.record")) {
-                compose.waitForIdle()
-                captureScreenRoboImage(File(System.getProperty("uit.preview.dir"), "forum-inbox-entry-390-phone.png").absolutePath)
-            }
             compose.onNodeWithText("UIT Forum", substring = false).performClick()
             compose.waitUntil(15000) { compose.onAllNodesWithText(ForumFixtures.TITLE).fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText(ForumFixtures.TITLE).performClick()

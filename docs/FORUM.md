@@ -89,12 +89,13 @@ upstream contract, category metadata gaps and tracking caveat.
 [Aggregate live evidence](research/evidence/uit-forum-public.json) contains counts
 and route identifiers only. Raw live bodies and student identities are excluded.
 [Design notes](design/UIT-FORUM.md) and the [phone gallery](design/README.md) document
-the actual Compose UI. Screenshots use authored synthetic content.
+the actual Compose UI with real UIT Forum responses. Fixture-based behavior
+tests do not produce screenshots.
 
 ```sh
 ./gradlew :core:network:forum:test :feature:forum:testDebugUnitTest \
   :core:data:testDebugUnitTest
-./gradlew :app:testDebugUnitTest --tests '*ForumDesignTest' -PrecordUi=true
+./gradlew :app:testDebugUnitTest --tests '*ForumDesignTest'
 # Explicit manual network verification; not run by normal check/CI:
 ./gradlew :core:network:forum:researchPublicForum
 ```
@@ -102,13 +103,13 @@ the actual Compose UI. Screenshots use authored synthetic content.
 The Android instrumentation test exercises the production Compose reader,
 repository, parser and real Keystore with an authored transport fixture. It
 checks local save, restore, offline reading and clear without constructing any
-university account transport. Its screenshot is a native emulator capture;
-host-rendered screenshots are separately labeled in the gallery.
+university account transport. It does not export a screenshot. The gallery uses
+the separate live-data Compose scenario below.
 
 ### Live UI verification (manual, local only)
 
-The synthetic gallery and instrumentation fixture do **not** prove that the UI
-can display current UIT responses or that Forum sign-in works. To exercise the
+Fixture-based behavior tests do **not** prove current server compatibility or
+Forum sign-in. To exercise the
 actual production client, parser, repository, ViewModel and Compose reader
 together against the public server:
 
@@ -125,7 +126,10 @@ network work completes. Normal tests skip this network scenario.
 
 Images and `provenance.txt` stay under ignored `app/build/outputs/forum-live/`.
 They can contain student names or addresses from public posts; inspect locally
-and do not automatically publish them as repository or PR assets. No fixtures
+and do not automatically publish them as repository or PR assets. The gallery
+contains only manually inspected public feed/category/official-announcement
+captures with provenance; support replies and authenticated images stay local.
+No fixtures
 replace responses in this scenario. Persistence uses in-memory `StudyStorage`;
 the runtime is Robolectric, not an installed APK or Android emulator. This test
 does not verify Android Keystore, device TLS behavior or Forum authentication.

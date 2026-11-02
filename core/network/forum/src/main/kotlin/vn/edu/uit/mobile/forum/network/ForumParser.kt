@@ -18,10 +18,21 @@ object ForumParser {
             return when (request) {
                 ForumRequest.Categories -> {
                     require(root["categories"] is JsonArray)
-                    ForumDocument(categories = categories(root.a("categories")))
+                    val advertised = root.a("anonymous_list_filters").mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
+                    ForumDocument(categories = categories(root.a("categories")), filters = ForumFilter.entries.filter { it == ForumFilter.LATEST || it.route in advertised })
                 }
                 is ForumRequest.Category -> ForumDocument(categories = categories(listOf(root.o("category"))).filter { it.id == request.id })
-                is ForumRequest.Latest -> {
+                ForumRequest.Tags -> {
+                    require(root["tags"] is JsonArray)
+                    val tags = root.a("tags")
+                    ForumDocument(
+                        tags = tags.take(10000).map { it.jsonObject }.filter { !it.b("pm_only") }.map {
+                            ForumTag(it.n("id"), text(it.s("name").ifBlank { it.s("text") }).take(200), it.n("count").coerceIn(0, Int.MAX_VALUE.toLong()).toInt(), text(it.s("description")).take(1000))
+                        }.filter { it.id > 0 && it.name.isNotBlank() }.distinctBy { it.id },
+                        tagsTruncated = tags.size > 10000
+                    )
+                }
+                is ForumRequest.Latest, is ForumRequest.Feed -> {
                     require(root["topic_list"] is JsonObject && root.o("topic_list")["topics"] is JsonArray)
                     val list = root.o("topic_list")
                     ForumDocument(topics = list.a("topics").take(100).map { topic(it.jsonObject) }.filter { it.id > 0 }.distinctBy { it.id }, more = list.s("more_topics_url").isNotBlank())

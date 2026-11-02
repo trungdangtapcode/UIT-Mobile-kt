@@ -1,5 +1,5 @@
 {
-  "captured_at_utc": "2026-11-02T19:37:48.300324468Z",
+  "captured_at_utc": "2026-11-02T19:48:26.104046920Z",
   "origin": "https://forum.uit.edu.vn",
   "data": "Live HTTPS responses; no fixture substitution or edited content",
   "runtime": "Production Compose, ViewModel, repository, parser and anonymous client on Robolectric",
@@ -16,22 +16,22 @@
     {
       "file": "forum-real-latest.png",
       "primary_source": "https://forum.uit.edu.vn/latest.json?page=0",
-      "sha256": "584351b630c793ea8df99b27cc1018e74f68bc8496b4ca96a1d382906fea75a3"
+      "sha256": "512631b62739c12c5bd4a43cd458e0f42982f699f287c8dc146ef328ab20542a"
     },
     {
       "file": "forum-real-categories.png",
       "primary_source": "https://forum.uit.edu.vn/site.json",
-      "sha256": "769882f2a3ff47b42a43ef0607415d38dad3e923df8b2607414d42b976aa1ae2"
+      "sha256": "9378a75f1a41f2158fab3d71bf824cedcd63d8f75062a6240b0469b76b7e174d"
     },
     {
       "file": "forum-real-announcement.png",
       "primary_source": "https://forum.uit.edu.vn/t/164929.json",
-      "sha256": "3569c4373aa3c772a9c09fa6a81f1b584c19d05126f1e3fcdbfe406e410e9d4a"
+      "sha256": "d00152deb5443c9afe93cb13414faa8c9e1d7c798a8eae57beae308dd0cfd885"
     },
     {
       "file": "forum-real-announcement-body.png",
       "primary_source": "https://forum.uit.edu.vn/t/164929.json",
-      "sha256": "8024bdcb748bb31fa706544e55db1eadcae1aa46278e02275c7d83af17864bbf"
+      "sha256": "4c7cbccdcfc59dcf67d58bfa1060788683afa5c42eb279e7bd081bdb64e438fb"
     },
     {
       "file": "forum-real-image-fullscreen.png",
@@ -57,6 +57,29 @@
       "file": "forum-real-history-after.png",
       "primary_source": "https://forum.uit.edu.vn/posts/452924/revisions/2.json",
       "sha256": "df90843a1cb1c5735e736ed20ac47346dafa633e21f337122019c49a7cf44fbf"
+    },
+    {
+      "file": "forum-real-top-monthly.png",
+      "primary_source": "https://forum.uit.edu.vn/top.json?period=monthly&page=0",
+      "sha256": "b7e272526852e14a665c4f992071d6864efb9a8f956fc283d195edb9b6a1f12d"
+    },
+    {
+      "file": "forum-real-tags.png",
+      "primary_source": "https://forum.uit.edu.vn/tags.json",
+      "sha256": "83974adce73e7ae79e5e784bc83afbe69ecef36f4941be540e252a5401182230"
+    },
+    {
+      "file": "forum-real-tag-topics.png",
+      "primary_source": "https://forum.uit.edu.vn/tag/3531/l/latest.json?page=0",
+      "sha256": "7bf6dc463cca8d17ede19f31a2eafe135b5a880893d8f8d89c2c7f986997a8ae"
     }
-  ]
+  ],
+  "mobile_web_comparison": {
+    "file": "forum-web-top-monthly.png",
+    "source": "https://forum.uit.edu.vn/top?period=monthly",
+    "runtime": "Chromium mobile viewport 390x844, anonymous, GET/HEAD/OPTIONS only",
+    "captured_at_utc": "2026-11-02T19:47:09.706673+00:00",
+    "sha256": "84af941f586a5445266f813a018f1f5a335a5832dd86c031cbed1fc55b2c88db",
+    "observation": "The first four topic titles match the native monthly Top capture in order. Web counts replies; native counts total posts."
+  }
 }

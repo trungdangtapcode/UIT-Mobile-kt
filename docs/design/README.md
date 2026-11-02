@@ -66,12 +66,16 @@ screenshots of an installed launcher. The widget pin chooser uses actual Compose
 
 The gallery below uses **real responses from https://forum.uit.edu.vn**, loaded
 by the production anonymous client, parser, repository, ViewModel and Compose UI.
-These are 390 × 844 dp Vietnamese phone renders on Robolectric, not screenshots
-from an installed APK. No authored topic or response is substituted.
+Native captures are 390 × 844 dp Vietnamese phone renders on Robolectric, not
+screenshots from an installed APK. The explicitly marked mobile-web comparison
+is an anonymous Chromium capture at 390 × 844 CSS pixels. No authored topic or
+response is substituted.
 
 | Actual UIT content | Phone render |
 | --- | --- |
 | Current public topics | [Latest](previews/forum-real-latest.png) |
+| Monthly Top, compared with mobile web | [Native](previews/forum-real-top-monthly.png) · [Actual web](previews/forum-web-top-monthly.png) |
+| Server tag search and selection | [Tags](previews/forum-real-tags.png) · [Tagged topics](previews/forum-real-tag-topics.png) |
 | Public category hierarchy | [Categories](previews/forum-real-categories.png) |
 | Official 2026–2027 gift announcement | [Topic](previews/forum-real-announcement.png) · [Body](previews/forum-real-announcement-body.png) |
 | Actual uploaded image | [Fullscreen](previews/forum-real-image-fullscreen.png) · [Zoom](previews/forum-real-image-zoom.png) |

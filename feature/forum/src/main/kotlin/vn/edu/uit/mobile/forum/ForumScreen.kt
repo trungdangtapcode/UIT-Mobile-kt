@@ -40,7 +40,7 @@ import vn.edu.uit.mobile.feature.forum.R
         { raw ->
             val target = ForumUrls.target(raw)
             if (target != null) viewModel.topic(target.topicId, target.postNumber) else ForumUrls.safe(raw)?.let { link = it }
-        }, viewModel::image, { url -> ForumUrls.safe(url)?.let { link = it } }, { post -> viewModel.history(post) }
+        }, viewModel::image, { url -> ForumUrls.safe(url)?.let { link = it } }, { post -> viewModel.history(post) }, viewModel::discover
     )
     if (state.historyPost != null) ForumHistoryDialog(state, viewModel::history, viewModel::closeHistory, { url -> ForumUrls.safe(url)?.let { link = it } }, viewModel::image)
     link?.let { url ->
@@ -87,9 +87,11 @@ import vn.edu.uit.mobile.feature.forum.R
     onLink: (String) -> Unit = {},
     imageLoader: suspend (String) -> ByteArray = { throw ForumException(ForumFailure.NETWORK) },
     onBrowser: (String) -> Unit = onLink,
-    onHistory: (ForumPost) -> Unit = {}
+    onHistory: (ForumPost) -> Unit = {},
+    onDiscover: (ForumFilter, ForumPeriod, ForumTag?) -> Unit = { _, _, _ -> }
 ) {
     val listState = rememberLazyListState()
+    LaunchedEffect(state.tab, state.filter, state.period, state.tag?.id, state.category?.id, state.query) { listState.scrollToItem(0) }
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(if (state.topic == null) R.string.f_close else R.string.f_back)) }
@@ -138,6 +140,12 @@ import vn.edu.uit.mobile.feature.forum.R
             ForumReader(state, onTopic, onSave, onWindow, onPosition, onLink, imageLoader, onBrowser, onHistory)
         } else {
             var query by rememberSaveable { mutableStateOf(state.query) }
+            var tagQuery by rememberSaveable { mutableStateOf("") }
+            if (state.tab == ForumTab.LATEST && state.category == null) ForumFeedControls(state, onDiscover)
+            if (state.tab == ForumTab.TAGS) {
+                OutlinedTextField(tagQuery, { tagQuery = it.take(200) }, Modifier.fillMaxWidth().testTag("forum-tag-query"), label = { Text(stringResource(R.string.f_find_tag)) }, singleLine = true, shape = TechnicalShapes.Control)
+                if (state.tagsTruncated) Text(stringResource(R.string.f_tags_truncated), style = MaterialTheme.typography.labelSmall)
+            }
             if (state.tab == ForumTab.SEARCH) {
                 OutlinedTextField(query, { query = it.take(200) }, Modifier.fillMaxWidth().testTag("forum-query"), label = { Text(stringResource(R.string.f_search_hint)) }, maxLines = 3, shape = TechnicalShapes.Control)
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -147,6 +155,18 @@ import vn.edu.uit.mobile.feature.forum.R
             }
             LazyColumn(Modifier.weight(1f).testTag("forum-list"), state = listState, contentPadding = PaddingValues(bottom = 24.dp)) {
                 when (state.tab) {
+                    ForumTab.TAGS -> {
+                        val tags = state.tags.filter { it.name.contains(tagQuery.trim(), ignoreCase = true) }.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+                        if (tags.isEmpty() && !state.loading) item { Text(stringResource(R.string.f_no_tags), Modifier.padding(vertical = 24.dp)) }
+                        items(tags, key = { it.id }) { tag ->
+                            Column(Modifier.fillMaxWidth().clickable { onDiscover(ForumFilter.LATEST, state.period, tag) }.padding(vertical = 12.dp).testTag("forum-tag-${tag.id}"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(tag.name, style = MaterialTheme.typography.titleMedium)
+                                Text(stringResource(R.string.f_tag_topics, tag.count), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                if (tag.description.isNotBlank()) Text(tag.description, style = MaterialTheme.typography.bodySmall)
+                            }
+                            HorizontalDivider()
+                        }
+                    }
                     ForumTab.CATEGORIES -> {
                         val sorted = state.categories.filter { it.parentId == null }.flatMap { parent -> listOf(parent) + state.categories.filter { it.parentId == parent.id }.sortedBy { it.name } } + state.categories.filter { it.parentId != null && state.categories.none { p -> p.id == it.parentId } }
                         items(sorted, key = { it.id }) { category ->
@@ -288,8 +308,9 @@ import vn.edu.uit.mobile.feature.forum.R
     Text(stringResource(R.string.f_empty), Modifier.padding(vertical = 24.dp), style = MaterialTheme.typography.bodyLarge)
 }
 private fun tabLabel(tab: ForumTab) = when (tab) {
-    ForumTab.LATEST -> R.string.f_latest
+    ForumTab.LATEST -> R.string.f_topics
     ForumTab.CATEGORIES -> R.string.f_categories
+    ForumTab.TAGS -> R.string.f_tags
     ForumTab.SEARCH -> R.string.f_search
     ForumTab.SAVED -> R.string.f_saved
 }

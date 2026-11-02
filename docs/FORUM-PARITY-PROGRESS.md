@@ -2,7 +2,7 @@
 
 This is implementation progress against the [46-row matrix](research/UIT-FORUM-PARITY.md),
 not a full-parity completion claim. The implementation branch is
-`feat/uit-forum-parity`, stacked on `feat/uit-forum-reader` (PR #78).
+`feat/uit-forum-parity` ([draft PR #79](https://github.com/trungdangtapcode/UIT-Mobile-kt/pull/79)), stacked on `feat/uit-forum-reader` (PR #78).
 
 ## Content, media and history increment
 
@@ -26,6 +26,34 @@ kept separate from server display-version numbers. Hidden history is rejected;
 history is neither persisted nor replayed offline. Cancelled/dismissed history
 cannot reappear through a late response. No edit/revert operation is implemented.
 Metadata-only changes and media diffs still need broader parity work.
+
+## Public discovery increment
+
+The Topics tab supports Latest, Top, Hot and Votes only when advertised in
+`anonymous_list_filters` from UIT `/site.json`. Authenticated-only list filters
+are not inferred from the broader `filters` array. Top supports day/week/month/
+quarter/year/all-time periods; labels describe elapsed periods rather than calendar
+weeks/months. Observed UIT monthly web dates span the preceding month.
+
+A Tags tab fetches `/tags.json`, keeps server IDs/counts/descriptions, excludes
+PM-only entries and searches the loaded directory locally. The directory is bounded
+to 10,000 entries and reports truncation. Selection opens a native topic list through
+`/tag/{id}/l/{filter}.json`. Pagination retains tag, sort and period. Switching a
+category clears the unrelated tag/sort; Back from a topic retains its feed selection.
+Denied/rate-limited feeds remain visible errors, not substituted empty success.
+
+Live UIT checks exercised weekly and monthly Top, Hot, Votes, tag search and the
+selected tag feed. A separate anonymous Chromium viewport at 390×844 opened
+`/top?period=monthly` with mutation methods blocked. Its first four titles matched
+the production native monthly list in order. The web labels replies; the app
+explicitly labels total posts (which includes the first post). No pixel-identical
+layout claim is intended.
+
+Observed guest `/tags/list.json?filter=uit&offset=0` returned 403, so the directory
+does not depend on or attempt to bypass that authenticated pagination route.
+Category/filter combinations, multiple-tag intersections, aliases, exact topic
+metadata and account-only lists remain open. The local tag filter only searches
+currently loaded public names; it is not a substitute for full server search.
 
 ## Evidence and limits
 
@@ -58,6 +86,7 @@ real university account is not used for mutation testing.
 
 | Rows | Progress | Still open |
 | --- | --- | --- |
+| F02, F04 | Advertised public sorts, Top periods and searchable server tag directory; real UIT and mobile-web comparison | Category/filter combinations, multiple tags, aliases and wider period/permission coverage |
 | F07, F12 | Reply-parent and attributed quote targets; nested quote content | Reply expansion, backlinks and return-to-anchor behavior |
 | F10–F11 | Inline spans and nested list/table content | Full whitespace/layout fidelity, complex table headers/spans and broader real examples |
 | F13 | Nested details and explicit spoiler concealment | Task controls and wider UIT content coverage |
@@ -66,8 +95,20 @@ real university account is not used for mutation testing.
 | F22 | Permitted history, before/after diff and revision navigation | Full metadata/media diffs, wider permission/device cases |
 | Other rows | Earlier reader behavior or research only | Authentication, account synchronization, participation and enabled extensions remain unfinished |
 
-A dedicated local Discourse environment is being prepared at the observed
-upstream revision for subsequent mutation tests. It is not connected to UIT and
+A dedicated local Discourse environment runs at the observed upstream revision
+for subsequent mutation tests. See [the isolated lab guide](FORUM-LAB.md). It is not connected to UIT and
 must not contain university credentials or private account content. Synthetic
 local server data is suitable for contract/action tests, not public Forum
 screenshot evidence.
+
+The isolated harness passed login/create/edit/reply/bookmark contract groups and
+sampled authenticated XHR read-state checks. [Aggregate evidence](research/evidence/uit-forum-local-contract.json)
+records zero production UIT requests. These writes are not wired into the app yet.
+The task-specific lab container was stopped after verification; its isolated data
+remains available for subsequent contract work.
+
+Validation: the full Gradle `check` and Android debug/instrumentation compilation
+passed after discovery implementation. After final localized period/tab wording,
+all 13 focused Forum UI/live tests passed and the debug APK was rebuilt. Network
+Forum tests total 25; Forum ViewModel tests total 9. Host captures and local server
+experiments do not replace installed-device or authenticated app acceptance.

@@ -37,6 +37,11 @@ class AnonymousForumClient(
     override suspend fun get(request: ForumRequest): String {
         val path = when (request) {
             ForumRequest.Categories -> "/site.json"
+            ForumRequest.Tags -> "/tags.json"
+            is ForumRequest.Feed -> {
+                require(request.page in 0..99 && (request.tagId?.let { it > 0 } != false))
+                request.tagId?.let { "/tag/$it/l/${request.filter.route}.json" } ?: "/${request.filter.route}.json"
+            }
             is ForumRequest.Category -> {
                 require(request.id > 0)
                 "/c/${request.id}/show.json"
@@ -65,6 +70,10 @@ class AnonymousForumClient(
         return requestBytes(ForumLimits.ORIGIN + path, 4 * 1024 * 1024, false, (request as? ForumRequest.Latest)?.takeIf { it.categoryId != null }) {
             when (request) {
                 is ForumRequest.Latest -> parameter("page", request.page)
+                is ForumRequest.Feed -> {
+                    parameter("page", request.page)
+                    if (request.filter == ForumFilter.TOP) parameter("period", request.period.route)
+                }
                 is ForumRequest.Search -> {
                     parameter("q", request.query)
                     parameter("page", request.page)

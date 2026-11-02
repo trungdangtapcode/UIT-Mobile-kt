@@ -153,3 +153,13 @@ blocked. Credentials and cookies were not persisted, and the screenshot remains
 local. Login can still update server-side session/last-login metadata. This
 confirms website authentication only: **the app's Forum transport is anonymous
 and does not yet implement Forum SSO**.
+
+## Discovery and isolated mutation research
+
+[The parity increment](FORUM-PARITY-PROGRESS.md) adds native public filters and a
+searchable tag directory as well as rich content, fullscreen images and revisions.
+The current app remains an anonymous reader. Account-based functionality is not
+implied by the availability of server capabilities or local upstream experiments.
+
+Use [the isolated Discourse lab](FORUM-LAB.md) for write-contract research. Never
+point the mutation harness at UIT or supply university credentials to it.

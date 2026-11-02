@@ -22,6 +22,8 @@ object ForumFixtures {
     fun response(request: ForumRequest): String = when (request) {
         is ForumRequest.Revision -> error("Revision fixture must be supplied explicitly")
         ForumRequest.Categories -> CATEGORIES
+        ForumRequest.Tags -> """{"tags":[]}"""
+        is ForumRequest.Feed -> if (request.page == 0) LATEST else """{"topic_list":{"topics":[]}}"""
         is ForumRequest.Category -> """{"category":{"id":${request.id},"name":"Public category"}}"""
         is ForumRequest.Latest -> if (request.page == 0) LATEST else """{"topic_list":{"topics":[]}}"""
         is ForumRequest.Search -> SEARCH

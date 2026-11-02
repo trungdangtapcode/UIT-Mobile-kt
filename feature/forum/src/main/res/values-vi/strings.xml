@@ -82,4 +82,20 @@
   <string name="f_diff_before">Trước</string>
   <string name="f_diff_after">Sau</string>
   <string name="f_diff_legend">Thêm: gạch chân · Xóa: gạch ngang</string>
+  <string name="f_tags">Thẻ</string>
+  <string name="f_find_tag">Tìm thẻ</string>
+  <string name="f_tags_truncated">Hiển thị 10.000 thẻ đầu tiên Forum trả về.</string>
+  <string name="f_no_tags">Không tìm thấy thẻ phù hợp.</string>
+  <string name="f_tag_topics">%1$d chủ đề</string>
+  <string name="f_all_tags">Tất cả thẻ</string>
+  <string name="f_top">Nổi bật</string>
+  <string name="f_hot">Sôi nổi</string>
+  <string name="f_votes">Nhiều bình chọn</string>
+  <string name="f_daily">Ngày qua</string>
+  <string name="f_weekly">Tuần qua</string>
+  <string name="f_monthly">Tháng qua</string>
+  <string name="f_quarterly">Quý qua</string>
+  <string name="f_yearly">Năm qua</string>
+  <string name="f_all_time">Mọi thời điểm</string>
+  <string name="f_topics">Chủ đề</string>
 </resources>

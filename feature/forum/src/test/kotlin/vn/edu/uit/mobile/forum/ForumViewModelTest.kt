@@ -31,7 +31,9 @@ class ForumViewModelTest {
                     ForumDocument(revision = ForumRevision(request.postId, request.version, null, null, "author", "", "", emptyList()))
                 }
                 is ForumRequest.Category -> ForumDocument()
-                ForumRequest.Categories -> ForumDocument(categories = listOf(ForumCategory(1, "Public")))
+                ForumRequest.Categories -> ForumDocument(categories = listOf(ForumCategory(1, "Public")), filters = listOf(ForumFilter.LATEST, ForumFilter.TOP, ForumFilter.HOT))
+                ForumRequest.Tags -> ForumDocument(tags = listOf(ForumTag(17, "algorithms", 2)))
+                is ForumRequest.Feed -> ForumDocument(topics = listOf(ForumTopic(request.page.toLong() + 10, "Filtered topic", 1, 3, "")), more = request.page == 0)
                 is ForumRequest.Latest -> ForumDocument(topics = listOf(ForumTopic(1, "Topic", 1, 1000, "")), more = true)
                 is ForumRequest.Search -> ForumDocument(hits = listOf(ForumHit(8, ForumTopic(1, "Topic", 1, 1000, ""), 123, "Matched reply")))
                 is ForumRequest.Topic -> {
@@ -54,6 +56,70 @@ class ForumViewModelTest {
         override suspend fun clear() {
             local = ForumLocalState()
         }
+    }
+
+    @Test fun discoveryKeepsFilterPeriodAndTagThroughPaginationAndBack() = runTest(dispatcher) {
+        val repo = Repo()
+        val vm = ForumViewModel(repo)
+        vm.open()
+        runCurrent()
+        vm.tags()
+        runCurrent()
+        val tag = vm.uiState.value.tags.single()
+        vm.discover(ForumFilter.TOP, ForumPeriod.MONTHLY, tag)
+        runCurrent()
+        assertEquals(ForumRequest.Feed(ForumFilter.TOP, 0, ForumPeriod.MONTHLY, 17), repo.calls.last())
+        vm.latest(append = true)
+        runCurrent()
+        assertEquals(ForumRequest.Feed(ForumFilter.TOP, 1, ForumPeriod.MONTHLY, 17), repo.calls.last())
+        assertEquals(2, vm.uiState.value.topics.size)
+        assertFalse(vm.uiState.value.more)
+        vm.topic(10)
+        runCurrent()
+        vm.back()
+        runCurrent()
+        assertEquals(tag, vm.uiState.value.tag)
+        assertEquals(ForumFilter.TOP, vm.uiState.value.filter)
+        assertEquals(2, vm.uiState.value.topics.size)
+        vm.discover(ForumFilter.HOT, tag = null)
+        runCurrent()
+        assertEquals(0, vm.uiState.value.page)
+        assertEquals(1, vm.uiState.value.topics.size)
+        assertNull(vm.uiState.value.tag)
+    }
+
+    @Test fun disabledFiltersAndRateLimitedSelectionCannotStartRequests() = runTest(dispatcher) {
+        val repo = Repo()
+        val vm = ForumViewModel(repo) { 100 }
+        vm.open()
+        runCurrent()
+        val before = repo.calls.size
+        vm.discover(ForumFilter.VOTES)
+        runCurrent()
+        assertEquals(before, repo.calls.size)
+        repo.failure = ForumFailure.RATE_LIMIT
+        vm.discover(ForumFilter.HOT)
+        runCurrent()
+        val calls = repo.calls.size
+        vm.discover(ForumFilter.TOP)
+        vm.tags()
+        runCurrent()
+        assertEquals(calls, repo.calls.size)
+        assertEquals(ForumFilter.HOT, vm.uiState.value.filter)
+    }
+
+    @Test fun categoryNavigationClearsUnrelatedTagAndSort() = runTest(dispatcher) {
+        val repo = Repo()
+        val vm = ForumViewModel(repo)
+        vm.open()
+        runCurrent()
+        vm.discover(ForumFilter.TOP, tag = ForumTag(17, "algorithms", 2))
+        runCurrent()
+        vm.latest(ForumCategory(1, "Public"))
+        runCurrent()
+        assertNull(vm.uiState.value.tag)
+        assertEquals(ForumFilter.LATEST, vm.uiState.value.filter)
+        assertEquals(ForumRequest.Latest(1), repo.calls.last())
     }
 
     @Test fun historyRespectsPermissionRateLimitAndIgnoresLateResultsAfterDismissal() = runTest(dispatcher) {

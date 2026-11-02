@@ -82,4 +82,20 @@
   <string name="f_diff_before">Before</string>
   <string name="f_diff_after">After</string>
   <string name="f_diff_legend">Added: underlined · Removed: struck through</string>
+  <string name="f_tags">Tags</string>
+  <string name="f_find_tag">Find a tag</string>
+  <string name="f_tags_truncated">Showing the first 10,000 tags returned by Forum.</string>
+  <string name="f_no_tags">No matching tags.</string>
+  <string name="f_tag_topics">%1$d topics</string>
+  <string name="f_all_tags">All tags</string>
+  <string name="f_top">Top</string>
+  <string name="f_hot">Hot</string>
+  <string name="f_votes">Most voted</string>
+  <string name="f_daily">Past day</string>
+  <string name="f_weekly">Past week</string>
+  <string name="f_monthly">Past month</string>
+  <string name="f_quarterly">Past quarter</string>
+  <string name="f_yearly">Past year</string>
+  <string name="f_all_time">All time</string>
+  <string name="f_topics">Topics</string>
 </resources>

@@ -12,6 +12,9 @@ object ForumLimits {
     const val CACHE_CHARS = 1000000
 }
 
+enum class ForumFilter(val route: String) { LATEST("latest"), TOP("top"), HOT("hot"), VOTES("votes") }
+enum class ForumPeriod(val route: String) { DAILY("daily"), WEEKLY("weekly"), MONTHLY("monthly"), QUARTERLY("quarterly"), YEARLY("yearly"), ALL("all") }
+data class ForumTag(val id: Long, val name: String, val count: Int, val description: String = "")
 data class ForumCategory(val id: Long, val name: String, val parentId: Long? = null, val description: String = "")
 data class ForumTopic(val id: Long, val title: String, val categoryId: Long, val posts: Int, val lastPosted: String, val pinned: Boolean = false, val closed: Boolean = false, val tags: List<String> = emptyList()) {
     val url: String get() = "${ForumLimits.ORIGIN}/t/$id"
@@ -64,10 +67,15 @@ data class ForumDocument(
     val stream: List<Long> = emptyList(),
     val posts: List<ForumPost> = emptyList(),
     val more: Boolean = false,
-    val revision: ForumRevision? = null
+    val revision: ForumRevision? = null,
+    val filters: List<ForumFilter> = listOf(ForumFilter.LATEST),
+    val tags: List<ForumTag> = emptyList(),
+    val tagsTruncated: Boolean = false
 )
 sealed interface ForumRequest {
     data object Categories : ForumRequest
+    data object Tags : ForumRequest
+    data class Feed(val filter: ForumFilter, val page: Int = 0, val period: ForumPeriod = ForumPeriod.WEEKLY, val tagId: Long? = null) : ForumRequest
     data class Category(val id: Long) : ForumRequest
     data class Latest(val categoryId: Long? = null, val page: Int = 0) : ForumRequest
     data class Search(val query: String, val page: Int = 1) : ForumRequest
@@ -115,6 +123,8 @@ object ForumUrls {
     }
     fun key(request: ForumRequest): String = when (request) {
         ForumRequest.Categories -> "categories"
+        ForumRequest.Tags -> "tags"
+        is ForumRequest.Feed -> "feed:${request.filter.route}:${request.period.route}:${request.tagId}:${request.page}"
         is ForumRequest.Category -> "category:${request.id}"
         is ForumRequest.Latest -> "latest:${request.categoryId}:${request.page}"
         is ForumRequest.Search -> "search:${request.page}:${request.query}"

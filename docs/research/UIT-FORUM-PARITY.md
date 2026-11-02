@@ -5,10 +5,10 @@ Research date: 2026-11-03, Asia/Tokyo. App baseline: `1417d5c` on
 public reader to the full student-facing UIT Forum experience. It does not claim
 that the missing functionality has been implemented.
 
-Current implementation increments are tracked separately in
-[Forum parity progress](../FORUM-PARITY-PROGRESS.md). The table below retains the
-explicit research baseline; the progress document records changed behavior and
-remaining acceptance gaps.
+Current status includes the partial implementation on draft PR #79, stacked on
+#78. [Forum parity progress](../FORUM-PARITY-PROGRESS.md) records changed behavior,
+real-data evidence and remaining acceptance gaps. Unchanged rows retain their
+explicit research-baseline status; no row is certified as full parity.
 
 ## What full parity means
 
@@ -75,12 +75,12 @@ it is not a complete inventory of every UIT plugin or account role.
 | ID | Web capability and evidence | Current app | Required acceptance evidence |
 | --- | --- | --- | --- |
 | F01 | Latest/category feeds; UIT observed | Partial: explicit pagination, discovered parent categories | Same topic order and metadata; pinned/closed/archived/unlisted states, duplicate handling and end-of-list behavior |
-| F02 | Top/time period, hot and votes filters; UIT advertised, weekly Top observed | Missing | Verify supported periods/order and category combinations against actual responses |
+| F02 | Top/time period, hot and votes filters; UIT advertised, weekly Top observed | Partial: advertised guest Top/periods, Hot and Votes; live UIT and monthly mobile-web comparison | Verify supported periods/order and category combinations against actual responses |
 | F03 | New/unread/unseen/read/posted; UIT advertised, authenticated behavior unverified | Missing | Same account sees consistent lists/counts; research does not reset or mark them read |
-| F04 | Tags and tag combinations; UIT tags observed | Partial: topic tag labels only | Search a large tag catalog, apply permitted combinations, handle no matches and navigation restoration |
+| F04 | Tags and tag combinations; UIT tags observed | Partial: searchable server tag directory and single-tag feeds; multi-tag/category combinations remain | Search a large tag catalog, apply permitted combinations, handle no matches and navigation restoration |
 | F05 | Full search and exact matched replies; UIT observed | Partial: submitted query and post jump | Search scopes/filters/order, pagination, excerpts, Unicode and restricted-result handling match web |
 | F06 | Long topics and timeline; real 7,455-ID stream verified earlier | Partial: numbered jump and bounded windows | Timeline/date navigation, gaps, edits/deletions during loading and stable scroll anchors across refresh |
-| F07 | Reply context/backlinks; fields exposed by UIT and upstream serializer | Missing | Open parent/child replies, return to the same position and preserve attribution |
+| F07 | Reply context/backlinks; fields exposed by UIT and upstream serializer | Partial: reply-parent and attributed quote targets; no inline reply expansion or return anchor | Open parent/child replies, return to the same position and preserve attribution |
 | F08 | Permalinks/share/navigation; mobile web observed | Partial: some topic links route internally | Exact post/slug/fragment targets, Android links/back stack, copy/share, inaccessible and legacy redirects |
 | F09 | Topic summary, participants, statistics and suggested topics; upstream documented, UIT coverage incomplete | Partial: title/category/post count | Inventory actual UIT controls; preserve meaningful metadata, suggestions and return navigation |
 
@@ -93,14 +93,14 @@ explain why a generic Markdown converter is not sufficient evidence of fidelity.
 
 | ID | Web capability and evidence | Current app | Required acceptance evidence |
 | --- | --- | --- | --- |
-| F10 | Inline emphasis/code, paragraph breaks and links; upstream documented | Partial: text extraction loses inline styles | Preserve ordering and nested spans, link ranges, Unicode, line breaks and selection/copy |
-| F11 | Headings, ordered/nested lists and tables; upstream documented | Partial: flattened cells and fixed-width table columns | Mixed cell/list content, link/image children, headers, numbering and horizontal scrolling |
-| F12 | Attributed/nested quotes and reply references; upstream documented | Partial: quote text flattened | Preserve author, target post and nested content; expand context without losing position |
-| F13 | Details, spoilers and task-like controls; upstream documented, UIT examples still needed | Partial: details flattened; spoiler semantics not modeled | Keep summaries and nested media; concealed content must remain concealed until requested |
-| F14 | Code language, syntax and copy; upstream documented | Partial: monospace block and horizontal scroll | Preserve exact whitespace/source, language metadata, long lines and copy behavior |
+| F10 | Inline emphasis/code, paragraph breaks and links; upstream documented | Partial: semantic inline spans and link ranges; broader fidelity/selection cases remain | Preserve ordering and nested spans, link ranges, Unicode, line breaks and selection/copy |
+| F11 | Headings, ordered/nested lists and tables; upstream documented | Partial: nested list and table-cell blocks; complex headers/spans remain | Mixed cell/list content, link/image children, headers, numbering and horizontal scrolling |
+| F12 | Attributed/nested quotes and reply references; upstream documented | Partial: nested quote content, author/target attribution; context navigation remains | Preserve author, target post and nested content; expand context without losing position |
+| F13 | Details, spoilers and task-like controls; upstream documented, UIT examples still needed | Partial: nested details and concealed spoilers; task controls and broader live examples remain | Keep summaries and nested media; concealed content must remain concealed until requested |
+| F14 | Code language, syntax and copy; upstream documented | Partial: preserved code, language label and copy; no syntax highlighting | Preserve exact whitespace/source, language metadata, long lines and copy behavior |
 | F15 | Emoji, mentions, user cards and flair; UIT fields/upstream documented | Partial: emoji alt text and author string | Custom emoji and mention targets, accessible labels, account-visible profile fields and identity attribution |
-| F16 | Image thumbnails/originals/lightbox; UIT observed | Partial: opt-in same-origin bitmap | Actual original vs thumbnail mapping, fullscreen, zoom/pan, multiple images, captions, orientation and accessible controls |
-| F17 | Image delivery and lifecycle | Partial: fixed limits, no retry after a failed request | Inspect CDN/short URLs/secure uploads; bounded decode, retry/cancel, memory eviction and account isolation; no arbitrary credential forwarding |
+| F16 | Image thumbnails/originals/lightbox; UIT observed | Partial: actual original URL, fullscreen, zoom/pan and accessible controls; gallery/orientation coverage remains | Actual original vs thumbnail mapping, fullscreen, zoom/pan, multiple images, captions, orientation and accessible controls |
+| F17 | Image delivery and lifecycle | Partial: explicit retry and bounded decode; broader delivery/lifecycle/account cases remain | Inspect CDN/short URLs/secure uploads; bounded decode, retry/cancel, memory eviction and account isolation; no arbitrary credential forwarding |
 | F18 | Animated images/video/audio; upstream documented, UIT examples unverified | Missing animation/playback; browser fallback | Same content with playback controls, lifecycle, captions where available and explicit unavailable states |
 | F19 | Attachments and onebox previews; upstream documented | Partial: extracted links | Names, type/size, authorized download/open, expired access, cancellation and safe rich preview semantics |
 | F20 | Legacy migrated content; BBCode visible in real support posts | Partial: literal tags can remain | Compare the same post on web; preserve content and distinguish upstream migration defects from app defects |
@@ -116,7 +116,7 @@ version number or from another post's successful response.
 
 | ID | Web capability and evidence | Current app | Required acceptance evidence |
 | --- | --- | --- | --- |
-| F22 | Edit indicator/history; real UIT revision observed | Missing | Version, time, reason, previous/next navigation, readable diff, hidden history and permission changes |
+| F22 | Edit indicator/history; real UIT revision observed | Partial: uncached permission-aware history, revision navigation and Changes/Before/After; metadata/media diffs remain | Version, time, reason, previous/next navigation, readable diff, hidden history and permission changes |
 | F23 | Edit/delete/restore/wiki and moderation notices; upstream documented | Missing metadata and actions | Server-authorized state, conflicts and tombstones; test writes only in an authorized test environment |
 | F24 | UIT login/session; prior private website login verified | Missing Forum app authentication | Research actual UIT redirects/CSRF/session contract, expiry, cancellation, logout and re-login on Android |
 | F25 | Per-user app credentials; official User API key mechanism documented, UIT eligibility unverified | Missing | Determine whether UIT allows applicable scopes, groups and callback; no key grant during read-only research |

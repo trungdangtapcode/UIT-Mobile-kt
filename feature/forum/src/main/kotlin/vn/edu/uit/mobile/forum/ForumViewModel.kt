@@ -8,13 +8,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import vn.edu.uit.mobile.domain.*
 
-enum class ForumTab { LATEST, CATEGORIES, SEARCH, SAVED }
+enum class ForumTab { LATEST, CATEGORIES, TAGS, SEARCH, SAVED }
 data class ForumState(
     val open: Boolean = false,
     val tab: ForumTab = ForumTab.LATEST,
     val categories: List<ForumCategory> = emptyList(),
     val category: ForumCategory? = null,
     val query: String = "",
+    val filters: List<ForumFilter> = listOf(ForumFilter.LATEST),
+    val filter: ForumFilter = ForumFilter.LATEST,
+    val period: ForumPeriod = ForumPeriod.WEEKLY,
+    val tag: ForumTag? = null,
+    val tags: List<ForumTag> = emptyList(),
+    val tagsTruncated: Boolean = false,
     val topics: List<ForumTopic> = emptyList(),
     val hits: List<ForumHit> = emptyList(),
     val page: Int = 0,
@@ -124,18 +130,36 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         if (state.value.retryAt > clock()) return
         val page = if (append) state.value.page + 1 else 0
         if (page >= 100) return
-        if (!append) state.value = state.value.copy(tab = ForumTab.LATEST, category = category, topic = null, topics = emptyList(), hits = emptyList(), more = false)
+        if (!append) {
+            closeHistory()
+            state.value = state.value.copy(
+                tab = ForumTab.LATEST,
+                category = category,
+                topic = null,
+                topics = emptyList(),
+                hits = emptyList(),
+                more = false,
+                filter = if (category == null) state.value.filter else ForumFilter.LATEST,
+                tag = if (category == null) state.value.tag else null
+            )
+        }
         launch({ latest(category, append) }) { token ->
             if (state.value.categories.isEmpty()) {
                 try {
                     val c = repository.load(ForumRequest.Categories)
-                    if (serial == token) state.value = state.value.copy(categories = c.document.categories)
+                    if (serial == token) state.value = state.value.copy(categories = c.document.categories, filters = c.document.filters)
                 } catch (e: ForumException) {
                     if (e.reason == ForumFailure.RATE_LIMIT) throw e
                 }
             }
             val local = repository.local()
-            val loaded = repository.load(ForumRequest.Latest(category?.id, page))
+            val selection = state.value
+            val request = if (category != null || selection.filter == ForumFilter.LATEST && selection.tag == null) {
+                ForumRequest.Latest(category?.id, page)
+            } else {
+                ForumRequest.Feed(selection.filter, page, selection.period, selection.tag?.id)
+            }
+            val loaded = repository.load(request)
             if (serial != token) return@launch
             val old = if (append) state.value.topics else emptyList()
             val topics = (old + loaded.document.topics).distinctBy { it.id }.take(1000)
@@ -144,16 +168,35 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
             enrichCategories(topics.map { it.categoryId }, token)
         }
     }
+    fun discover(filter: ForumFilter, period: ForumPeriod = state.value.period, tag: ForumTag? = state.value.tag) {
+        if (filter !in state.value.filters || state.value.retryAt > clock()) return
+        state.value = state.value.copy(filter = filter, period = period, tag = tag)
+        latest(null)
+    }
+    fun tags() {
+        if (state.value.retryAt > clock()) return
+        closeHistory()
+        state.value = state.value.copy(tab = ForumTab.TAGS, topic = null, more = false)
+        launch(::tags) { token ->
+            val result = repository.load(ForumRequest.Tags)
+            if (token == serial) {
+                feedStamp = result.fetchedAt to result.offline
+                state.value = state.value.copy(tags = result.document.tags, tagsTruncated = result.document.tagsTruncated, fetchedAt = result.fetchedAt, offline = result.offline)
+            }
+        }
+    }
     fun tab(tab: ForumTab) {
+        closeHistory()
         work?.cancel()
         serial++
         state.value = state.value.copy(tab = tab, topic = null, loading = false, error = if (state.value.retryAt > clock()) state.value.error else null, offline = feedStamp.second, fetchedAt = feedStamp.first)
         when (tab) {
-            ForumTab.LATEST -> latest(null)
+            ForumTab.LATEST -> discover(ForumFilter.LATEST, tag = null)
+            ForumTab.TAGS -> tags()
             ForumTab.CATEGORIES -> launch({ tab(tab) }) { token ->
                 if (state.value.categories.isEmpty()) {
                     val result = repository.load(ForumRequest.Categories)
-                    if (token == serial) state.value = state.value.copy(categories = result.document.categories, fetchedAt = result.fetchedAt, offline = result.offline)
+                    if (token == serial) state.value = state.value.copy(categories = result.document.categories, filters = result.document.filters, fetchedAt = result.fetchedAt, offline = result.offline)
                 }
                 enrichCategories(state.value.topics.map { it.categoryId } + state.value.hits.map { it.topic.categoryId } + state.value.categories.mapNotNull { it.parentId }, token)
             }

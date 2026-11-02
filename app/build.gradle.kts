@@ -15,6 +15,8 @@ dependencies {
     androidTestImplementation(libs.android.test.junit)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test)
+    testImplementation(project(":core:network:forum"))
+    androidTestImplementation(project(":core:network:forum"))
     testImplementation(libs.junit4)
     testImplementation(testFixtures(project(":core:domain")))
     testImplementation(libs.robolectric)
@@ -25,7 +27,7 @@ dependencies {
     implementation(project(":core:data")); implementation(project(":core:auth")); implementation(project(":core:database"))
     implementation(project(":core:designsystem")); implementation(project(":core:domain"))
     implementation(project(":feature:auth")); implementation(project(":feature:dashboard")); implementation(project(":feature:schedule"))
-    implementation(project(":feature:courses")); implementation(project(":feature:academic"))
+    implementation(project(":feature:courses")); implementation(project(":feature:academic")); implementation(project(":feature:forum"))
     implementation(platform(libs.compose.bom)); implementation(libs.compose.material3); implementation(libs.compose.ui)
     implementation(libs.activity.compose); implementation(libs.lifecycle.compose); implementation(libs.lifecycle.viewmodel)
     implementation(libs.koin.android); implementation(libs.work); implementation(libs.core.ktx)
@@ -33,7 +35,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     // Compose rendering uses the debug-only host Activity supplied by ui-test-manifest.
-    if (name.contains("Release")) exclude("**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class")
+    if (name.contains("Release")) exclude("**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class")
     val recordUi = providers.gradleProperty("recordUi").getOrElse("false").toBoolean()
     systemProperty("roborazzi.test.record", recordUi)
     if (recordUi) systemProperty("robolectric.pixelCopyRenderMode", "hardware")

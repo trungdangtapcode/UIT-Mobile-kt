@@ -21,11 +21,13 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import vn.edu.uit.mobile.data.LocalForumRepository
 import vn.edu.uit.mobile.data.LocalPracticeRepository
 import vn.edu.uit.mobile.data.StudyStorage
 import vn.edu.uit.mobile.designsystem.AppLanguage
 import vn.edu.uit.mobile.designsystem.LanguagePreference
 import vn.edu.uit.mobile.domain.*
+import vn.edu.uit.mobile.forum.network.ForumTransport
 import vn.edu.uit.mobile.model.*
 import vn.edu.uit.mobile.widgets.WidgetRoute
 
@@ -55,6 +57,25 @@ class WidgetNavigationTest {
             modules(
                 module {
                     single<PortalRepository> { repository }
+                    single<ForumRepository> {
+                        LocalForumRepository(
+                            object : ForumTransport {
+                                override suspend fun get(request: ForumRequest) = ForumFixtures.response(request)
+                                override suspend fun image(url: String): ByteArray = error("Implicit image request forbidden")
+                            },
+                            object : StudyStorage {
+                                private val values = mutableMapOf<String, String>()
+                                override fun read(key: String) = values[key]
+                                override fun write(key: String, value: String) {
+                                    values[key] = value
+                                }
+                                override fun remove(key: String) {
+                                    values.remove(key)
+                                }
+                                override fun removeAccount(accountId: String) = error("Forum is independent of university accounts")
+                            }
+                        ) { ForumFixtures.AT }
+                    }
                     single<BookmarkRepository> { bookmarks }
                     single<PracticeRepository> {
                         LocalPracticeRepository(
@@ -100,6 +121,27 @@ class WidgetNavigationTest {
 
     @After fun cleanup() {
         stopKoin()
+    }
+
+    @Test fun forumOpensFromInboxWithoutAccountAndBottomNavigationCanLeave() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().visible()
+        try {
+            compose.onNodeWithText("Inbox", substring = false).performClick()
+            compose.onNodeWithText("Public campus discussions · no sign-in needed").assertExists()
+            if (java.lang.Boolean.getBoolean("roborazzi.test.record")) {
+                compose.waitForIdle()
+                captureScreenRoboImage(File(System.getProperty("uit.preview.dir"), "forum-inbox-entry-390-phone.png").absolutePath)
+            }
+            compose.onNodeWithText("UIT Forum", substring = false).performClick()
+            compose.waitUntil(15000) { compose.onAllNodesWithText(ForumFixtures.TITLE).fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText(ForumFixtures.TITLE).performClick()
+            compose.waitUntil(15000) { compose.onAllNodesWithTag("forum-post-1").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("Schedule", substring = false).performClick()
+            compose.onNodeWithTag("forum-reader").assertDoesNotExist()
+            assertTrue(owners.value.isEmpty())
+        } finally {
+            activity.pause().stop().destroy()
+        }
     }
 
     @Test fun readingLibraryOpensFromCoursesAndBottomNavigationCanLeaveIt() {

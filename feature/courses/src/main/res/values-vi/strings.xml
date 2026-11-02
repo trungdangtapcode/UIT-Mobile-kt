@@ -69,4 +69,6 @@
     <string name="courses_read_more">Đọc thêm</string>
     <string name="courses_h5p_summary">Xem tóm tắt H5P</string>
     <string name="courses_download">Tải %1$s</string>
+    <string name="inbox_uit_forum">UIT Forum</string>
+    <string name="inbox_uit_forum_public">Thảo luận toàn trường · không cần đăng nhập</string>
 </resources>

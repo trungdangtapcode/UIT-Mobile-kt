@@ -11,6 +11,7 @@ dependencies {
     implementation(project(":core:auth"))
     implementation(project(":core:network:moodle"))
     implementation(project(":core:network:daa"))
+    implementation(project(":core:network:forum"))
     implementation(libs.work)
     implementation(libs.core.ktx)
 }

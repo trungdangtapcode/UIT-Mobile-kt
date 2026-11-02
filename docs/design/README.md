@@ -61,6 +61,23 @@ Widget images inflate and draw the actual Android RemoteViews, with a 16dp outer
 gutter representing their placement on a phone. They are host-side renders, not
 screenshots of an installed launcher. The widget pin chooser uses actual Compose.
 
+## UIT Forum
+
+The dedicated public reader preserves the five bottom destinations. These are
+actual Compose phone renders with authored content and no university credentials.
+The entry capture uses the Activity's device palette; the reader gallery pins the
+UIT blue palette for consistent review.
+
+| State | Phone render |
+| --- | --- |
+| Entry and feed | [Inbox entry](previews/forum-inbox-entry-390-phone.png) · [Latest, 390dp](previews/forum-latest-390-phone.png) |
+| Discovery | [Categories](previews/forum-categories-390-phone.png) · [Post-level search, 412dp](previews/forum-search-412-phone.png) |
+| Topic | [Title and first post](previews/forum-topic-390-phone.png) · [Quote and code](previews/forum-rich-content-390-phone.png) · [Table and opt-in image](previews/forum-table-images-390-phone.png) |
+| Local and failures | [Saved, Vietnamese 1.3× at 360dp](previews/forum-saved-360-vi-large-phone.png) · [Unavailable, 360dp](previews/forum-unavailable-360-phone.png) · [Rate limit](previews/forum-rate-limit-390-phone.png) |
+
+See [Forum behavior and limits](../FORUM.md), [research](../research/UIT-FORUM-READER.md)
+and [design](UIT-FORUM.md). Host renders do not establish device networking behavior.
+
 ## Render on a rootless server
 
 An Android SDK and JDK are required; an emulator, KVM and root are not:

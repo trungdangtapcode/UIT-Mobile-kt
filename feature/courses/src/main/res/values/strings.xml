@@ -70,4 +70,6 @@
     <string name="courses_read_more">Read more</string>
     <string name="courses_h5p_summary">Read H5P summary</string>
     <string name="courses_download">Download %1$s</string>
+    <string name="inbox_uit_forum">UIT Forum</string>
+    <string name="inbox_uit_forum_public">Public campus discussions · no sign-in needed</string>
 </resources>

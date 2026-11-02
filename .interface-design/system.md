@@ -180,3 +180,9 @@ References guide judgment. Do not copy a dashboard template and call a color or
 font substitution a structural revision. Review 360/390/412dp phones, dark mode,
 canceled/empty/overdue states and larger text when changing these patterns. Do not
 generate desktop previews or use archived desktop images as the review baseline.
+
+Course knowledge maps: a selected concept leads a one-column directed neighborhood.
+Use 28dp connector gutters, native neighbor buttons, labeled incoming/outgoing
+propositions and a horizontally scrollable concept index. Keep an equivalent
+relationship list and source-copy dialogs. Definitions use bodyLarge; labels use
+existing title styles. All controls keep TechnicalShapes and native touch targets.

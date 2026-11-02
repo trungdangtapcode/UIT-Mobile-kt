@@ -11,6 +11,7 @@ import urllib.error
 import urllib.request
 import practice_contract
 import tutor_contract
+import knowledge_contract
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 MAX_BODY = 131072
@@ -30,7 +31,7 @@ def bounded_text(value, limit, allow_empty=False):
 
 
 def validate_request(data):
-    if not isinstance(data, dict) or type(data.get("version")) is not int or data.get("version") != 1 or data.get("mode") not in {"analyze", "ask", "practice", "tutor"}:
+    if not isinstance(data, dict) or type(data.get("version")) is not int or data.get("version") != 1 or data.get("mode") not in {"analyze", "ask", "practice", "tutor", "knowledge"}:
         raise StudyError(400, "invalid_request")
     mode = data["mode"]
     if mode == "tutor":
@@ -38,7 +39,9 @@ def validate_request(data):
             return tutor_contract.request(data)
         except (ValueError, TypeError, KeyError, UnicodeError):
             raise StudyError(400, "invalid_tutor") from None
-    question = bounded_text(data.get("question", ""), 1200, allow_empty=mode != "ask")
+    question = bounded_text(data.get("question", ""), 1200, allow_empty=mode not in {"ask", "knowledge"})
+    if mode == "knowledge" and len(question) > 400:
+        raise StudyError(400, "invalid_request")
     language = data.get("language", "English")
     if language not in {"English", "Vietnamese"}:
         raise StudyError(400, "invalid_request")
@@ -152,11 +155,12 @@ class OpenAIProvider:
         self.key, self.model = key, model
 
     def generate(self, request):
+        knowledge = request["mode"] == "knowledge"
         practice = request["mode"] == "practice"
         tutor = request["mode"] == "tutor"
-        payload = {"model": self.model, "store": False, "instructions": tutor_contract.SYSTEM if tutor else practice_contract.SYSTEM if practice else SYSTEM,
-                   "input": json.dumps(request, ensure_ascii=False), "max_output_tokens": 8192 if practice or tutor else 4096,
-                   "text": {"format": {"type": "json_schema", "name": "code_tutor_result" if tutor else "practice_result" if practice else "study_result", "strict": True, "schema": tutor_contract.SCHEMA if tutor else practice_contract.SCHEMA if practice else SCHEMA}}}
+        payload = {"model": self.model, "store": False, "instructions": knowledge_contract.SYSTEM if knowledge else tutor_contract.SYSTEM if tutor else practice_contract.SYSTEM if practice else SYSTEM,
+                   "input": json.dumps(request, ensure_ascii=False), "max_output_tokens": 8192 if practice or tutor or knowledge else 4096,
+                   "text": {"format": {"type": "json_schema", "name": "knowledge_map_result" if knowledge else "code_tutor_result" if tutor else "practice_result" if practice else "study_result", "strict": True, "schema": knowledge_contract.SCHEMA if knowledge else tutor_contract.SCHEMA if tutor else practice_contract.SCHEMA if practice else SCHEMA}}}
         req = urllib.request.Request("https://api.openai.com/v1/responses", data=json.dumps(payload).encode(), headers={
             "Content-Type": "application/json", "Authorization": "Bearer " + self.key,
         }, method="POST")
@@ -211,6 +215,11 @@ class Gateway:
             if request["mode"] == "tutor":
                 try:
                     result = tutor_contract.result(generated, request)
+                except (ValueError, TypeError, KeyError, UnicodeError):
+                    raise StudyError(502, "invalid_evidence") from None
+            elif request["mode"] == "knowledge":
+                try:
+                    result = knowledge_contract.result(generated, request["sources"])
                 except (ValueError, TypeError, KeyError, UnicodeError):
                     raise StudyError(502, "invalid_evidence") from None
             elif request["mode"] == "practice":

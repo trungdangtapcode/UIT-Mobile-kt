@@ -56,6 +56,10 @@ source extraction, with format/size limits. See
 proposes versioned passage indexing, local lexical/embedding retrieval, source
 navigation and bilingual/device evaluation gates for the next search feature.
 
+**Knowledge maps** creates an editable concept map from explicitly selected
+course text, with labeled directed relationships and inspectable source copies.
+Reviewed maps reopen offline. See [usage, limits and phone/model evidence](docs/KNOWLEDGE-MAPS.md).
+
 **AI quiz & flashcards** creates an editable, source-linked draft from explicitly
 selected cached text. Save reviewed sets for offline practice, inspect historical
 evidence and track multiple-choice correctness separately from flashcard recall.

@@ -1,0 +1,157 @@
+{
+  "model": "gpt-6-luna",
+  "source": "authored synthetic teaching text only",
+  "universityAccess": false,
+  "automaticRetries": 0,
+  "cases": [
+    {
+      "case": "english",
+      "request": {
+        "version": 1,
+        "mode": "knowledge",
+        "question": "How does BFS explore a graph?",
+        "language": "English",
+        "sources": [
+          {
+            "id": "excerpt:graphs",
+            "title": "Authored traversal text",
+            "text": "Graph traversal includes BFS and DFS. BFS uses a FIFO queue and visits one distance layer at a time. DFS can use an explicit stack or recursion."
+          }
+        ]
+      },
+      "result": {
+        "status": "ready",
+        "message": "BFS explores using a FIFO queue and visits one distance layer at a time.",
+        "title": "How BFS explores a graph",
+        "nodes": [
+          {
+            "id": "bfs",
+            "label": "BFS",
+            "definition": "A traversal method that uses a FIFO queue and visits one distance layer at a time.",
+            "citations": [
+              {
+                "sourceId": "excerpt:graphs",
+                "quote": "BFS uses a FIFO queue and visits one distance layer at a time."
+              }
+            ]
+          },
+          {
+            "id": "fifo_queue",
+            "label": "FIFO queue",
+            "definition": "The queue used by BFS.",
+            "citations": [
+              {
+                "sourceId": "excerpt:graphs",
+                "quote": "BFS uses a FIFO queue"
+              }
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "from": "bfs",
+            "to": "fifo_queue",
+            "relation": "uses",
+            "citations": [
+              {
+                "sourceId": "excerpt:graphs",
+                "quote": "BFS uses a FIFO queue"
+              }
+            ]
+          }
+        ]
+      },
+      "validated": true,
+      "seconds": 5.33
+    },
+    {
+      "case": "vietnamese",
+      "request": {
+        "version": 1,
+        "mode": "knowledge",
+        "question": "BFS duyệt đồ thị bằng cấu trúc dữ liệu nào?",
+        "language": "Vietnamese",
+        "sources": [
+          {
+            "id": "excerpt:graphs",
+            "title": "Authored traversal text",
+            "text": "Graph traversal includes BFS and DFS. BFS uses a FIFO queue and visits one distance layer at a time. DFS can use an explicit stack or recursion."
+          }
+        ]
+      },
+      "result": {
+        "status": "ready",
+        "message": "BFS sử dụng hàng đợi FIFO.",
+        "title": "Cấu trúc dữ liệu BFS sử dụng",
+        "nodes": [
+          {
+            "id": "bfs",
+            "label": "BFS",
+            "definition": "Duyệt đồ thị bằng hàng đợi FIFO.",
+            "citations": [
+              {
+                "sourceId": "excerpt:graphs",
+                "quote": "BFS uses a FIFO queue"
+              }
+            ]
+          },
+          {
+            "id": "fifo_queue",
+            "label": "Hàng đợi FIFO",
+            "definition": "Cấu trúc dữ liệu mà BFS sử dụng.",
+            "citations": [
+              {
+                "sourceId": "excerpt:graphs",
+                "quote": "BFS uses a FIFO queue"
+              }
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "from": "bfs",
+            "to": "fifo_queue",
+            "relation": "sử dụng",
+            "citations": [
+              {
+                "sourceId": "excerpt:graphs",
+                "quote": "BFS uses a FIFO queue"
+              }
+            ]
+          }
+        ]
+      },
+      "validated": true,
+      "seconds": 11.53
+    },
+    {
+      "case": "insufficient",
+      "request": {
+        "version": 1,
+        "mode": "knowledge",
+        "question": "Explain the mechanisms of nuclear fusion using only this text.",
+        "language": "English",
+        "sources": [
+          {
+            "id": "excerpt:graphs",
+            "title": "Authored traversal text",
+            "text": "Graph traversal includes BFS and DFS. BFS uses a FIFO queue and visits one distance layer at a time. DFS can use an explicit stack or recursion."
+          }
+        ]
+      },
+      "result": {
+        "status": "insufficient_evidence",
+        "message": "The selected source describes graph traversal, BFS, and DFS, but contains no information about nuclear fusion or its mechanisms.",
+        "title": "",
+        "nodes": [],
+        "edges": []
+      },
+      "validated": true,
+      "seconds": 5.65
+    }
+  ],
+  "promptVersion": 2,
+  "reviewNotes": [
+    "Source occurrence and structure were checked mechanically. The assistant inspected the small authored examples; no independent human educational evaluation or real-course quality benchmark was performed."
+  ]
+}

@@ -1,8 +1,9 @@
 # Source-backed knowledge visualization
 
 Research date: November 2, 2026. This extends the discussion of
-[semantic course search](SEMANTIC-COURSE-SEARCH.md). It proposes a new capability;
-the current app does not implement concept maps or algorithm simulations.
+[semantic course search](SEMANTIC-COURSE-SEARCH.md). The concept-map milestone is
+now implemented on `feat/knowledge-maps`; see the [implementation guide](../KNOWLEDGE-MAPS.md).
+Algorithm simulations remain a follow-up. The text below records the original proposal.
 No university access, model call, private source upload or UI change was performed.
 
 ## Product recommendation

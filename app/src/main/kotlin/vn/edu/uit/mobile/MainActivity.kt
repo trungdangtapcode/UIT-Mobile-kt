@@ -34,10 +34,12 @@ import vn.edu.uit.mobile.authui.*
 import vn.edu.uit.mobile.common.*
 import vn.edu.uit.mobile.courses.*
 import vn.edu.uit.mobile.dashboard.*
+import vn.edu.uit.mobile.data.LocalKnowledgeRepository
 import vn.edu.uit.mobile.data.LocalReadingRepository
 import vn.edu.uit.mobile.data.OfflineDownloadWorker
 import vn.edu.uit.mobile.data.StudyPrivateStorage
 import vn.edu.uit.mobile.data.createFreeTimeBlockStorage
+import vn.edu.uit.mobile.data.createKnowledgeSourceLoader
 import vn.edu.uit.mobile.data.createOfflineCourseSourceLoader
 import vn.edu.uit.mobile.data.createOfflineDownloadStorage
 import vn.edu.uit.mobile.data.createOfflineTutorCodeLoader
@@ -57,6 +59,7 @@ class MainActivity : ComponentActivity() {
     private val workloadRepository: WorkloadRepository by inject()
     private val revisionRepository: RevisionRepository by inject()
     private val practiceRepository: PracticeRepository by inject()
+    private val knowledgeRepository: KnowledgeRepository by lazy { getKoin().getOrNull<KnowledgeRepository>() ?: LocalKnowledgeRepository(StudyPrivateStorage(this, "knowledge", "uit.knowledge.v1"), accounts) }
     private val readingRepository: ReadingRepository by lazy { getKoin().getOrNull<ReadingRepository>() ?: LocalReadingRepository(StudyPrivateStorage(this, "reading", "uit.reading.v1"), accounts) }
     private val studyRepository: StudyAiRepository by lazy { createStudyAiRepository(this, accounts) }
 
@@ -91,6 +94,7 @@ class MainActivity : ComponentActivity() {
                 val study = ownedViewModel { StudyViewModel(studyRepository, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this))) }
                 val practice = ownedViewModel { PracticeViewModel(studyRepository, practiceRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this))) }
                 val tutor = ownedViewModel { CodeTutorViewModel(studyRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this)), createOfflineTutorCodeLoader(createOfflineDownloadStorage(this))) }
+                val knowledge = ownedViewModel { KnowledgeViewModel(studyRepository, knowledgeRepository, accounts, repository, createKnowledgeSourceLoader(createOfflineDownloadStorage(this))) }
                 val reading = ownedViewModel { CourseReadingViewModel(readingRepository, accounts, repository, createOfflineDownloadStorage(this), createReadingDocumentLoader(createOfflineDownloadStorage(this)), nativeReadingPdfFactory(cacheDir)) }
                 val inbox = ownedViewModel { InboxViewModel(repository) }
                 val academic = ownedViewModel { AcademicViewModel(repository) }
@@ -114,7 +118,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, practice, tutor, reading, inbox, academic, studentProfile, widgetRoute, {
+                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, practice, tutor, knowledge, reading, inbox, academic, studentProfile, widgetRoute, {
                     showWidgets = false
                     widgetRoute = null
                     setIntent(
@@ -181,6 +185,7 @@ private fun UitShell(
     study: StudyViewModel,
     practice: PracticeViewModel,
     tutor: CodeTutorViewModel,
+    knowledge: KnowledgeViewModel,
     reading: CourseReadingViewModel,
     inbox: InboxViewModel,
     academic: AcademicViewModel,
@@ -362,6 +367,7 @@ private fun UitShell(
                     },
                     practice = practice,
                     tutor = tutor,
+                    knowledge = knowledge,
                     onReading = { reading.library() },
                     onOpenPdf = reading::open
                 )

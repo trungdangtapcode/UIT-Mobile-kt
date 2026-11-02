@@ -159,6 +159,10 @@ class ConnectedStudyAiRepository(
         PracticeRules.request(sources, options)
         exchange(course, PracticeProtocol.payload(sources, options)) { data, direct -> PracticeProtocol.result(data, direct).also { PracticeRules.generation(it, sources, options) } }
     }
+    override suspend fun knowledge(course: Course, sources: List<StudySource>, focus: String, language: String): KnowledgeGeneration = withContext(Dispatchers.IO) {
+        KnowledgeRules.request(sources, focus, language)
+        exchange(course, KnowledgeProtocol.payload(sources, focus, language)) { data, direct -> KnowledgeProtocol.result(data, direct, focus, language).also { KnowledgeRules.generation(it, sources, focus, language) } }
+    }
     override suspend fun tutor(course: Course?, request: TutorRequest): TutorResult = withContext(Dispatchers.IO) {
         TutorRules.request(request)
         require(course != null || request.sources.isEmpty()) { "Choose a course before adding course context." }
@@ -177,6 +181,7 @@ class ConnectedStudyAiRepository(
                     if (direct) {
                         val model = config.getValue("model").jsonPrimitive.content
                         when (request["mode"]?.jsonPrimitive?.content) {
+                            "knowledge" -> KnowledgeProtocol.request(model, request)
                             "practice" -> PracticeProtocol.request(model, request)
                             "tutor" -> TutorProtocol.request(model, request)
                             else -> OpenAiStudyProtocol.request(model, request)

@@ -206,3 +206,12 @@ exams. Topics share the teaching account's budget; completed/locked sessions are
 preserved and unplaced effort remains explicit. See [usage](docs/EXAM-REVISION.md),
 the [constructive algorithm](docs/EXAM-REVISION-ALGORITHM.md) and
 [stacked PR landing order](docs/STACKED-PRS.md).
+
+## AI Code Tutor
+
+Courses explains explicitly selected code, including individual saved notebook
+cells, with numbered evidence, progressive hints and unexecuted test ideas.
+Generated edits stay preview-only. Direct personal-key and optional gateway modes
+share the existing AI connection. See [usage and limits](docs/CODE-TUTOR.md),
+[phone/provider evidence](docs/CODE-TUTOR-EVALUATION.md) and the
+[stacked PR order](docs/STACKED-PRS.md).

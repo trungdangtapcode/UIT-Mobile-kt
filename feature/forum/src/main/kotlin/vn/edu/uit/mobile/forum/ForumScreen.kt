@@ -218,11 +218,15 @@ import vn.edu.uit.mobile.feature.forum.R
     val topic = state.topic ?: return
     val list = rememberLazyListState()
     val density = LocalDensity.current
+    var appliedJump by rememberSaveable { mutableStateOf("") }
+    val jumpKey = "${state.readerSession}:${topic.id}:${state.scrollVersion}"
     var number by rememberSaveable(topic.id) { mutableStateOf("") }
     val position = state.local.positions.firstOrNull { it.topic.id == topic.id }
-    LaunchedEffect(topic.id, state.scrollVersion) {
+    LaunchedEffect(jumpKey) {
+        if (appliedJump == jumpKey) return@LaunchedEffect
         val index = state.posts.indexOfFirst { it.number >= state.anchorNumber }
         list.scrollToItem(if (index < 0 || state.anchorNumber == 1 && state.start == 0) 0 else index + 1, with(density) { state.anchorOffsetDp.dp.roundToPx() })
+        appliedJump = jumpKey
     }
     LaunchedEffect(topic.id, state.posts) {
         snapshotFlow { list.firstVisibleItemIndex to list.firstVisibleItemScrollOffset }.distinctUntilChanged().collect { (index, offset) ->

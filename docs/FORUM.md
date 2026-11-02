@@ -29,7 +29,9 @@ It does not fetch all intervening bodies. A local reading anchor stores topic ID
 post ID, actual post number and a bounded density-independent scroll offset.
 Writes are debounced by 500 ms and flushed when leaving the reader. The position
 is best-effort during abrupt process termination. Search and topic requests use
-operation generations so canceled or late responses cannot replace a newer view.
+operation generations so canceled or late responses cannot replace a newer view. A completed jump is remembered for the current reader session so Activity
+state restoration preserves the visible reply instead of repeating the initial
+jump. A fresh ViewModel session still applies a new requested jump.
 
 ```mermaid
 flowchart TD

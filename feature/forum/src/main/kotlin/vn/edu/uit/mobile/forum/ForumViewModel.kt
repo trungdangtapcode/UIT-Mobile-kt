@@ -2,6 +2,7 @@ package vn.edu.uit.mobile.forum
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import java.util.UUID
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,7 +34,8 @@ data class ForumState(
     val offline: Boolean = false,
     val fetchedAt: Long = 0,
     val error: ForumFailure? = null,
-    val retryAt: Long = 0
+    val retryAt: Long = 0,
+    val readerSession: String = UUID.randomUUID().toString()
 )
 
 class ForumViewModel(private val repository: ForumRepository, private val clock: () -> Long = { System.currentTimeMillis() / 1000 }) : ViewModel() {

@@ -2,6 +2,7 @@ package vn.edu.uit.mobile
 
 import android.app.Application
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureScreenRoboImage
@@ -68,6 +69,19 @@ class ForumDesignTest {
         capture("forum-rich-content-390-phone")
         compose.onNodeWithText("Load image").performScrollTo().assertIsDisplayed()
         capture("forum-table-images-390-phone")
+    }
+
+    @Test fun restoredReaderKeepsVisibleReplyInsteadOfRepeatingInitialJump() {
+        val request = ForumRequest.Topic(901)
+        val doc = ForumParser.parse(request, ForumFixtures.response(request))
+        val state = state().copy(topic = doc.topic, posts = doc.posts, stream = doc.stream, start = 0, end = 20)
+        val restoration = StateRestorationTester(compose)
+        restoration.setContent { UitTheme(dark = true, dynamic = false) { WorkspaceFrame(3, {}, {}, "", false, false, 0) { ForumContent(state) } } }
+        compose.onNodeWithTag("forum-reader").performScrollToIndex(5)
+        compose.onNodeWithTag("forum-post-9").assertIsDisplayed()
+        restoration.emulateSavedInstanceStateRestore()
+        compose.waitForIdle()
+        compose.onNodeWithTag("forum-post-9").assertIsDisplayed()
     }
 
     @Test

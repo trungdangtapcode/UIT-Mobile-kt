@@ -1,0 +1,102 @@
+{
+  "provenance": "Authored synthetic code contract fixture; human educational quality review pending.",
+  "request": {
+    "version": 1,
+    "mode": "tutor",
+    "question": "What happens for an empty list?",
+    "language": "English",
+    "tutor": {
+      "lines": [
+        {
+          "number": 10,
+          "text": "def first(values):"
+        },
+        {
+          "number": 11,
+          "text": "    return values[0]"
+        },
+        {
+          "number": 12,
+          "text": ""
+        }
+      ],
+      "codeLanguage": "Python",
+      "firstLine": 10,
+      "environment": "Python 3.11; values is a list"
+    },
+    "sources": []
+  },
+  "result": {
+    "status": "ready",
+    "summary": "Inspect the input contract before indexing a list.",
+    "observations": [
+      {
+        "kind": "code",
+        "text": "The function indexes element zero without checking for an empty list.",
+        "codeReferences": [
+          {
+            "startLine": 11,
+            "endLine": 11,
+            "quote": "return values[0]"
+          }
+        ],
+        "citations": []
+      }
+    ],
+    "hints": [
+      {
+        "kind": "suggestion",
+        "text": "Which index exists in an empty list?",
+        "codeReferences": [
+          {
+            "startLine": 11,
+            "endLine": 11,
+            "quote": "return values[0]"
+          }
+        ],
+        "citations": []
+      },
+      {
+        "kind": "suggestion",
+        "text": "Check for an item before indexing.",
+        "codeReferences": [
+          {
+            "startLine": 11,
+            "endLine": 11,
+            "quote": "return values[0]"
+          }
+        ],
+        "citations": []
+      },
+      {
+        "kind": "suggestion",
+        "text": "Define the empty-input outcome, then return the first element.",
+        "codeReferences": [
+          {
+            "startLine": 11,
+            "endLine": 11,
+            "quote": "return values[0]"
+          }
+        ],
+        "citations": []
+      }
+    ],
+    "tests": [
+      {
+        "name": "Empty list",
+        "input": "first([])",
+        "expected": "IndexError is predicted for a Python list; not run.",
+        "reason": "Index zero is unavailable.",
+        "codeReferences": [
+          {
+            "startLine": 11,
+            "endLine": 11,
+            "quote": "return values[0]"
+          }
+        ]
+      }
+    ],
+    "proposedCode": "def first(values):\n    if not values:\n        return None\n    return values[0]\n",
+    "editReason": "None is one possible empty-input contract; check callers before copying."
+  }
+}

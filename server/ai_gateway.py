@@ -10,6 +10,7 @@ import time
 import urllib.error
 import urllib.request
 import practice_contract
+import tutor_contract
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 MAX_BODY = 131072
@@ -29,9 +30,14 @@ def bounded_text(value, limit, allow_empty=False):
 
 
 def validate_request(data):
-    if not isinstance(data, dict) or type(data.get("version")) is not int or data.get("version") != 1 or data.get("mode") not in {"analyze", "ask", "practice"}:
+    if not isinstance(data, dict) or type(data.get("version")) is not int or data.get("version") != 1 or data.get("mode") not in {"analyze", "ask", "practice", "tutor"}:
         raise StudyError(400, "invalid_request")
     mode = data["mode"]
+    if mode == "tutor":
+        try:
+            return tutor_contract.request(data)
+        except (ValueError, TypeError, KeyError, UnicodeError):
+            raise StudyError(400, "invalid_tutor") from None
     question = bounded_text(data.get("question", ""), 1200, allow_empty=mode != "ask")
     language = data.get("language", "English")
     if language not in {"English", "Vietnamese"}:
@@ -147,9 +153,10 @@ class OpenAIProvider:
 
     def generate(self, request):
         practice = request["mode"] == "practice"
-        payload = {"model": self.model, "store": False, "instructions": practice_contract.SYSTEM if practice else SYSTEM,
-                   "input": json.dumps(request, ensure_ascii=False), "max_output_tokens": 8192 if practice else 4096,
-                   "text": {"format": {"type": "json_schema", "name": "practice_result" if practice else "study_result", "strict": True, "schema": practice_contract.SCHEMA if practice else SCHEMA}}}
+        tutor = request["mode"] == "tutor"
+        payload = {"model": self.model, "store": False, "instructions": tutor_contract.SYSTEM if tutor else practice_contract.SYSTEM if practice else SYSTEM,
+                   "input": json.dumps(request, ensure_ascii=False), "max_output_tokens": 8192 if practice or tutor else 4096,
+                   "text": {"format": {"type": "json_schema", "name": "code_tutor_result" if tutor else "practice_result" if practice else "study_result", "strict": True, "schema": tutor_contract.SCHEMA if tutor else practice_contract.SCHEMA if practice else SCHEMA}}}
         req = urllib.request.Request("https://api.openai.com/v1/responses", data=json.dumps(payload).encode(), headers={
             "Content-Type": "application/json", "Authorization": "Bearer " + self.key,
         }, method="POST")
@@ -201,7 +208,12 @@ class Gateway:
             self.calls.append(now)
         try:
             generated = self.provider.generate(request)
-            if request["mode"] == "practice":
+            if request["mode"] == "tutor":
+                try:
+                    result = tutor_contract.result(generated, request)
+                except (ValueError, TypeError, KeyError, UnicodeError):
+                    raise StudyError(502, "invalid_evidence") from None
+            elif request["mode"] == "practice":
                 try:
                     result = practice_contract.result(generated, request["sources"], request["practice"])
                 except (ValueError, TypeError, KeyError):

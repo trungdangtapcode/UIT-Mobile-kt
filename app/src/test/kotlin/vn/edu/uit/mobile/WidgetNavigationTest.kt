@@ -102,6 +102,37 @@ class WidgetNavigationTest {
         stopKoin()
     }
 
+    @Test fun codeTutorRetainsActivityMemoryButExcludesPrivateCodeFromSavedState() {
+        var activity = Robolectric.buildActivity(MainActivity::class.java).setup().visible()
+        try {
+            compose.onNodeWithText("Courses", substring = false).performClick()
+            compose.onNodeWithText("AI Code Tutor").performScrollTo().performClick()
+            val privateCode = "private_tutor_marker_921 = 42"
+            compose.onNodeWithTag("tutor-editor").performScrollTo().performTextReplacement(privateCode)
+            compose.onNodeWithText("Schedule", substring = false).performClick()
+            compose.onNodeWithText("Courses", substring = false).performClick()
+            compose.onNodeWithTag("tutor-editor").assertTextContains(privateCode)
+            val saved = Bundle()
+            activity.saveInstanceState(saved)
+            val parcel = android.os.Parcel.obtain()
+            try {
+                parcel.writeBundle(saved)
+                val bytes = parcel.marshall()
+                assertFalse(bytes.toString(Charsets.UTF_16LE).contains(privateCode))
+                assertFalse(bytes.toString(Charsets.UTF_8).contains(privateCode))
+            } finally {
+                parcel.recycle()
+            }
+            activity.pause().stop().destroy()
+            activity = Robolectric.buildActivity(MainActivity::class.java).setup(saved).visible()
+            compose.onNodeWithTag("tutor-editor").assertTextEquals("Code · indentation preserved", "")
+            compose.onNodeWithText("Back", substring = false).performClick()
+            compose.onNodeWithText("Course directory").assertExists()
+        } finally {
+            activity.pause().stop().destroy()
+        }
+    }
+
     @Test fun savedPracticeLibrarySurvivesActivityRecreationAndReturnsToCourses() {
         var activity = Robolectric.buildActivity(MainActivity::class.java).setup().visible()
         try {

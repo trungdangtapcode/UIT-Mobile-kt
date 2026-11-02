@@ -37,6 +37,7 @@ import vn.edu.uit.mobile.data.OfflineDownloadWorker
 import vn.edu.uit.mobile.data.createFreeTimeBlockStorage
 import vn.edu.uit.mobile.data.createOfflineCourseSourceLoader
 import vn.edu.uit.mobile.data.createOfflineDownloadStorage
+import vn.edu.uit.mobile.data.createOfflineTutorCodeLoader
 import vn.edu.uit.mobile.data.createStudyAiRepository
 import vn.edu.uit.mobile.data.observeDownloadWifi
 import vn.edu.uit.mobile.designsystem.*
@@ -84,6 +85,7 @@ class MainActivity : ComponentActivity() {
                 val courses = ownedViewModel { CoursesViewModel(repository) }
                 val study = ownedViewModel { StudyViewModel(studyRepository, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this))) }
                 val practice = ownedViewModel { PracticeViewModel(studyRepository, practiceRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this))) }
+                val tutor = ownedViewModel { CodeTutorViewModel(studyRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this)), createOfflineTutorCodeLoader(createOfflineDownloadStorage(this))) }
                 val inbox = ownedViewModel { InboxViewModel(repository) }
                 val academic = ownedViewModel { AcademicViewModel(repository) }
                 val auth = ownedViewModel { AccountsViewModel(accounts) }
@@ -106,7 +108,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, practice, inbox, academic, studentProfile, widgetRoute, {
+                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, practice, tutor, inbox, academic, studentProfile, widgetRoute, {
                     showWidgets = false
                     widgetRoute = null
                     setIntent(
@@ -172,6 +174,7 @@ private fun UitShell(
     bookmarks: BookmarksViewModel,
     study: StudyViewModel,
     practice: PracticeViewModel,
+    tutor: CodeTutorViewModel,
     inbox: InboxViewModel,
     academic: AcademicViewModel,
     studentProfile: StudentProfileViewModel,
@@ -336,7 +339,8 @@ private fun UitShell(
                         bookmarksFromSearch = false
                         returnToBookmarks = false
                     },
-                    practice = practice
+                    practice = practice,
+                    tutor = tutor
                 )
                 3 -> InboxScreen(inbox)
                 else -> AcademicScreen(academic, accountContent)

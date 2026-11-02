@@ -48,7 +48,8 @@ text** workflows. They use explicitly selected saved descriptions or pasted text
 direct OpenAI access (the default) or an optional HTTPS gateway, with inspectable
 source quotes. Direct mode uses a personal API key entered on the phone and needs
 no hosted backend. Personal checklists
-are saved locally; PDF ingestion is not part of this first version. See
+are saved locally. Verified offline documents include basic PDF text and notebook
+source extraction, with format/size limits. See
 [Study AI setup and limits](docs/STUDY-AI.md).
 
 **AI quiz & flashcards** creates an editable, source-linked draft from explicitly

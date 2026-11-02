@@ -1,0 +1,102 @@
+{
+  "provenance": "Owner-authorized private Moodle course reads and direct teaching-file downloads. Only aggregate results are public; sources, filenames, course/account identifiers, URLs, cookies and model answers are excluded.",
+  "sampledCoursePages": 14,
+  "contentsApiAvailable": false,
+  "metadataPath": "Production HtmlMoodleParser on cached course HTML",
+  "teachingFileLinksDownloaded": 2,
+  "uniqueNotebookContents": 1,
+  "notebook": {
+    "sourceExtractedAfterFix": true,
+    "realBytes": 86545,
+    "notebookCells": 91,
+    "verifiedSourceCharacters": 12000,
+    "explicitLaterExcerptCharacters": 8941,
+    "sourceChecksumVerified": true,
+    "notebookExecuted": false,
+    "outputsIncluded": false,
+    "metadataIncluded": false,
+    "attachmentsIncluded": false
+  },
+  "academicMutationEndpointsInvoked": 0,
+  "moduleViewEndpointsInvoked": 0,
+  "readOnlyCaveat": "Authentication and normal access logging can change server session/access records; this is not a server-side database audit.",
+  "requestedModel": "gpt-6-luna",
+  "apiCallsAcrossAllRounds": 9,
+  "automaticRetries": 0,
+  "modelSubstitutions": 0,
+  "preFix": {
+    "sourceSupported": false,
+    "initialStatuses": [
+      "rejected",
+      "rejected",
+      "insufficient_evidence"
+    ],
+    "diagnosticStatuses": [
+      "rejected",
+      "rejected",
+      "insufficient_evidence"
+    ],
+    "diagnosedIssue": "Generated quotations stripped literal Markdown formatting and were rejected by unchanged evidence validation."
+  },
+  "postFix": {
+    "realCourseContentUsed": true,
+    "apiCalls": 3,
+    "universityRequestsDuringAi": 0,
+    "passwordAvailableToAiWorker": false,
+    "cookieFileAvailableToAiWorker": false,
+    "cases": [
+      {
+        "case": 1,
+        "requestedModel": "gpt-6-luna",
+        "returnedModel": "gpt-6-luna",
+        "sourceCharacters": 11021,
+        "requestedKind": "MIXED",
+        "requestedCount": 4,
+        "language": "English",
+        "status": "ready",
+        "returnedQuestions": 4,
+        "mechanicalValidation": "passed",
+        "milliseconds": 10327,
+        "localSaveAnswerRestore": true,
+        "humanQualityReview": "pending"
+      },
+      {
+        "case": 2,
+        "requestedModel": "gpt-6-luna",
+        "returnedModel": "gpt-6-luna",
+        "sourceCharacters": 8941,
+        "requestedKind": "MIXED",
+        "requestedCount": 4,
+        "language": "Vietnamese",
+        "status": "ready",
+        "returnedQuestions": 4,
+        "mechanicalValidation": "passed",
+        "milliseconds": 10748,
+        "localSaveAnswerRestore": true,
+        "humanQualityReview": "pending"
+      },
+      {
+        "case": 3,
+        "requestedModel": "gpt-6-luna",
+        "returnedModel": "gpt-6-luna",
+        "sourceCharacters": 501,
+        "requestedKind": "MCQ",
+        "requestedCount": 12,
+        "language": "English",
+        "status": "insufficient_evidence",
+        "returnedQuestions": 0,
+        "mechanicalValidation": "passed",
+        "milliseconds": 2672,
+        "localSaveAnswerRestore": false,
+        "humanQualityReview": "pending"
+      }
+    ]
+  },
+  "humanQualityReview": "pending",
+  "limitations": [
+    "One unique real notebook, not a representative course-content benchmark.",
+    "Later notebook cells tested as an explicitly selected pasted excerpt; the file picker still caps text at 12000 characters.",
+    "No real PDF or OCR case was tested in this follow-up.",
+    "Local host storage round trip is separate from synthetic native Keystore CI coverage."
+  ]
+}

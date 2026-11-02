@@ -11,9 +11,10 @@ answers work offline.
 1. Open a course and choose **AI quiz & flashcards**. For existing material,
    choose **Courses → Saved practice sets**.
 2. Inspect and explicitly check saved activity descriptions, verified downloaded
-   text documents, or your own pasted excerpts. This screen does not download or
+   text documents, Jupyter notebooks, or your own pasted excerpts. This screen does not download or
    refresh university material. The existing offline source loader supplies text
-   formats; this feature does not introduce PDF/OCR ingestion.
+   formats, including basic PDF text extraction. Scanned PDFs still need external
+   text/OCR; this workflow does not execute notebook cells.
 3. Choose Multiple choice, Flashcards or Mixed, a count from 1–12, English or
    Vietnamese, and an optional focus topic. Mixed needs at least two questions.
 4. Configure the shared AI connection if needed. In direct mode, enter your own
@@ -57,10 +58,36 @@ authentication, request limits and redirect restrictions. Neither path retries
 automatically or falls back to another model. Cancellation stops accepting late
 results; provider processing or billing may already have happened.
 
-For this feature's development and evidence, **no real UIT login, CPASSWORD,
-student record, session cookie or university file was used**. The live model
-check sent authored synthetic text through an OpenAI-only transport guard.
-See [evaluation evidence](AI-PRACTICE-EVALUATION.md).
+The initial test suite and gallery used synthetic data. A later owner-authorized
+integration check read actual course pages and downloaded teaching notebooks,
+then sent selected educational excerpts to the configured OpenAI model. It did
+not invoke submission, grading, profile/account update or activity-completion
+endpoints. Authentication and normal access logs can still change server session
+and access records; “read-only” is not a promise of zero server-side writes.
+No university password or cookie was sent to AI or committed. Only aggregate
+real-data results are public. See [evaluation evidence](AI-PRACTICE-EVALUATION.md).
+
+## Jupyter notebook sources
+
+Verified `.ipynb` files use a notebook v4 source reader rather than sending their
+raw JSON. It accepts the [official string or string-array cell source forms](https://nbformat.readthedocs.io/en/latest/format_description.html),
+keeps Markdown and code in cell order, and preserves code indentation, newlines,
+Unicode and LaTeX. It reads no execution outputs, authors/kernel metadata, image
+attachments or raw cells and never starts a kernel, installs packages or executes
+code. Invalid UTF-8, malformed/unsupported notebooks and empty usable content
+produce no source instead of falling back to raw JSON.
+
+The existing 8 MiB file and 12,000-character source limits remain; notebook input
+also has a 10,000-cell ceiling. The file picker supplies a bounded **prefix**, not
+an automatic full-notebook index or a cell-range picker. Inspect that text before
+sending. To study later cells, explicitly paste the desired excerpt. A cap can
+cut a cell midway, so a source preview is necessary for meaningful context.
+
+Quotation validation stays literal after whitespace normalization. Both direct
+and gateway instructions require copied Markdown emphasis, backticks, LaTeX and
+punctuation, in the source's language even when the answer uses Vietnamese.
+Formatting-stripped or translated quotes are rejected rather than treated as
+verified evidence.
 
 ## Contract and mechanical validation
 

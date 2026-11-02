@@ -1,8 +1,9 @@
 # AI practice evaluation and phone evidence
 
 This evidence covers issue #50 on the stacked `feat/ai-practice-sets` branch.
-All accounts, lessons, progress and model outputs used for testing are synthetic.
-There was no real UIT login or university account operation for this feature.
+The deterministic tests and phone gallery use synthetic accounts, lessons and
+model outputs. A later authorized real-course follow-up is recorded separately
+below, with only aggregate public evidence.
 
 ## Real provider smoke check
 
@@ -30,6 +31,66 @@ answer consistency, bounds and literal source quotations. It does not decide
 whether every explanation or distractor is educationally sound. Human semantic
 quality review is **pending**, explicitly recorded in each response.
 
+## Authorized real-course follow-up
+
+The owner explicitly requested real data because synthetic lessons cannot expose
+all extraction and integration failures. The
+[aggregate report](evaluations/ai-practice/gpt-6-luna-real-summary.json) records the
+follow-up; raw course pages, notebooks, filenames, course/account identifiers,
+authenticated URLs and model answers remain private outside Git and CI.
+
+Fourteen sampled course pages were read through an allowlist. The contents API
+was unavailable for this session, so the production `HtmlMoodleParser` processed
+saved HTML. Many modules had no usable description; a successful catalog read
+therefore did not establish usable source coverage. Two direct teaching-file
+links yielded **one unique notebook**: 86,545 bytes, 91 cells (50 Markdown and 41
+code). These are sample observations, not enrollment totals or a representative
+survey of UIT courses.
+
+The notebook initially produced no source because `.ipynb` was unsupported.
+The new reader passed the real file through checksum verification and the
+production offline source loader, preserving a 12,000-character prefix without
+executing cells or including notebook outputs/metadata/attachments. Corrupting
+that isolated local copy made the same loader refuse it. Later notebook cells
+were separately selected as an explicit pasted excerpt; no cell-range picker or
+full-notebook indexing is claimed.
+
+Nine additional `gpt-6-luna` requests were made in three explicit operator-run
+rounds, with no automatic retry or model fallback. The initial round and a
+private diagnostic round each rejected both notebook cases while accepting the
+thin brief's insufficient-evidence result. The diagnostic response showed the
+model removing literal Markdown/backticks from quotations. The evidence validator
+correctly rejected those outputs. Direct and gateway prompts were then clarified
+to demand verbatim contiguous quotations, preserving formatting and the source
+language. The validator was not relaxed.
+
+Final run, with the same real text selections:
+
+| Selected source | Request | Result | Local save/answer/restore |
+| --- | --- | --- | --- |
+| 11,021-character excerpt from verified notebook prefix | 4 mixed, English | 4 accepted questions; exact quotations passed | Passed |
+| 8,941-character explicit excerpt from later cells, including code/math | 4 mixed, Vietnamese | 4 accepted questions; original-language quotations passed | Passed |
+| 501-character course brief lacking explanations for the requested gate-behavior topic | 12 MCQ, English | `insufficient_evidence`, no questions | No set saved |
+
+The provider stage had an OpenAI-only transport guard and no university requests.
+The university credential was not passed into that test worker; the private
+cookie file had already been removed. The local round trip used an isolated host
+storage adapter, not a real account mutation or proof of native encryption.
+Synthetic Android Keystore instrumentation remains separate.
+
+The university read stage allowed authentication, selected catalog/HTML reads and
+direct teaching-file downloads. It did **not** invoke academic mutation, activity
+completion, resource-view, submission, grade, profile or message endpoints.
+Authentication and ordinary access logging can still change server session and
+access records; this is not a server-side database audit. Avoiding all
+[resource-view requests](https://github.com/moodle/moodle/blob/MOODLE_405_STABLE/mod/resource/view.php)
+matters because a GET can trigger resource-view/completion handling.
+
+This follow-up demonstrates two real failures and their fixes, not an accuracy
+benchmark. It covers one unique notebook and a short brief; no real PDF or OCR
+case was exercised. Human semantic/bilingual review remains pending, and #50 and
+the stacked draft PR stay open.
+
 ## Deterministic checks
 
 | Layer | Coverage |
@@ -45,7 +106,9 @@ quality review is **pending**, explicitly recorded in each response.
 The ViewModel and real-screen tests give `PortalRepository` a rejecting proxy:
 only the saved snapshot getter is permitted (the ViewModel unit adapter also
 allows the saved sync-state getter). Every other university operation throws.
-The fake account repository also rejects account/session writes. These guards
+The fake account repository also rejects account/session writes. Notebook tests
+cover source representations, Unicode/code layout, malformed input, size bounds,
+excluded outputs/metadata, and verified offline-loader integration. These guards
 are part of the tests, not a runtime claim about unrelated app features.
 
 ```sh

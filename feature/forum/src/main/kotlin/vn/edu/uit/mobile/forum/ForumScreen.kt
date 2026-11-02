@@ -105,8 +105,10 @@ import vn.edu.uit.mobile.feature.forum.R
                     onTopic(t.id, state.anchorNumber, 0)
                 } else if (state.tab == ForumTab.SEARCH) {
                     onSearch(state.query, false)
-                } else {
+                } else if (state.tab == ForumTab.LATEST) {
                     onLatest(state.category, false)
+                } else {
+                    onTab(state.tab)
                 }
             }) { Icon(Icons.Outlined.Refresh, stringResource(R.string.f_refresh)) }
         }

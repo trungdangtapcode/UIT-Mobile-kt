@@ -71,6 +71,15 @@ class ForumDesignTest {
         capture("forum-table-images-390-phone")
     }
 
+    @Test fun refreshingLocalLibraryKeepsItsDestination() {
+        var destination: ForumTab? = null
+        var requestedFeed = false
+        compose.setContent { UitTheme(dark = true, dynamic = false) { ForumContent(state().copy(tab = ForumTab.SAVED), onTab = { destination = it }, onLatest = { _, _ -> requestedFeed = true }) } }
+        compose.onNodeWithContentDescription("Refresh").performClick()
+        org.junit.Assert.assertEquals(ForumTab.SAVED, destination)
+        org.junit.Assert.assertFalse(requestedFeed)
+    }
+
     @Test fun restoredReaderKeepsVisibleReplyInsteadOfRepeatingInitialJump() {
         val request = ForumRequest.Topic(901)
         val doc = ForumParser.parse(request, ForumFixtures.response(request))

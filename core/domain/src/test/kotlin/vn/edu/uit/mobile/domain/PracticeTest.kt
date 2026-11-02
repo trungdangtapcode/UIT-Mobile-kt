@@ -69,4 +69,14 @@ class PracticeTest {
         assertThrows(IllegalArgumentException::class.java) { PracticeRules.outcome(PracticeFixtures.mcq, PracticeAttempt("a", selected = 0, recalled = true)) }
         assertThrows(IllegalArgumentException::class.java) { PracticeRules.outcome(PracticeFixtures.card, PracticeAttempt("a", selected = 0)) }
     }
+
+    @Test fun `translated answers must retain literal markup and math in source quotations`() {
+        val text = "`push(x)` adds an item to a **stack**. The example uses ${'$'}x + y${'$'}."
+        val source = StudySource("formatted", "Synthetic formatted lesson", text)
+        val question = PracticeFixtures.card.copy(answer = "Thêm phần tử vào ngăn xếp.", citations = listOf(StudyCitation(source.id, text)))
+        PracticeRules.questions(listOf(question), listOf(source))
+        listOf("push(x) adds an item to a stack.", "`push(x)` thêm phần tử vào ngăn xếp.", "The example uses x + y.").forEach { rewritten ->
+            assertThrows(IllegalArgumentException::class.java) { PracticeRules.questions(listOf(question.copy(citations = listOf(StudyCitation(source.id, rewritten)))), listOf(source)) }
+        }
+    }
 }

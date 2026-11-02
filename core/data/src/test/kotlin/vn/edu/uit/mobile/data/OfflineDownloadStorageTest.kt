@@ -95,6 +95,7 @@ class OfflineDownloadStorageTest {
         val loader = createOfflineCourseSourceLoader(store)
         val txtFile = CourseFile("Syllabus.md", "https://courses.example.org/syllabus.md")
         val pdfFile = CourseFile("Slides.pdf", "https://courses.example.org/slides.pdf")
+        val notebookFile = CourseFile("Lab.ipynb", "https://courses.example.org/lab.ipynb")
         val unverifiedFile = CourseFile("Secret.txt", "https://courses.example.org/secret.txt")
 
         val txtDest = materialDestination(folder.root, course, txtFile).apply {
@@ -123,11 +124,20 @@ class OfflineDownloadStorageTest {
             writeText("Unverified text without checksum")
         }
 
-        val section = CourseSection(1, "Week 1", listOf(CourseModule(10, course.id, "Materials", "resource", "", files = listOf(txtFile, pdfFile, unverifiedFile))))
+        val notebookDest = materialDestination(folder.root, course, notebookFile).apply {
+            parentFile!!.mkdirs()
+            writeText("""{"nbformat":4,"metadata":{"owner":"METADATA_SENTINEL"},"cells":[{"cell_type":"markdown","source":["# Circuit lesson\n","Measure the prepared state."]},{"cell_type":"code","source":"if ready:\n    measure()","outputs":[{"text":"OUTPUT_SENTINEL"}]}]}""")
+        }
+        writeMaterialChecksum(notebookDest, java.security.MessageDigest.getInstance("SHA-256").digest(notebookDest.readBytes()).joinToString("") { "%02x".format(it) })
+
+        val section = CourseSection(1, "Week 1", listOf(CourseModule(10, course.id, "Materials", "resource", "", files = listOf(txtFile, pdfFile, notebookFile, unverifiedFile))))
         val sources = loader.load(course, listOf(section), emptyList())
-        assertEquals(2, sources.size)
+        assertEquals(3, sources.size)
         assertTrue(sources.all { it.id.startsWith("file:") && it.text.length <= 12000 })
         assertTrue(sources.any { it.title == "Syllabus.md" && it.text.contains("Projection and selection operators.") })
         assertTrue(sources.any { it.title == "Slides.pdf" && it.text.contains("Transactions preserve ACID consistency.") })
+        val notebook = sources.single { it.title == "Lab.ipynb" }
+        assertTrue(notebook.text.contains("if ready:\n    measure()"))
+        assertFalse(notebook.text.contains("METADATA_SENTINEL") || notebook.text.contains("OUTPUT_SENTINEL"))
     }
 }

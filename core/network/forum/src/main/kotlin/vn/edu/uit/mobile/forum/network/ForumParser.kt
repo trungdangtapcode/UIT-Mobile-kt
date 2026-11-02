@@ -2,6 +2,7 @@ package vn.edu.uit.mobile.forum.network
 
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Element
+import com.fleeksoft.ksoup.nodes.TextNode
 import kotlinx.serialization.json.*
 import vn.edu.uit.mobile.domain.*
 
@@ -71,6 +72,8 @@ object ForumParser {
         val doc = Ksoup.parseBodyFragment(html.take(64000))
         val hasEmbed = doc.select("iframe,object,embed,video,audio").isNotEmpty()
         doc.select("script,style,form,input,button,iframe,object,embed,svg,canvas,link,meta").remove()
+        // Discourse emoji are inline textual reactions, not image attachments.
+        doc.select("img.emoji").forEach { it.replaceWith(TextNode(it.attr("alt").take(80))) }
         val output = mutableListOf<ForumBlock>()
         fun links(e: Element) = e.select("a[href]").mapNotNull { a -> ForumUrls.safe(a.attr("href"))?.let { ForumLink(a.text().take(300).ifBlank { it }, it) } }.distinctBy { it.url }.take(40)
         fun visit(e: Element, depth: Int) {
@@ -110,7 +113,16 @@ object ForumParser {
                 }
             }
         }
-        doc.body().children().forEach { visit(it, 0) }
+        doc.body().childNodes().forEach { node ->
+            if (output.size >= 200) {
+                abbreviated = true
+                return@forEach
+            }
+            when (node) {
+                is Element -> visit(node, 0)
+                is TextNode -> if (node.text().isNotBlank()) output += ForumBlock(ForumBlockKind.TEXT, clipped(node.text(), 10000))
+            }
+        }
         if (hasEmbed && output.none { it.kind == ForumBlockKind.UNSUPPORTED }) output += ForumBlock(ForumBlockKind.UNSUPPORTED, "")
         if (abbreviated) output += ForumBlock(ForumBlockKind.OMITTED, "")
         return output

@@ -54,6 +54,13 @@ class ForumTest {
         assertTrue(blocks.any { it.text.startsWith("• ") })
     }
 
+    @Test fun discourseEmojiStayInlineWithoutOfferingRemoteImageLoads() {
+        val inline = ForumParser.blocks("<p>Thanks <img class='emoji' src='https://external.example/emoji.png' alt=':+1:'></p>")
+        assertEquals("Thanks :+1:", inline.single().text)
+        assertFalse(inline.any { it.kind == ForumBlockKind.IMAGE })
+        assertEquals(":smile:", ForumParser.blocks("<img class='emoji' src='/images/emoji/smile.png' alt=':smile:'>").single().text)
+    }
+
     @Test fun deepOrOversizedMarkupIsBoundedAndOffersSourceFallback() {
         val nested = "<div>".repeat(1000) + "payload" + "</div>".repeat(1000)
         assertTrue(ForumParser.blocks(nested).any { it.kind == ForumBlockKind.OMITTED })

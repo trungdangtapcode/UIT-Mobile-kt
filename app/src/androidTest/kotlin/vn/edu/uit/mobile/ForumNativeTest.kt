@@ -2,6 +2,8 @@ package vn.edu.uit.mobile
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
@@ -9,10 +11,12 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.security.KeyStore
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.runBlocking
 import org.junit.*
 import org.junit.Assert.*
@@ -33,6 +37,18 @@ class ForumNativeTest {
         val suffix = UUID.randomUUID().toString()
         val name = "forum-native-$suffix"
         val alias = "uit.forum.native.$suffix"
+        val imageCalls = AtomicInteger()
+        val picture = Bitmap.createBitmap(240, 96, Bitmap.Config.ARGB_8888).apply { eraseColor(android.graphics.Color.rgb(17, 28, 40)) }
+        val ink = Paint().apply {
+            color = android.graphics.Color.rgb(101, 190, 255)
+            strokeWidth = 3f
+        }
+        Canvas(picture).apply {
+            drawLine(40f, 48f, 200f, 48f, ink)
+            listOf(40f, 120f, 200f).forEach { drawCircle(it, 48f, 16f, ink) }
+        }
+        val png = ByteArrayOutputStream().also { picture.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+        picture.recycle()
         val offline = AtomicBoolean(false)
         val requests = mutableListOf<ForumRequest>()
         val remote = object : ForumTransport {
@@ -41,7 +57,11 @@ class ForumNativeTest {
                 if (offline.get()) throw ForumException(ForumFailure.NETWORK)
                 return ForumFixtures.response(request)
             }
-            override suspend fun image(url: String): ByteArray = error("Images must be explicitly requested")
+            override suspend fun image(url: String): ByteArray {
+                check(ForumUrls.image(url) != null)
+                imageCalls.incrementAndGet()
+                return png
+            }
         }
         val repository = LocalForumRepository(remote, StudyPrivateStorage(context, name, alias)) { ForumFixtures.AT }
         val vm = ForumViewModel(repository)
@@ -61,10 +81,16 @@ class ForumNativeTest {
             assertEquals(901L, restored.saved.single().id)
             assertEquals(1, restored.positions.single().postNumber)
             assertFalse(context.getSharedPreferences(name, Context.MODE_PRIVATE).all.values.any { it.toString().contains(ForumFixtures.TITLE) || it.toString().contains("lab_helper") })
+            assertEquals(0, imageCalls.get())
+            compose.onNodeWithText("Load image").performScrollTo().performClick()
+            compose.waitUntil(15000) { compose.onAllNodesWithContentDescription("Authored lab diagram").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithContentDescription("Authored lab diagram").performScrollTo().assertIsDisplayed()
+            assertEquals(1, imageCalls.get())
             offline.set(true)
             compose.runOnIdle { vm.topic(901) }
             compose.waitUntil(15000) { !vm.uiState.value.loading && vm.uiState.value.offline }
             compose.onNodeWithTag("forum-reader").performScrollToNode(hasText("Prepare your workspace"))
+            compose.onNodeWithContentDescription("Authored lab diagram").performScrollTo().assertIsDisplayed()
             val destination = File(context.filesDir, "auth-smoke/forum-native-reader.png").apply { parentFile!!.mkdirs() }
             destination.outputStream().use { compose.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it) }
             compose.runOnIdle {

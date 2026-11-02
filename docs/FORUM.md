@@ -104,3 +104,42 @@ repository, parser and real Keystore with an authored transport fixture. It
 checks local save, restore, offline reading and clear without constructing any
 university account transport. Its screenshot is a native emulator capture;
 host-rendered screenshots are separately labeled in the gallery.
+
+### Live UI verification (manual, local only)
+
+The synthetic gallery and instrumentation fixture do **not** prove that the UI
+can display current UIT responses or that Forum sign-in works. To exercise the
+actual production client, parser, repository, ViewModel and Compose reader
+together against the public server:
+
+```sh
+./gradlew :app:testDebugUnitTest --tests '*ForumLiveDesignTest' \
+  -PforumLive=true -PrecordUi=true
+```
+
+This opt-in test makes real anonymous HTTPS GET requests. It captures latest,
+categories, submitted search, topic reading and a numbered jump. It also checks
+forward reply loading and captures an announcement when present in the current
+feed. The main Robolectric looper is explicitly drained while asynchronous
+network work completes. Normal tests skip this network scenario.
+
+Images and `provenance.txt` stay under ignored `app/build/outputs/forum-live/`.
+They can contain student names or addresses from public posts; inspect locally
+and do not automatically publish them as repository or PR assets. No fixtures
+replace responses in this scenario. Persistence uses in-memory `StudyStorage`;
+the runtime is Robolectric, not an installed APK or Android emulator. This test
+does not verify Android Keystore, device TLS behavior or Forum authentication.
+
+On 2026-11-03 (Asia/Tokyo), the real reader loaded the Microsoft 365 topic with
+7,455 stream IDs, its initial 20 bodies, a further reply batch and the window
+around post #3727. Some migrated posts still contain literal legacy BBCode in
+their upstream cooked HTML; the reader currently displays those tags as text.
+
+A separate, private browser check authenticated the owner's authorized account:
+the read-only `/session/current.json` response returned HTTP 200 and its username
+matched the supplied account. Only verified same-origin login POST routes were
+allowed; other POSTs, including message-bus polling and view telemetry, were
+blocked. Credentials and cookies were not persisted, and the screenshot remains
+local. Login can still update server-side session/last-login metadata. This
+confirms website authentication only: **the app's Forum transport is anonymous
+and does not yet implement Forum SSO**.

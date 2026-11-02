@@ -16,6 +16,7 @@ dependencies {
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test)
     testImplementation(project(":core:network:forum"))
+    testImplementation(libs.ktor.core)
     androidTestImplementation(project(":core:network:forum"))
     testImplementation(libs.junit4)
     testImplementation(testFixtures(project(":core:domain")))
@@ -35,7 +36,12 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     // Compose rendering uses the debug-only host Activity supplied by ui-test-manifest.
-    if (name.contains("Release")) exclude("**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class")
+    if (name.contains("Release")) exclude("**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class")
+    val forumLive = providers.gradleProperty("forumLive").getOrElse("false").toBoolean()
+    systemProperty("uit.forum.live", forumLive.toString())
+    systemProperty("uit.forum.live.dir", layout.buildDirectory.dir("outputs/forum-live").get().asFile.absolutePath)
+    outputs.upToDateWhen { !forumLive }
+    outputs.doNotCacheIf("Live Forum verification must contact the current server") { forumLive }
     val recordUi = providers.gradleProperty("recordUi").getOrElse("false").toBoolean()
     systemProperty("roborazzi.test.record", recordUi)
     if (recordUi) systemProperty("robolectric.pixelCopyRenderMode", "hardware")

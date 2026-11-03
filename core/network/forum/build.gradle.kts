@@ -16,3 +16,13 @@ tasks.register<JavaExec>("researchPublicForum") {
     mainClass.set("vn.edu.uit.mobile.forum.network.ForumLiveResearch")
     args(rootProject.layout.projectDirectory.file("docs/research/evidence/uit-forum-public.json").asFile.absolutePath)
 }
+
+tasks.register<JavaExec>("verifyForumMemberLab") {
+    group = "verification"
+    description = "Opt-in native member contracts against the isolated localhost Discourse lab."
+    dependsOn(tasks.named("testClasses"))
+    classpath = project.extensions.getByType<SourceSetContainer>()["test"].runtimeClasspath
+    mainClass.set("vn.edu.uit.mobile.forum.network.ForumMemberLab")
+    val credentials = providers.gradleProperty("forumLabCredentials")
+    doFirst { args(credentials.get(), rootProject.layout.projectDirectory.file("docs/research/evidence/uit-forum-native-member-lab.json").asFile.absolutePath) }
+}

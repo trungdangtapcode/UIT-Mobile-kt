@@ -17,6 +17,7 @@ dependencies {
     androidTestImplementation(libs.compose.ui.test)
     testImplementation(project(":core:network:forum"))
     testImplementation(libs.ktor.core)
+    testImplementation(libs.ktor.okhttp)
     androidTestImplementation(project(":core:network:forum"))
     testImplementation(libs.junit4)
     testImplementation(testFixtures(project(":core:domain")))
@@ -36,7 +37,12 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     // Compose rendering uses the debug-only host Activity supplied by ui-test-manifest.
-    if (name.contains("Release")) exclude("**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class")
+    if (name.contains("Release")) exclude("**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class", "**/ForumAccountDesignTest.class", "**/ForumAccountLiveTest.class")
+    val accountLive = providers.gradleProperty("forumAccountLive").getOrElse("false").toBoolean()
+    systemProperty("uit.forum.account.live", accountLive.toString())
+    systemProperty("uit.forum.account.dir", layout.buildDirectory.dir("outputs/forum-account-private").get().asFile.absolutePath)
+    outputs.upToDateWhen { !accountLive }
+    outputs.doNotCacheIf("Authenticated Forum test must not be reused") { accountLive }
     val forumLive = providers.gradleProperty("forumLive").getOrElse("false").toBoolean()
     systemProperty("uit.forum.live", forumLive.toString())
     systemProperty("uit.forum.live.dir", layout.buildDirectory.dir("outputs/forum-live").get().asFile.absolutePath)

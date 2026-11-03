@@ -31,6 +31,7 @@ import vn.edu.uit.mobile.feature.forum.R
 
 @Composable fun ForumScreen(viewModel: ForumViewModel) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val actions = ForumAccountActions(viewModel::account, { viewModel.compose(create = true) }, { viewModel.compose(it) }, viewModel::edit, viewModel::submit)
     var link by remember { mutableStateOf<String?>(null) }
     var clear by remember { mutableStateOf(false) }
     BackHandler { if (state.topic != null) viewModel.back() else viewModel.close() }
@@ -40,8 +41,18 @@ import vn.edu.uit.mobile.feature.forum.R
         { raw ->
             val target = ForumUrls.target(raw)
             if (target != null) viewModel.topic(target.topicId, target.postNumber) else ForumUrls.safe(raw)?.let { link = it }
-        }, viewModel::image, { url -> ForumUrls.safe(url)?.let { link = it } }, { post -> viewModel.history(post) }, viewModel::discover
+        }, viewModel::image, { url -> ForumUrls.safe(url)?.let { link = it } }, { post -> viewModel.history(post) }, viewModel::discover, if (viewModel.supportsAccount) actions else null
     )
+    if (state.loginVisible) ForumLoginDialog(state, viewModel::login, viewModel::dismissAccount)
+    if (state.memberVisible) {
+        ForumMemberDialog(state, { tab, append, channel ->
+            viewModel.member(tab, append, channel, state.threadId.takeIf { channel?.id == state.channel?.id && channel != null })
+        }, viewModel::submit, { id, number ->
+            viewModel.dismissAccount()
+            viewModel.topic(id, number)
+        }, viewModel::disconnect, viewModel::dismissAccount, { url -> ForumUrls.safe(url)?.let { link = it } }, viewModel::image, { id -> viewModel.member(ForumMemberTab.CHAT, channel = state.channel, threadId = id) })
+    }
+    state.composer?.let { ForumComposerDialog(state, viewModel::submit, viewModel::dismissComposer) }
     if (state.historyPost != null) ForumHistoryDialog(state, viewModel::history, viewModel::closeHistory, { url -> ForumUrls.safe(url)?.let { link = it } }, viewModel::image)
     link?.let { url ->
         val handler = LocalUriHandler.current
@@ -88,7 +99,8 @@ import vn.edu.uit.mobile.feature.forum.R
     imageLoader: suspend (String) -> ByteArray = { throw ForumException(ForumFailure.NETWORK) },
     onBrowser: (String) -> Unit = onLink,
     onHistory: (ForumPost) -> Unit = {},
-    onDiscover: (ForumFilter, ForumPeriod, ForumTag?) -> Unit = { _, _, _ -> }
+    onDiscover: (ForumFilter, ForumPeriod, ForumTag?) -> Unit = { _, _, _ -> },
+    accountActions: ForumAccountActions? = null
 ) {
     val listState = rememberLazyListState()
     LaunchedEffect(state.tab, state.filter, state.period, state.tag?.id, state.category?.id, state.query) { listState.scrollToItem(0) }
@@ -99,7 +111,8 @@ import vn.edu.uit.mobile.feature.forum.R
                 Text(stringResource(R.string.f_title), style = MaterialTheme.typography.titleLarge)
                 Text("forum.uit.edu.vn", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
             }
-            IconButton(enabled = !state.loading, onClick = {
+            accountActions?.let { actions -> IconButton(onClick = actions.account, enabled = !state.accountBusy && !state.commandBusy) { Icon(Icons.Outlined.Person, stringResource(R.string.f_account)) } }
+            IconButton(enabled = !state.loading && !state.commandBusy, onClick = {
                 val t = state.topic
                 if (t != null) {
                     onTopic(t.id, state.anchorNumber, 0)
@@ -117,6 +130,10 @@ import vn.edu.uit.mobile.feature.forum.R
                 ForumTab.entries.forEach { tab -> Tab(selected = state.tab == tab, onClick = { onTab(tab) }, text = { Text(stringResource(tabLabel(tab))) }) }
             }
         }
+        if (state.user != null) Text(state.user.username, style = MaterialTheme.typography.labelSmall)
+        if (accountActions != null && state.user?.canCreateTopic == true && state.topic == null && !state.memberVisible) TextButton(onClick = accountActions.create, enabled = !state.commandBusy) { Text(stringResource(R.string.f_new_topic)) }
+        if (state.accountError != null && !state.loginVisible && !state.memberVisible && state.composer == null) ForumAccountError(state)
+        if (state.commandBusy || state.accountBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
         if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth().testTag("forum-loading"))
         state.error?.let { error ->
             Surface(shape = TechnicalShapes.Control, color = MaterialTheme.colorScheme.errorContainer) {
@@ -137,7 +154,7 @@ import vn.edu.uit.mobile.feature.forum.R
         if (state.fetchedAt > 0) Text(stringResource(if (state.offline) R.string.f_cached else R.string.f_retrieved, date(state.fetchedAt)), style = MaterialTheme.typography.labelSmall, color = if (state.offline) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant)
         val topic = state.topic
         if (topic != null) {
-            ForumReader(state, onTopic, onSave, onWindow, onPosition, onLink, imageLoader, onBrowser, onHistory)
+            ForumReader(state, onTopic, onSave, onWindow, onPosition, onLink, imageLoader, onBrowser, onHistory, accountActions)
         } else {
             var query by rememberSaveable { mutableStateOf(state.query) }
             var tagQuery by rememberSaveable { mutableStateOf("") }
@@ -178,7 +195,7 @@ import vn.edu.uit.mobile.feature.forum.R
                         }
                     }
                     ForumTab.SAVED -> {
-                        item { Text(stringResource(R.string.f_local_note), Modifier.padding(vertical = 12.dp), style = MaterialTheme.typography.bodyMedium) }
+                        item { Text(stringResource(if (state.user == null) R.string.f_local_note else R.string.f_member_local_note), Modifier.padding(vertical = 12.dp), style = MaterialTheme.typography.bodyMedium) }
                         if (state.local.saved.isEmpty()) item { EmptyForum() }
                         items(state.local.saved, key = { it.id }) { t ->
                             val position = state.local.positions.firstOrNull { it.topic.id == t.id }
@@ -234,7 +251,7 @@ import vn.edu.uit.mobile.feature.forum.R
     HorizontalDivider()
 }
 
-@Composable private fun ColumnScope.ForumReader(state: ForumState, onTopic: (Long, Int, Int) -> Unit, onSave: (ForumTopic) -> Unit, onWindow: (Boolean) -> Unit, onPosition: (ForumPost, Int) -> Unit, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, onBrowser: (String) -> Unit, onHistory: (ForumPost) -> Unit) {
+@Composable private fun ColumnScope.ForumReader(state: ForumState, onTopic: (Long, Int, Int) -> Unit, onSave: (ForumTopic) -> Unit, onWindow: (Boolean) -> Unit, onPosition: (ForumPost, Int) -> Unit, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, onBrowser: (String) -> Unit, onHistory: (ForumPost) -> Unit, accountActions: ForumAccountActions?) {
     val topic = state.topic ?: return
     val list = rememberLazyListState()
     val density = LocalDensity.current
@@ -262,6 +279,7 @@ import vn.edu.uit.mobile.feature.forum.R
         }
     }
     if (position != null) TextButton(onClick = { onTopic(topic.id, position.postNumber, position.offsetDp) }, enabled = !state.loading) { Text(stringResource(R.string.f_resume, position.postNumber)) }
+    if (position == null) state.remoteReadNumber?.let { remote -> TextButton(onClick = { onTopic(topic.id, remote, 0) }, enabled = !state.loading) { Text(stringResource(R.string.f_resume_server, remote)) } }
     LazyColumn(Modifier.weight(1f).testTag("forum-reader"), state = list, contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item(key = "heading") {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -293,6 +311,7 @@ import vn.edu.uit.mobile.feature.forum.R
                     }
                 }
                 SelectionContainerCompat { post.blocks.forEach { block -> ForumBlockView(block, onLink, imageLoader, topic.url + "/${post.number}", onBrowser) } }
+                if (accountActions != null && state.user != null) ForumPostActions(state, post, accountActions, onLink, imageLoader)
             }
         }
         if (state.posts.isEmpty() && !state.loading) item { Text(stringResource(R.string.f_no_posts)) }
@@ -315,6 +334,12 @@ private fun tabLabel(tab: ForumTab) = when (tab) {
     ForumTab.SAVED -> R.string.f_saved
 }
 internal fun errorLabel(error: ForumFailure) = when (error) {
+    ForumFailure.AUTHENTICATION -> R.string.f_auth_error
+    ForumFailure.SECOND_FACTOR -> R.string.f_second_factor_required
+    ForumFailure.FORBIDDEN -> R.string.f_forbidden
+    ForumFailure.REJECTED -> R.string.f_rejected
+    ForumFailure.CONFLICT -> R.string.f_conflict
+    ForumFailure.UNCERTAIN -> R.string.f_uncertain
     ForumFailure.NETWORK -> R.string.f_network
     ForumFailure.RATE_LIMIT -> R.string.f_rate
     ForumFailure.UNAVAILABLE -> R.string.f_unavailable

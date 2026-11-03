@@ -56,6 +56,12 @@ internal fun filterLabel(filter: ForumFilter) = when (filter) {
     ForumFilter.TOP -> R.string.f_top
     ForumFilter.HOT -> R.string.f_hot
     ForumFilter.VOTES -> R.string.f_votes
+    ForumFilter.NEW -> R.string.f_new
+    ForumFilter.UNREAD -> R.string.f_unread
+    ForumFilter.UNSEEN -> R.string.f_unseen
+    ForumFilter.READ -> R.string.f_read
+    ForumFilter.POSTED -> R.string.f_posted
+    ForumFilter.BOOKMARKS -> R.string.f_account_bookmarks
 }
 internal fun periodLabel(period: ForumPeriod) = when (period) {
     ForumPeriod.DAILY -> R.string.f_daily

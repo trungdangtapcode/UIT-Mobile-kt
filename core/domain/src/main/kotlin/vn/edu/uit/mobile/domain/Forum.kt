@@ -2,7 +2,7 @@ package vn.edu.uit.mobile.domain
 
 import java.net.URI
 
-/** Public, anonymous Discourse reading. No account or mutation contract exists here. */
+/** Shared read contracts; authenticated commands live in ForumAccount.kt. */
 object ForumLimits {
     const val ORIGIN = "https://forum.uit.edu.vn"
     const val BATCH = 20
@@ -12,10 +12,10 @@ object ForumLimits {
     const val CACHE_CHARS = 1000000
 }
 
-enum class ForumFilter(val route: String) { LATEST("latest"), TOP("top"), HOT("hot"), VOTES("votes") }
+enum class ForumFilter(val route: String, val memberOnly: Boolean = false) { LATEST("latest"), TOP("top"), HOT("hot"), VOTES("votes"), NEW("new", true), UNREAD("unread", true), UNSEEN("unseen", true), READ("read", true), POSTED("posted", true), BOOKMARKS("bookmarks", true) }
 enum class ForumPeriod(val route: String) { DAILY("daily"), WEEKLY("weekly"), MONTHLY("monthly"), QUARTERLY("quarterly"), YEARLY("yearly"), ALL("all") }
 data class ForumTag(val id: Long, val name: String, val count: Int, val description: String = "")
-data class ForumCategory(val id: Long, val name: String, val parentId: Long? = null, val description: String = "")
+data class ForumCategory(val id: Long, val name: String, val parentId: Long? = null, val description: String = "", val canCreate: Boolean = false)
 data class ForumTopic(val id: Long, val title: String, val categoryId: Long, val posts: Int, val lastPosted: String, val pinned: Boolean = false, val closed: Boolean = false, val tags: List<String> = emptyList()) {
     val url: String get() = "${ForumLimits.ORIGIN}/t/$id"
 }
@@ -45,7 +45,7 @@ data class ForumBlock(
     val original: String? = null,
     val level: Int = 0
 )
-data class ForumPost(val id: Long, val topicId: Long, val number: Int, val author: String, val created: String, val blocks: List<ForumBlock>, val version: Int = 1, val updated: String = "", val canViewHistory: Boolean = false, val replyTo: Int? = null)
+data class ForumPost(val id: Long, val topicId: Long, val number: Int, val author: String, val created: String, val blocks: List<ForumBlock>, val version: Int = 1, val updated: String = "", val canViewHistory: Boolean = false, val replyTo: Int? = null, val canEdit: Boolean = false, val canLike: Boolean = false, val liked: Boolean = false, val likeCount: Int = 0, val reactions: List<ForumReaction> = emptyList(), val polls: List<ForumPoll> = emptyList())
 data class ForumRevision(
     val postId: Long,
     val version: Int,
@@ -70,7 +70,10 @@ data class ForumDocument(
     val revision: ForumRevision? = null,
     val filters: List<ForumFilter> = listOf(ForumFilter.LATEST),
     val tags: List<ForumTag> = emptyList(),
-    val tagsTruncated: Boolean = false
+    val tagsTruncated: Boolean = false,
+    val canReply: Boolean = false,
+    val lastReadPostNumber: Int? = null,
+    val reactionChoices: List<String> = emptyList()
 )
 sealed interface ForumRequest {
     data object Categories : ForumRequest
@@ -83,8 +86,8 @@ sealed interface ForumRequest {
     data class Revision(val topicId: Long, val postId: Long, val version: Int) : ForumRequest
     data class Posts(val topicId: Long, val ids: List<Long>) : ForumRequest
 }
-enum class ForumFailure { NETWORK, RATE_LIMIT, UNAVAILABLE, INVALID, STORAGE, CAPACITY }
-class ForumException(val reason: ForumFailure, val retryAfterSeconds: Long? = null) : Exception(reason.name)
+enum class ForumFailure { NETWORK, RATE_LIMIT, UNAVAILABLE, INVALID, STORAGE, CAPACITY, AUTHENTICATION, SECOND_FACTOR, FORBIDDEN, REJECTED, CONFLICT, UNCERTAIN }
+class ForumException(val reason: ForumFailure, val retryAfterSeconds: Long? = null, val detail: String = "") : Exception(reason.name)
 data class ForumLoaded(val document: ForumDocument, val fetchedAt: Long, val offline: Boolean = false)
 data class ForumPosition(val topic: ForumTopic, val postId: Long, val postNumber: Int, val offsetDp: Int = 0)
 data class ForumLocalState(val saved: List<ForumTopic> = emptyList(), val positions: List<ForumPosition> = emptyList(), val savedAt: Map<Long, Long> = emptyMap())

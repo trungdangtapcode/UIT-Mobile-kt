@@ -34,7 +34,7 @@ def rails(code):
     return json.loads(lines[0])
 
 
-def main():
+def validate_lab():
     inspect = json.loads(docker("inspect", CONTAINER))[0]
     if inspect["Config"].get("Labels", {}).get("uit-mobile.task") != "forum-parity":
         raise RuntimeError("Refusing an unlabelled container")
@@ -44,6 +44,12 @@ def main():
     actual = docker("exec", "-w", "/src", CONTAINER, "git", "rev-parse", "HEAD").strip()
     if actual != REVISION:
         raise RuntimeError("Lab source does not match the documented research revision")
+
+    return actual
+
+
+def main():
+    actual = validate_lab()
 
     # Only generated .invalid identities enter the isolated database. Email jobs
     # are disabled before creating either user. No host credential env is passed.

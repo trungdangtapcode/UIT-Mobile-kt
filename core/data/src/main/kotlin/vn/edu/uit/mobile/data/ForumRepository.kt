@@ -8,7 +8,7 @@ import kotlinx.serialization.json.*
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.forum.network.*
 
-fun createForumRepository(context: Context): ForumRepository = LocalForumRepository(AnonymousForumClient(), StudyPrivateStorage(context, "forum_public", "uit.forum.public.v1"))
+fun createForumRepository(context: Context): ForumRepository = ConnectedForumRepository(LocalForumRepository(AnonymousForumClient(), StudyPrivateStorage(context, "forum_public", "uit.forum.public.v1")), ForumSessionClient(), StudyPrivateStorage(context, "forum_session", "uit.forum.session.v1"))
 
 /** Guest namespace: public responses and local preferences never share a UIT account. */
 class LocalForumRepository(private val remote: ForumTransport, private val storage: StudyStorage, private val now: () -> Long = { System.currentTimeMillis() / 1000 }) : ForumRepository {

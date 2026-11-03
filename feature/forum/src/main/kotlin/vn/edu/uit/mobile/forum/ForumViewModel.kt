@@ -8,9 +8,29 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import vn.edu.uit.mobile.domain.*
 
+enum class ForumMemberTab { NOTICES, BOOKMARKS, CHAT }
+data class ForumComposer(val topicId: Long? = null, val parent: Int? = null, val edit: ForumEditable? = null)
 enum class ForumTab { LATEST, CATEGORIES, TAGS, SEARCH, SAVED }
 data class ForumState(
     val open: Boolean = false,
+    val user: ForumUser? = null,
+    val loginVisible: Boolean = false,
+    val memberVisible: Boolean = false,
+    val memberTab: ForumMemberTab = ForumMemberTab.NOTICES,
+    val memberPage: ForumAccountPage = ForumAccountPage(),
+    val memberIndex: Int = 0,
+    val channel: ForumChannel? = null,
+    val threadId: Long? = null,
+    val accountBusy: Boolean = false,
+    val accountError: ForumFailure? = null,
+    val accountDetail: String = "",
+    val accountRetryAt: Long = 0,
+    val composer: ForumComposer? = null,
+    val commandBusy: Boolean = false,
+    val commandUncertain: Boolean = false,
+    val canReply: Boolean = false,
+    val remoteReadNumber: Int? = null,
+    val reactionChoices: List<String> = emptyList(),
     val tab: ForumTab = ForumTab.LATEST,
     val categories: List<ForumCategory> = emptyList(),
     val category: ForumCategory? = null,
@@ -53,6 +73,12 @@ data class ForumState(
 class ForumViewModel(private val repository: ForumRepository, private val clock: () -> Long = { System.currentTimeMillis() / 1000 }) : ViewModel() {
     private val state = MutableStateFlow(ForumState())
     val uiState = state.asStateFlow()
+    private val accountRepository = repository as? ForumAccountRepository
+    val supportsAccount get() = accountRepository != null
+    private var accountWork: Job? = null
+    private var commandWork: Job? = null
+    private var accountSerial = 0L
+    private var resumed = false
     private var historyWork: Job? = null
     private var historySerial = 0L
     private var work: Job? = null
@@ -66,7 +92,23 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
     private var feedStamp: Pair<Long, Boolean> = 0L to false
     fun open() {
         state.value = state.value.copy(open = true)
-        if (state.value.fetchedAt == 0L && state.value.topics.isEmpty()) latest() else refreshLocal()
+        if (!resumed && accountRepository != null) {
+            resumed = true
+            accountWork = viewModelScope.launch {
+                state.value = state.value.copy(accountBusy = true)
+                try {
+                    val user = accountRepository.resume()
+                    state.value = state.value.copy(user = user, accountBusy = false)
+                    latest()
+                } catch (e: ForumException) {
+                    state.value = state.value.copy(accountBusy = false, loginVisible = true, accountError = e.reason)
+                }
+            }
+        } else if (state.value.fetchedAt == 0L && state.value.topics.isEmpty()) {
+            latest()
+        } else {
+            refreshLocal()
+        }
     }
     fun close() {
         closeHistory()
@@ -87,9 +129,14 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         }
     }
     private fun failure(e: ForumException, action: (() -> Unit)? = null) {
+        if (e.reason == ForumFailure.AUTHENTICATION && state.value.user != null) {
+            resetAccountUi()
+            state.value = state.value.copy(loginVisible = true, accountError = e.reason)
+            return
+        }
         if (action != null) retry = action
         val s = state.value
-        val denied = e.reason == ForumFailure.UNAVAILABLE && s.topic != null
+        val denied = e.reason in listOf(ForumFailure.UNAVAILABLE, ForumFailure.FORBIDDEN) && s.topic != null
         if (denied) retry = { topic(s.topic!!.id, s.anchorNumber) }
         state.value = s.copy(
             error = e.reason,
@@ -149,7 +196,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
                     val c = repository.load(ForumRequest.Categories)
                     if (serial == token) state.value = state.value.copy(categories = c.document.categories, filters = c.document.filters)
                 } catch (e: ForumException) {
-                    if (e.reason == ForumFailure.RATE_LIMIT) throw e
+                    if (e.reason in listOf(ForumFailure.RATE_LIMIT, ForumFailure.AUTHENTICATION)) throw e
                 }
             }
             val local = repository.local()
@@ -234,7 +281,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
             val indexes = doc.posts.map { doc.stream.indexOf(it.id) }.filter { it >= 0 }
             val start = indexes.minOrNull() ?: 0
             val end = indexes.maxOrNull()?.plus(1) ?: 0
-            state.value = state.value.copy(topic = doc.topic, stream = doc.stream, posts = doc.posts, start = start, end = end, unavailable = end - start - doc.posts.size, fetchedAt = result.fetchedAt, offline = result.offline, anchorNumber = number, anchorOffsetDp = offsetDp, scrollVersion = state.value.scrollVersion + 1)
+            state.value = state.value.copy(commandUncertain = false, accountError = null, accountDetail = "", remoteReadNumber = doc.lastReadPostNumber, canReply = doc.canReply, reactionChoices = doc.reactionChoices, topic = doc.topic, stream = doc.stream, posts = doc.posts, start = start, end = end, unavailable = end - start - doc.posts.size, fetchedAt = result.fetchedAt, offline = result.offline, anchorNumber = number, anchorOffsetDp = offsetDp, scrollVersion = state.value.scrollVersion + 1)
             enrichCategories(listOfNotNull(doc.topic?.categoryId), token)
         }
     }
@@ -256,7 +303,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
                 state.value = state.value.copy(categories = (state.value.categories + c).distinctBy { it.id })
                 c.mapNotNull { it.parentId }.forEach { queue.addLast(it) }
             } catch (e: ForumException) {
-                if (e.reason == ForumFailure.RATE_LIMIT) throw e
+                if (e.reason in listOf(ForumFailure.RATE_LIMIT, ForumFailure.AUTHENTICATION)) throw e
                 if (e.reason == ForumFailure.UNAVAILABLE) attemptedCategories += id
             }
         }
@@ -287,6 +334,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         }
     }
     fun save(topic: ForumTopic) {
+        if (state.value.topic?.id != topic.id && state.value.topics.none { it.id == topic.id } && state.value.local.saved.none { it.id == topic.id }) return
         saveValue(topic, state.value.local.saved.none { it.id == topic.id })
     }
     private fun saveValue(topic: ForumTopic, desired: Boolean) {
@@ -316,12 +364,14 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
     }
     private suspend fun persistPosition() {
         val p = pendingPosition ?: return
+        val token = localSerial
         try {
             repository.position(p)
+            if (token != localSerial) return
             if (pendingPosition == p) pendingPosition = null
             state.value = state.value.copy(local = state.value.local.copy(positions = (listOf(p) + state.value.local.positions.filterNot { it.topic.id == p.topic.id }).take(120)))
         } catch (e: ForumException) {
-            failure(e, ::flushPosition)
+            if (token == localSerial) failure(e, ::flushPosition)
         }
     }
     private fun flushPosition() {
@@ -329,13 +379,8 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         positionWork = viewModelScope.launch { persistPosition() }
     }
     fun clear() {
-        closeHistory()
-        work?.cancel()
-        positionWork?.cancel()
-        saveWork?.cancel()
-        localSerial++
-        pendingPosition = null
-        serial++
+        accountWork?.cancel()
+        resetAccountUi()
         launch({ clear() }) {
             repository.clear()
             attemptedCategories.clear()
@@ -359,7 +404,13 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
             } catch (e: CancellationException) {
                 throw e
             } catch (e: ForumException) {
-                if (serial == historySerial) state.value = state.value.copy(historyError = e.reason, historyRetryAt = if (e.reason == ForumFailure.RATE_LIMIT) clock() + (e.retryAfterSeconds ?: 30) else 0)
+                if (serial == historySerial) {
+                    if (e.reason == ForumFailure.AUTHENTICATION) {
+                        failure(e)
+                    } else {
+                        state.value = state.value.copy(historyError = e.reason, historyRetryAt = if (e.reason == ForumFailure.RATE_LIMIT) clock() + (e.retryAfterSeconds ?: 30) else 0)
+                    }
+                }
             } catch (_: Exception) {
                 if (serial == historySerial) state.value = state.value.copy(historyError = ForumFailure.INVALID)
             } finally {
@@ -367,5 +418,163 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
             }
         }
     }
-    suspend fun image(url: String) = repository.image(url)
+    private fun resetAccountUi() {
+        closeHistory()
+        work?.cancel()
+        positionWork?.cancel()
+        saveWork?.cancel()
+        commandWork?.cancel()
+        serial++
+        localSerial++
+        accountSerial++
+        pendingPosition = null
+        retry = null
+        feedStamp = 0L to false
+        attemptedCategories.clear()
+        state.value = ForumState(open = true)
+    }
+    fun account() {
+        state.value = state.value.copy(loginVisible = state.value.user == null, memberVisible = state.value.user != null, accountError = null)
+        if (state.value.user != null) member(ForumMemberTab.NOTICES)
+    }
+    fun login(username: String, password: String, code: String) {
+        val repo = accountRepository ?: return
+        if (state.value.accountBusy || state.value.accountRetryAt > clock()) return
+        accountWork?.cancel()
+        resetAccountUi()
+        val token = accountSerial
+        state.value = state.value.copy(loginVisible = true, accountBusy = true)
+        accountWork = viewModelScope.launch {
+            try {
+                val user = repo.login(username, password, code)
+                if (token != accountSerial) return@launch
+                state.value = state.value.copy(user = user, loginVisible = false)
+                latest(null)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: ForumException) {
+                if (token == accountSerial) state.value = state.value.copy(accountError = e.reason, accountDetail = e.detail, accountRetryAt = if (e.reason == ForumFailure.RATE_LIMIT) clock() + (e.retryAfterSeconds ?: 30) else 0)
+            } catch (_: Exception) {
+                if (token == accountSerial) state.value = state.value.copy(accountError = ForumFailure.INVALID)
+            } finally {
+                if (token == accountSerial) state.value = state.value.copy(accountBusy = false)
+            }
+        }
+    }
+    fun disconnect() {
+        val repo = accountRepository ?: return
+        accountWork?.cancel()
+        resetAccountUi()
+        state.value = state.value.copy(accountBusy = true)
+        accountWork = viewModelScope.launch {
+            try {
+                repo.disconnect()
+                state.value = state.value.copy(accountBusy = false)
+                latest(null)
+            } catch (e: ForumException) {
+                state.value = state.value.copy(accountBusy = false, loginVisible = true, accountError = e.reason)
+            }
+        }
+    }
+    fun dismissAccount() {
+        if (state.value.accountBusy || state.value.commandBusy) return
+        if (state.value.loginVisible) disconnect() else state.value = state.value.copy(memberVisible = false, memberPage = ForumAccountPage(), channel = null, accountError = null)
+    }
+    fun member(tab: ForumMemberTab = state.value.memberTab, append: Boolean = false, channel: ForumChannel? = null, threadId: Long? = null) {
+        val repo = accountRepository ?: return
+        if (state.value.user == null || state.value.commandBusy || state.value.accountRetryAt > clock()) return
+        accountWork?.cancel()
+        val token = ++accountSerial
+        val index = if (append) state.value.memberIndex + 1 else 0
+        if (index > 100) return
+        val before = if (append) state.value.memberPage else ForumAccountPage()
+        val request = when (tab) {
+            ForumMemberTab.NOTICES -> ForumMemberRequest.Notices(index * 30)
+            ForumMemberTab.BOOKMARKS -> ForumMemberRequest.Bookmarks(index)
+            ForumMemberTab.CHAT -> channel?.let { ForumMemberRequest.Messages(it, if (append) before.messages.minOfOrNull { m -> m.id } else null, threadId) } ?: ForumMemberRequest.Channels
+        }
+        state.value = state.value.copy(memberVisible = true, memberTab = tab, channel = channel, threadId = threadId, accountBusy = true, accountError = null, memberPage = before)
+        accountWork = viewModelScope.launch {
+            try {
+                val result = repo.member(request)
+                if (token != accountSerial) return@launch
+                val combined = result.copy(notices = (before.notices + result.notices).distinctBy { it.id }.take(1000), bookmarks = (before.bookmarks + result.bookmarks).distinctBy { it.id }.take(1000), messages = (before.messages + result.messages).distinctBy { it.id }.sortedBy { it.id }.takeLast(500))
+                val grew = combined.notices.size > before.notices.size || combined.bookmarks.size > before.bookmarks.size || combined.messages.size > before.messages.size
+                state.value = state.value.copy(commandUncertain = false, memberPage = combined.copy(more = result.more && grew), memberIndex = index)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: ForumException) {
+                failure(e)
+                if (token == accountSerial) state.value = state.value.copy(accountError = e.reason, accountDetail = e.detail, accountRetryAt = if (e.reason == ForumFailure.RATE_LIMIT) clock() + (e.retryAfterSeconds ?: 30) else 0)
+            } catch (_: Exception) {
+                if (token == accountSerial) state.value = state.value.copy(accountError = ForumFailure.INVALID)
+            } finally {
+                if (token == accountSerial) state.value = state.value.copy(accountBusy = false)
+            }
+        }
+    }
+    fun compose(parent: Int? = null, create: Boolean = false) {
+        if (state.value.user == null || state.value.commandBusy || state.value.accountRetryAt > clock()) return
+        if (create && state.value.user?.canCreateTopic != true || !create && !state.value.canReply) return
+        state.value = state.value.copy(composer = ForumComposer(if (create) null else state.value.topic?.id, parent), accountError = null, commandUncertain = false)
+    }
+    fun edit(post: ForumPost) {
+        val repo = accountRepository ?: return
+        if (!post.canEdit || state.value.user == null || state.value.commandBusy || state.value.accountRetryAt > clock()) return
+        accountWork?.cancel()
+        val token = ++accountSerial
+        state.value = state.value.copy(accountBusy = true, accountError = null)
+        accountWork = viewModelScope.launch {
+            try {
+                val source = repo.member(ForumMemberRequest.Edit(post.id)).editable ?: throw ForumException(ForumFailure.INVALID)
+                if (token == accountSerial) state.value = state.value.copy(composer = ForumComposer(edit = source), commandUncertain = false)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: ForumException) {
+                failure(e)
+                if (token == accountSerial) state.value = state.value.copy(accountError = e.reason, accountRetryAt = if (e.reason == ForumFailure.RATE_LIMIT) clock() + (e.retryAfterSeconds ?: 30) else 0)
+            } catch (_: Exception) {
+                if (token == accountSerial) state.value = state.value.copy(accountError = ForumFailure.INVALID)
+            } finally {
+                if (token == accountSerial) state.value = state.value.copy(accountBusy = false)
+            }
+        }
+    }
+    fun dismissComposer() {
+        if (!state.value.commandBusy) state.value = state.value.copy(composer = null, accountError = null, commandUncertain = false)
+    }
+    fun submit(command: ForumCommand) {
+        val repo = accountRepository ?: return
+        if (state.value.user == null || state.value.commandBusy || state.value.commandUncertain || state.value.accountRetryAt > clock()) return
+        val token = accountSerial
+        val topic = state.value.topic
+        state.value = state.value.copy(commandBusy = true, accountError = null, accountDetail = "")
+        commandWork = viewModelScope.launch {
+            try {
+                val result = repo.command(command)
+                if (token != accountSerial) return@launch
+                state.value = state.value.copy(commandBusy = false, composer = null)
+                if (state.value.memberVisible) {
+                    member(state.value.memberTab, channel = state.value.channel, threadId = state.value.threadId)
+                } else {
+                    result.topicId?.let { topic(it, result.postNumber) } ?: topic?.let { topic(it.id, state.value.anchorNumber) }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: ForumException) {
+                failure(e)
+                if (token == accountSerial) state.value = state.value.copy(accountError = e.reason, accountDetail = e.detail, accountRetryAt = if (e.reason == ForumFailure.RATE_LIMIT) clock() + (e.retryAfterSeconds ?: 30) else 0, commandUncertain = e.reason == ForumFailure.UNCERTAIN)
+            } catch (_: Exception) {
+                if (token == accountSerial) state.value = state.value.copy(accountError = ForumFailure.UNCERTAIN, commandUncertain = true)
+            } finally {
+                if (token == accountSerial) state.value = state.value.copy(commandBusy = false)
+            }
+        }
+    }
+    suspend fun image(url: String): ByteArray = try {
+        repository.image(url)
+    } catch (e: ForumException) {
+        if (e.reason == ForumFailure.AUTHENTICATION) withContext(Dispatchers.Main) { failure(e) }
+        throw e
+    }
 }

@@ -39,7 +39,7 @@ class AnonymousForumClient(
             ForumRequest.Categories -> "/site.json"
             ForumRequest.Tags -> "/tags.json"
             is ForumRequest.Feed -> {
-                require(request.page in 0..99 && (request.tagId?.let { it > 0 } != false))
+                require(!request.filter.memberOnly && request.page in 0..99 && (request.tagId?.let { it > 0 } != false))
                 request.tagId?.let { "/tag/$it/l/${request.filter.route}.json" } ?: "/${request.filter.route}.json"
             }
             is ForumRequest.Category -> {

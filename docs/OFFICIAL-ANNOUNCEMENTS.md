@@ -158,7 +158,7 @@ Run from the repository with JDK 21 and an Android SDK configured:
 ./gradlew :core:network:daa:test :core:data:testDebugUnitTest --tests '*Announcement*'
 ./gradlew :app:testDebugUnitTest --tests '*AnnouncementsDesignTest' --tests '*AnnouncementNotificationTest'
 ./gradlew :core:network:daa:researchAnnouncements
-./gradlew :app:testDebugUnitTest --tests '*AnnouncementsLiveDesignTest' -PannouncementsLive=true
+./gradlew :app:testDebugUnitTest --tests '*AnnouncementsLiveDesignTest' -PannouncementsLive=true -PrecordUi=true
 ```
 
 Live captures use actual public UIT responses through production code, at 360/390/

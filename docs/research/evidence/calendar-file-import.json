@@ -1,0 +1,17 @@
+{
+  "verified_at_utc": "2026-11-03T07:04:10.286749+00:00",
+  "client": "khal, version 0.14.1",
+  "source": "core/domain/build/test-artifacts/calendar-export.ics",
+  "source_sha256": "c23aa85bd0604b6fd5e7fd8601bbd16f5e522ed254030bc7a8d22c589d6d4081",
+  "data": "Synthetic domain-test fixture; no university account or network requests",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "imported_occurrences": 3,
+  "checks": [
+    "CLI client import succeeds",
+    "Reimport retains stable UIDs without duplicates in khal",
+    "Displayed Vietnam dates and times match source",
+    "Cancellation status survives import",
+    "Finite make-up and fortnightly occurrences survive import"
+  ],
+  "limits": "Terminal calendar client on Linux, not Google/Outlook or Android import UI. Device FileProvider test is separate."
+}

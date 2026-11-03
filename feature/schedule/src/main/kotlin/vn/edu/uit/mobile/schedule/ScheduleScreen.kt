@@ -38,7 +38,8 @@ import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.schedule.R
 import vn.edu.uit.mobile.model.*
 
-@Immutable data class ScheduleState(val snapshot: PortalSnapshot = PortalSnapshot(), val anchor: LocalDate = today(), val monthly: Boolean = false, val focusRequest: Int = 0, val calendarExportBusy: Boolean = false, val calendarExportMessage: String? = null)
+@Immutable data class ScheduleState(val snapshot: PortalSnapshot = PortalSnapshot(), val anchor: LocalDate = today(), val monthly: Boolean = false, val focusRequest: Int = 0, val calendarExportBusy: Boolean = false, val calendarExportMessage: CalendarExportMessage? = null, val calendarSession: Long = 0)
+enum class CalendarExportMessage(val error: Boolean = false) { SAVED, CANCELED, REVIEW(true), SAVE_FAILED(true), NO_PICKER(true), NO_CALENDAR(true), SHARE_FAILED(true), SHARE_OPENED }
 sealed interface ScheduleIntent {
     data class Move(val amount: Int) : ScheduleIntent
     data object Toggle : ScheduleIntent
@@ -54,51 +55,96 @@ class ScheduleViewModel(private val repository: PortalRepository, accounts: Acco
                 state.value = state.value.copy(snapshot = it)
             }
         }
-        viewModelScope.launch { accounts.accounts.collect { freeTimePlanner.onAccounts(it.map { account -> account.id }.toSet()) } }
+        viewModelScope.launch {
+            var previous: Set<String>? = null
+            accounts.accounts.collect { values ->
+                val ids = values.map { it.id }.toSet()
+                freeTimePlanner.onAccounts(ids)
+                if (previous != null && previous != ids) {
+                    pendingCalendarExport = null
+                    state.value = state.value.copy(calendarSession = state.value.calendarSession + 1, calendarExportBusy = false, calendarExportMessage = CalendarExportMessage.REVIEW)
+                }
+                previous = ids
+            }
+        }
     }
-    private var pendingCalendarExport: CalendarExportPlan? = null
-    fun prepareCalendarExport(plan: CalendarExportPlan): String? {
+    private var pendingCalendarExport: Pair<Long, CalendarExportPlan>? = null
+    private fun validateCalendar(plan: CalendarExportPlan, session: Long = state.value.calendarSession) {
+        check(session == state.value.calendarSession)
+        check(plan.entries.isNotEmpty())
+        check(plan.entries == CalendarFileExport().plan(state.value.snapshot, plan.options).entries)
+    }
+    fun prepareCalendarExport(plan: CalendarExportPlan, expectedSession: Long = state.value.calendarSession): String? {
         if (state.value.calendarExportBusy) return null
         return try {
-            check(plan.entries == CalendarFileExport().plan(state.value.snapshot, plan.options).entries) { "The saved schedule changed. Review the updated preview and try again." }
-            check(plan.entries.isNotEmpty()) { "There are no events to export." }
-            pendingCalendarExport = plan
+            validateCalendar(plan, expectedSession)
+            pendingCalendarExport = state.value.calendarSession to plan
             state.value = state.value.copy(calendarExportBusy = true, calendarExportMessage = null)
             plan.fileName
         } catch (e: Exception) {
-            state.value = state.value.copy(calendarExportMessage = "The saved schedule changed or this range cannot be exported. Review the preview and try a shorter range.")
+            state.value = state.value.copy(calendarExportMessage = CalendarExportMessage.REVIEW)
             null
         }
     }
     fun calendarPickerUnavailable() {
         pendingCalendarExport = null
-        state.value = state.value.copy(calendarExportBusy = false, calendarExportMessage = "No document picker is available on this device.")
+        state.value = state.value.copy(calendarExportBusy = false, calendarExportMessage = CalendarExportMessage.NO_PICKER)
     }
     fun calendarAppUnavailable() {
-        state.value = state.value.copy(calendarExportMessage = "No calendar app is available on this device.")
+        state.value = state.value.copy(calendarExportMessage = CalendarExportMessage.NO_CALENDAR)
     }
     fun completeCalendarExport(context: Context, uri: Uri?) = viewModelScope.launch {
-        val plan = pendingCalendarExport
+        val pending = pendingCalendarExport
+        val session = state.value.calendarSession
         pendingCalendarExport = null
         if (uri == null) {
-            state.value = state.value.copy(calendarExportBusy = false, calendarExportMessage = "Export canceled. No events were written.")
+            state.value = state.value.copy(calendarExportBusy = false, calendarExportMessage = CalendarExportMessage.CANCELED)
             return@launch
         }
         try {
-            check(plan != null) { "The export was interrupted. Review the selection and save again." }
-            check(plan.entries == CalendarFileExport().plan(state.value.snapshot, plan.options).entries) { "The saved schedule changed. Review the updated preview and save again." }
+            check(pending != null)
+            val plan = pending.second
+            validateCalendar(plan, pending.first)
+            val bytes = withContext(Dispatchers.Default) { CalendarFileExport().render(plan, Clock.System.now().epochSeconds).toByteArray(Charsets.UTF_8) }
+            validateCalendar(plan, pending.first)
             withContext(Dispatchers.IO) {
-                val bytes = CalendarFileExport().render(plan, Clock.System.now().epochSeconds).toByteArray(Charsets.UTF_8)
                 val stream = context.applicationContext.contentResolver.openOutputStream(uri, "wt") ?: error("No output stream")
                 stream.use { it.write(bytes) }
             }
-            state.value = state.value.copy(calendarExportMessage = "Calendar file saved. Import it with your calendar app; it will not update automatically.")
+            if (session == state.value.calendarSession) state.value = state.value.copy(calendarExportMessage = CalendarExportMessage.SAVED)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            state.value = state.value.copy(calendarExportMessage = "Calendar file was not saved. The selection may have changed or the destination is unavailable. Review and try again.")
+            if (session == state.value.calendarSession) state.value = state.value.copy(calendarExportMessage = CalendarExportMessage.SAVE_FAILED)
         } finally {
-            state.value = state.value.copy(calendarExportBusy = false)
+            if (session == state.value.calendarSession) state.value = state.value.copy(calendarExportBusy = false)
+        }
+    }
+    suspend fun shareCalendar(context: Context, plan: CalendarExportPlan, expectedSession: Long = state.value.calendarSession, launch: (android.content.Intent) -> Unit) {
+        if (state.value.calendarExportBusy) return
+        val session = expectedSession
+        if (session != state.value.calendarSession) {
+            state.value = state.value.copy(calendarExportMessage = CalendarExportMessage.REVIEW)
+            return
+        }
+        var file: java.io.File? = null
+        var launched = false
+        state.value = state.value.copy(calendarExportBusy = true, calendarExportMessage = null)
+        try {
+            validateCalendar(plan, session)
+            withContext(Dispatchers.IO) { file = CalendarFileShares.write(context.applicationContext, plan) }
+            currentCoroutineContext().ensureActive()
+            validateCalendar(plan, session)
+            launch(CalendarFileShares.intent(context, requireNotNull(file)))
+            launched = true
+            state.value = state.value.copy(calendarExportMessage = CalendarExportMessage.SHARE_OPENED)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            if (session == state.value.calendarSession) state.value = state.value.copy(calendarExportMessage = CalendarExportMessage.SHARE_FAILED)
+        } finally {
+            if (!launched) withContext(NonCancellable + Dispatchers.IO) { file?.delete() }
+            if (session == state.value.calendarSession) state.value = state.value.copy(calendarExportBusy = false)
         }
     }
     override fun onIntent(intent: ScheduleIntent) {
@@ -136,6 +182,7 @@ class ScheduleViewModel(private val repository: PortalRepository, accounts: Acco
     val freeTime by viewModel.freeTimePlanner.uiState.collectAsStateWithLifecycle()
     val activityContext = LocalContext.current
     val context = activityContext.applicationContext
+    val exportScope = rememberCoroutineScope()
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/calendar")) { uri -> viewModel.completeCalendarExport(context, uri) }
     if (showingRevision && revision != null) {
         RevisionScreen(revision) {
@@ -160,18 +207,22 @@ class ScheduleViewModel(private val repository: PortalRepository, accounts: Acco
             }
         }
     } else if (exporting) {
-        CalendarExportContent(state.snapshot, state.anchor, state.calendarExportBusy, state.calendarExportMessage, { exporting = false }, { entry ->
-            try {
-                activityContext.startActivity(calendarInsertIntent(entry, state.snapshot.updatedAt))
-            } catch (_: android.content.ActivityNotFoundException) {
-                viewModel.calendarAppUnavailable()
-            }
-        }) { plan ->
-            viewModel.prepareCalendarExport(plan)?.let { fileName ->
+        key(state.calendarSession) {
+            CalendarExportContent(state.snapshot, state.anchor, state.calendarExportBusy, state.calendarExportMessage, { exporting = false }, { entry ->
                 try {
-                    picker.launch(fileName)
+                    activityContext.startActivity(calendarInsertIntent(entry, state.snapshot.updatedAt))
                 } catch (_: android.content.ActivityNotFoundException) {
-                    viewModel.calendarPickerUnavailable()
+                    viewModel.calendarAppUnavailable()
+                }
+            }, onShare = { plan ->
+                exportScope.launch { viewModel.shareCalendar(context, plan, state.calendarSession) { send -> activityContext.startActivity(android.content.Intent.createChooser(send, context.getString(R.string.exp_share))) } }
+            }) { plan ->
+                viewModel.prepareCalendarExport(plan, state.calendarSession)?.let { fileName ->
+                    try {
+                        picker.launch(fileName)
+                    } catch (_: android.content.ActivityNotFoundException) {
+                        viewModel.calendarPickerUnavailable()
+                    }
                 }
             }
         }

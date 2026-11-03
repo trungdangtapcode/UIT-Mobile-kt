@@ -12,6 +12,7 @@ class UitApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         vn.edu.uit.mobile.schedule.TimetableImageShares.cleanup(this)
+        vn.edu.uit.mobile.schedule.CalendarFileShares.cleanup(this)
         startKoin {
             androidContext(this@UitApplication)
             modules(

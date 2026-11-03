@@ -1,1 +1,1 @@
-<paths xmlns:android="http://schemas.android.com/apk/res/android"><files-path name="materials" path="materials/" /><cache-path name="timetable_images" path="timetable-shares/" /></paths>
+<paths xmlns:android="http://schemas.android.com/apk/res/android"><files-path name="materials" path="materials/" /><cache-path name="timetable_images" path="timetable-shares/" /><cache-path name="calendar_files" path="calendar-shares/" /></paths>

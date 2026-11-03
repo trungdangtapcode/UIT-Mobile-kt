@@ -1,0 +1,32 @@
+{
+  "runtime": "Native Compose on host Robolectric, Android 35 resources; not a device screenshot",
+  "source": "CalendarExportDesignTest synthetic schedule fixtures, no university data",
+  "inspection": "360/390/412dp portrait; 412dp uses font scale 1.3; Vietnamese invalid date and disabled actions inspected",
+  "captures": [
+    {
+      "file": "calendar-export-360-phone.png",
+      "captured_at_utc": "2026-11-03T07:08:49.566132+00:00",
+      "sha256": "b8f3c67b8a64d061470360e94c755cc65246462c54a5d9bb05dee7db7c6cae2f"
+    },
+    {
+      "file": "calendar-export-390-phone.png",
+      "captured_at_utc": "2026-11-03T07:08:50.561106+00:00",
+      "sha256": "1e808fc8bc272ca8de04b0f817738c396324de7915e79406e621b944b3b81573"
+    },
+    {
+      "file": "calendar-export-preview-390-phone.png",
+      "captured_at_utc": "2026-11-03T07:08:50.658104+00:00",
+      "sha256": "43e909a5388563e02a7e7322674ae744bf7cf7d84920fb2cfe856a3948512669"
+    },
+    {
+      "file": "calendar-export-412-large-text-phone.png",
+      "captured_at_utc": "2026-11-03T07:08:48.297166+00:00",
+      "sha256": "6c3e1e19d67e0980c77d4de47be9a68a5a6022a92750dc20ecdaa8f9454be7ff"
+    },
+    {
+      "file": "calendar-export-390-vietnamese-error-phone.png",
+      "captured_at_utc": "2026-11-03T07:08:49.221141+00:00",
+      "sha256": "3954cd31233641af4ef79f47a80d7c7e05ff943ed75206357753c261fe5ba54a"
+    }
+  ]
+}

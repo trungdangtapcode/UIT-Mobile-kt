@@ -24,6 +24,7 @@ class UitApplication : Application() {
                     single<WorkloadRepository> { get<UitGraph>().workload }
                     single<RevisionRepository> { get<UitGraph>().revision }
                     single<PracticeRepository> { get<UitGraph>().practice }
+                    single<AnnouncementRepository> { get<UitGraph>().announcements }
                     single<ForumRepository> { get<UitGraph>().forum }
                     single<KnowledgeRepository> { get<UitGraph>().knowledge }
                     single<ReadingRepository> { get<UitGraph>().reading }
@@ -31,6 +32,7 @@ class UitApplication : Application() {
             )
         }
         UitSyncWorker.schedule(this)
+        vn.edu.uit.mobile.data.AnnouncementSyncWorker.schedule(this)
         WidgetRuntime.observe(this)
     }
 }

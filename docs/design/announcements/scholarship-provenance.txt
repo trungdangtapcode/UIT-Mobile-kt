@@ -1,0 +1,6 @@
+Captured: 2026-11-03T08:11:59.594966554Z
+Source: https://portal.uit.edu.vn/bai-viet/thong-bao-dang-ky-xet-cap-cac-loai-hoc-bong-hk-1-nh-2026-2027
+Body SHA-256: d1c0adeda794cb51765595cd4a7dd59da13e12684a63bcdda2c1bd40b4b676b6
+Runtime: Robolectric API 35 native Compose; live public GET; no SSO
+Image: https://portal.uit.edu.vn/media/ir.attachment/36566701/file
+Image content: UIT-published instructional screenshot, not the owner account

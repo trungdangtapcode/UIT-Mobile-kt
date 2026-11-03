@@ -3,4 +3,7 @@
     <string name="notif_channel">UIT deadlines and academic updates</string>
     <string name="notif_due">Due in %1$d hour(s)</string>
     <string name="notif_grade">Grade published: %1$s</string>
+    <string name="announcement_channel">University announcements</string>
+    <string name="announcement_new">University updates · %1$d</string>
+    <string name="announcement_reminder">Your announcement reminders · %1$d</string>
 </resources>

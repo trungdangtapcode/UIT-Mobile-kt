@@ -106,7 +106,7 @@ class InboxViewModel(private val repository: PortalRepository) : BaseMviViewMode
     }
 }
 
-@Composable fun InboxScreen(viewModel: InboxViewModel, onForum: (() -> Unit)? = null) {
+@Composable fun InboxScreen(viewModel: InboxViewModel, onForum: (() -> Unit)? = null, onAnnouncements: (() -> Unit)? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snack = remember { SnackbarHostState() }
     var drafts by rememberSaveable { mutableStateOf(mapOf<Long, String>()) }
@@ -123,11 +123,11 @@ class InboxViewModel(private val repository: PortalRepository) : BaseMviViewMode
         }
     }
     Scaffold(snackbarHost = { SnackbarHost(snack) }, containerColor = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground, contentWindowInsets = WindowInsets(0, 0, 0, 0)) { padding ->
-        Box(Modifier.padding(padding)) { InboxContent(state, viewModel::onIntent, onForum = onForum, draft = drafts[state.selected?.id].orEmpty(), onDraftChange = { text -> state.selected?.id?.let { drafts = drafts + (it to text) } }) }
+        Box(Modifier.padding(padding)) { InboxContent(state, viewModel::onIntent, onForum = onForum, onAnnouncements = onAnnouncements, draft = drafts[state.selected?.id].orEmpty(), onDraftChange = { text -> state.selected?.id?.let { drafts = drafts + (it to text) } }) }
     }
 }
 
-@Composable fun InboxContent(state: InboxState, onIntent: (InboxIntent) -> Unit = {}, now: Long = Clock.System.now().epochSeconds, draft: String = "", onDraftChange: (String) -> Unit = {}, onForum: (() -> Unit)? = null) {
+@Composable fun InboxContent(state: InboxState, onIntent: (InboxIntent) -> Unit = {}, now: Long = Clock.System.now().epochSeconds, draft: String = "", onDraftChange: (String) -> Unit = {}, onForum: (() -> Unit)? = null, onAnnouncements: (() -> Unit)? = null) {
     var filter by rememberSaveable(state.deadlineFocus) { mutableStateOf(if (state.overdueFocus) "Overdue" else "Upcoming") }
     BackHandler(enabled = state.tab == 2 && state.selected != null) { onIntent(InboxIntent.Back) }
     if (state.tab == 2 && state.selected != null) {
@@ -140,6 +140,7 @@ class InboxViewModel(private val repository: PortalRepository) : BaseMviViewMode
             PageHeading(stringResource(R.string.inbox_title), stringResource(R.string.inbox_subtitle)) {
                 IconButton(onClick = { onIntent(InboxIntent.Refresh) }) { Icon(Icons.Outlined.Refresh, stringResource(R.string.inbox_refresh)) }
             }
+            if (onAnnouncements != null) OutlinedButton(onAnnouncements, Modifier.fillMaxWidth(), shape = TechnicalShapes.Control) { Text(stringResource(R.string.inbox_school_announcements)) }
             if (onForum != null) {
                 Surface(onClick = onForum, shape = TechnicalShapes.Panel, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.fillMaxWidth()) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

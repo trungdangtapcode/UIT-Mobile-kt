@@ -1,0 +1,19 @@
+<resources>
+  <string name="rich_retry">Thử lại</string>
+  <string name="rich_image">Tải ảnh</string>
+  <string name="rich_image_failed">Ảnh không khả dụng hoặc vượt giới hạn kích thước an toàn.</string>
+  <string name="rich_external_image">Xem ảnh trong trình duyệt</string>
+  <string name="rich_unsupported">Nội dung tương tác · mở trang gốc để xem</string>
+  <string name="rich_details">Mở nội dung chi tiết</string>
+  <string name="rich_abbreviated">Nội dung được rút gọn · mở bài viết đầy đủ</string>
+  <string name="rich_copy_code">Sao chép mã</string>
+  <string name="rich_quote_source">Xem bài được trích dẫn</string>
+  <string name="rich_show_spoiler">Hiện nội dung ẩn</string>
+  <string name="rich_hide_spoiler">Ẩn nội dung</string>
+  <string name="rich_fullscreen">Xem toàn màn hình</string>
+  <string name="rich_close_image">Đóng ảnh</string>
+  <string name="rich_original">Mở ảnh gốc</string>
+  <string name="rich_zoom_out">Thu nhỏ</string>
+  <string name="rich_zoom_in">Phóng to</string>
+  <string name="rich_reset_zoom">Vừa màn hình</string>
+</resources>

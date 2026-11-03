@@ -54,6 +54,8 @@ import vn.edu.uit.mobile.schedule.*
 import vn.edu.uit.mobile.widgets.*
 
 class MainActivity : ComponentActivity() {
+    private var announcementRoute by mutableStateOf<String?>(null)
+    private val announcementRepository: AnnouncementRepository by lazy { getKoin().getOrNull<AnnouncementRepository>() ?: vn.edu.uit.mobile.data.createAnnouncementRepository(this) }
     private var widgetRoute by mutableStateOf<WidgetRoute?>(null)
     private val repository: PortalRepository by inject()
     private val accounts: AccountRepository by inject()
@@ -73,6 +75,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         widgetRoute = WidgetRoute.read(if (savedInstanceState == null) intent else BundleCompat.getParcelable(savedInstanceState, "pending_widget_route", Intent::class.java))
+        announcementRoute = savedInstanceState?.getString("announcement_route") ?: intent.getStringExtra(vn.edu.uit.mobile.data.AnnouncementSyncWorker.EXTRA_ANNOUNCEMENT)
         enableEdgeToEdge()
         val preferences = getSharedPreferences("appearance", MODE_PRIVATE)
         setContent {
@@ -99,6 +102,7 @@ class MainActivity : ComponentActivity() {
                 val tutor = ownedViewModel { CodeTutorViewModel(studyRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this)), createOfflineTutorCodeLoader(createOfflineDownloadStorage(this))) }
                 val knowledge = ownedViewModel { KnowledgeViewModel(studyRepository, knowledgeRepository, accounts, repository, createKnowledgeSourceLoader(createOfflineDownloadStorage(this))) }
                 val reading = ownedViewModel { CourseReadingViewModel(readingRepository, accounts, repository, createOfflineDownloadStorage(this), createReadingDocumentLoader(createOfflineDownloadStorage(this)), nativeReadingPdfFactory(cacheDir)) }
+                val announcements = ownedViewModel { AnnouncementsViewModel(announcementRepository) }
                 val forum = ownedViewModel { ForumViewModel(forumRepository) }
                 val inbox = ownedViewModel { InboxViewModel(repository) }
                 val academic = ownedViewModel { AcademicViewModel(repository) }
@@ -122,7 +126,10 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, practice, tutor, knowledge, reading, forum, inbox, academic, studentProfile, widgetRoute, {
+                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, practice, tutor, knowledge, reading, forum, inbox, academic, studentProfile, announcements, announcementRoute, {
+                    announcementRoute = null
+                    intent.removeExtra(vn.edu.uit.mobile.data.AnnouncementSyncWorker.EXTRA_ANNOUNCEMENT)
+                }, { if (Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS) }, widgetRoute, {
                     showWidgets = false
                     widgetRoute = null
                     setIntent(
@@ -157,10 +164,12 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        announcementRoute = intent.getStringExtra(vn.edu.uit.mobile.data.AnnouncementSyncWorker.EXTRA_ANNOUNCEMENT)
         widgetRoute = WidgetRoute.read(intent)
     }
     override fun onSaveInstanceState(outState: Bundle) {
         widgetRoute?.let { outState.putParcelable("pending_widget_route", it.intent(this)) }
+        outState.putString("announcement_route", announcementRoute)
         super.onSaveInstanceState(outState)
     }
 }
@@ -195,10 +204,23 @@ private fun UitShell(
     inbox: InboxViewModel,
     academic: AcademicViewModel,
     studentProfile: StudentProfileViewModel,
+    announcements: AnnouncementsViewModel,
+    announcementRoute: String?,
+    onAnnouncementConsumed: () -> Unit,
+    onAnnouncementPermission: () -> Unit,
     widgetRoute: WidgetRoute?,
     onWidgetRouteConsumed: () -> Unit,
     accounts: @Composable ((vn.edu.uit.mobile.model.Account) -> Unit) -> Unit
 ) {
+    var showAnnouncements by rememberSaveable { mutableStateOf(false) }
+    var announcementTarget by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(announcementRoute) {
+        if (announcementRoute != null) {
+            announcementTarget = announcementRoute
+            showAnnouncements = true
+            onAnnouncementConsumed()
+        }
+    }
     val forumState by forum.uiState.collectAsStateWithLifecycle()
     val readingState by reading.uiState.collectAsStateWithLifecycle()
     var selected by rememberSaveable { mutableIntStateOf(0) }
@@ -213,6 +235,7 @@ private fun UitShell(
     var profileAccountId by rememberSaveable { mutableStateOf<String?>(null) }
     fun openProfile(account: vn.edu.uit.mobile.model.Account? = null) {
         val navigate = {
+            showAnnouncements = false
             showBookmarks = false
             returnToBookmarks = false
             returnToSearch = false
@@ -263,6 +286,7 @@ private fun UitShell(
     WorkspaceFrame(
         selected, { destination ->
             val navigate = {
+                showAnnouncements = false
                 forum.close()
                 selected = destination
                 showBookmarks = false
@@ -279,6 +303,7 @@ private fun UitShell(
         errorMessage = sync.error?.text(),
         onSearch = {
             val navigate = {
+                showAnnouncements = false
                 showBookmarks = false
                 returnToBookmarks = false
                 returnToSearch = false
@@ -289,7 +314,14 @@ private fun UitShell(
             if (reading.uiState.value.open) reading.leave(navigate) else navigate()
         }
     ) {
-        if (readingState.open) {
+        if (showAnnouncements) {
+            key(announcementTarget) {
+                AnnouncementsScreen(announcements, {
+                    showAnnouncements = false
+                    announcementTarget = null
+                }, announcementTarget, onAnnouncementPermission)
+            }
+        } else if (readingState.open) {
             CourseReadingScreen(reading)
         } else if (forumState.open) {
             ForumScreen(forum)
@@ -351,7 +383,10 @@ private fun UitShell(
                 0 -> DashboardScreen(dashboard, onCourse = {
                     courses.onIntent(CoursesIntent.Select(it))
                     selected = 2
-                }, onSchedule = { selected = 1 }, onInbox = { selected = 3 }, onConnect = { showAccounts = true })
+                }, onSchedule = { selected = 1 }, onInbox = { selected = 3 }, onConnect = { showAccounts = true }, onAnnouncements = {
+                    announcementTarget = null
+                    showAnnouncements = true
+                })
                 1 -> ScheduleScreen(schedule, workload, revision) {
                     courses.onIntent(CoursesIntent.Select(it))
                     selected = 2
@@ -383,7 +418,10 @@ private fun UitShell(
                     onReading = { reading.library() },
                     onOpenPdf = reading::open
                 )
-                3 -> InboxScreen(inbox, onForum = { forum.open() })
+                3 -> InboxScreen(inbox, onForum = { forum.open() }, onAnnouncements = {
+                    announcementTarget = null
+                    showAnnouncements = true
+                })
                 else -> AcademicScreen(academic, accountContent)
             }
         }

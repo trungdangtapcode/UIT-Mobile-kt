@@ -1,0 +1,72 @@
+{
+    "capturedAt": "2026-11-03T08:02:32.559632871Z",
+    "mode": "Anonymous production client; public GET only",
+    "sources": [
+        {
+            "source": "PORTAL",
+            "route": "https://portal.uit.edu.vn/bai-viet?category=thong-bao",
+            "count": 12,
+            "more": true,
+            "secondCount": 12,
+            "article": "https://portal.uit.edu.vn/bai-viet/thong-bao-danh-sach-dang-ky-hoc-bong-kkht-hk1-2026-2027-va-hoc-bong-ngoai-ngan-sach-hk1-2026-2027",
+            "bodyHash": "ed1cda74c5f9a96d3252ca66bab8300cfdc8fbd862727a89e80fa49e448c02d6",
+            "blocks": 21,
+            "passed": true
+        },
+        {
+            "source": "CTSV",
+            "route": "https://ctsv.uit.edu.vn/",
+            "count": 10,
+            "more": true,
+            "secondCount": 5,
+            "article": "https://ctsv.uit.edu.vn/bai-viet/thong-bao-danh-sach-dang-ky-hoc-bong-kkht-hk1-2026-2027-va-hoc-bong-ngoai-ngan-sach-hk1",
+            "bodyHash": "455ea023f07eaa5679f367940d2d43bf825ad88bb7ec0ff8838f174c38ba9a05",
+            "blocks": 10,
+            "passed": true
+        },
+        {
+            "source": "OEP",
+            "route": "https://oep.uit.edu.vn/vi/thong-bao-chung",
+            "count": 20,
+            "more": true,
+            "secondCount": 20,
+            "article": "https://oep.uit.edu.vn/vi/hb-ket-qua-du-kien-danh-sach-sinh-vien-chuong-trinh-lien-ket-nhan-hoc-bong-tan-sinh-vien-khoa-2026",
+            "bodyHash": "c038861c743dffe1f7e2177cf1b98314fe1ff1e47ca9893dbca6f2ee8d4d3445",
+            "blocks": 7,
+            "passed": true
+        },
+        {
+            "source": "YOUTH",
+            "route": "https://tuoitre.uit.edu.vn/",
+            "count": 28,
+            "more": false,
+            "secondCount": 0,
+            "article": "https://tuoitre.uit.edu.vn/dien-dan-tri-thuc-tre-dai-hoc-quoc-gia-thanh-pho-ho-chi-minh-nam-2026",
+            "bodyHash": "ab0e06efb1d0787ff6795476cfe8296e634d958f93b898df647ab205a1bb27a4",
+            "blocks": 46,
+            "passed": true
+        },
+        {
+            "source": "RESEARCH",
+            "route": "https://khcn.uit.edu.vn/thong-bao",
+            "count": 10,
+            "more": true,
+            "secondCount": 10,
+            "article": "https://khcn.uit.edu.vn/thong-bao-ve-viec-dang-ky-de-tai-nghien-cuu-khoa-hoc-sinh-vien-hoc-vien-cao-hoc-nam-2023",
+            "bodyHash": "617c296aa54e453f1d88927bab18249b177a19619ec46eb754a810b4526b5f70",
+            "blocks": 9,
+            "passed": true
+        },
+        {
+            "source": "FACULTY_IS",
+            "route": "https://httt.uit.edu.vn/category/thong-bao-hoc-vu/",
+            "count": 10,
+            "more": true,
+            "secondCount": 10,
+            "article": "https://httt.uit.edu.vn/danh-sach-sinh-vien-du-kien-xu-ly-hoc-vu-xlhv-hk2-va-hk3-nam-hoc-2025-2026-khoa-httt/",
+            "bodyHash": "0cf0f3a3546e8012b186db88de763bf5040d6d1745da3d9f2202a3b80a007df0",
+            "blocks": 11,
+            "passed": true
+        }
+    ]
+}

@@ -1,14 +1,16 @@
-# UIT Forum reader
+# UIT Forum
 
-This document describes the current initial reader, not the completed product
-target. The required target is full student-facing UIT web parity. Track missing
+This document describes the reader and its account integration, not the completed
+product target. The required target is full student-facing UIT web parity. Track missing
 capabilities, research and acceptance gates in the
 [Forum parity matrix](research/UIT-FORUM-PARITY.md), with current implementation
 changes in [parity progress](FORUM-PARITY-PROGRESS.md).
 
 Open **Inbox → UIT Forum**. University sign-in is not required. Forum is a
 dedicated native phone workspace inside the existing five-destination shell;
-Moodle course discussions remain separate.
+Moodle course discussions remain separate. The Forum account button now opens
+[native sign-in and participation](FORUM-ACCOUNTS.md), with a separate encrypted
+Forum session even when university credentials match.
 
 Latest and category feeds support explicit pagination. Search is submitted by
 button, accepts Discourse search syntax, and opens the matched post. Topic
@@ -151,15 +153,16 @@ matched the supplied account. Only verified same-origin login POST routes were
 allowed; other POSTs, including message-bus polling and view telemetry, were
 blocked. Credentials and cookies were not persisted, and the screenshot remains
 local. Login can still update server-side session/last-login metadata. This
-confirms website authentication only: **the app's Forum transport is anonymous
-and does not yet implement Forum SSO**.
+confirmed website authentication only at the original reader baseline. The later
+[native account increment](FORUM-ACCOUNTS.md) separately verifies the production
+Kotlin login and read-only account screens; the two tests must not be conflated.
 
 ## Discovery and isolated mutation research
 
 [The parity increment](FORUM-PARITY-PROGRESS.md) adds native public filters and a
 searchable tag directory as well as rich content, fullscreen images and revisions.
-The current app remains an anonymous reader. Account-based functionality is not
-implied by the availability of server capabilities or local upstream experiments.
+The app now has a distinct authenticated session path. Its current operations,
+evidence and remaining parity limits are listed in [Forum accounts](FORUM-ACCOUNTS.md).
 
 Use [the isolated Discourse lab](FORUM-LAB.md) for write-contract research. Never
 point the mutation harness at UIT or supply university credentials to it.

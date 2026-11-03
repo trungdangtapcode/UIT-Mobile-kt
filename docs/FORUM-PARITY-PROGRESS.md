@@ -24,7 +24,7 @@ Permitted posts expose native edit history with revision navigation, author/time
 reason, title/body diffs and Changes/Before/After views. Request revision IDs are
 kept separate from server display-version numbers. Hidden history is rejected;
 history is neither persisted nor replayed offline. Cancelled/dismissed history
-cannot reappear through a late response. No edit/revert operation is implemented.
+cannot reappear through a late response. The account increment below adds conflict-aware raw editing; revision reverts are not implemented.
 Metadata-only changes and media diffs still need broader parity work.
 
 ## Public discovery increment
@@ -93,7 +93,9 @@ real university account is not used for mutation testing.
 | F14 | Language labels, source copy, whitespace-preserving code | Syntax highlighting |
 | F16–F17 | Real uploaded image, original, fullscreen, zoom/pan and retry | Multi-image gallery, CDN/secure/redirect handling and device lifecycle coverage |
 | F22 | Permitted history, before/after diff and revision navigation | Full metadata/media diffs, wider permission/device cases |
-| Other rows | Earlier reader behavior or research only | Authentication, account synchronization, participation and enabled extensions remain unfinished |
+| F03, F24, F26–F30 | Native separate login/restore, account isolation, personal filters, server resume/bookmarks/notices | Installed Android, remote session revocation, tracking/preferences and broader account cases |
+| F23, F33–F35, F38, F41 | New/reply/edit with stale-source conflict, explicit bookmark/like/reaction/poll actions, existing channel/thread chat | Uploads/drafts/preview, advanced poll types, chat creation/management/realtime, production write acceptance |
+| Other rows | Earlier reader behavior or research only | See the matrix; no full-parity certification |
 
 A dedicated local Discourse environment runs at the observed upstream revision
 for subsequent mutation tests. See [the isolated lab guide](FORUM-LAB.md). It is not connected to UIT and
@@ -103,12 +105,38 @@ screenshot evidence.
 
 The isolated harness passed login/create/edit/reply/bookmark contract groups and
 sampled authenticated XHR read-state checks. [Aggregate evidence](research/evidence/uit-forum-local-contract.json)
-records zero production UIT requests. These writes are not wired into the app yet.
+records zero production UIT requests. The subsequent native-client suite now
+exercises the app's actual session/API classes; see [account behavior](FORUM-ACCOUNTS.md)
+and [native contract evidence](research/evidence/uit-forum-native-member-lab.json).
 The task-specific lab container was stopped after verification; its isolated data
 remains available for subsequent contract work.
 
-Validation: the full Gradle `check` and Android debug/instrumentation compilation
+At the earlier discovery baseline, the full Gradle `check` and Android debug/instrumentation compilation
 passed after discovery implementation. After final localized period/tab wording,
-all 13 focused Forum UI/live tests passed and the debug APK was rebuilt. Network
-Forum tests total 25; Forum ViewModel tests total 9. Host captures and local server
+all 13 focused Forum UI/live tests passed and the debug APK was rebuilt. At that
+baseline, Forum network tests totaled 25 and ViewModel tests totaled 9. Host captures and local server
 experiments do not replace installed-device or authenticated app acceptance.
+
+## Native account increment
+
+The app now signs in natively with the same university credentials, while keeping
+Forum cookies separate from Portal/Moodle. UIT's actual login returns 204; current
+identity verification succeeds afterward. Cookies are encrypted with Android
+Keystore in production, and member bodies never enter guest storage.
+
+Personal filters, notifications (including real UIT badge notices), server
+bookmarks and server last-read resume are implemented. Explicit new topic/reply,
+raw edit with conflict detection, bookmark/like/reaction, regular/multiple poll
+voting and channel/thread chat use typed native requests. No action is automatically
+replayed after an ambiguous result. Authenticated content is memory-only.
+
+See [Forum accounts](FORUM-ACCOUNTS.md) for the exact contracts, reproduction,
+privacy boundaries and remaining work. The production client passed the local
+mutation suite. Live UIT login and read-only Compose screens also passed with all
+non-login writes blocked. Final validation for the native account increment: full Gradle `check`,
+`:app:assembleDebug` and `:app:compileDebugAndroidTestKotlin` passed. Forum network
+contracts: 37 passing tests; Forum ViewModel: 15; connected-repository isolation:
+4; account Compose interactions: 4. The separate opt-in real UIT account test and
+local native-client mutation suite passed. These counts describe their respective
+suites, not installed-device coverage. PR #79 stays draft: full web parity and
+installed-device acceptance remain open.

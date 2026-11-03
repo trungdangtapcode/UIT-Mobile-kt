@@ -7,7 +7,9 @@ notifications read and granting API keys must not be tested on that account.
 This lab runs a separate upstream Discourse instance on localhost. Its generated
 accounts, `.invalid` email addresses and posts are synthetic contract-test data.
 They must never become published UIT Forum screenshot evidence. Passing this
-harness establishes upstream HTTP behavior, not app mutation support or UIT parity.
+HTTP harness establishes upstream behavior. The separate native Kotlin harness
+below additionally verifies app transport/API support, but not production UIT
+mutations or full parity.
 
 ## Pinned environment
 
@@ -81,8 +83,7 @@ rotation, other plugins and UIT customizations need separate investigation.
 
 Upstream `lib/auth/default_current_user_provider.rb` at the pinned revision updates
 last-seen for ordinary authenticated requests; XHR/API requests require
-`Discourse-Present: true` for that branch. Therefore a future read-only native
-transport must deliberately account for `X-Requested-With`, presence headers,
+`Discourse-Present: true` for that branch. The native transport therefore deliberately accounts for `X-Requested-With`, presence headers,
 `track_visit`, timing endpoints and notification actions. GET alone does not prove
 read-only account behavior. Do not experiment with these mutations on UIT.
 
@@ -107,3 +108,34 @@ docker stop uit-forum-lab
 No container/database removal is automatic. Starting the container later also
 requires restarting the documented `bin/dev` process. Keep its data separate from
 all production dumps and other development projects.
+
+## Native production-client acceptance
+
+After starting the same pinned server, generate fresh local identities. The
+seeder checks the task label, loopback port and source revision before touching
+its local database. It enables the relevant plugins only on that isolated server.
+The credential file must not already exist and must be outside this repository.
+It is created with mode 0600; no university credential environment is forwarded.
+
+```sh
+python3 scripts/seed-forum-member-lab.py /tmp/uit-forum-test/native-credentials.json
+./gradlew :core:network:forum:verifyForumMemberLab \
+  -PforumLabCredentials=/tmp/uit-forum-test/native-credentials.json
+```
+
+`ForumMemberLab` uses the production `ForumSessionClient`, `ForumMemberApi` and
+parser against the exact `http://127.0.0.1:39300` test origin. The production app
+constructor remains fixed to HTTPS UIT; its manifest still rejects cleartext.
+No remote-origin argument exists. Redirects and automatic connection retries are
+disabled. The fixture configuration cannot change the accepted origin.
+
+The test signs in two generated local accounts, restores cookies, creates a topic,
+edits it, verifies a stale-source conflict, replies, creates/removes a bookmark,
+adds/removes a like/reaction, votes, sends channel/thread messages and reads them
+back. A thread is seeded through the upstream route; creating a new thread is not
+a native UI acceptance claim. Only aggregate results are written to
+[the native lab evidence](research/evidence/uit-forum-native-member-lab.json).
+It does not export screenshots or read any production UIT account.
+
+Stop the task container after verification. Local data is retained for diagnosis;
+remove the private generated credential file when it is no longer needed.

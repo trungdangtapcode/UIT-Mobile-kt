@@ -31,8 +31,9 @@ The [aggregate survey](evidence/uit-forum-parity-survey.json) records route stat
 field names, counts and selected public settings, without raw post/account bodies.
 Public JSON and an actual 390 × 844 mobile browser page were inspected. This pass
 used no credentials; all non-read browser requests were blocked. Earlier private
-website login verification is documented in [FORUM.md](../FORUM.md), and is not
-evidence of authenticated app support. Public reads can still affect server logs
+website login verification is documented in [FORUM.md](../FORUM.md), and did not establish authenticated app support at that baseline. The subsequent
+[native account verification](../FORUM-ACCOUNTS.md) now verifies Kotlin login and
+read-only account screens separately. Public reads can still affect server logs
 and view counters. There was no recursive crawl or mutation testing.
 
 | Observed source | Finding | Consequence |
@@ -76,7 +77,7 @@ it is not a complete inventory of every UIT plugin or account role.
 | --- | --- | --- | --- |
 | F01 | Latest/category feeds; UIT observed | Partial: explicit pagination, discovered parent categories | Same topic order and metadata; pinned/closed/archived/unlisted states, duplicate handling and end-of-list behavior |
 | F02 | Top/time period, hot and votes filters; UIT advertised, weekly Top observed | Partial: advertised guest Top/periods, Hot and Votes; live UIT and monthly mobile-web comparison | Verify supported periods/order and category combinations against actual responses |
-| F03 | New/unread/unseen/read/posted; UIT advertised, authenticated behavior unverified | Missing | Same account sees consistent lists/counts; research does not reset or mark them read |
+| F03 | New/unread/unseen/read/posted; UIT advertised, authenticated behavior unverified | Partial: server-advertised authenticated lists; guest filtering enforced; live account feed verified | Same account sees consistent lists/counts; research does not reset or mark them read |
 | F04 | Tags and tag combinations; UIT tags observed | Partial: searchable server tag directory and single-tag feeds; multi-tag/category combinations remain | Search a large tag catalog, apply permitted combinations, handle no matches and navigation restoration |
 | F05 | Full search and exact matched replies; UIT observed | Partial: submitted query and post jump | Search scopes/filters/order, pagination, excerpts, Unicode and restricted-result handling match web |
 | F06 | Long topics and timeline; real 7,455-ID stream verified earlier | Partial: numbered jump and bounded windows | Timeline/date navigation, gaps, edits/deletions during loading and stable scroll anchors across refresh |
@@ -109,19 +110,19 @@ explain why a generic Markdown converter is not sufficient evidence of fidelity.
 ### Revisions, permissions and sessions
 
 The [post serializer at UIT's advertised upstream revision](https://github.com/discourse/discourse/blob/b81bee142d364526b432788251986871952b5ddb/app/serializers/post_serializer.rb)
-exposes edit/history/reply/action metadata. The app currently retains only a small
-subset in `ForumPost`. The corresponding [post controller](https://github.com/discourse/discourse/blob/b81bee142d364526b432788251986871952b5ddb/app/controllers/posts_controller.rb)
+exposes edit/history/reply/action metadata. The app retains permissions, history and participation metadata in `ForumPost`;
+this is still only part of the full web contract. The corresponding [post controller](https://github.com/discourse/discourse/blob/b81bee142d364526b432788251986871952b5ddb/app/controllers/posts_controller.rb)
 applies visibility checks to revision access. Do not infer permission from a
 version number or from another post's successful response.
 
 | ID | Web capability and evidence | Current app | Required acceptance evidence |
 | --- | --- | --- | --- |
 | F22 | Edit indicator/history; real UIT revision observed | Partial: uncached permission-aware history, revision navigation and Changes/Before/After; metadata/media diffs remain | Version, time, reason, previous/next navigation, readable diff, hidden history and permission changes |
-| F23 | Edit/delete/restore/wiki and moderation notices; upstream documented | Missing metadata and actions | Server-authorized state, conflicts and tombstones; test writes only in an authorized test environment |
-| F24 | UIT login/session; prior private website login verified | Missing Forum app authentication | Research actual UIT redirects/CSRF/session contract, expiry, cancellation, logout and re-login on Android |
+| F23 | Edit/delete/restore/wiki and moderation notices; upstream documented | Partial: permitted raw edit and original-text conflict; delete/restore/wiki remain | Server-authorized state, conflicts and tombstones; test writes only in an authorized test environment |
+| F24 | UIT login/session; prior private website login verified | Partial: native CSRF/session login (UIT 204), encrypted cookie restore and live read-only Compose acceptance; installed Android remains | Research actual UIT redirects/CSRF/session contract, expiry, cancellation, logout and re-login on Android |
 | F25 | Per-user app credentials; official User API key mechanism documented, UIT eligibility unverified | Missing | Determine whether UIT allows applicable scopes, groups and callback; no key grant during read-only research |
-| F26 | Account/role/category restrictions; permissions exposed by server | Partial: anonymous unavailable state | Distinguish guest vs expired vs forbidden; private content never enters guest cache or another account's UI |
-| F27 | Revoked access, logout and account switching | Guest storage only | Cancel in-flight requests and purge/partition private text, media, revisions and pending operations; no stale-content flash |
+| F26 | Account/role/category restrictions; permissions exposed by server | Partial: separate member repository, permissions and expiry handling; private content excluded from guest cache | Distinguish guest vs expired vs forbidden; private content never enters guest cache or another account's UI |
+| F27 | Revoked access, logout and account switching | Partial: local disconnect, generations and private UI purge; remote session revocation/device lifecycle remain | Cancel in-flight requests and purge/partition private text, media, revisions and pending operations; no stale-content flash |
 
 The [User API key specification](https://meta.discourse.org/t/user-api-keys-specification/48536)
 describes a user-consented, scoped application credential flow. It is a candidate
@@ -138,14 +139,14 @@ does not replace server account state.
 
 | ID | Web capability and evidence | Current app | Required acceptance evidence |
 | --- | --- | --- | --- |
-| F28 | Account bookmarks/reminders; upstream documented | Local topic saves only | Post/topic targets, reminder metadata, synchronization and explicit distinction from device-only saves |
-| F29 | Read position and cross-device unread state; upstream documented | Local position only | Research timings/read side effects; reconcile server progress without marking content read during research |
-| F30 | Notifications and account menu; upstream documented, prior authenticated header observed | Missing | Read-only list discovery first; type-specific targets, paging, read/unread semantics, logout isolation and deep links |
+| F28 | Account bookmarks/reminders; upstream documented | Partial: server bookmark list/add/remove and displayed reminder time; reminder editing remains | Post/topic targets, reminder metadata, synchronization and explicit distinction from device-only saves |
+| F29 | Read position and cross-device unread state; upstream documented | Partial: local/session anchors and server last-read resume; no timing/read writes or cross-device write sync | Research timings/read side effects; reconcile server progress without marking content read during research |
+| F30 | Notifications and account menu; upstream documented, prior authenticated header observed | Partial: native paged notices, real badge titles, read state and topic links; broader type targets/read actions remain | Read-only list discovery first; type-specific targets, paging, read/unread semantics, logout isolation and deep links |
 | F31 | Watching/tracking/muting by topic/category/tag; upstream documented | Missing | Server options and effective state, permission errors and separately authorized state-change tests |
 | F32 | User profiles/activity, preferences, groups/badges; upstream documented | Author text only | Inventory permitted fields and tabs; privacy, navigation and separately authorized preference changes |
-| F33 | Composer, new topic/reply/quote/mention; reply control observed on UIT | Missing | Native phone editing, category rules, preview, keyboard/IME, length limits and server validation |
-| F34 | Drafts, uploads and interrupted submission; upstream documented | Missing | Local vs server drafts, attachment progress, conflict recovery and ambiguous timeout handling without duplicate posts |
-| F35 | Likes and reactions; UIT setting/action metadata observed | Missing | Server-provided choices/counts/permissions; no reactions on the real university account during tests |
+| F33 | Composer, new topic/reply/quote/mention; reply control observed on UIT | Partial: native raw composer, permitted category selection, new/reply/edit; preview/uploads/quote/mention helpers remain | Native phone editing, category rules, preview, keyboard/IME, length limits and server validation |
+| F34 | Drafts, uploads and interrupted submission; upstream documented | Partial: ambiguous writes are not replayed; text retained on rejection/conflict; persistent/server drafts and uploads remain | Local vs server drafts, attachment progress, conflict recovery and ambiguous timeout handling without duplicate posts |
+| F35 | Likes and reactions; UIT setting/action metadata observed | Partial: native server choices/counts/permissions and local Kotlin like/reaction round trips; real UIT writes intentionally untested | Server-provided choices/counts/permissions; no reactions on the real university account during tests |
 | F36 | Flags/reporting and own-post actions; UIT action types advertised | Missing | Available reasons, eligibility, result/error handling; no live reports or deletion as test cleanup |
 | F37 | Personal messages/invitations; upstream documented, UIT account eligibility unverified | Missing | Verify permitted workflows without reading unrelated private conversations; test delivery only in a dedicated environment |
 
@@ -153,10 +154,10 @@ does not replace server account state.
 
 | ID | Web capability and evidence | Current app | Required acceptance evidence |
 | --- | --- | --- | --- |
-| F38 | Polls: UIT setting enabled; [official poll behavior](https://meta.discourse.org/t/creating-and-managing-polls/77548) | Missing semantic renderer/actions | Find permitted real examples; preserve choices, visibility/closed state and result rules; no research votes |
+| F38 | Polls: UIT setting enabled; [official poll behavior](https://meta.discourse.org/t/creating-and-managing-polls/77548) | Partial: native choices, own votes, hidden-result handling and regular/multiple voting; advanced types/results/fidelity remain | Find permitted real examples; preserve choices, visibility/closed state and result rules; no research votes |
 | F39 | Solved: UIT setting enabled; [official Solved behavior](https://meta.discourse.org/t/discourse-solved/30155) | Missing | Category eligibility, accepted-answer attribution/link and authorized accept/unaccept flow |
 | F40 | Topic voting: UIT setting/filter advertised | Missing | Distinguish topic votes from post reactions/poll votes; inspect category eligibility, limits and existing vote state |
-| F41 | Chat: UIT setting enabled; [official chat behavior](https://meta.discourse.org/t/exploring-features-in-discourse-chat/239695) | Missing | Separate channel/thread/DM model, permissions, history and reconnect; typing/read/send events are not safe research writes |
+| F41 | Chat: UIT setting enabled; [official chat behavior](https://meta.discourse.org/t/exploring-features-in-discourse-chat/239695) | Partial: existing channels/DMs and threads, latest/older history and explicit send; no new conversation/thread, message management or realtime yet | Separate channel/thread/DM model, permissions, history and reconnect; typing/read/send events are not safe research writes |
 | F42 | Live updates and notifications | Missing | Investigate UIT message-bus/event contracts, deduplication, edits/deletions, app backgrounding and battery; never equate blocked polling with verified real-time support |
 | F43 | Offline, stale data and recovery | Partial: bounded guest snapshots | Show age/coverage; distinguish stale content from current permission; no unauthorized replay of queued writes |
 | F44 | Accessibility and phone behavior | Partial: limited phone tests | TalkBack semantics, 360/390/412dp, larger text, contrast, image descriptions, IME, rotation/process death and scroll restoration |
@@ -252,3 +253,27 @@ acceptance cases unless the user separately authorizes a concrete test action.
 - Revisit the bounded stream/cache/media limits with measured phone behavior.
   A protective limit must produce a truthful state, never silently truncate into
   an apparently complete topic.
+
+## Native member contract update (2026-11-03)
+
+The [native account increment](../FORUM-ACCOUNTS.md) implements the typed session,
+personal lists, basic mutations and channel/thread chat. UIT login returned 204
+and issued Secure host-scoped Forum cookies; the production Kotlin client then
+verified the authorized identity. Same university credentials are supported;
+Portal/Moodle session sharing is not. Public settings still do not establish a
+standard DiscourseConnect flow.
+
+Pinned upstream sources consulted for the implementation include
+[`SessionsController`](https://github.com/discourse/discourse/blob/b81bee142d364526b432788251986871952b5ddb/app/controllers/session_controller.rb),
+[`PostsController`](https://github.com/discourse/discourse/blob/b81bee142d364526b432788251986871952b5ddb/app/controllers/posts_controller.rb),
+[`NotificationSerializer`](https://github.com/discourse/discourse/blob/b81bee142d364526b432788251986871952b5ddb/app/serializers/notification_serializer.rb),
+[`CreateMessage`](https://github.com/discourse/discourse/blob/b81bee142d364526b432788251986871952b5ddb/plugins/chat/app/services/chat/create_message.rb)
+and [`ListChannelThreadMessages`](https://github.com/discourse/discourse/blob/b81bee142d364526b432788251986871952b5ddb/plugins/chat/app/services/chat/list_channel_thread_messages.rb).
+The local Kotlin acceptance suite also exercises enabled polls/reactions at that
+revision. Actual UIT badge-notification field shapes were inspected read-only to
+correct the topic-title-only assumption. No production content/action writes were
+used to prove the mutation contracts.
+
+These are partial rows. Host-rendered login/account reads and local-server writes
+are different acceptance evidence; neither proves full web parity or installed
+Android behavior. Full remaining gaps stay in the matrix and draft PR #79.

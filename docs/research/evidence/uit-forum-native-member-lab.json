@@ -1,0 +1,17 @@
+{
+  "captured_at_utc": "2026-11-03T04:46:38.176646430Z",
+  "environment": "Production Kotlin ForumSessionClient and ForumMemberApi against isolated rootless Discourse",
+  "upstream_revision": "b81bee142d364526b432788251986871952b5ddb",
+  "production_UIT_requests": 0,
+  "university_credentials_used": false,
+  "checks": [
+    "native login and cookie restore",
+    "create, edit, stale edit conflict, reply",
+    "bookmark creation and removal",
+    "like and reaction add/remove",
+    "poll vote reflected in subsequent read",
+    "channel and existing thread send/read",
+    "notification read"
+  ],
+  "limits": "Local server contract acceptance, not production UIT mutations or installed Android/Keystore acceptance. No synthetic review screenshots."
+}

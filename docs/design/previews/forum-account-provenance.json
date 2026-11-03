@@ -1,0 +1,39 @@
+{
+  "captured_at_utc": "2026-11-03T04:48:23.956706+00:00",
+  "origin": "https://forum.uit.edu.vn",
+  "runtime": "Production Kotlin networking, repository, ViewModel and Compose on Robolectric",
+  "viewport_dp": [
+    390,
+    844
+  ],
+  "locale": "vi-VN",
+  "device_capture": false,
+  "persistence": "Memory storage; Android Keystore not exercised",
+  "account_mode": "Authorized university account; live login and read-only account screens",
+  "allowed_methods": "GET; POST /session only, all other writes blocked by test interceptor",
+  "primary_routes": [
+    "/session/csrf.json",
+    "/session",
+    "/session/current.json",
+    "/site.json",
+    "/latest.json",
+    "/notifications.json",
+    "/u/{current_username}/bookmarks.json"
+  ],
+  "public_capture_selection": "Inspected empty login and empty composer only. Account feed/notifications/bookmarks and identifiers remain private ignored artifacts. No post was submitted.",
+  "command": "./gradlew :app:testDebugUnitTest --tests '*ForumAccountLiveTest' -PforumAccountLive=true",
+  "captures": [
+    {
+      "file": "forum-native-login.png",
+      "captured_at_utc": "2026-11-03T04:48:22.142757+00:00",
+      "sha256": "f915dc390295f3f66ffc4ffeb4cf5dcfc23b1634613c6ff86945a4db544da6f7",
+      "content": "Empty native form captured from actual UIT production flow; no authored post or fixture body"
+    },
+    {
+      "file": "forum-native-composer.png",
+      "captured_at_utc": "2026-11-03T04:48:23.956706+00:00",
+      "sha256": "98d013518cd708a44834ed36241bd04b7783da3853078a62180359f33e075ac2",
+      "content": "Empty native form captured from actual UIT production flow; no authored post or fixture body"
+    }
+  ]
+}

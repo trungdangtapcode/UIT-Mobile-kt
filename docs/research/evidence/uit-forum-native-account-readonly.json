@@ -1,0 +1,22 @@
+{
+  "captured_at_utc": "2026-11-03T04:48:23.956706+00:00",
+  "runtime": "Production Kotlin networking, repository, ViewModel and Compose on Robolectric",
+  "account_identity_verified": true,
+  "login_contract": "UIT POST /session returns 204; GET /session/current.json verifies identity",
+  "necessary_login_posts_in_this_test": 1,
+  "production_content_or_account_action_writes": 0,
+  "checks": [
+    "current identity matches supplied account",
+    "authenticated feed contains actual topics",
+    "permitted composer categories available",
+    "notifications and bookmarks read",
+    "local disconnect clears session and member UI"
+  ],
+  "request_guard": "GET; POST /session only, all other writes blocked by test interceptor",
+  "limits": [
+    "Host Robolectric with memory storage, not installed Android or Keystore acceptance",
+    "Necessary login/session metadata may change; no claim that every GET has no side effect",
+    "No private conversation read and no production posting/editing/reaction/vote/chat/mark-read writes",
+    "Only empty forms selected for public screenshots; private account captures remain ignored"
+  ]
+}

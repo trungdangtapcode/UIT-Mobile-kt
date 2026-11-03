@@ -1,0 +1,27 @@
+package vn.edu.uit.mobile.forum.network
+
+import io.ktor.client.*
+import io.ktor.client.engine.mock.*
+import io.ktor.http.*
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
+import vn.edu.uit.mobile.domain.*
+
+/** Diagnostic probes assert observed defects, NOT desired acceptance behavior. */
+class ForumParityNetworkAuditProbeTest {
+    @Test fun reproductionMultiplePollWithoutMaxOnlyAllowsOneSelection() {
+        val raw="""{"id":9,"post_stream":{"stream":[7],"posts":[{"id":7,"topic_id":9,"post_number":1,"cooked":"<p>Question</p>","polls":[{"name":"poll","type":"multiple","status":"open","options":[{"id":"a","html":"A"},{"id":"b","html":"B"},{"id":"c","html":"C"}]}]}]}}"""
+        val poll=ForumParser.parse(ForumRequest.Topic(9),raw,true).posts.single().polls.single()
+        assertEquals(3,poll.options.size)
+        assertEquals(1,poll.max)
+    }
+    @Test fun reproductionChatBookmarkIsDroppedFromServerBookmarkList() = runTest {
+        val http=HttpClient(MockEngine { respond("""{"user_bookmark_list":{"bookmarks":[{"id":8,"bookmarkable_type":"Chat::Message","bookmarkable_id":5,"bookmarkable_url":"/chat/c/fixture/3/5","title":"A saved chat message"}]}}""",headers=headersOf(HttpHeaders.ContentType,"application/json")) })
+        try {
+            val page=ForumMemberApi(ForumSessionClient(http)).read(ForumUser(7,"fixture",""),ForumMemberRequest.Bookmarks())
+            assertTrue(page.bookmarks.isEmpty())
+            assertFalse(page.more)
+        } finally { http.close() }
+    }
+}

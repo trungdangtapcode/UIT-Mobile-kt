@@ -1,5 +1,11 @@
 # UIT Forum web parity: research and implementation contract
 
+**Audit update (2026-11-03):** [The behavioral and mobile-web audit](UIT-FORUM-PARITY-AUDIT-2026-11-03.md)
+finds the current implementation is not web-equivalent. Five diagnostic probes
+reproduce draft loss, truncated chat history, incorrect optional poll bounds and
+dropped chat bookmarks. These are open defects in existing flows, in addition
+to the missing capabilities below; passing baseline CI does not resolve them.
+
 Research date: 2026-11-03, Asia/Tokyo. App baseline: `1417d5c` on
 `feat/uit-forum-reader`, PR #78. This document changes the target from an initial
 public reader to the full student-facing UIT Forum experience. It does not claim

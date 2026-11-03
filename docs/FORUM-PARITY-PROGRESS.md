@@ -1,5 +1,11 @@
 # Forum parity implementation progress
 
+**Audit update (2026-11-03):** [The behavioral and mobile-web audit](research/UIT-FORUM-PARITY-AUDIT-2026-11-03.md)
+finds the current implementation is not web-equivalent. Five diagnostic probes
+reproduce draft loss, truncated chat history, incorrect optional poll bounds and
+dropped chat bookmarks. These are open defects in existing flows, in addition
+to the missing capabilities below; passing baseline CI does not resolve them.
+
 This is implementation progress against the [46-row matrix](research/UIT-FORUM-PARITY.md),
 not a full-parity completion claim. The implementation branch is
 `feat/uit-forum-parity` ([draft PR #79](https://github.com/trungdangtapcode/UIT-Mobile-kt/pull/79)), stacked on `feat/uit-forum-reader` (PR #78).

@@ -1,5 +1,5 @@
 {
-  "captured_at_utc": "2026-11-03T04:46:38.176646430Z",
+  "captured_at_utc": "2026-11-03T06:42:26.632197267Z",
   "environment": "Production Kotlin ForumSessionClient and ForumMemberApi against isolated rootless Discourse",
   "upstream_revision": "b81bee142d364526b432788251986871952b5ddb",
   "production_UIT_requests": 0,
@@ -9,7 +9,9 @@
     "create, edit, stale edit conflict, reply",
     "bookmark creation and removal",
     "like and reaction add/remove",
-    "poll vote reflected in subsequent read",
+    "poll vote and removal reflected in subsequent reads",
+    "semantic poll source position",
+    "channel lookup and past/future/around message anchors",
     "channel and existing thread send/read",
     "notification read"
   ],

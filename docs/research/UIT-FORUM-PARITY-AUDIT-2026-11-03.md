@@ -11,6 +11,14 @@ Live UIT still advertises Discourse `2026.10.0-latest`, upstream revision
 `b81bee142d364526b432788251986871952b5ddb`. This is a self-audit with executable
 counterexamples, not an independent third-party review or a security certification.
 
+## Follow-up fixes
+
+The findings below describe the pinned baseline, not the patched head. See the
+[fix and regression report](UIT-FORUM-AUDIT-FIXES-2026-11-03.md) for A01–A06,
+current acceptance evidence and remaining device/full-workflow limits. Keep the
+archived bad-outcome probes for reproducibility; normal test suites now assert
+correct behavior instead.
+
 ## Method and evidence
 
 - Read the production domain, parser, transport, repository, ViewModel and Compose

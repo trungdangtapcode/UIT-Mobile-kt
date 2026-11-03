@@ -156,4 +156,23 @@
     <string name="f_open_thread">Mở luồng thảo luận</string>
     <string name="f_back_to_channel">Về kênh</string>
     <string name="f_poll_choice">Lựa chọn %1$d</string>
+    <string name="f_draft_saving">Đang lưu nháp trên thiết bị…</string>
+    <string name="f_draft_failed">Chưa lưu được nháp. Giữ trình soạn thảo mở và thử lại.</string>
+    <string name="f_draft_saved">Đã lưu nháp trên thiết bị cho tài khoản Forum này.</string>
+    <string name="f_draft_resolve">Kiểm tra lần gửi trước</string>
+    <string name="f_draft_resolve_note">Kiểm tra chủ đề trên Forum trước khi gửi lại. Nếu đã đăng, hãy xóa nháp để tránh đăng hai lần. Chỉ tiếp tục khi đã xác nhận bài chưa được đăng.</string>
+    <string name="f_draft_checked">Đã kiểm tra: chưa đăng</string>
+    <string name="f_keep_draft">Giữ nháp</string>
+    <string name="f_discard_draft">Xóa nháp</string>
+    <string name="f_discard_draft_note">Xóa vĩnh viễn bản nháp trên thiết bị? Thao tác này không xóa bài đã đăng.</string>
+    <string name="f_existing_draft">Có bản nháp đang chờ</string>
+    <string name="f_existing_draft_note">Tiếp tục hoặc xóa bản nháp hiện có trước khi bắt đầu bản khác.</string>
+    <string name="f_resume_draft">Tiếp tục bản nháp</string>
+    <string name="f_poll">Bình chọn</string>
+    <string name="f_remove_vote">Gỡ bình chọn của tôi</string>
+    <string name="f_newer_messages">Tin nhắn mới hơn</string>
+    <string name="f_chat_target_missing">Tin nhắn đã đánh dấu không có trong cuộc trò chuyện được trả về.</string>
+    <string name="f_chat_window">Đang hiển thị 500 tin nhắn. Tải tin cũ hơn hoặc mới hơn để tiếp tục.</string>
+    <string name="f_bookmark_other">Loại đánh dấu này mở trên website Forum nếu có liên kết.</string>
+    <string name="f_draft_local">Bản nháp ở trên thiết bị này, không đồng bộ lên website Forum.</string>
 </resources>

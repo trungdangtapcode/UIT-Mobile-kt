@@ -65,14 +65,25 @@ object ForumMemberLab {
             val poll = post.polls.single()
             apiB.send(reader, ForumCommand.Vote(post.id, poll.name, listOf(poll.options.first().id)))
             check(ForumParser.parse(request, b.get(request), true).posts.first().polls.single().votes == listOf(poll.options.first().id))
+            apiB.send(reader, ForumCommand.RemoveVote(post.id, poll.name))
+            check(ForumParser.parse(request, b.get(request), true).posts.first().polls.single().votes.isEmpty())
+            check(post.blocks.count { it.kind == ForumBlockKind.POLL } == 1)
             val channels = apiB.read(reader, ForumMemberRequest.Channels).channels
             val channel = channels.first { it.id == config.n("channel") }
             check(channel.canSend)
+            check(apiB.read(reader, ForumMemberRequest.Channel(channel.id)).channels.single().id == channel.id)
             val text = "Native local message ${System.currentTimeMillis()}"
             apiB.send(reader, ForumCommand.Chat(channel, text, java.util.UUID.randomUUID().toString()))
             val messages = apiB.read(reader, ForumMemberRequest.Messages(channel)).messages
             check(messages.any { it.blocks.any { block -> text in block.text } })
             val original = messages.first { it.blocks.any { block -> text in block.text } }
+            val around = apiB.read(reader, ForumMemberRequest.Messages(channel, target = original.id))
+            check(around.messages.any { it.id == original.id })
+            val older = apiB.read(reader, ForumMemberRequest.Messages(channel, before = original.id))
+            check(older.messages.all { it.id < original.id })
+            older.messages.lastOrNull()?.let { last ->
+                check(apiB.read(reader, ForumMemberRequest.Messages(channel, after = last.id)).messages.any { it.id == original.id })
+            }
             // Seed a local thread through the upstream route; native UI currently
             // enters existing threads instead of creating new ones.
             val thread = b.write(io.ktor.http.HttpMethod.Post, "/chat/api/channels/${channel.id}/threads.json", listOf("original_message_id" to "${original.id}", "title" to "Native isolated thread")).n("id")
@@ -97,7 +108,7 @@ object ForumMemberLab {
                         put("upstream_revision", config.s("upstream_revision"))
                         put("production_UIT_requests", 0)
                         put("university_credentials_used", false)
-                        put("checks", JsonArray(listOf("native login and cookie restore", "create, edit, stale edit conflict, reply", "bookmark creation and removal", "like and reaction add/remove", "poll vote reflected in subsequent read", "channel and existing thread send/read", "notification read").map { JsonPrimitive(it) }))
+                        put("checks", JsonArray(listOf("native login and cookie restore", "create, edit, stale edit conflict, reply", "bookmark creation and removal", "like and reaction add/remove", "poll vote and removal reflected in subsequent reads", "semantic poll source position", "channel lookup and past/future/around message anchors", "channel and existing thread send/read", "notification read").map { JsonPrimitive(it) }))
                         put("limits", "Local server contract acceptance, not production UIT mutations or installed Android/Keystore acceptance. No synthetic review screenshots.")
                     }.toString() + "\n"
                 )

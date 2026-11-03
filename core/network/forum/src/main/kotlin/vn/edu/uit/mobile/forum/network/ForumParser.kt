@@ -92,8 +92,20 @@ object ForumParser {
     private fun posts(root: JsonObject, id: Long): List<ForumPost> = root.o("post_stream").a("posts").take(ForumLimits.WINDOW).map { it.jsonObject }.filter {
         it.n("topic_id") == id && it.n("id") > 0 && it.n("post_number") in 1..Int.MAX_VALUE.toLong() && !it.b("hidden") && it.s("deleted_at").isBlank() && !it.b("user_deleted")
     }.map {
+        val post = it
+        val polls = it.a("polls").take(20).map { p ->
+            val poll = p.jsonObject
+            ForumPoll(
+                poll.s("name"), poll.s("type"), poll.s("status"),
+                poll.a("options").take(100).map { option ->
+                    val o = option.jsonObject
+                    ForumPollOption(o.s("id"), blocks(o.s("html")), o.s("votes").toIntOrNull())
+                },
+                post.o("polls_votes").a(poll.s("name")).mapNotNull { v -> (v as? JsonPrimitive)?.contentOrNull }, poll.s("voters").toIntOrNull(), if (poll.s("type") == "multiple") poll.s("min").toIntOrNull()?.takeIf { n -> n >= 0 } ?: 1 else 1, if (poll.s("type") == "multiple") poll.s("max").toIntOrNull()?.takeIf { n -> n <= poll.a("options").size } ?: poll.a("options").size else 1, poll.s("results"), text(poll.s("title")).take(1000)
+            )
+        }
         ForumPost(
-            it.n("id"), id, it.n("post_number").toInt(), it.s("username").take(100), it.s("created_at").take(40), blocks(it.s("cooked")), it.n("version").toInt().coerceAtLeast(1), it.s("updated_at").take(40), it.b("can_view_edit_history"), it.n("reply_to_post_number").toInt().takeIf { n -> n > 0 },
+            it.n("id"), id, it.n("post_number").toInt(), it.s("username").take(100), it.s("created_at").take(40), ForumHtml.parse(it.s("cooked"), polls.associateBy { p -> p.name }), it.n("version").toInt().coerceAtLeast(1), it.s("updated_at").take(40), it.b("can_view_edit_history"), it.n("reply_to_post_number").toInt().takeIf { n -> n > 0 },
             canEdit = it.b("can_edit"), canLike = it.a("actions_summary").map { a -> a.jsonObject }.any { a -> a.n("id") == 2L && (a.b("can_act") || a.b("can_undo")) },
             liked = it.a("actions_summary").map { a -> a.jsonObject }.any { a -> a.n("id") == 2L && a.b("acted") },
             likeCount = it.a("actions_summary").map { a -> a.jsonObject }.firstOrNull { a -> a.n("id") == 2L }?.n("count")?.coerceIn(0, Int.MAX_VALUE.toLong())?.toInt() ?: 0,
@@ -101,17 +113,7 @@ object ForumParser {
                 val o = r.jsonObject
                 ForumReaction(o.s("id"), o.n("count").coerceIn(0, Int.MAX_VALUE.toLong()).toInt(), it.o("current_user_reaction").s("id") == o.s("id"), it.o("current_user_reaction").b("can_undo"))
             },
-            polls = it.a("polls").take(20).map { p ->
-                val poll = p.jsonObject
-                ForumPoll(
-                    poll.s("name"), poll.s("type"), poll.s("status"),
-                    poll.a("options").take(100).map { option ->
-                        val o = option.jsonObject
-                        ForumPollOption(o.s("id"), blocks(o.s("html")), o.s("votes").toIntOrNull())
-                    },
-                    it.o("polls_votes").a(poll.s("name")).mapNotNull { v -> (v as? JsonPrimitive)?.contentOrNull }, poll.s("voters").toIntOrNull(), poll.n("min").toInt().coerceAtLeast(1), poll.n("max").toInt().coerceAtLeast(1), poll.s("results")
-                )
-            }
+            polls = polls
         )
     }.distinctBy { it.id }
 

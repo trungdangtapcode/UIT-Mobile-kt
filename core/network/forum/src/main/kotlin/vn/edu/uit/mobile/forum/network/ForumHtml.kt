@@ -8,9 +8,10 @@ import vn.edu.uit.mobile.domain.*
 
 /** Bounded semantic tree. No HTML, CSS or script is executed by the renderer. */
 internal object ForumHtml {
-    fun parse(html: String): List<ForumBlock> = Reader(html).read()
+    fun parse(html: String, polls: Map<String, ForumPoll> = emptyMap()): List<ForumBlock> = Reader(html, polls).read()
 
-    private class Reader(private val html: String) {
+    private class Reader(private val html: String, private val polls: Map<String, ForumPoll>) {
+        private val renderedPolls = mutableSetOf<String>()
         private var remaining = 400
         private var spans = 4000
         private var abbreviated = html.length > 64000
@@ -24,7 +25,10 @@ internal object ForumHtml {
             val doc = Ksoup.parseBodyFragment(html.take(64000))
             doc.select("script,style,form,input,button,link,meta").remove()
             doc.select("img.emoji").forEach { it.replaceWith(TextNode(it.attr("alt").take(80))) }
-            val blocks = nodes(doc.body().childNodes(), 0)
+            val parsed = nodes(doc.body().childNodes(), 0)
+            val placeholders = doc.select(".poll").map { it.attr("data-poll-name") }.toSet()
+            val recovered = if (abbreviated) emptyList() else polls.filterKeys { it !in renderedPolls && it !in placeholders }.values.map { ForumBlock(ForumBlockKind.POLL, "", poll = it) }
+            val blocks = parsed + recovered
             return if (abbreviated) blocks + ForumBlock(ForumBlockKind.OMITTED, "") else blocks
         }
         private fun nodes(nodes: List<Node>, depth: Int): List<ForumBlock> {
@@ -118,6 +122,17 @@ internal object ForumHtml {
                 return emptyList()
             }
             val tag = e.tagName()
+            // Quoted polls belong to their source post. Never bind their controls
+            // to this post merely because both polls use the default name.
+            val quoted = e.parents().any { it.tagName() == "blockquote" || it.hasClass("quote") || it.hasClass("expanded-quote") }
+            if (e.hasClass("poll") && !quoted) {
+                polls[e.attr("data-poll-name")]?.let {
+                    renderedPolls += it.name
+                    val poll = it.copy(title = it.title.ifBlank { e.select(".poll-title").firstOrNull()?.text()?.take(1000).orEmpty() })
+                    val block = ForumBlock(ForumBlockKind.POLL, "", poll = poll)
+                    return listOf(if (e.hasClass("spoiler")) ForumBlock(ForumBlockKind.SPOILER, "", children = listOf(block)) else block)
+                }
+            }
             if (tag in dropped) return emptyList()
             if (e.hasClass("spoiler") && tag != "img") {
                 return listOf(ForumBlock(ForumBlockKind.SPOILER, "", children = nodes(e.childNodes(), depth)))

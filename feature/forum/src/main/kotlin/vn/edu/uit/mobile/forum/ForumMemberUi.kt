@@ -25,9 +25,19 @@ import vn.edu.uit.mobile.feature.forum.R
     onClose: () -> Unit,
     onLink: (String) -> Unit,
     imageLoader: suspend (String) -> ByteArray,
-    onThread: (Long?) -> Unit
+    onThread: (Long?) -> Unit,
+    onNewer: () -> Unit = {},
+    onBookmark: (ForumBookmark) -> Unit = {}
 ) {
     val ready = forumAccountReady(state)
+    val listState = remember(state.memberTab, state.channel?.id, state.threadId) { LazyListState() }
+    LaunchedEffect(state.chatScrollVersion, state.channel?.id, state.threadId) {
+        if (state.channel != null && state.memberPage.messages.isNotEmpty() && !state.accountBusy) {
+            val messages = state.memberPage.messages
+            val targetIndex = state.chatTarget?.let { id -> messages.indexOfFirst { it.id == id }.takeIf { it >= 0 } }
+            listState.scrollToItem((targetIndex ?: messages.lastIndex) + if (state.memberPage.more) 1 else 0)
+        }
+    }
     var remove by remember { mutableStateOf<ForumBookmark?>(null) }
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize().imePadding(), shape = TechnicalShapes.Dialog) {
@@ -70,7 +80,7 @@ import vn.edu.uit.mobile.feature.forum.R
                         TextButton(onClick = { onThread(null) }, enabled = !state.commandBusy) { Text(stringResource(R.string.f_back_to_channel)) }
                     }
                 }
-                LazyColumn(Modifier.weight(1f).testTag("forum-member-list"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                LazyColumn(Modifier.weight(1f).testTag("forum-member-list"), state = listState, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     val page = state.memberPage
                     when (state.memberTab) {
                         ForumMemberTab.NOTICES -> {
@@ -88,7 +98,16 @@ import vn.edu.uit.mobile.feature.forum.R
                         ForumMemberTab.BOOKMARKS -> {
                             items(page.bookmarks, key = { it.id }) { bookmark ->
                                 Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                                    TextButton(onClick = { onTopic(bookmark.topicId, bookmark.postNumber) }, enabled = !state.commandBusy) { Text(bookmark.title, style = MaterialTheme.typography.titleMedium) }
+                                    val target = bookmark.target
+                                    TextButton(onClick = {
+                                        when (target) {
+                                            is ForumBookmarkTarget.Topic -> onTopic(target.id, target.number)
+                                            is ForumBookmarkTarget.Chat -> onBookmark(bookmark)
+                                            is ForumBookmarkTarget.Other -> target.url?.let(onLink)
+                                        }
+                                    }, enabled = !state.commandBusy && !state.accountBusy && (target !is ForumBookmarkTarget.Other || target.url != null)) { Text(bookmark.title.ifBlank { stringResource(R.string.f_account_bookmarks) }, style = MaterialTheme.typography.titleMedium) }
+                                    if (target is ForumBookmarkTarget.Chat) Text(stringResource(R.string.f_chat), style = MaterialTheme.typography.labelSmall)
+                                    if (target is ForumBookmarkTarget.Other) Text(stringResource(R.string.f_bookmark_other), style = MaterialTheme.typography.labelSmall)
                                     if (bookmark.reminder.isNotBlank()) Text(isoDate(bookmark.reminder), style = MaterialTheme.typography.labelSmall)
                                     TextButton(onClick = { remove = bookmark }, enabled = !state.commandBusy && !state.commandUncertain) { Text(stringResource(R.string.f_remove_bookmark)) }
                                 }
@@ -107,8 +126,8 @@ import vn.edu.uit.mobile.feature.forum.R
                                 }
                                 if (page.channels.isEmpty() && !state.accountBusy) item { Text(stringResource(R.string.f_no_channels)) }
                             } else {
-                                if (page.more) item { OutlinedButton(onClick = { onLoad(ForumMemberTab.CHAT, true, state.channel) }, enabled = ready && !state.accountBusy && !state.commandBusy, shape = TechnicalShapes.Control) { Text(stringResource(R.string.f_older_messages)) } }
-                                items(page.messages, key = { it.id }) { message ->
+                                if (page.more) item(key = "older") { OutlinedButton(onClick = { onLoad(ForumMemberTab.CHAT, true, state.channel) }, enabled = ready && !state.accountBusy && !state.commandBusy, shape = TechnicalShapes.Control) { Text(stringResource(R.string.f_older_messages)) } }
+                                items(page.messages, key = { "message-${it.id}" }) { message ->
                                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Text(message.author, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                                         Text(isoDate(message.created), style = MaterialTheme.typography.labelSmall)
@@ -117,12 +136,15 @@ import vn.edu.uit.mobile.feature.forum.R
                                     }
                                     HorizontalDivider()
                                 }
+                                if (page.moreNewer) item(key = "newer") { OutlinedButton(onClick = onNewer, enabled = ready && !state.accountBusy && !state.commandBusy, shape = TechnicalShapes.Control) { Text(stringResource(R.string.f_newer_messages)) } }
                                 if (page.messages.isEmpty() && !state.accountBusy) item { Text(stringResource(R.string.f_no_messages)) }
                             }
                         }
                     }
                     if (page.more && state.memberTab != ForumMemberTab.CHAT) item { OutlinedButton(onClick = { onLoad(state.memberTab, true, null) }, enabled = ready && !state.accountBusy && !state.commandBusy, shape = TechnicalShapes.Control) { Text(stringResource(R.string.f_more)) } }
                 }
+                if (state.channel != null && state.chatTarget != null && !state.accountBusy && state.memberPage.messages.none { it.id == state.chatTarget }) Text(stringResource(R.string.f_chat_target_missing), style = MaterialTheme.typography.labelSmall)
+                if (state.channel != null && state.memberPage.messages.size == 500) Text(stringResource(R.string.f_chat_window), style = MaterialTheme.typography.labelSmall)
                 state.channel?.takeIf { it.canSend && (state.threadId == null || state.memberPage.thread?.status == "open") }?.let { channel ->
                     var message by remember(channel.id, state.threadId) { mutableStateOf("") }
                     var pending by remember(channel.id, state.threadId) { mutableStateOf(false) }

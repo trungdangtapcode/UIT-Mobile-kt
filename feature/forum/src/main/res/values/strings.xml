@@ -156,4 +156,23 @@
     <string name="f_open_thread">Open thread</string>
     <string name="f_back_to_channel">Back to channel</string>
     <string name="f_poll_choice">Poll choice %1$d</string>
+    <string name="f_draft_saving">Saving draft on this device…</string>
+    <string name="f_draft_failed">Draft could not be saved. Keep this editor open and try again.</string>
+    <string name="f_draft_saved">Draft saved on this device for this Forum account.</string>
+    <string name="f_draft_resolve">Check previous submission</string>
+    <string name="f_draft_resolve_note">Check the topic on the Forum before retrying. If it was published, discard this draft to avoid posting twice. Only continue if you have verified that it was not published.</string>
+    <string name="f_draft_checked">Verified: not published</string>
+    <string name="f_keep_draft">Keep draft</string>
+    <string name="f_discard_draft">Discard</string>
+    <string name="f_discard_draft_note">Permanently remove this local draft? This does not delete any published post.</string>
+    <string name="f_existing_draft">A draft is waiting</string>
+    <string name="f_existing_draft_note">Resume or discard your existing draft before starting another one.</string>
+    <string name="f_resume_draft">Resume draft</string>
+    <string name="f_poll">Poll</string>
+    <string name="f_remove_vote">Remove my vote</string>
+    <string name="f_newer_messages">Newer messages</string>
+    <string name="f_chat_target_missing">This bookmarked message is unavailable in the returned conversation.</string>
+    <string name="f_chat_window">Showing 500 messages. Load older or newer messages to continue.</string>
+    <string name="f_bookmark_other">This bookmark type opens on the Forum website when a link is available.</string>
+    <string name="f_draft_local">Drafts stay on this device. They are not synced to the Forum website.</string>
 </resources>

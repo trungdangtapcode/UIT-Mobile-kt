@@ -3,6 +3,7 @@ package vn.edu.uit.mobile
 import android.app.Application
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.lifecycle.ViewModelStore
 import org.junit.*
@@ -22,6 +23,12 @@ class ForumAccountDesignTest {
     @get:Rule val compose = createComposeRule()
     private class Repo : ForumAccountRepository {
         val commands = mutableListOf<ForumCommand>()
+        var draft: ForumDraft? = null
+        var longChat = false
+        override suspend fun draft() = draft
+        override suspend fun saveDraft(draft: ForumDraft?) {
+            this.draft = draft
+        }
         override suspend fun resume(): ForumUser? = null
         override suspend fun login(username: String, password: String, secondFactor: String): ForumUser {
             check(password == "fixture-password")
@@ -32,7 +39,8 @@ class ForumAccountDesignTest {
             is ForumMemberRequest.Notices -> ForumAccountPage(notices = listOf(ForumNotice(7, "Fixture notice", 9, 1, false)))
             is ForumMemberRequest.Bookmarks -> ForumAccountPage(bookmarks = listOf(ForumBookmark(8, "Fixture bookmark", 9, 1)))
             ForumMemberRequest.Channels -> ForumAccountPage(channels = listOf(ForumChannel(3, "Fixture channel", true)))
-            is ForumMemberRequest.Messages -> ForumAccountPage(messages = listOf(ForumChatMessage(2, 3, "Fixture", "", listOf(ForumBlock(ForumBlockKind.TEXT, "Fixture message")), threadId = 8)), thread = request.threadId?.let { ForumThread(it, 3, "Fixture thread", "open") })
+            is ForumMemberRequest.Channel -> ForumAccountPage(channels = listOf(ForumChannel(request.id, "Fixture channel", true)))
+            is ForumMemberRequest.Messages -> if (longChat) ForumAccountPage(messages = (1L..50L).map { ForumChatMessage(it, 3, "Fixture", "", listOf(ForumBlock(ForumBlockKind.TEXT, "Message $it " + "long content ".repeat(20)))) }) else ForumAccountPage(messages = listOf(ForumChatMessage(2, 3, "Fixture", "", listOf(ForumBlock(ForumBlockKind.TEXT, "Fixture message")), threadId = 8)), thread = request.threadId?.let { ForumThread(it, 3, "Fixture thread", "open") })
             is ForumMemberRequest.Edit -> ForumAccountPage(editable = ForumEditable(2, 9, 1, "Existing **source**", 1))
         }
         override suspend fun command(command: ForumCommand): ForumCommandResult {
@@ -137,5 +145,58 @@ class ForumAccountDesignTest {
         compose.onNodeWithText("Back to channel").performClick()
         compose.waitForIdle()
         assertNull(vm.uiState.value.threadId)
+    }
+
+    @Test fun composerRestorationAndKeepDraftRetainAllFieldsWithoutPublishing() {
+        val restoration = StateRestorationTester(compose)
+        restoration.setContent { UitTheme(dark = true, dynamic = false) { ForumScreen(vm) } }
+        compose.runOnIdle { vm.open() }
+        login()
+        compose.runOnIdle { vm.compose(create = true) }
+        compose.onNodeWithText("Topic title").performTextInput("Retained title")
+        compose.onNodeWithText("Choose category").performClick()
+        compose.onNodeWithTag("forum-category-1").performSemanticsAction(SemanticsActions.OnClick) { it() }
+        compose.onNodeWithTag("forum-composer-raw").performTextInput("Retained **Markdown**")
+        restoration.emulateSavedInstanceStateRestore()
+        compose.onNodeWithTag("forum-composer-raw").assertTextContains("Retained **Markdown**")
+        compose.onNodeWithText("Retained title").assertExists()
+        compose.onAllNodesWithText("Allowed category").onLast().assertExists()
+        compose.onNodeWithText("Keep draft").performClick()
+        compose.onNodeWithTag("forum-composer-raw").assertDoesNotExist()
+        compose.onNodeWithText("Resume draft").performClick()
+        compose.onNodeWithTag("forum-composer-raw").assertTextContains("Retained **Markdown**")
+        compose.onNodeWithText("Discard").performClick()
+        assertNotNull(repo.draft)
+        compose.onAllNodesWithText("Discard").onLast().performClick()
+        compose.waitForIdle()
+        assertNull(repo.draft)
+        assertTrue(repo.commands.isEmpty())
+    }
+
+    @Test fun chatOpensAtLatestMessageAndReturnsThereAfterExplicitSend() {
+        repo.longChat = true
+        show()
+        login()
+        compose.runOnIdle { vm.member(ForumMemberTab.CHAT, channel = ForumChannel(3, "Fixture channel", true)) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Message 50 ", substring = true).assertIsDisplayed()
+        compose.onNodeWithTag("forum-member-list").performScrollToIndex(0)
+        compose.onNodeWithText("Message 1 ", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Message").performTextInput("Explicit send")
+        compose.onNodeWithText("Send").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Message 50 ", substring = true).assertIsDisplayed()
+        assertEquals(1, repo.commands.size)
+    }
+
+    @Test fun refreshingThreadDoesNotDiscardUnsentChatText() {
+        show()
+        login()
+        compose.runOnIdle { vm.member(ForumMemberTab.CHAT, channel = ForumChannel(3, "Fixture channel", true), threadId = 8) }
+        compose.onNodeWithText("Message").performTextInput("Keep this thread draft")
+        compose.onNodeWithText("Refresh").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Message").assertTextContains("Keep this thread draft")
+        assertTrue(repo.commands.isEmpty())
     }
 }

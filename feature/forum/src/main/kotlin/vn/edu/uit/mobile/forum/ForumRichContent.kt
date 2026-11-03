@@ -32,11 +32,18 @@ import vn.edu.uit.mobile.designsystem.TechnicalShapes
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.forum.R
 
-@Composable internal fun ForumBlockView(block: ForumBlock, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, source: String, onBrowser: (String) -> Unit) {
+@Composable internal fun ForumBlockView(block: ForumBlock, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, source: String, onBrowser: (String) -> Unit, pollContent: (@Composable (ForumPoll) -> Unit)? = null) {
     @Composable fun children() {
-        block.children.forEach { ForumBlockView(it, onLink, imageLoader, source, onBrowser) }
+        block.children.forEach { ForumBlockView(it, onLink, imageLoader, source, onBrowser, pollContent) }
     }
     when (block.kind) {
+        ForumBlockKind.POLL -> block.poll?.let { poll ->
+            if (pollContent != null) {
+                pollContent(poll)
+            } else {
+                ForumPollView(poll, false, 0, {}, {}, onLink, imageLoader, source)
+            }
+        }
         ForumBlockKind.CODE -> {
             val clipboard = LocalClipboardManager.current
             Surface(shape = TechnicalShapes.Control, color = MaterialTheme.colorScheme.surfaceContainerHighest) {
@@ -70,7 +77,7 @@ import vn.edu.uit.mobile.feature.forum.R
             if (block.cells.isNotEmpty()) {
                 block.cells.forEach { row ->
                     Row {
-                        row.forEach { cell -> Column(Modifier.width(200.dp).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { cell.forEach { ForumBlockView(it, onLink, imageLoader, source, onBrowser) } } }
+                        row.forEach { cell -> Column(Modifier.width(200.dp).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { cell.forEach { ForumBlockView(it, onLink, imageLoader, source, onBrowser, pollContent) } } }
                     }
                     HorizontalDivider()
                 }

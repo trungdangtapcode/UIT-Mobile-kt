@@ -8,7 +8,7 @@ import kotlinx.serialization.json.*
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.forum.network.*
 
-/** Member content is memory-only and never enters the anonymous repository/cache. */
+/** Member responses never enter the guest cache. Drafts persist in an account-bound encrypted slot. */
 class ConnectedForumRepository(
     private val guest: ForumRepository,
     private val client: ForumSessionClient,
@@ -16,6 +16,7 @@ class ConnectedForumRepository(
 ) : ForumAccountRepository {
     private val epoch = AtomicLong()
     private val sessionLock = Mutex()
+    private val draftLock = Mutex()
     private val localLock = Any()
 
     @Volatile private var user: ForumUser? = null
@@ -190,7 +191,45 @@ class ConnectedForumRepository(
             synchronized(localLock) { memory = memory.copy(positions = (listOf(position) + memory.positions.filterNot { it.topic.id == position.topic.id }).take(120)) }
         }
     }
+    private fun ensureDraftOwner(owner: Long, token: Long) {
+        ensure(token)
+        if (user?.id != owner) throw CancellationException("Forum draft account changed")
+    }
+    override suspend fun draft(): ForumDraft? {
+        val owner = user?.id ?: throw ForumException(ForumFailure.AUTHENTICATION)
+        val token = epoch.get()
+        return withContext(Dispatchers.IO) {
+            draftLock.withLock {
+                ensureDraftOwner(owner, token)
+                try {
+                    vault.read("draft.$owner")?.let(ForumDraftCodec::decode).also { ensureDraftOwner(owner, token) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    throw ForumException(ForumFailure.STORAGE)
+                }
+            }
+        }
+    }
+    override suspend fun saveDraft(draft: ForumDraft?) {
+        val owner = user?.id ?: throw ForumException(ForumFailure.AUTHENTICATION)
+        val token = epoch.get()
+        withContext(Dispatchers.IO) {
+            draftLock.withLock {
+                ensureDraftOwner(owner, token)
+                try {
+                    if (draft == null) vault.remove("draft.$owner") else vault.write("draft.$owner", ForumDraftCodec.encode(draft))
+                    ensureDraftOwner(owner, token)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    throw ForumException(ForumFailure.STORAGE)
+                }
+            }
+        }
+    }
     override suspend fun clear() {
+        if (user != null) saveDraft(null)
         disconnect()
         guest.clear()
     }

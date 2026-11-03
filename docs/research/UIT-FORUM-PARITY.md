@@ -1,10 +1,10 @@
 # UIT Forum web parity: research and implementation contract
 
-**Audit update (2026-11-03):** [The behavioral and mobile-web audit](UIT-FORUM-PARITY-AUDIT-2026-11-03.md)
-finds the current implementation is not web-equivalent. Five diagnostic probes
-reproduce draft loss, truncated chat history, incorrect optional poll bounds and
-dropped chat bookmarks. These are open defects in existing flows, in addition
-to the missing capabilities below; passing baseline CI does not resolve them.
+**Audit follow-up (2026-11-03):** [The baseline audit](UIT-FORUM-PARITY-AUDIT-2026-11-03.md)
+found six concrete defects. The [fix and regression report](UIT-FORUM-AUDIT-FIXES-2026-11-03.md)
+records encrypted local drafts, bidirectional chat paging, poll bounds/source
+position, typed bookmarks and chat scroll fixes. Full web parity remains incomplete;
+the baseline counterexamples and broader workflow gaps remain documented.
 
 Research date: 2026-11-03, Asia/Tokyo. App baseline: `1417d5c` on
 `feat/uit-forum-reader`, PR #78. This document changes the target from an initial
@@ -151,7 +151,7 @@ does not replace server account state.
 | F31 | Watching/tracking/muting by topic/category/tag; upstream documented | Missing | Server options and effective state, permission errors and separately authorized state-change tests |
 | F32 | User profiles/activity, preferences, groups/badges; upstream documented | Author text only | Inventory permitted fields and tabs; privacy, navigation and separately authorized preference changes |
 | F33 | Composer, new topic/reply/quote/mention; reply control observed on UIT | Partial: native raw composer, permitted category selection, new/reply/edit; preview/uploads/quote/mention helpers remain | Native phone editing, category rules, preview, keyboard/IME, length limits and server validation |
-| F34 | Drafts, uploads and interrupted submission; upstream documented | Partial: ambiguous writes are not replayed; text retained on rejection/conflict; persistent/server drafts and uploads remain | Local vs server drafts, attachment progress, conflict recovery and ambiguous timeout handling without duplicate posts |
+| F34 | Drafts, uploads and interrupted submission; upstream documented | Partial: ambiguous writes are not replayed; text retained on rejection/conflict; one encrypted account-bound local draft with recovery and confirmed discard; server drafts and uploads remain | Local vs server drafts, attachment progress, conflict recovery and ambiguous timeout handling without duplicate posts |
 | F35 | Likes and reactions; UIT setting/action metadata observed | Partial: native server choices/counts/permissions and local Kotlin like/reaction round trips; real UIT writes intentionally untested | Server-provided choices/counts/permissions; no reactions on the real university account during tests |
 | F36 | Flags/reporting and own-post actions; UIT action types advertised | Missing | Available reasons, eligibility, result/error handling; no live reports or deletion as test cleanup |
 | F37 | Personal messages/invitations; upstream documented, UIT account eligibility unverified | Missing | Verify permitted workflows without reading unrelated private conversations; test delivery only in a dedicated environment |

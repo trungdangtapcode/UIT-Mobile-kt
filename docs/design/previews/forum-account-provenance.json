@@ -31,9 +31,11 @@
     },
     {
       "file": "forum-native-composer.png",
-      "captured_at_utc": "2026-11-03T04:48:23.956706+00:00",
-      "sha256": "98d013518cd708a44834ed36241bd04b7783da3853078a62180359f33e075ac2",
+      "captured_at_utc": "2026-11-03T06:40:54.241643+00:00",
+      "sha256": "74ed036d7de374e84831a9e82209dca71a5d01ca57f0c1f122b66ba8c1a1b364",
       "content": "Empty native form captured from actual UIT production flow; no authored post or fixture body"
     }
-  ]
+  ],
+  "composer_refresh_at_utc": "2026-11-03T06:40:54.241643+00:00",
+  "composer_refresh_note": "Audit-fix capture: inspected actual empty composer after live UIT login; local draft explanation and keep/discard controls. No post submitted."
 }

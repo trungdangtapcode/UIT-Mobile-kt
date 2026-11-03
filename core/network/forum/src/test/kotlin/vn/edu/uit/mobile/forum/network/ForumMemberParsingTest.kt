@@ -69,6 +69,6 @@ class ForumMemberParsingTest {
         assertNull(poll.voters)
         assertEquals(listOf("a"), poll.votes)
         assertEquals("closed", poll.status)
-        assertEquals(2, poll.max)
+        assertEquals(1, poll.max)
     }
 }

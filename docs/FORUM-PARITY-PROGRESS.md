@@ -1,10 +1,10 @@
 # Forum parity implementation progress
 
-**Audit update (2026-11-03):** [The behavioral and mobile-web audit](research/UIT-FORUM-PARITY-AUDIT-2026-11-03.md)
-finds the current implementation is not web-equivalent. Five diagnostic probes
-reproduce draft loss, truncated chat history, incorrect optional poll bounds and
-dropped chat bookmarks. These are open defects in existing flows, in addition
-to the missing capabilities below; passing baseline CI does not resolve them.
+**Audit follow-up (2026-11-03):** [The baseline audit](research/UIT-FORUM-PARITY-AUDIT-2026-11-03.md)
+found six concrete defects. The [fix and regression report](research/UIT-FORUM-AUDIT-FIXES-2026-11-03.md)
+records encrypted local drafts, bidirectional chat paging, poll bounds/source
+position, typed bookmarks and chat scroll fixes. Full web parity remains incomplete;
+the baseline counterexamples and broader workflow gaps remain documented.
 
 This is implementation progress against the [46-row matrix](research/UIT-FORUM-PARITY.md),
 not a full-parity completion claim. The implementation branch is
@@ -100,7 +100,7 @@ real university account is not used for mutation testing.
 | F16–F17 | Real uploaded image, original, fullscreen, zoom/pan and retry | Multi-image gallery, CDN/secure/redirect handling and device lifecycle coverage |
 | F22 | Permitted history, before/after diff and revision navigation | Full metadata/media diffs, wider permission/device cases |
 | F03, F24, F26–F30 | Native separate login/restore, account isolation, personal filters, server resume/bookmarks/notices | Installed Android, remote session revocation, tracking/preferences and broader account cases |
-| F23, F33–F35, F38, F41 | New/reply/edit with stale-source conflict, explicit bookmark/like/reaction/poll actions, existing channel/thread chat | Uploads/drafts/preview, advanced poll types, chat creation/management/realtime, production write acceptance |
+| F23, F33–F35, F38, F41 | New/reply/edit with stale-source conflict, explicit bookmark/like/reaction/poll actions, existing channel/thread chat | Uploads/server drafts/preview, advanced poll types, chat creation/management/realtime, production write acceptance |
 | Other rows | Earlier reader behavior or research only | See the matrix; no full-parity certification |
 
 A dedicated local Discourse environment runs at the observed upstream revision
@@ -134,7 +134,7 @@ Personal filters, notifications (including real UIT badge notices), server
 bookmarks and server last-read resume are implemented. Explicit new topic/reply,
 raw edit with conflict detection, bookmark/like/reaction, regular/multiple poll
 voting and channel/thread chat use typed native requests. No action is automatically
-replayed after an ambiguous result. Authenticated content is memory-only.
+replayed after an ambiguous result. Authenticated content is memory-only except the encrypted account-bound composer draft.
 
 See [Forum accounts](FORUM-ACCOUNTS.md) for the exact contracts, reproduction,
 privacy boundaries and remaining work. The production client passed the local

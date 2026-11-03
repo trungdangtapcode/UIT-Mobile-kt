@@ -51,8 +51,10 @@ sequenceDiagram
 
 `ConnectedForumRepository` wraps the existing anonymous repository and owns a
 separate `forum_session` / `uit.forum.session.v1` Android Keystore AES-GCM vault.
-Only Forum cookies and account ID persist. Authenticated content, temporary saves,
-reading anchors, notices, bookmarks, chat and edit sources stay in memory. They
+Forum cookies, account ID and one pending composer draft per Forum account persist.
+The draft includes Markdown, title, category, reply target, edit reason, original
+edit source and an uncertain-submission marker. Other authenticated content,
+temporary saves, reading anchors, notices, bookmarks and chat stay in memory. They
 never enter the guest offline cache. **Saved temporarily** and **Forum bookmarks**
 are deliberately distinct controls.
 
@@ -64,7 +66,9 @@ old account, including late image/history/member responses and cookies arriving
 after disconnect.
 
 **Disconnect here** removes this app's cookies, encrypted credential record and
-member UI. It does not revoke remote sessions or log other devices out. Server
+member UI. An encrypted local draft is retained for recovery only after that same
+account is verified again; **Discard** removes the current draft with confirmation.
+Drafts are not uploaded or synced to other devices. Disconnect does not revoke remote sessions or log other devices out. Server
 session revocation is still an open parity item. Android backup is disabled by
 the app manifest. Installed-device Keystore/recreation testing remains required.
 
@@ -76,12 +80,12 @@ the app manifest. Installed-device Keystore/recreation testing remains required.
 | Category permissions | Retain authorized restricted categories; only full-permission categories appear in new-topic selection | Server remains authoritative at submission |
 | Reading position | Offer the server's last-read post as a resume target | Reading does not submit timing/read updates; no cross-device write sync yet |
 | Notifications | Paged list, read state, date, topic targets and badge titles | Opening the list does not mark read; unsupported notification kinds have an explicit fallback label |
-| Forum bookmarks | Read server list/reminder time, add post bookmark, explicitly confirm removal | No reminder editor yet; temporary device saves are separate |
-| New topic/reply | Native raw Markdown editor, title/category and explicit Publish | No autosaved server drafts; validation/rejection retains the text |
+| Forum bookmarks | Read server list/reminder time, native topic/chat/thread bookmark targets, add post bookmark, explicitly confirm removal | Unknown bookmark types remain visible with a safe web link when supplied; no reminder editor yet; temporary device saves are separate |
+| New topic/reply | Native raw Markdown editor, title/category and explicit Publish | One encrypted local draft per account; recover/keep/confirmed discard; no server autosave or multiple concurrent drafts |
 | Edit | Fetch permitted raw source, edit reason, submit `original_text` with changed raw | A stale edit returns conflict instead of overwriting a newer revision |
 | Likes/reactions | Counts, current selection, server-advertised choices and action permissions | Explicit action only; no fabricated emoji/capability list |
-| Polls | Semantic choices, own votes, nullable results, open/closed state, regular/multiple voting | Number/ranked-choice types explicitly unsupported; advanced results/voter lists and source-position fidelity remain |
-| Chat | Existing public channels and DMs, latest messages, older pagination, semantic rich bodies, explicit send | Server membership/silencing/status gates controls; manual refresh only |
+| Polls | Semantic choices, own votes, nullable results, open/closed state, regular/multiple voting | Source-position semantic blocks; upstream optional min/max defaults; explicit vote removal; number/ranked-choice and advanced results/voter lists remain unsupported |
+| Chat | Existing public channels and DMs, latest messages, bounded bidirectional history, bookmark anchors, semantic rich bodies, explicit send | 500-message directional window with independent older/newer continuation; initial/send scroll to latest; stable paging keys; manual refresh only |
 | Chat threads | Open an existing message's thread, isolate history, send explicitly into that thread, return to channel | No new thread/DM creation, thread directory, realtime events, edits/deletes or typing/read receipts yet |
 
 Notification badge fields were checked against actual UIT data after visual
@@ -100,7 +104,12 @@ separate UI states. Rate-limit controls wait for the returned retry interval.
 
 A timeout/5xx/malformed successful create response may mean the server committed
 the operation. The UI labels this as an unknown outcome and blocks another submit
-until the user leaves the editor and inspects/refetches server state. There is no
+across editor dismissal and restart. For a post draft, the user must inspect the
+server and explicitly confirm that the previous attempt was not published before
+retrying, or discard the draft if it was published. Merely refreshing another list
+does not unlock that draft. The pending marker is stored before the network write;
+a failed local save prevents the write. A confirmed write clears the draft; if
+local cleanup fails, recovery remains marked uncertain to prevent a duplicate. There is no
 offline write queue. Chat `staged_id` is a correlation ID, **not** a verified
 idempotency guarantee. A confirmed write is not reported as failed merely because
 persisting a rotated cookie failed afterward.
@@ -149,7 +158,7 @@ account identifiers, notices, private bodies and credentials stay out of the PR.
 These empty forms were captured during the actual production flow, not populated
 with authored Forum content.
 
-Full parity still needs uploads/preview/drafts, broader account preferences and
+Full parity still needs uploads/preview/server drafts, broader account preferences and
 tracking, remote logout, advanced polls, topic voting/solved, private-message
 creation, chat management/realtime, further media fidelity and installed Android
 acceptance. Implementing this increment does not close those rows.

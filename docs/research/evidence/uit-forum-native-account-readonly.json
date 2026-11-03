@@ -1,5 +1,5 @@
 {
-  "captured_at_utc": "2026-11-03T04:48:23.956706+00:00",
+  "captured_at_utc": "2026-11-03T06:40:56.121591+00:00",
   "runtime": "Production Kotlin networking, repository, ViewModel and Compose on Robolectric",
   "account_identity_verified": true,
   "login_contract": "UIT POST /session returns 204; GET /session/current.json verifies identity",
@@ -18,5 +18,6 @@
     "Necessary login/session metadata may change; no claim that every GET has no side effect",
     "No private conversation read and no production posting/editing/reaction/vote/chat/mark-read writes",
     "Only empty forms selected for public screenshots; private account captures remain ignored"
-  ]
+  ],
+  "follow_up": "Audit-fix live verification repeated; inspected updated empty composer. No private capture published."
 }

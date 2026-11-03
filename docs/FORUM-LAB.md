@@ -106,7 +106,12 @@ docker stop uit-forum-lab
 ```
 
 No container/database removal is automatic. Starting the container later also
-requires restarting the documented `bin/dev` process. Keep its data separate from
+requires restarting the documented `bin/dev` process. For HTTP-only contract
+tests, run `bin/pitchfork -p 3000` with the same container environment instead;
+this avoids starting the frontend development watcher. If `bin/dev` reports a
+stale frontend build PID after a container restart, first verify that no frontend
+watcher is running, then remove only its generated
+`frontend/discourse/dist/manifest/build.json` and restart it. Keep its data separate from
 all production dumps and other development projects.
 
 ## Native production-client acceptance

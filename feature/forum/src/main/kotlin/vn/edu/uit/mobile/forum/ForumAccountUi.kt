@@ -20,7 +20,7 @@ import vn.edu.uit.mobile.designsystem.TechnicalShapes
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.forum.R
 
-class ForumAccountActions(val account: () -> Unit, val create: () -> Unit, val reply: (Int) -> Unit, val edit: (ForumPost) -> Unit, val submit: (ForumCommand) -> Unit)
+class ForumAccountActions(val account: () -> Unit, val create: () -> Unit, val reply: (Int) -> Unit, val edit: (ForumPost) -> Unit, val submit: (ForumCommand) -> Unit, val draft: () -> Unit = {})
 
 @Composable internal fun forumAccountReady(state: ForumState): Boolean {
     var now by remember { mutableLongStateOf(System.currentTimeMillis() / 1000) }
@@ -76,13 +76,15 @@ class ForumAccountActions(val account: () -> Unit, val create: () -> Unit, val r
     }
 }
 
-@Composable internal fun ForumComposerDialog(state: ForumState, onSubmit: (ForumCommand) -> Unit, onDismiss: () -> Unit) {
+@Composable internal fun ForumComposerDialog(state: ForumState, onSubmit: (ForumCommand) -> Unit, onDismiss: () -> Unit, onChange: (ForumDraft) -> Unit, onDiscard: () -> Unit) {
     val composer = state.composer ?: return
     val ready = forumAccountReady(state)
-    var raw by remember(composer) { mutableStateOf(composer.edit?.raw.orEmpty()) }
-    var title by remember(composer) { mutableStateOf("") }
-    var reason by remember(composer) { mutableStateOf("") }
-    var category by remember(composer) { mutableStateOf<ForumCategory?>(null) }
+    val raw = composer.raw
+    val title = composer.title
+    val reason = composer.reason
+    val category = state.categories.firstOrNull { it.id == composer.categoryId && it.canCreate }
+    var discard by remember { mutableStateOf(false) }
+    var resolve by remember { mutableStateOf(false) }
     val creating = composer.topicId == null && composer.edit == null
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize().imePadding(), shape = TechnicalShapes.Dialog) {
@@ -101,34 +103,80 @@ class ForumAccountActions(val account: () -> Unit, val create: () -> Unit, val r
                 )
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (creating) {
-                        OutlinedTextField(title, { title = it.take(1000) }, label = { Text(stringResource(R.string.f_topic_title)) }, shape = TechnicalShapes.Control, modifier = Modifier.fillMaxWidth())
+                        OutlinedTextField(title, { onChange(composer.copy(title = it.take(1000))) }, label = { Text(stringResource(R.string.f_topic_title)) }, shape = TechnicalShapes.Control, modifier = Modifier.fillMaxWidth())
                         var expanded by remember { mutableStateOf(false) }
                         Box {
                             OutlinedButton(onClick = { expanded = true }, shape = TechnicalShapes.Control) { Text(category?.name ?: stringResource(R.string.f_choose_category)) }
                             DropdownMenu(expanded, { expanded = false }) {
                                 state.categories.filter { it.canCreate }.forEach { c ->
                                     DropdownMenuItem(modifier = Modifier.testTag("forum-category-${c.id}"), text = { Text(c.name) }, onClick = {
-                                        category = c
+                                        onChange(composer.copy(categoryId = c.id))
                                         expanded = false
                                     })
                                 }
                             }
                         }
                     }
-                    OutlinedTextField(raw, { raw = it.take(64000) }, label = { Text(stringResource(R.string.f_markdown)) }, minLines = 10, shape = TechnicalShapes.Control, modifier = Modifier.fillMaxWidth().testTag("forum-composer-raw"), enabled = !state.commandBusy)
-                    if (composer.edit != null) OutlinedTextField(reason, { reason = it.take(1000) }, label = { Text(stringResource(R.string.f_edit_reason)) }, shape = TechnicalShapes.Control, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(raw, { onChange(composer.copy(raw = it.take(64000))) }, label = { Text(stringResource(R.string.f_markdown)) }, minLines = 10, shape = TechnicalShapes.Control, modifier = Modifier.fillMaxWidth().testTag("forum-composer-raw"), enabled = !state.commandBusy)
+                    if (composer.edit != null) OutlinedTextField(reason, { onChange(composer.copy(reason = it.take(1000))) }, label = { Text(stringResource(R.string.f_edit_reason)) }, shape = TechnicalShapes.Control, modifier = Modifier.fillMaxWidth())
+                    Text(
+                        stringResource(
+                            if (state.draftSaving) {
+                                R.string.f_draft_saving
+                            } else if (state.draftError) {
+                                R.string.f_draft_failed
+                            } else if (composer.hasChanges || composer.uncertain) {
+                                R.string.f_draft_saved
+                            } else {
+                                R.string.f_draft_local
+                            }
+                        ),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                    if (composer.uncertain) TextButton(onClick = { resolve = true }) { Text(stringResource(R.string.f_draft_resolve)) }
                     Text(stringResource(R.string.f_submit_note), style = MaterialTheme.typography.bodySmall)
                     ForumAccountError(state)
                 }
                 if (state.commandBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    TextButton(onClick = onDismiss, enabled = !state.commandBusy) { Text(stringResource(R.string.f_cancel)) }
+                    TextButton(onClick = onDismiss, enabled = !state.commandBusy) { Text(stringResource(R.string.f_keep_draft)) }
+                    TextButton(onClick = { discard = true }, enabled = !state.commandBusy) { Text(stringResource(R.string.f_discard_draft)) }
                     Button(onClick = {
                         onSubmit(composer.edit?.let { ForumCommand.Edit(it, raw, reason) } ?: composer.topicId?.let { ForumCommand.Reply(it, raw, composer.parent) } ?: ForumCommand.Create(title, raw, requireNotNull(category).id))
-                    }, enabled = ready && raw.isNotBlank() && (!creating || title.isNotBlank() && category != null) && !state.commandBusy && !state.commandUncertain, shape = TechnicalShapes.Control) { Text(stringResource(R.string.f_publish)) }
+                    }, enabled = ready && raw.isNotBlank() && (!creating || title.isNotBlank() && category != null) && !state.commandBusy && !state.commandUncertain && !composer.uncertain, shape = TechnicalShapes.Control) { Text(stringResource(R.string.f_publish)) }
                 }
             }
         }
+    }
+    if (discard) {
+        AlertDialog(
+            onDismissRequest = { discard = false },
+            shape = TechnicalShapes.Dialog,
+            title = { Text(stringResource(R.string.f_discard_draft)) },
+            text = { Text(stringResource(R.string.f_discard_draft_note)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    discard = false
+                    onDiscard()
+                }) { Text(stringResource(R.string.f_discard_draft)) }
+            },
+            dismissButton = { TextButton(onClick = { discard = false }) { Text(stringResource(R.string.f_cancel)) } }
+        )
+    }
+    if (resolve) {
+        AlertDialog(
+            onDismissRequest = { resolve = false },
+            shape = TechnicalShapes.Dialog,
+            title = { Text(stringResource(R.string.f_draft_resolve)) },
+            text = { Text(stringResource(R.string.f_draft_resolve_note)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    resolve = false
+                    onChange(composer.copy(uncertain = false))
+                }) { Text(stringResource(R.string.f_draft_checked)) }
+            },
+            dismissButton = { TextButton(onClick = { resolve = false }) { Text(stringResource(R.string.f_cancel)) } }
+        )
     }
 }
 
@@ -155,42 +203,44 @@ class ForumAccountActions(val account: () -> Unit, val create: () -> Unit, val r
         }
     }
     if (post.reactions.isNotEmpty()) Text(post.reactions.joinToString(" · ") { "${it.id} ${it.count}${if (it.selected) " ✓" else ""}" }, style = MaterialTheme.typography.labelMedium)
-    post.polls.forEach { poll ->
-        var selected by remember(post.id, poll) { mutableStateOf(poll.votes.toSet()) }
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(poll.name, style = MaterialTheme.typography.titleMedium)
-            poll.options.forEachIndexed { index, option ->
-                val choiceLabel = option.blocks.joinToString(" ") { it.text }.ifBlank { stringResource(R.string.f_poll_choice, index + 1) }
-                Row {
-                    Checkbox(
-                        modifier = Modifier.semantics { contentDescription = choiceLabel },
-                        checked = option.id in selected,
-                        onCheckedChange = if (poll.status == "open" && poll.type in listOf("regular", "multiple") && enabled) {
-                            { checked ->
-                                selected = if (poll.type == "regular") {
-                                    setOf(option.id)
-                                } else if (checked) {
-                                    selected + option.id
-                                } else {
-                                    selected - option.id
-                                }
+}
+
+@Composable internal fun ForumPollView(poll: ForumPoll, enabled: Boolean, postId: Long, onVote: (List<String>) -> Unit, onRemove: () -> Unit, onLink: (String) -> Unit, image: suspend (String) -> ByteArray, source: String) {
+    var selected by remember(postId, poll) { mutableStateOf(poll.votes.toSet()) }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(poll.title.ifBlank { stringResource(R.string.f_poll) }, style = MaterialTheme.typography.titleMedium)
+        poll.options.forEachIndexed { index, option ->
+            val choiceLabel = option.blocks.joinToString(" ") { it.text }.ifBlank { stringResource(R.string.f_poll_choice, index + 1) }
+            Row {
+                Checkbox(
+                    modifier = Modifier.semantics { contentDescription = choiceLabel },
+                    checked = option.id in selected,
+                    onCheckedChange = if (poll.status == "open" && poll.type in listOf("regular", "multiple") && enabled) {
+                        { checked ->
+                            selected = if (poll.type == "regular") {
+                                setOf(option.id)
+                            } else if (checked) {
+                                selected + option.id
+                            } else {
+                                selected - option.id
                             }
-                        } else {
-                            null
                         }
-                    )
-                    Column(Modifier.weight(1f)) {
-                        option.blocks.forEach { ForumBlockView(it, onLink, image, "${ForumLimits.ORIGIN}/t/${post.topicId}/${post.number}", onLink) }
-                        option.votes?.let { Text(stringResource(R.string.f_vote_count, it), style = MaterialTheme.typography.labelSmall) }
+                    } else {
+                        null
                     }
+                )
+                Column(Modifier.weight(1f)) {
+                    option.blocks.forEach { ForumBlockView(it, onLink, image, source, onLink) }
+                    option.votes?.let { Text(stringResource(R.string.f_vote_count, it), style = MaterialTheme.typography.labelSmall) }
                 }
             }
-            if (poll.type in listOf("regular", "multiple")) {
-                OutlinedButton(onClick = { actions.submit(ForumCommand.Vote(post.id, poll.name, selected.toList())) }, enabled = enabled && poll.status == "open" && selected.size in poll.min..poll.max, shape = TechnicalShapes.Control) { Text(stringResource(R.string.f_vote)) }
-            } else {
-                Text(stringResource(R.string.f_poll_unsupported))
-            }
-            if (poll.status != "open") Text(stringResource(R.string.f_closed))
         }
+        if (poll.type in listOf("regular", "multiple")) {
+            OutlinedButton(onClick = { onVote(selected.toList()) }, enabled = enabled && poll.status == "open" && selected.isNotEmpty() && selected.size in poll.min..poll.max, shape = TechnicalShapes.Control) { Text(stringResource(R.string.f_vote)) }
+        } else {
+            Text(stringResource(R.string.f_poll_unsupported))
+        }
+        if (enabled && poll.votes.isNotEmpty() && poll.status == "open") TextButton(onClick = onRemove) { Text(stringResource(R.string.f_remove_vote)) }
+        if (poll.status != "open") Text(stringResource(R.string.f_closed))
     }
 }

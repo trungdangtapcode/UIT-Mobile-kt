@@ -31,7 +31,7 @@ import vn.edu.uit.mobile.feature.forum.R
 
 @Composable fun ForumScreen(viewModel: ForumViewModel) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val actions = ForumAccountActions(viewModel::account, { viewModel.compose(create = true) }, { viewModel.compose(it) }, viewModel::edit, viewModel::submit)
+    val actions = ForumAccountActions(viewModel::account, { viewModel.compose(create = true) }, { viewModel.compose(it) }, viewModel::edit, viewModel::submit, viewModel::resumeDraft)
     var link by remember { mutableStateOf<String?>(null) }
     var clear by remember { mutableStateOf(false) }
     BackHandler { if (state.topic != null) viewModel.back() else viewModel.close() }
@@ -50,9 +50,19 @@ import vn.edu.uit.mobile.feature.forum.R
         }, viewModel::submit, { id, number ->
             viewModel.dismissAccount()
             viewModel.topic(id, number)
-        }, viewModel::disconnect, viewModel::dismissAccount, { url -> ForumUrls.safe(url)?.let { link = it } }, viewModel::image, { id -> viewModel.member(ForumMemberTab.CHAT, channel = state.channel, threadId = id) })
+        }, viewModel::disconnect, viewModel::dismissAccount, { url -> ForumUrls.safe(url)?.let { link = it } }, viewModel::image, { id -> viewModel.member(ForumMemberTab.CHAT, channel = state.channel, threadId = id) }, { viewModel.member(ForumMemberTab.CHAT, append = true, channel = state.channel, threadId = state.threadId, newer = true) }, viewModel::openBookmark)
     }
-    state.composer?.let { ForumComposerDialog(state, viewModel::submit, viewModel::dismissComposer) }
+    state.composer?.let { ForumComposerDialog(state, viewModel::submit, viewModel::dismissComposer, viewModel::updateDraft, viewModel::discardDraft) }
+    if (state.draftChoiceVisible) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissDraftChoice,
+            shape = TechnicalShapes.Dialog,
+            title = { Text(stringResource(R.string.f_existing_draft)) },
+            text = { Text(stringResource(R.string.f_existing_draft_note)) },
+            confirmButton = { TextButton(onClick = viewModel::resumeDraft) { Text(stringResource(R.string.f_resume_draft)) } },
+            dismissButton = { TextButton(onClick = viewModel::dismissDraftChoice) { Text(stringResource(R.string.f_cancel)) } }
+        )
+    }
     if (state.historyPost != null) ForumHistoryDialog(state, viewModel::history, viewModel::closeHistory, { url -> ForumUrls.safe(url)?.let { link = it } }, viewModel::image)
     link?.let { url ->
         val handler = LocalUriHandler.current
@@ -132,6 +142,7 @@ import vn.edu.uit.mobile.feature.forum.R
         }
         if (state.user != null) Text(state.user.username, style = MaterialTheme.typography.labelSmall)
         if (accountActions != null && state.user?.canCreateTopic == true && state.topic == null && !state.memberVisible) TextButton(onClick = accountActions.create, enabled = !state.commandBusy) { Text(stringResource(R.string.f_new_topic)) }
+        if (accountActions != null && state.user != null && state.draft != null) TextButton(onClick = accountActions.draft, enabled = !state.commandBusy) { Text(stringResource(R.string.f_resume_draft)) }
         if (state.accountError != null && !state.loginVisible && !state.memberVisible && state.composer == null) ForumAccountError(state)
         if (state.commandBusy || state.accountBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
         if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth().testTag("forum-loading"))
@@ -310,7 +321,22 @@ import vn.edu.uit.mobile.feature.forum.R
                         Text(stringResource(R.string.f_edited), style = MaterialTheme.typography.labelSmall)
                     }
                 }
-                SelectionContainerCompat { post.blocks.forEach { block -> ForumBlockView(block, onLink, imageLoader, topic.url + "/${post.number}", onBrowser) } }
+                SelectionContainerCompat {
+                    post.blocks.forEach { block ->
+                        ForumBlockView(block, onLink, imageLoader, topic.url + "/${post.number}", onBrowser) { poll ->
+                            ForumPollView(
+                                poll,
+                                state.user != null && accountActions != null && !state.commandBusy && !state.commandUncertain && forumAccountReady(state),
+                                post.id,
+                                { options -> accountActions?.submit?.invoke(ForumCommand.Vote(post.id, poll.name, options)) },
+                                { accountActions?.submit?.invoke(ForumCommand.RemoveVote(post.id, poll.name)) },
+                                onLink,
+                                imageLoader,
+                                topic.url + "/${post.number}"
+                            )
+                        }
+                    }
+                }
                 if (accountActions != null && state.user != null) ForumPostActions(state, post, accountActions, onLink, imageLoader)
             }
         }

@@ -20,7 +20,7 @@ data class ForumTopic(val id: Long, val title: String, val categoryId: Long, val
     val url: String get() = "${ForumLimits.ORIGIN}/t/$id"
 }
 data class ForumHit(val id: Long, val topic: ForumTopic, val postNumber: Int, val excerpt: String)
-enum class ForumBlockKind { TEXT, HEADING, QUOTE, CODE, TABLE, DETAILS, SPOILER, IMAGE, LINK, UNSUPPORTED, OMITTED }
+enum class ForumBlockKind { TEXT, HEADING, QUOTE, CODE, TABLE, DETAILS, SPOILER, IMAGE, LINK, POLL, UNSUPPORTED, OMITTED }
 data class ForumLink(val label: String, val url: String)
 data class ForumInline(
     val text: String,
@@ -43,7 +43,8 @@ data class ForumBlock(
     val cells: List<List<List<ForumBlock>>> = emptyList(),
     val label: String = "",
     val original: String? = null,
-    val level: Int = 0
+    val level: Int = 0,
+    val poll: ForumPoll? = null
 )
 data class ForumPost(val id: Long, val topicId: Long, val number: Int, val author: String, val created: String, val blocks: List<ForumBlock>, val version: Int = 1, val updated: String = "", val canViewHistory: Boolean = false, val replyTo: Int? = null, val canEdit: Boolean = false, val canLike: Boolean = false, val liked: Boolean = false, val likeCount: Int = 0, val reactions: List<ForumReaction> = emptyList(), val polls: List<ForumPoll> = emptyList())
 data class ForumRevision(
@@ -111,6 +112,16 @@ object ForumUrls {
     fun image(raw: String): String? = safe(raw)?.takeIf {
         val uri = URI(it)
         uri.host == "forum.uit.edu.vn" && uri.path.startsWith("/uploads/") && uri.rawQuery == null && uri.path.split('/').none { part -> part == "." || part == ".." || part.any(Char::isISOControl) } && !uri.path.contains('\\')
+    }
+    fun chatTarget(raw: String): ForumBookmarkTarget.Chat? = safe(raw)?.let {
+        val uri = URI(it)
+        if (uri.host != "forum.uit.edu.vn" || uri.rawQuery != null || uri.rawFragment != null) return@let null
+        val match = Regex("/chat/c/[^/]+/([0-9]+)(?:/t/([0-9]+))?/([0-9]+)/?").matchEntire(uri.path) ?: return@let null
+        val channel = match.groupValues[1].toLongOrNull()?.takeIf { n -> n > 0 } ?: return@let null
+        val message = match.groupValues[3].toLongOrNull()?.takeIf { n -> n > 0 } ?: return@let null
+        val thread = match.groupValues[2].takeIf { v -> v.isNotEmpty() }?.toLongOrNull()?.takeIf { n -> n > 0 }
+        if (match.groupValues[2].isNotEmpty() && thread == null) return@let null
+        ForumBookmarkTarget.Chat(channel, message, thread)
     }
     fun target(raw: String): ForumTarget? = safe(raw)?.let {
         val uri = URI(it)

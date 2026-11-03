@@ -28,7 +28,22 @@ class ForumMemberApi(private val client: ForumSessionClient) {
             val root = client.read("/u/${user.username}/bookmarks.json", listOf("page" to "${request.page}"))
             val data = if (root["user_bookmark_list"] is JsonObject) root.o("user_bookmark_list") else root
             require(data["bookmarks"] is JsonArray)
-            ForumAccountPage(bookmarks = data.a("bookmarks").take(100).map { it.jsonObject }.filter { it.n("topic_id") > 0 && !it.b("deleted") && !it.b("hidden") }.map { ForumBookmark(it.n("id"), it.s("title").take(1000), it.n("topic_id"), it.n("linked_post_number").toInt().coerceAtLeast(1), it.s("reminder_at")) }, more = data.s("more_bookmarks_url").isNotBlank())
+            ForumAccountPage(
+                bookmarks = data.a("bookmarks").take(100).map { it.jsonObject }.filter { it.n("id") > 0 && !it.b("deleted") && !it.b("hidden") }.map { o ->
+                    val url = o.s("bookmarkable_url").takeIf { it.isNotBlank() }?.let(ForumUrls::safe)
+                    val topic = o.n("topic_id")
+                    val number = o.n("linked_post_number").toInt().coerceAtLeast(1)
+                    val target = if (topic > 0) {
+                        ForumBookmarkTarget.Topic(topic, number)
+                    } else if (o.s("bookmarkable_type") == "Chat::Message") {
+                        url?.let(ForumUrls::chatTarget) ?: ForumBookmarkTarget.Other(url, o.s("bookmarkable_type"))
+                    } else {
+                        ForumBookmarkTarget.Other(url, o.s("bookmarkable_type"))
+                    }
+                    ForumBookmark(o.n("id"), Ksoup.parseBodyFragment(o.s("title").take(4000)).text().take(1000), topic, number, o.s("reminder_at"), target)
+                },
+                more = data.s("more_bookmarks_url").isNotBlank()
+            )
         }
         ForumMemberRequest.Channels -> {
             if (!user.canChat) throw ForumException(ForumFailure.FORBIDDEN)
@@ -40,16 +55,29 @@ class ForumMemberApi(private val client: ForumSessionClient) {
                 }.filter { it.id > 0 }.distinctBy { it.id }
             )
         }
+        is ForumMemberRequest.Channel -> {
+            if (!user.canChat) throw ForumException(ForumFailure.FORBIDDEN)
+            require(request.id > 0)
+            val root = client.read("/chat/api/channels/${request.id}.json").o("channel")
+            require(root.n("id") == request.id)
+            ForumAccountPage(channels = listOf(ForumChannel(root.n("id"), root.s("title").take(300), root.s("status") == "open" && root["current_user_membership"] is JsonObject && root.o("meta")["user_silenced"] == JsonPrimitive(false), root.s("chatable_type") == "DirectMessage")))
+        }
         is ForumMemberRequest.Messages -> {
             if (!user.canChat) throw ForumException(ForumFailure.FORBIDDEN)
             require(request.channel.id > 0 && (request.before?.let { it > 0 } != false) && (request.threadId?.let { it > 0 } != false))
+            require(listOfNotNull(request.before, request.after, request.target).size <= 1 && listOfNotNull(request.after, request.target).all { it > 0 })
             val thread = request.threadId?.let { id ->
                 val o = client.read("/chat/api/channels/${request.channel.id}/threads/$id.json").o("thread")
                 require(o.n("id") == id && o.n("channel_id") == request.channel.id)
                 ForumThread(id, request.channel.id, o.s("title").take(300), o.s("status"))
             }
             val params = mutableListOf("page_size" to "50")
-            if (request.before == null) params += "fetch_from_last_message" to "true"
+            if (request.before == null && request.after == null && request.target == null) params += "fetch_from_last_message" to "true"
+            request.after?.let {
+                params += "target_message_id" to "$it"
+                params += "direction" to "future"
+            }
+            request.target?.let { params += "target_message_id" to "$it" }
             request.before?.let {
                 params += "target_message_id" to "$it"
                 params += "direction" to "past"
@@ -57,7 +85,7 @@ class ForumMemberApi(private val client: ForumSessionClient) {
             val scope = thread?.let { "/threads/${it.id}" }.orEmpty()
             val root = client.read("/chat/api/channels/${request.channel.id}$scope/messages.json", params)
             require(root["messages"] is JsonArray)
-            ForumAccountPage(messages = root.a("messages").take(50).map { it.jsonObject }.filter { it.n("chat_channel_id") == request.channel.id && it.s("deleted_at").isBlank() && (thread == null || it.n("thread_id") == thread.id) }.map { ForumChatMessage(it.n("id"), request.channel.id, it.o("user").s("username").take(100), it.s("created_at"), ForumParser.blocks(it.s("cooked")), it.n("thread_id").takeIf { n -> n > 0 }) }.filter { it.id > 0 }, more = root.o("meta").b("can_load_more_past"), thread = thread)
+            ForumAccountPage(messages = root.a("messages").take(50).map { it.jsonObject }.filter { it.n("chat_channel_id") == request.channel.id && it.s("deleted_at").isBlank() && (thread == null || it.n("thread_id") == thread.id) }.map { ForumChatMessage(it.n("id"), request.channel.id, it.o("user").s("username").take(100), it.s("created_at"), ForumParser.blocks(it.s("cooked")), it.n("thread_id").takeIf { n -> n > 0 }) }.filter { it.id > 0 }, more = root.o("meta").b("can_load_more_past"), moreNewer = root.o("meta").b("can_load_more_future"), thread = thread)
         }
         is ForumMemberRequest.Edit -> {
             require(request.postId > 0)
@@ -111,6 +139,10 @@ class ForumMemberApi(private val client: ForumSessionClient) {
             is ForumCommand.Vote -> {
                 require(command.postId > 0 && command.name.length in 1..100 && command.options.size in 1..100 && command.options.all { it.length in 1..100 })
                 client.write(HttpMethod.Put, "/polls/vote.json", listOf("post_id" to "${command.postId}", "poll_name" to command.name) + command.options.map { "options[]" to it })
+            }
+            is ForumCommand.RemoveVote -> {
+                require(command.postId > 0 && command.name.length in 1..100)
+                client.write(HttpMethod.Delete, "/polls/vote.json", listOf("post_id" to "${command.postId}", "poll_name" to command.name))
             }
             is ForumCommand.Chat -> {
                 if (!user.canChat || !command.channel.canSend) throw ForumException(ForumFailure.FORBIDDEN)

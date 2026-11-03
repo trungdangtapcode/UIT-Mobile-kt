@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import vn.edu.uit.mobile.domain.*
 
 enum class ForumMemberTab { NOTICES, BOOKMARKS, CHAT }
-data class ForumComposer(val topicId: Long? = null, val parent: Int? = null, val edit: ForumEditable? = null)
+typealias ForumComposer = ForumDraft
 enum class ForumTab { LATEST, CATEGORIES, TAGS, SEARCH, SAVED }
 data class ForumState(
     val open: Boolean = false,
@@ -26,6 +26,12 @@ data class ForumState(
     val accountDetail: String = "",
     val accountRetryAt: Long = 0,
     val composer: ForumComposer? = null,
+    val draft: ForumDraft? = null,
+    val draftSaving: Boolean = false,
+    val draftError: Boolean = false,
+    val draftChoiceVisible: Boolean = false,
+    val chatScrollVersion: Int = 0,
+    val chatTarget: Long? = null,
     val commandBusy: Boolean = false,
     val commandUncertain: Boolean = false,
     val canReply: Boolean = false,
@@ -77,6 +83,8 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
     val supportsAccount get() = accountRepository != null
     private var accountWork: Job? = null
     private var commandWork: Job? = null
+    private var draftWork: Job? = null
+    private var draftSerial = 0L
     private var accountSerial = 0L
     private var resumed = false
     private var historyWork: Job? = null
@@ -94,14 +102,17 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         state.value = state.value.copy(open = true)
         if (!resumed && accountRepository != null) {
             resumed = true
+            val token = ++accountSerial
             accountWork = viewModelScope.launch {
                 state.value = state.value.copy(accountBusy = true)
                 try {
                     val user = accountRepository.resume()
-                    state.value = state.value.copy(user = user, accountBusy = false)
+                    val draft = if (user != null) accountRepository.draft() else null
+                    if (token != accountSerial) return@launch
+                    state.value = state.value.copy(user = user, draft = draft, accountBusy = false)
                     latest()
                 } catch (e: ForumException) {
-                    state.value = state.value.copy(accountBusy = false, loginVisible = true, accountError = e.reason)
+                    if (token == accountSerial) state.value = state.value.copy(accountBusy = false, loginVisible = true, accountError = e.reason)
                 }
             }
         } else if (state.value.fetchedAt == 0L && state.value.topics.isEmpty()) {
@@ -424,6 +435,8 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         positionWork?.cancel()
         saveWork?.cancel()
         commandWork?.cancel()
+        draftWork?.cancel()
+        draftSerial++
         serial++
         localSerial++
         accountSerial++
@@ -448,7 +461,9 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
             try {
                 val user = repo.login(username, password, code)
                 if (token != accountSerial) return@launch
-                state.value = state.value.copy(user = user, loginVisible = false)
+                val draft = repo.draft()
+                if (token != accountSerial) return@launch
+                state.value = state.value.copy(user = user, draft = draft, loginVisible = false)
                 latest(null)
             } catch (e: CancellationException) {
                 throw e
@@ -480,32 +495,51 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         if (state.value.accountBusy || state.value.commandBusy) return
         if (state.value.loginVisible) disconnect() else state.value = state.value.copy(memberVisible = false, memberPage = ForumAccountPage(), channel = null, accountError = null)
     }
-    fun member(tab: ForumMemberTab = state.value.memberTab, append: Boolean = false, channel: ForumChannel? = null, threadId: Long? = null) {
+    fun member(tab: ForumMemberTab = state.value.memberTab, append: Boolean = false, channel: ForumChannel? = null, threadId: Long? = null, newer: Boolean = false, target: Long? = null) {
         val repo = accountRepository ?: return
         if (state.value.user == null || state.value.commandBusy || state.value.accountRetryAt > clock()) return
         accountWork?.cancel()
         val token = ++accountSerial
-        val index = if (append) state.value.memberIndex + 1 else 0
+        val index = if (tab == ForumMemberTab.CHAT) {
+            0
+        } else if (append) {
+            state.value.memberIndex + 1
+        } else {
+            0
+        }
         if (index > 100) return
-        val before = if (append) state.value.memberPage else ForumAccountPage()
+        val sameScope = tab == state.value.memberTab && channel?.id == state.value.channel?.id && threadId == state.value.threadId
+        val before = if (append && sameScope) state.value.memberPage else ForumAccountPage()
+        val visible = if (sameScope) state.value.memberPage else ForumAccountPage()
         val request = when (tab) {
             ForumMemberTab.NOTICES -> ForumMemberRequest.Notices(index * 30)
             ForumMemberTab.BOOKMARKS -> ForumMemberRequest.Bookmarks(index)
-            ForumMemberTab.CHAT -> channel?.let { ForumMemberRequest.Messages(it, if (append) before.messages.minOfOrNull { m -> m.id } else null, threadId) } ?: ForumMemberRequest.Channels
+            ForumMemberTab.CHAT -> channel?.let { ForumMemberRequest.Messages(it, if (append && !newer) before.messages.minOfOrNull { m -> m.id } else null, threadId, after = if (append && newer) before.messages.maxOfOrNull { m -> m.id } else null, target = target) } ?: ForumMemberRequest.Channels
         }
-        state.value = state.value.copy(memberVisible = true, memberTab = tab, channel = channel, threadId = threadId, accountBusy = true, accountError = null, memberPage = before)
+        state.value = state.value.copy(memberVisible = true, memberTab = tab, channel = channel, threadId = threadId, accountBusy = true, accountError = null, memberPage = visible)
         accountWork = viewModelScope.launch {
             try {
                 val result = repo.member(request)
                 if (token != accountSerial) return@launch
-                val combined = result.copy(notices = (before.notices + result.notices).distinctBy { it.id }.take(1000), bookmarks = (before.bookmarks + result.bookmarks).distinctBy { it.id }.take(1000), messages = (before.messages + result.messages).distinctBy { it.id }.sortedBy { it.id }.takeLast(500))
-                val grew = combined.notices.size > before.notices.size || combined.bookmarks.size > before.bookmarks.size || combined.messages.size > before.messages.size
-                state.value = state.value.copy(commandUncertain = false, memberPage = combined.copy(more = result.more && grew), memberIndex = index)
+                val allMessages = (before.messages + result.messages).distinctBy { it.id }.sortedBy { it.id }
+                val messages = if (append && !newer) allMessages.take(500) else allMessages.takeLast(500)
+                val combined = result.copy(notices = (before.notices + result.notices).distinctBy { it.id }.take(1000), bookmarks = (before.bookmarks + result.bookmarks).distinctBy { it.id }.take(1000), messages = messages)
+                val grew = combined.notices.size > before.notices.size || combined.bookmarks.size > before.bookmarks.size
+                val advanced = !append || result.messages.any { m -> if (newer) m.id > (before.messages.maxOfOrNull { it.id } ?: 0) else m.id < (before.messages.minOfOrNull { it.id } ?: Long.MAX_VALUE) }
+                val olderAvailable = if (tab != ForumMemberTab.CHAT) {
+                    result.more && grew
+                } else if (append && newer) {
+                    before.more || allMessages.size > messages.size
+                } else {
+                    result.more && advanced
+                }
+                val newerAvailable = if (append && !newer) before.moreNewer || allMessages.size > messages.size else result.moreNewer && advanced
+                state.value = state.value.copy(commandUncertain = false, memberPage = combined.copy(more = olderAvailable, moreNewer = newerAvailable), memberIndex = index, chatScrollVersion = state.value.chatScrollVersion + if (tab == ForumMemberTab.CHAT && !append) 1 else 0, chatTarget = if (append) state.value.chatTarget else target)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: ForumException) {
                 failure(e)
-                if (token == accountSerial) state.value = state.value.copy(accountError = e.reason, accountDetail = e.detail, accountRetryAt = if (e.reason == ForumFailure.RATE_LIMIT) clock() + (e.retryAfterSeconds ?: 30) else 0)
+                if (token == accountSerial) state.value = state.value.copy(memberPage = if (e.reason in listOf(ForumFailure.FORBIDDEN, ForumFailure.UNAVAILABLE)) ForumAccountPage() else state.value.memberPage, accountError = e.reason, accountDetail = e.detail, accountRetryAt = if (e.reason == ForumFailure.RATE_LIMIT) clock() + (e.retryAfterSeconds ?: 30) else 0)
             } catch (_: Exception) {
                 if (token == accountSerial) state.value = state.value.copy(accountError = ForumFailure.INVALID)
             } finally {
@@ -516,7 +550,14 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
     fun compose(parent: Int? = null, create: Boolean = false) {
         if (state.value.user == null || state.value.commandBusy || state.value.accountRetryAt > clock()) return
         if (create && state.value.user?.canCreateTopic != true || !create && !state.value.canReply) return
-        state.value = state.value.copy(composer = ForumComposer(if (create) null else state.value.topic?.id, parent), accountError = null, commandUncertain = false)
+        val context = ForumComposer(if (create) null else state.value.topic?.id, parent)
+        val existing = state.value.draft
+        if (existing != null && existing.key != context.key) {
+            state.value = state.value.copy(draftChoiceVisible = true)
+            return
+        }
+        val draft = existing ?: context
+        state.value = state.value.copy(composer = draft, accountError = null, commandUncertain = draft.uncertain)
     }
     fun edit(post: ForumPost) {
         val repo = accountRepository ?: return
@@ -527,7 +568,15 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         accountWork = viewModelScope.launch {
             try {
                 val source = repo.member(ForumMemberRequest.Edit(post.id)).editable ?: throw ForumException(ForumFailure.INVALID)
-                if (token == accountSerial) state.value = state.value.copy(composer = ForumComposer(edit = source), commandUncertain = false)
+                if (token == accountSerial) {
+                    val existing = state.value.draft
+                    if (existing != null && existing.key != "edit:${source.postId}") {
+                        state.value = state.value.copy(draftChoiceVisible = true)
+                    } else {
+                        val draft = existing ?: ForumDraft(edit = source, raw = source.raw)
+                        state.value = state.value.copy(composer = draft, commandUncertain = draft.uncertain)
+                    }
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: ForumException) {
@@ -540,20 +589,93 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
             }
         }
     }
+    fun resumeDraft() {
+        if (state.value.user == null || state.value.commandBusy) return
+        val draft = state.value.draft ?: return
+        state.value = state.value.copy(composer = draft, draftChoiceVisible = false, commandUncertain = draft.uncertain)
+    }
+    fun dismissDraftChoice() {
+        state.value = state.value.copy(draftChoiceVisible = false)
+    }
+    fun updateDraft(draft: ForumDraft) {
+        if (state.value.user == null || state.value.commandBusy || state.value.composer?.key != draft.key) return
+        state.value = state.value.copy(composer = draft, draft = draft, draftSaving = true, draftError = false, commandUncertain = draft.uncertain)
+        persistDraft(draft)
+    }
+    private fun persistDraft(draft: ForumDraft?, close: Boolean = false) {
+        val repo = accountRepository ?: return
+        draftWork?.cancel()
+        val token = ++draftSerial
+        val account = localSerial
+        state.value = state.value.copy(draftSaving = true, draftError = false)
+        draftWork = viewModelScope.launch {
+            try {
+                repo.saveDraft(draft)
+                if (token == draftSerial && account == localSerial) state.value = state.value.copy(draft = draft, draftSaving = false, composer = if (close) null else state.value.composer, draftChoiceVisible = false)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                if (token == draftSerial && account == localSerial) state.value = state.value.copy(draftSaving = false, draftError = true)
+            }
+        }
+    }
     fun dismissComposer() {
-        if (!state.value.commandBusy) state.value = state.value.copy(composer = null, accountError = null, commandUncertain = false)
+        if (state.value.commandBusy) return
+        val draft = state.value.composer ?: return
+        persistDraft(draft.takeIf { it.hasChanges || it.uncertain }, close = true)
+    }
+    fun discardDraft() {
+        if (!state.value.commandBusy && state.value.user != null) persistDraft(null, close = true)
+    }
+    fun openBookmark(bookmark: ForumBookmark) {
+        val target = bookmark.target as? ForumBookmarkTarget.Chat ?: return
+        val repo = accountRepository ?: return
+        if (state.value.user == null || state.value.accountBusy || state.value.commandBusy) return
+        accountWork?.cancel()
+        val token = ++accountSerial
+        state.value = state.value.copy(accountBusy = true, accountError = null)
+        accountWork = viewModelScope.launch {
+            try {
+                val channel = repo.member(ForumMemberRequest.Channel(target.channelId)).channels.single()
+                if (token == accountSerial) member(ForumMemberTab.CHAT, channel = channel, threadId = target.threadId, target = target.messageId)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: ForumException) {
+                failure(e)
+                if (token == accountSerial) state.value = state.value.copy(accountError = e.reason)
+            } catch (_: Exception) {
+                if (token == accountSerial) state.value = state.value.copy(accountError = ForumFailure.INVALID)
+            } finally {
+                if (token == accountSerial) state.value = state.value.copy(accountBusy = false)
+            }
+        }
     }
     fun submit(command: ForumCommand) {
         val repo = accountRepository ?: return
-        if (state.value.user == null || state.value.commandBusy || state.value.commandUncertain || state.value.accountRetryAt > clock()) return
+        if (state.value.user == null || state.value.commandBusy || state.value.commandUncertain || state.value.composer?.uncertain == true || state.value.accountRetryAt > clock()) return
         val token = accountSerial
         val topic = state.value.topic
+        val composer = state.value.composer
+        draftWork?.cancel()
+        draftSerial++
         state.value = state.value.copy(commandBusy = true, accountError = null, accountDetail = "")
         commandWork = viewModelScope.launch {
             try {
+                if (composer != null) repo.saveDraft(composer.copy(uncertain = true))
                 val result = repo.command(command)
+                var cleanupFailed = false
+                if (composer != null) {
+                    try {
+                        repo.saveDraft(null)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        cleanupFailed = true
+                    }
+                }
+
                 if (token != accountSerial) return@launch
-                state.value = state.value.copy(commandBusy = false, composer = null)
+                state.value = state.value.copy(commandBusy = false, composer = null, draft = if (composer != null) composer.copy(uncertain = true).takeIf { cleanupFailed } else state.value.draft, draftSaving = false, draftError = cleanupFailed)
                 if (state.value.memberVisible) {
                     member(state.value.memberTab, channel = state.value.channel, threadId = state.value.threadId)
                 } else {
@@ -562,10 +684,19 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
             } catch (e: CancellationException) {
                 throw e
             } catch (e: ForumException) {
+                if (composer != null) {
+                    val pending = composer.copy(uncertain = e.reason == ForumFailure.UNCERTAIN)
+                    try {
+                        repo.saveDraft(pending)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) { /* Preserve the in-memory draft and the earlier durable pending marker. */ }
+                    if (token == accountSerial) state.value = state.value.copy(composer = pending, draft = pending)
+                }
                 failure(e)
                 if (token == accountSerial) state.value = state.value.copy(accountError = e.reason, accountDetail = e.detail, accountRetryAt = if (e.reason == ForumFailure.RATE_LIMIT) clock() + (e.retryAfterSeconds ?: 30) else 0, commandUncertain = e.reason == ForumFailure.UNCERTAIN)
             } catch (_: Exception) {
-                if (token == accountSerial) state.value = state.value.copy(accountError = ForumFailure.UNCERTAIN, commandUncertain = true)
+                if (token == accountSerial) state.value = state.value.copy(accountError = ForumFailure.UNCERTAIN, commandUncertain = true, composer = composer?.copy(uncertain = true), draft = composer?.copy(uncertain = true) ?: state.value.draft)
             } finally {
                 if (token == accountSerial) state.value = state.value.copy(commandBusy = false)
             }

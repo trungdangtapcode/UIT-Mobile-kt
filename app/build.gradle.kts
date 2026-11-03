@@ -19,6 +19,8 @@ dependencies {
     testImplementation(libs.ktor.core)
     testImplementation(libs.ktor.okhttp)
     androidTestImplementation(project(":core:network:forum"))
+    androidTestImplementation(libs.ktor.core)
+    androidTestImplementation(libs.ktor.mock)
     testImplementation(libs.junit4)
     testImplementation(testFixtures(project(":core:domain")))
     testImplementation(libs.robolectric)

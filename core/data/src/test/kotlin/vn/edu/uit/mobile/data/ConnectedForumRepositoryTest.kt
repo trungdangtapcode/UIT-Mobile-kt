@@ -159,4 +159,54 @@ class ConnectedForumRepositoryTest {
             server.http.close()
         }
     }
+
+    @Test fun durableDraftIsBoundToVerifiedAccountAndExplicitDiscardRemovesIt() = runTest {
+        val server = Server()
+        val storage = Storage()
+        val guest = Guest()
+        try {
+            val first = ConnectedForumRepository(guest, ForumSessionClient(server.http), storage)
+            first.login("member", "not-real")
+            val draft = ForumDraft(edit = ForumEditable(2, 9, 1, "Original **source**", 3), raw = "Updated source", reason = "Correction", uncertain = true)
+            first.saveDraft(draft)
+            val restarted = ConnectedForumRepository(guest, ForumSessionClient(server.http), storage)
+            assertEquals(7L, restarted.resume()?.id)
+            assertEquals(draft, restarted.draft())
+            restarted.disconnect()
+            server.id = 8
+            restarted.login("other", "not-real")
+            assertNull(restarted.draft())
+            restarted.saveDraft(ForumDraft(raw = "Other account"))
+            restarted.disconnect()
+            server.id = 7
+            restarted.login("member", "not-real")
+            assertEquals(draft, restarted.draft())
+            restarted.saveDraft(null)
+            assertNull(restarted.draft())
+            assertEquals(0, guest.saves)
+            assertTrue(storage.values.containsKey("draft.8"))
+            assertFalse(storage.values.containsKey("draft.7"))
+        } finally {
+            server.http.close()
+        }
+    }
+
+    @Test fun corruptDraftFailsVisiblyWithoutDeletingIt() = runTest {
+        val server = Server()
+        val storage = Storage()
+        try {
+            val repo = ConnectedForumRepository(Guest(), ForumSessionClient(server.http), storage)
+            repo.login("member", "not-real")
+            storage.values["draft.7"] = "corrupt"
+            try {
+                repo.draft()
+                fail("Corrupt draft accepted")
+            } catch (e: ForumException) {
+                assertEquals(ForumFailure.STORAGE, e.reason)
+            }
+            assertEquals("corrupt", storage.values["draft.7"])
+        } finally {
+            server.http.close()
+        }
+    }
 }

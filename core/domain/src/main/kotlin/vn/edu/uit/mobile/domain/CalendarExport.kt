@@ -5,7 +5,7 @@ import kotlinx.datetime.*
 import vn.edu.uit.mobile.model.*
 
 enum class CalendarExportType { CLASSES, EXAMS, DEADLINES, OTHER }
-data class CalendarExportOptions(val from: LocalDate, val through: LocalDate, val types: Set<CalendarExportType> = CalendarExportType.entries.toSet())
+data class CalendarExportOptions(val from: LocalDate, val through: LocalDate, val types: Set<CalendarExportType> = CalendarExportType.entries.toSet(), val excludedKeys: Set<String> = emptySet())
 data class CalendarExportPlan(val options: CalendarExportOptions, val entries: List<ScheduleEntry>, val updatedAt: Long) {
     val fileName: String get() = "uit-schedule-${options.from}-${options.through}.ics"
 }
@@ -18,7 +18,8 @@ class CalendarFileExport {
         require(options.types.isNotEmpty()) { "Choose at least one event type." }
         val entries = GetUnifiedScheduleUseCase()(snapshot, options.from, options.through).filter { type(it.kind) in options.types }.distinctBy { it.key }
         require(entries.size <= 2000) { "Choose a shorter range with at most 2,000 events." }
-        return CalendarExportPlan(options, entries, snapshot.updatedAt)
+        require(options.excludedKeys.size <= 2000) { "Too many excluded events." }
+        return CalendarExportPlan(options, entries.filterNot { it.key in options.excludedKeys }, snapshot.updatedAt)
     }
 
     fun render(plan: CalendarExportPlan, generatedAt: Long): String {

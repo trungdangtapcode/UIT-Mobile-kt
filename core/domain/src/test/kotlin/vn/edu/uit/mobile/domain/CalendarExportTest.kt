@@ -99,4 +99,13 @@ class CalendarExportTest {
         assertNull(canceled.endMillis)
         assertTrue(canceled.free)
     }
+
+    @Test fun `exclusion uses occurrence keys without changing remaining UIDs or event fields`() {
+        val source = PortalSnapshot(timetable = listOf(slot))
+        val all = export.plan(source, options)
+        val subset = export.plan(source, options.copy(excludedKeys = setOf(all.entries.last().key)))
+        assertEquals(listOf(all.entries.first()), subset.entries)
+        assertEquals(uid(export.render(all, stamp)), uid(export.render(subset, stamp)))
+        assertTrue(export.plan(source, options.copy(excludedKeys = all.entries.map { it.key }.toSet())).entries.isEmpty())
+    }
 }

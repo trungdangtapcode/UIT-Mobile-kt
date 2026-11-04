@@ -1,8 +1,14 @@
 # Calendar file export
 
 Open **Schedule → Export calendar file**, choose an inclusive date range of one to
-90 days, select event types, review the preview, and tap **Save .ics file**. Android's
+90 days, select event types, and uncheck individual occurrences in the preview.
+Use **Select all** or **Clear selection** to change the whole visible selection.
+Changing the date range or event types resets individual exclusions.
+Tap **Save .ics file** or **Share .ics file**; both use the same reviewed selection. Android's
 native document picker lets the student choose a local or cloud-backed destination.
+Share opens the native Android Sharesheet with a `.ics` attachment. Nothing is
+sent until the student chooses a destination app and completes its flow. Opening
+the Sharesheet does not prove delivery or calendar import.
 No backend, calendar permission, university write or automatic upload is required.
 A selected cloud document provider may upload the file as part of its own storage.
 
@@ -52,10 +58,22 @@ keep exported copies synchronized automatically.
 The file is unencrypted and contains personal schedule information, even though
 `CLASS:PRIVATE` requests private treatment by a calendar client. That property is
 not access control or encryption. The document picker controls the destination;
-its provider controls subsequent storage and sharing. No extra export file is
-kept in UIT Mobile's private storage.
+its provider controls subsequent storage and sharing. Save writes directly to the selected document without an extra local export copy.
+Share creates a private cache copy under `calendar-shares/`, with an opaque random
+filename, and exposes only its `content://` URI using a narrow FileProvider path
+and a temporary read grant. It grants no write access. Completed share copies are
+not deleted immediately because the chosen app may read them asynchronously.
+On app startup or the next share, copies at least an hour old and excess copies
+are removed (at most eight after a new share). This is opportunistic cleanup,
+not a background expiry timer. A recipient may retain its own copy indefinitely.
+Failed or canceled preparation deletes its temporary file. Share files are bounded
+to 8 MiB; there is no exported-calendar directory or broad external-storage grant.
 
 ## Lifecycle and errors
+
+Changing the set of connected accounts invalidates an outstanding export even
+when the schedule entries happen to be identical. Exclusions apply to stable
+occurrence keys, so omitted events cannot reappear in Save or Share.
 
 The reviewed plan stays in the schedule ViewModel while the native picker is open,
 including configuration changes. Returning from a canceled picker writes no events.
@@ -69,6 +87,11 @@ incomplete file with the document provider.
 
 ## Verification
 
+Validation for this increment: full Gradle `check`, debug APK build and Android
+instrumentation compilation passed. The focused suites contain 26 passing tests:
+8 domain, 9 flow, 7 Compose and 2 FileProvider/cache tests. Instrumentation runtime
+results are reported separately in PR CI.
+
 Domain tests cover finite recurrence, cancellation, make-up meetings, exact UTC
 boundaries, stable identifiers, type/range limits, unknown durations and escaped
 Unicode content. Native Compose tests cover 360/390/412dp phones, larger text,
@@ -78,17 +101,42 @@ unavailable document provider using synthetic fixtures.
 
 ```sh
 JAVA_HOME=/path/to/jdk21 ./gradlew :core:domain:test \
-  :app:testDebugUnitTest --tests '*CalendarExport*' -PrecordUi=true
+  :app:testDebugUnitTest --tests '*CalendarExport*' --tests '*CalendarFileSharingTest' -PrecordUi=true
 JAVA_HOME=/path/to/jdk21 ./gradlew :app:assembleDebug \
   :app:assembleDebugAndroidTest check :app:testDebugUnitTest
 ```
 
 A synthetic `.ics` fixture is generated at
-`core/domain/build/test-artifacts/calendar-export.ics`. An independent Python
-`icalendar` parser accepted its occurrences, UTC timestamps, cancellation status and
-unique identifiers. Parsing is not an end-user calendar import test. Import into
-an actual calendar client and a physical phone document-picker run remain manual
-validation before closing [issue #14](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/14).
+`core/domain/build/test-artifacts/calendar-export.ics`. The actual
+[khal calendar client](https://khal.readthedocs.io/en/latest/usage.html) imported
+and reimported it in an isolated local calendar. Its displayed Vietnam dates/times,
+UIDs, cancellation and finite recurrence occurrences matched the source; reimport
+did not duplicate events in khal 0.14.1. See [import evidence](research/evidence/calendar-file-import.json).
+This is a Linux terminal calendar client, not Google Calendar, Outlook or Android
+import UI. Physical phone document-picker/import validation remains manual before closing [issue #14](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/14).
+
+Reproduce the client acceptance without touching existing calendars:
+
+```sh
+python3 -m venv /tmp/uit-calendar-import
+/tmp/uit-calendar-import/bin/pip install 'khal==0.14.1'
+# First generate the fixture with :core:domain:test.
+PATH=/tmp/uit-calendar-import/bin:$PATH /tmp/uit-calendar-import/bin/python scripts/verify-calendar-import.py
+```
+
+The script creates and deletes its own temporary calendar, configuration and
+SQLite database. It exports only aggregate evidence, using synthetic schedule data.
+It never reads the normal khal configuration or connects to university services.
+`CalendarFileExportNativeTest` additionally exercises the actual Android
+FileProvider read-back with synthetic events; host compilation is not device
+runtime acceptance. Compose captures use clearly synthetic fixture schedules,
+with 360/390/412dp and larger text. English and Vietnamese validation, storage and
+share messages use locale resources; no server exception text is shown as UI copy.
 
 The storage workflow follows Android's
 [Storage Access Framework](https://developer.android.com/training/data-storage/shared/documents-files).
+
+Sharing follows Android's [Sharesheet contract](https://developer.android.com/develop/ui/compose/sharing/send)
+and [secure file sharing guidance](https://developer.android.com/training/secure-file-sharing/share-file).
+The feature uses ACTION_SEND, text/calendar, EXTRA_STREAM, ClipData and the read URI
+grant. It does not choose or contact a recipient on the student's behalf.

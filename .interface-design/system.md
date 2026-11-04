@@ -206,3 +206,14 @@ Save/Remind/Open original actions, then semantic native text and tables. Do not
 place long permalink strings in the title panel. Source settings stay in the same
 column. Reminder forms use a bounded, scrollable native dialog with explicit GMT+07
 and no implied university deadline. All public preferences are device-local.
+
+
+UIT Assistant: keep the existing five bottom destinations and enter from Today or
+an announcement. A one-column workspace list leads with the student-chosen label
+and selected sources. Chat keeps a compact context panel and a fixed bottom
+composer; answers use readable paragraphs with adjacent source actions, without
+bubble decoration. Source inspection shows the retained paragraph version in a
+bounded scrollable dialog. Context, checklist review and connection forms reuse
+TechnicalShapes and native touch targets. Source scope is public-only in the initial
+release; configuration and Send remain explicit. Preserve Back to workspace and
+native original-source navigation. Credentials stay outside saveable form state.

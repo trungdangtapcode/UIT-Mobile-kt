@@ -168,6 +168,20 @@ class ConnectedStudyAiRepository(
         require(course != null || request.sources.isEmpty()) { "Choose a course before adding course context." }
         exchange(course, TutorProtocol.payload(request)) { data, direct -> TutorProtocol.result(data, direct, request).also { TutorRules.result(it, request) } }
     }
+    internal fun assistantModel(): AssistantModel {
+        val expected = config() ?: error("Configure an AI connection")
+        return AssistantModel { payload ->
+            check(config() == expected) { "AI connection changed" }
+            assistantStep(payload).also { check(config() == expected) { "AI connection changed" } }
+        }
+    }
+    internal suspend fun assistantStep(request: JsonObject): JsonObject = withContext(Dispatchers.IO) {
+        require(request["mode"]?.jsonPrimitive?.content == "assistant")
+        exchange(null, request) { data, _ ->
+            AssistantProtocol.output(data)
+            data
+        }
+    }
     private suspend fun <T> exchange(course: Course?, request: JsonObject, decode: (JsonObject, Boolean) -> T): T {
         requireAccount(course)
         val config = config() ?: error("Configure an AI connection before generating an answer.")
@@ -181,6 +195,7 @@ class ConnectedStudyAiRepository(
                     if (direct) {
                         val model = config.getValue("model").jsonPrimitive.content
                         when (request["mode"]?.jsonPrimitive?.content) {
+                            "assistant" -> AssistantProtocol.request(model, request)
                             "knowledge" -> KnowledgeProtocol.request(model, request)
                             "practice" -> PracticeProtocol.request(model, request)
                             "tutor" -> TutorProtocol.request(model, request)
@@ -217,7 +232,7 @@ class ConnectedStudyAiRepository(
                     while (true) {
                         val count = channel.readAvailable(buffer, 0, buffer.size)
                         if (count < 0) break
-                        require(bytes.size() + count <= if (direct) 262144 else 65536) { "The AI response exceeded the supported size." }
+                        require(bytes.size() + count <= if (direct || request["mode"]?.jsonPrimitive?.content == "assistant") 262144 else 65536) { "The AI response exceeded the supported size." }
                         bytes.write(buffer, 0, count)
                     }
                     val data = Json.parseToJsonElement(bytes.toString("UTF-8")).jsonObject

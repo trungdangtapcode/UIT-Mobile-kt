@@ -1,0 +1,13 @@
+{
+  "capturedAt": "2026-11-04T12:20:09.248481+00:00",
+  "attemptedModel": "gpt-6-luna",
+  "provider": "https://api.openai.com/v1/responses",
+  "scope": "Public Portal scholarship announcement; no university account credentials",
+  "result": "provider_access_rejected",
+  "observedApplicationError": "OpenAI rejected the API key or project access. Check your personal key and model permissions.",
+  "completeModelAnswers": 0,
+  "semanticQualityVerified": false,
+  "apiKeyIncluded": false,
+  "modelEvaluation": "Not completed. No generated or mock answer is published as a successful live response.",
+  "publicSourceCapture": "Passed independently through the production public client and announcement repository."
+}

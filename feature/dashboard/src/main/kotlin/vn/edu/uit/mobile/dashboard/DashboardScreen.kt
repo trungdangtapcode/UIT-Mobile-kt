@@ -43,9 +43,9 @@ class DashboardViewModel(private val repository: PortalRepository) : BaseMviView
 }
 
 @Composable
-fun DashboardScreen(viewModel: DashboardViewModel, onCourse: (Course) -> Unit, onSchedule: () -> Unit = {}, onInbox: () -> Unit = {}, onConnect: () -> Unit = {}, onAnnouncements: () -> Unit = {}) {
+fun DashboardScreen(viewModel: DashboardViewModel, onCourse: (Course) -> Unit, onSchedule: () -> Unit = {}, onInbox: () -> Unit = {}, onConnect: () -> Unit = {}, onAnnouncements: () -> Unit = {}, onAssistant: () -> Unit = {}) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    DashboardContent(state, onRefresh = { viewModel.onIntent(DashboardIntent.Refresh) }, onCourse = onCourse, onSchedule = onSchedule, onInbox = onInbox, onConnect = onConnect, onAnnouncements = onAnnouncements)
+    DashboardContent(state, onRefresh = { viewModel.onIntent(DashboardIntent.Refresh) }, onCourse = onCourse, onSchedule = onSchedule, onInbox = onInbox, onConnect = onConnect, onAnnouncements = onAnnouncements, onAssistant = onAssistant)
 }
 
 @Composable
@@ -57,7 +57,8 @@ fun DashboardContent(
     onSchedule: () -> Unit = {},
     onInbox: () -> Unit = {},
     onConnect: () -> Unit = {},
-    onAnnouncements: () -> Unit = {}
+    onAnnouncements: () -> Unit = {},
+    onAssistant: () -> Unit = {}
 ) {
     val snapshot = state.snapshot
     val today = Instant.fromEpochSeconds(now).toLocalDateTime(UitTimeZone).date
@@ -91,6 +92,13 @@ fun DashboardContent(
                     Icon(Icons.Outlined.Campaign, null)
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.ann_title))
+                }
+            }
+            item {
+                OutlinedButton(onAssistant, Modifier.fillMaxWidth(), shape = TechnicalShapes.Control) {
+                    Icon(Icons.Outlined.QuestionAnswer, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.as_entry))
                 }
             }
             if (!connected) {

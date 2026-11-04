@@ -1,0 +1,19 @@
+<resources>
+  <string name="rich_retry">Retry</string>
+  <string name="rich_image">Load image</string>
+  <string name="rich_image_failed">Image is unavailable or exceeds the safe size limit.</string>
+  <string name="rich_external_image">View image in browser</string>
+  <string name="rich_unsupported">Interactive media · open the source to view</string>
+  <string name="rich_details">Expand details</string>
+  <string name="rich_abbreviated">Content abbreviated for this reader · open full post</string>
+  <string name="rich_copy_code">Copy code</string>
+  <string name="rich_quote_source">View quoted post</string>
+  <string name="rich_show_spoiler">Reveal hidden content</string>
+  <string name="rich_hide_spoiler">Hide content</string>
+  <string name="rich_fullscreen">View fullscreen</string>
+  <string name="rich_close_image">Close image</string>
+  <string name="rich_original">Open original</string>
+  <string name="rich_zoom_out">Zoom out</string>
+  <string name="rich_zoom_in">Zoom in</string>
+  <string name="rich_reset_zoom">Fit image</string>
+</resources>

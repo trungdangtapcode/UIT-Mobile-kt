@@ -71,4 +71,5 @@
     <string name="courses_download">Tải %1$s</string>
     <string name="inbox_uit_forum">UIT Forum</string>
     <string name="inbox_uit_forum_public">Thảo luận toàn trường · không cần đăng nhập</string>
+    <string name="inbox_school_announcements">Thông báo trường</string>
 </resources>

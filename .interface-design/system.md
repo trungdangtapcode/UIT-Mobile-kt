@@ -196,3 +196,13 @@ styles and nested blocks; concealed spoilers stay out of accessibility semantics
 Images open on a quiet fullscreen canvas with explicit zoom/fit/close controls.
 Revision dialogs retain Changes/Before/After, source and close actions. Forum
 review screenshots use actual production UIT responses with capture provenance.
+
+University announcements: enter from Today or Inbox without adding a bottom tab.
+Use a date-led, single-column list of cut-corner panels. Full titles lead; source,
+unread/correction state and checked time remain explicit. Search and horizontally
+scrollable filters precede the list. Group matching title/date cross-posts while
+retaining each source action. Article detail has a compact title/source panel,
+Save/Remind/Open original actions, then semantic native text and tables. Do not
+place long permalink strings in the title panel. Source settings stay in the same
+column. Reminder forms use a bounded, scrollable native dialog with explicit GMT+07
+and no implied university deadline. All public preferences are device-local.

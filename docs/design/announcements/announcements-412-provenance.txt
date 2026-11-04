@@ -1,0 +1,31 @@
+Captured: 2026-11-03T08:11:56.483120600Z
+Runtime: Robolectric API 35 native Compose host rendering; not a physical Android device
+Mode: anonymous public GET; no university credentials
+Route: https://portal.uit.edu.vn/bai-viet?category=thong-bao
+Second page: https://portal.uit.edu.vn/bai-viet?category=thong-bao&page=2
+Articles: 24
+Published titles and URLs:
+2026-11-03 | Thông báo danh sách đăng ký Học bổng KKHT HK1 2026-2027 và Học bổng Ngoài ngân sách HK1 2026-2027 | https://portal.uit.edu.vn/bai-viet/thong-bao-danh-sach-dang-ky-hoc-bong-kkht-hk1-2026-2027-va-hoc-bong-ngoai-ngan-sach-hk1-2026-2027
+2026-11-03 | Thông báo kiểm tra danh sách sinh viên đủ điều kiện được hưởng Học bổng theo Nghị định 179/2026 | https://portal.uit.edu.vn/bai-viet/thong-bao-kiem-tra-danh-sach-sinh-vien-du-dieu-kien-duoc-huong-hoc-bong-theo-nghi-dinh-179-2026
+2026-11-03 | Tham gia khảo sát nhu cầu về quê đón Tết - Chương trình "Hành trình Mùa Xuân" Xuân Đinh Mùi 2027 | https://portal.uit.edu.vn/bai-viet/tham-gia-khao-sat-nhu-cau-ve-que-don-tet-chuong-trinh-hanh-trinh-mua-xuan-xuan-dinh-mui-2027
+2026-11-02 | Thông báo tổ chức Lễ tốt nghiệp đợt 2 năm 2026 | https://portal.uit.edu.vn/bai-viet/thong-bao-to-chuc-le-tot-nghiep-dot-2-nam-2026
+2026-11-02 | Thông báo về việc nhận bằng tốt nghiệp đợt 3 năm 2026 | https://portal.uit.edu.vn/bai-viet/thong-bao-ve-viec-nhan-bang-tot-nghiep-dot-3-nam-2026
+2026-10-30 | Thông báo đăng ký gia hạn học phí HK1 năm học 2026-2027 (Lần cuối - Đợt 2) | https://portal.uit.edu.vn/bai-viet/thong-bao-dang-ky-gia-han-hoc-phi-hk1-nam-hoc-2026-2027-lan-cuoi-dot-2
+2026-10-28 | Thông báo đăng ký gia hạn học phí HK1 năm học 2026-2027 (Lần 2 - Đợt 2) | https://portal.uit.edu.vn/bai-viet/thong-bao-dang-ky-gia-han-hoc-phi-hk1-nam-hoc-2026-2027-lan-2-dot-2
+2026-10-27 | Thông báo nộp hồ sơ chế độ chính sách học kỳ 1 năm học 2026-2027 | https://portal.uit.edu.vn/bai-viet/thong-bao-nop-ho-so-che-do-chinh-sach-hoc-ky-1-nam-hoc-2026-2027
+2026-10-26 | Thông báo đăng ký gia hạn học phí HK1 năm học 2026-2027 (Đợt 2) | https://portal.uit.edu.vn/bai-viet/thong-bao-dang-ky-gia-han-hoc-phi-hk1-nam-hoc-2026-2027-dot-2
+2026-10-19 | Thông báo đăng ký xét cấp các loại học bổng HK 1 – NH 2026-2027 | https://portal.uit.edu.vn/bai-viet/thong-bao-dang-ky-xet-cap-cac-loai-hoc-bong-hk-1-nh-2026-2027
+2026-10-16 | Thông báo đăng ký khám sức khỏe sinh viên năm học 2026-2027 | https://portal.uit.edu.vn/bai-viet/thong-bao-dang-ky-kham-suc-khoe-sinh-vien-nam-hoc-2026-2027
+2026-10-15 | Thông báo lịch thi tập trung giữa kỳ học kỳ 1 năm học 2026-2027 | https://portal.uit.edu.vn/bai-viet/thong-bao-lich-thi-tap-trung-giua-ky-hoc-ky-1-nam-hoc-2026-2027
+2026-10-15 | ĐĂNG KÝ THAM DỰ KHÓA HỌC TIẾNG NHẬT (MIỄN PHÍ) KHÓA VIII VÀ TÌM KIẾM VIỆC LÀM TẠI NHẬT BẢN - TÀI TRỢ BỞI HUREDEE | https://portal.uit.edu.vn/bai-viet/dang-ky-tham-du-khoa-hoc-tieng-nhat-mien-phi-khoa-viii-va-tim-kiem-viec-lam-tai-nhat-ban-tai-tro-boi-huredee
+2026-10-12 | Kết quả bảo hiểm y tế 3 tháng cuối năm 2026 | https://portal.uit.edu.vn/bai-viet/ket-qua-bao-hiem-y-te-3-thang-cuoi-nam-2026
+2026-10-09 | UPRACE × UIT 2026 | Sinh viên UIT chung tay lan tỏa tinh thần chạy bộ vì cộng đồng | https://portal.uit.edu.vn/bai-viet/uprace-x-uit-2026-sinh-vien-uit-chung-tay-lan-toa-tinh-than-chay-bo-vi-cong-dong
+2026-10-08 | Thông báo về việc chọn đội tuyển dự thi Olympic Toán học sinh viên toàn quốc năm học 2026-2027 | https://portal.uit.edu.vn/bai-viet/thong-bao-ve-viec-chon-doi-tuyen-du-thi-olympic-toan-hoc-sinh-vien-toan-quoc-nam-hoc-2026-2027
+2026-10-07 | Kết quả gia hạn học phí học kỳ 1 năm học 2026-2027 | https://portal.uit.edu.vn/bai-viet/ket-qua-gia-han-hoc-phi-hoc-ky-1-nam-hoc-2026-2027
+2026-10-07 | Thông báo về việc xét miễn các môn anh văn 1, 2 và 3 đợt 2 trong học kỳ 1 năm học 2026-2027 cho sinh viên chính quy chương trình đào tạo đại trà và chương trình chuẩn | https://portal.uit.edu.vn/bai-viet/thong-bao-ve-viec-xet-mien-cac-mon-anh-van-1-2-va-3-dot-2-trong-hoc-ky-1-nam-hoc-2026-2027-cho-sinh-vien-chinh-quy-chuon
+2026-10-07 | Kế hoạch xét tốt nghiệp đợt 04 năm 2026 | https://portal.uit.edu.vn/bai-viet/ke-hoach-xet-tot-nghiep-dot-04-nam-2026
+2026-10-05 | Nhắc Danh sách sinh viên chưa hoàn thành hồ sơ nhập học Khóa 2026 - Lần cuối | https://portal.uit.edu.vn/bai-viet/nhac-danh-sach-sinh-vien-chua-hoan-thanh-ho-so-nhap-hoc-khoa-2026-lan-cuoi
+2026-10-05 | Danh sách sinh viên đăng ký gia hạn thêm thời gian nộp học phí HK1, Năm học 2026-2027 | https://portal.uit.edu.vn/bai-viet/danh-sach-sinh-vien-dang-ky-gia-han-them-thoi-gian-nop-hoc-phi-hk1-nam-hoc-2026-2027
+2026-10-02 | Danh sách sinh viên được hoàn tiền BHYT 3 tháng cuối năm 2026 - Khóa 2026 | https://portal.uit.edu.vn/bai-viet/danh-sach-sinh-vien-duoc-hoan-tien-bhyt-3-thang-cuoi-nam-2026-khoa-2026
+2026-09-30 | Thông báo đăng ký gia hạn học phí HK1 năm học 2026-2027 (lần 2) | https://portal.uit.edu.vn/bai-viet/thong-bao-dang-ky-gia-han-hoc-phi-hk1-nam-hoc-2026-2027-lan-2
+ | Về việc hỗ trợ sinh viên bảo vệ Khóa luận tốt nghiệp và đăng ký xét tốt nghiệp sớm | https://portal.uit.edu.vn/bai-viet/ve-viec-ho-tro-sinh-vien-bao-ve-khoa-luan-tot-nghiep-va-dang-ky-xet-tot-nghiep-som

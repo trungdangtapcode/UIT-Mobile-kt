@@ -15,6 +15,7 @@ dependencies {
     androidTestImplementation(libs.android.test.junit)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test)
+    testImplementation(project(":core:network:daa"))
     testImplementation(project(":core:network:forum"))
     testImplementation(libs.ktor.core)
     testImplementation(libs.ktor.okhttp)
@@ -39,7 +40,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     // Compose rendering uses the debug-only host Activity supplied by ui-test-manifest.
-    if (name.contains("Release")) exclude("**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class", "**/ForumAccountDesignTest.class", "**/ForumAccountLiveTest.class")
+    if (name.contains("Release")) exclude("**/AnnouncementsDesignTest.class", "**/AnnouncementsLiveDesignTest.class", "**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class", "**/ForumAccountDesignTest.class", "**/ForumAccountLiveTest.class")
     val accountLive = providers.gradleProperty("forumAccountLive").getOrElse("false").toBoolean()
     systemProperty("uit.forum.account.live", accountLive.toString())
     systemProperty("uit.forum.account.dir", layout.buildDirectory.dir("outputs/forum-account-private").get().asFile.absolutePath)
@@ -55,4 +56,12 @@ tasks.withType<Test>().configureEach {
     if (recordUi) systemProperty("robolectric.pixelCopyRenderMode", "hardware")
     if (recordUi) outputs.dir(rootProject.layout.projectDirectory.dir("docs/design/previews"))
     systemProperty("uit.preview.dir", rootProject.layout.projectDirectory.dir("docs/design/previews").asFile.absolutePath)
+}
+
+tasks.withType<Test>().configureEach {
+    val live = providers.gradleProperty("announcementsLive").getOrElse("false").toBoolean()
+    systemProperty("uit.announcements.live", live.toString())
+    systemProperty("uit.announcements.output", layout.buildDirectory.dir("outputs/announcements-live").get().asFile.absolutePath)
+    outputs.upToDateWhen { !live }
+    outputs.doNotCacheIf("Public announcement live evidence must contact UIT") { live }
 }

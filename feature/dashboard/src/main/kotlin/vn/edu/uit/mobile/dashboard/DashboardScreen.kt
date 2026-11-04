@@ -43,9 +43,9 @@ class DashboardViewModel(private val repository: PortalRepository) : BaseMviView
 }
 
 @Composable
-fun DashboardScreen(viewModel: DashboardViewModel, onCourse: (Course) -> Unit, onSchedule: () -> Unit = {}, onInbox: () -> Unit = {}, onConnect: () -> Unit = {}) {
+fun DashboardScreen(viewModel: DashboardViewModel, onCourse: (Course) -> Unit, onSchedule: () -> Unit = {}, onInbox: () -> Unit = {}, onConnect: () -> Unit = {}, onAnnouncements: () -> Unit = {}) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    DashboardContent(state, onRefresh = { viewModel.onIntent(DashboardIntent.Refresh) }, onCourse = onCourse, onSchedule = onSchedule, onInbox = onInbox, onConnect = onConnect)
+    DashboardContent(state, onRefresh = { viewModel.onIntent(DashboardIntent.Refresh) }, onCourse = onCourse, onSchedule = onSchedule, onInbox = onInbox, onConnect = onConnect, onAnnouncements = onAnnouncements)
 }
 
 @Composable
@@ -56,7 +56,8 @@ fun DashboardContent(
     onCourse: (Course) -> Unit = {},
     onSchedule: () -> Unit = {},
     onInbox: () -> Unit = {},
-    onConnect: () -> Unit = {}
+    onConnect: () -> Unit = {},
+    onAnnouncements: () -> Unit = {}
 ) {
     val snapshot = state.snapshot
     val today = Instant.fromEpochSeconds(now).toLocalDateTime(UitTimeZone).date
@@ -83,6 +84,13 @@ fun DashboardContent(
                         Text(mediumDate(date), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     IconButton(onClick = onRefresh, enabled = !state.sync.syncing) { Icon(Icons.Outlined.Sync, stringResource(R.string.dash_refresh), Modifier.size(22.dp)) }
+                }
+            }
+            item {
+                OutlinedButton(onAnnouncements, Modifier.fillMaxWidth(), shape = TechnicalShapes.Control) {
+                    Icon(Icons.Outlined.Campaign, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.ann_title))
                 }
             }
             if (!connected) {

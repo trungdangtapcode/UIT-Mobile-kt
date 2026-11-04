@@ -43,8 +43,8 @@
     <string name="as_reading">Đang đọc bằng chứng từ bài viết…</string>
     <string name="as_thinking">Đang chuẩn bị câu trả lời…</string>
     <string name="as_stop">Dừng</string>
-    <string name="as_question">Hỏi về nguồn đã chọn</string>
-    <string name="as_send">Gửi với context đã chọn</string>
+    <string name="as_question">Nhắn Trợ lý UIT…</string>
+    <string name="as_send">Gửi tin nhắn</string>
     <string name="as_name">Tên workspace</string>
     <string name="as_source_state">Kiểm tra lần cuối: %1$s · %2$s</string>
     <string name="as_source_available">Khả dụng</string>
@@ -72,4 +72,15 @@
     <string name="as_entry">Hỏi Trợ lý UIT</string>
     <string name="as_access_error">Dịch vụ AI từ chối khóa hoặc quyền truy cập dự án. Cập nhật kết nối AI trước khi thử lại.</string>
     <string name="as_quota_error">Dịch vụ AI đã chạm giới hạn sử dụng hoặc đang bận. Kiểm tra tài khoản API và thử lại sau.</string>
+    <string name="as_chat_options">Tùy chọn hội thoại</string>
+    <string name="as_chat_context">Thông báo công khai · %1$d nguồn</string>
+    <string name="as_chat_welcome">Bạn muốn tìm hiểu điều gì?</string>
+    <string name="as_chat_scope_note">Câu trả lời dựa trên thông báo công khai đã chọn. Mở nguồn phía trên để xem nội dung được chia sẻ.</string>
+    <string name="as_latest">Tin nhắn mới nhất</string>
+    <string name="as_sources_count">Nguồn · %1$d</string>
+    <string name="as_copy">Sao chép câu trả lời</string>
+    <string name="as_writing">Đang trả lời…</string>
+    <string name="as_verifying">Đang kiểm tra trích dẫn…</string>
+    <string name="as_draft">Bản nháp · chưa kiểm tra trích dẫn</string>
+    <string name="as_composer_note">AI có thể sai. Kiểm tra nguồn trước quyết định quan trọng.</string>
 </resources>

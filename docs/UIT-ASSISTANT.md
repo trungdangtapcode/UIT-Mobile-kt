@@ -246,3 +246,41 @@ explicit configuration:
 
 Run the commands with JDK 21 and the Android SDK configured. Public captures and
 model evaluation stay in ignored build output until reviewed for publication.
+
+## Chat presentation and SSE transport
+
+The phone conversation separates right-aligned, cut-corner user messages from
+left-aligned assistant prose. A compact public-source selector replaces the large
+context panel. Numbered citations open through a collapsed Sources control at the
+end of each answer. Copy and checklist actions remain separate from generation;
+checklist writes are still explicitly reviewed and device-local. The bottom
+composer uses one Send/Stop control, with the existing app theme and navigation.
+
+Direct OpenAI mode requests `stream=true` and `Accept: text/event-stream` on the
+fixed Responses endpoint. The Ktor channel is consumed while the response is
+arriving; there is no typewriter animation over a buffered answer. Typed
+`response.output_text.delta` events produce transient previews of the structured
+answer's text fields. Preview updates are throttled to at most one per 50 ms,
+plus the final flush. Escaped strings and split Unicode escapes are handled.
+Opaque reasoning and reference fields are not rendered as previews.
+
+Previews are explicitly labelled as drafts with unchecked citations, held only in
+`AssistantProgress`, and never persisted or offered as checklist/copy/source
+results. Each model step resets the preview. Only `response.completed` reaches the
+existing output and exact-reference validator. A failed, refused, incomplete,
+truncated or canceled stream cannot become a completed answer; repair clears the
+old preview. Connection-change checks apply before a request, during previews and
+after completion. Leaving the screen cancels the request and clears transient UI
+state through the existing ViewModel lifecycle.
+
+SSE parsing accepts LF/CRLF, multi-line data and comments, bounds each data frame
+to 262,144 characters, total wire data to 2 MiB, accumulated structured preview to
+65,536 characters, and completed response JSON to 262,144 UTF-8 bytes. Existing
+request and whole-turn deadlines remain. There is no automatic transport fallback
+or extra paid retry after a broken stream. The optional Python gateway currently
+returns a buffered response; its search/read activity still appears, but token
+streaming is available in Direct mode only.
+
+Official contract references, accessed 2026-11-04:
+[Streaming responses](https://developers.openai.com/api/docs/guides/streaming-responses)
+and [typed streaming events](https://developers.openai.com/api/reference/resources/responses/streaming-events).

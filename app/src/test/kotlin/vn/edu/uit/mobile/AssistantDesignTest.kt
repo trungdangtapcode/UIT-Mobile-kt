@@ -43,9 +43,9 @@ class AssistantDesignTest {
         var stopped = false
         compose.setContent { UitTheme { AssistantContent(state, onAsk = { sent = it }, onStop = { stopped = true }) } }
         assertEquals("", sent)
-        compose.onNodeWithText("Send selected context").assertIsNotEnabled()
+        compose.onNodeWithContentDescription("Send message").assertIsNotEnabled()
         compose.onNodeWithTag("assistant-question").performTextInput("What changed?")
-        compose.onNodeWithText("Send selected context").performClick()
+        compose.onNodeWithContentDescription("Send message").performClick()
         assertEquals("What changed?", sent)
         assertFalse(stopped)
     }
@@ -53,8 +53,10 @@ class AssistantDesignTest {
     @Test fun sourceInspectionShowsTheExactQuoteAndOriginalNavigation() {
         var url = ""
         compose.setContent { UitTheme { AssistantContent(state, onOriginal = { url = it }) } }
-        compose.onNodeWithTag("assistant-content").performScrollToNode(hasText("[1] Portal UIT · 2026-11-03"))
-        compose.onNodeWithText("[1] Portal UIT · 2026-11-03").performClick()
+        compose.onNodeWithTag("assistant-content").performScrollToNode(hasText("Sources · 1"))
+        compose.onNodeWithText("Sources · 1").performClick()
+        compose.onNodeWithTag("assistant-content").performScrollToNode(hasTestTag("assistant-reference-turn-0"))
+        compose.onNodeWithTag("assistant-reference-turn-0").performClick()
         compose.onAllNodesWithText("Submit an application before Friday.").onFirst().assertExists()
         compose.onNodeWithText("Open original announcement").performScrollTo().performClick()
         assertEquals(source.url, url)
@@ -63,8 +65,8 @@ class AssistantDesignTest {
     @Test fun checklistCreationRequiresReviewAndExplicitSave() {
         var saved = emptyList<AssistantChecklistItem>()
         compose.setContent { UitTheme { AssistantContent(state, onChecklist = { _, _, items -> saved = items }) } }
-        compose.onNodeWithTag("assistant-content").performScrollToNode(hasText("Draft a local checklist"))
-        compose.onNodeWithText("Draft a local checklist").performClick()
+        compose.onNodeWithTag("assistant-content").performScrollToNode(hasContentDescription("Draft a local checklist"))
+        compose.onNodeWithContentDescription("Draft a local checklist").performClick()
         assertTrue(saved.isEmpty())
         compose.onNodeWithText("One task per line").performTextReplacement("Read requirements\nPrepare an application")
         compose.onNodeWithText("Save", substring = false).performScrollTo().performClick()
@@ -83,7 +85,7 @@ class AssistantDesignTest {
     @Test fun noConnectionKeepsSendDisabledAndThePublicOnlyScopeVisible() {
         compose.setContent { UitTheme { AssistantContent(state.copy(connection = StudyConnection())) } }
         compose.onNodeWithTag("assistant-question").performTextInput("Question")
-        compose.onNodeWithText("Send selected context").assertIsNotEnabled()
+        compose.onNodeWithContentDescription("Send message").assertIsNotEnabled()
         compose.onNodeWithContentDescription("Context and sources").performClick()
         compose.onNodeWithText("This release reads selected public university notices. Personal records, course files, Forum posts and private messages are outside this workspace.").assertExists()
     }
@@ -92,9 +94,26 @@ class AssistantDesignTest {
         var stopped = false
         val running = state.copy(busy = true, progress = AssistantProgress("read_announcement"), library = AssistantLibrary(listOf(workspace.copy(turns = listOf(turn.copy(status = AssistantTurnStatus.RUNNING, facts = emptyList(), evidence = emptyList()))))))
         compose.setContent { UitTheme { AssistantContent(running, onStop = { stopped = true }) } }
-        compose.onNodeWithTag("assistant-content").performScrollToNode(hasText("Stop"))
-        compose.onNodeWithText("Stop").performClick()
+        compose.onNodeWithTag("assistant-progress").assertExists()
+        compose.onNodeWithContentDescription("Stop").performClick()
         assertTrue(stopped)
-        compose.onNodeWithText("Send selected context").assertIsNotEnabled()
+        compose.onNodeWithContentDescription("Send message").assertDoesNotExist()
+    }
+
+    @Test fun sourcesAreCollapsedAndMessageRolesRemainDistinct() {
+        compose.setContent { UitTheme { AssistantContent(state) } }
+        compose.onNodeWithTag("assistant-content").performScrollToIndex(0)
+        compose.onNodeWithTag("assistant-user-turn").assertExists()
+        compose.onNodeWithTag("assistant-answer-turn-0").assertExists()
+        compose.onNodeWithText("[1] Portal UIT · 2026-11-03").assertDoesNotExist()
+    }
+
+    @Test fun streamedPreviewIsLabelledAsDraftAndHasNoSourceOrChecklistActions() {
+        val running = state.copy(busy = true, progress = AssistantProgress("writing", draft = "Receiving an unverified answer."), library = AssistantLibrary(listOf(workspace.copy(turns = listOf(turn.copy(status = AssistantTurnStatus.RUNNING, facts = emptyList(), evidence = emptyList()))))))
+        compose.setContent { UitTheme { AssistantContent(running) } }
+        compose.onNodeWithTag("assistant-draft").assertTextEquals("Receiving an unverified answer.")
+        compose.onNodeWithText("Draft · citations not checked yet").assertExists()
+        compose.onNodeWithTag("assistant-sources-turn").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Draft a local checklist").assertDoesNotExist()
     }
 }

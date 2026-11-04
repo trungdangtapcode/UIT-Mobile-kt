@@ -9,6 +9,7 @@ import com.github.takahirom.roborazzi.captureScreenRoboImage
 import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.*
 import org.junit.*
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -95,14 +96,49 @@ class AssistantLiveDesignTest {
     @Config(qualifiers = "vi-rVN-w412dp-h915dp-mdpi")
     fun actualPublicContext412LargeText() = workspace(412, true)
 
-    @Test fun actualModelAnswerAndCitationWhenSuccessfulLiveEvidenceExists() {
+    private fun conversation(width: Int, large: Boolean = false, dark: Boolean = true) {
         val initial = capturedState(answer = true)
+        if (large) RuntimeEnvironment.setFontScale(1.3f)
         val workspace = initial.library.workspaces.first { it.turns.any { turn -> turn.status == AssistantTurnStatus.COMPLETE } }
-        compose.setContent { UitTheme(dark = true, dynamic = false) { WorkspaceFrame(0, {}, {}, "", false, false, 0) { AssistantContent(initial.copy(selected = workspace.id)) } } }
-        compose.onNodeWithTag("assistant-content").performScrollToIndex(1)
-        capture("assistant-real-model-answer-390")
-        compose.onNodeWithTag("assistant-content").performScrollToNode(hasText("[1] Portal UIT", substring = true))
-        compose.onAllNodes(hasText("[1] Portal UIT", substring = true)).onFirst().performClick()
-        capture("assistant-real-model-evidence-390")
+        val first = workspace.turns.first()
+        val suffix = "$width${if (large) "-large-text" else ""}${if (!dark) "-light" else ""}"
+        compose.setContent { UitTheme(dark = dark, dynamic = false) { WorkspaceFrame(0, {}, {}, "", false, false, 0) { AssistantContent(initial.copy(selected = workspace.id)) } } }
+        compose.onNodeWithTag("assistant-content").performScrollToIndex(0)
+        capture("assistant-chat-answer-$suffix")
+        val followUpIndex = 3 + first.facts.size
+        compose.onNodeWithTag("assistant-content").performScrollToIndex(followUpIndex)
+        capture("assistant-chat-followup-$suffix")
+        if (width == 390 && dark) {
+            compose.onNodeWithTag("assistant-content").performScrollToNode(hasTestTag("assistant-sources-${first.id}"))
+            compose.onNodeWithTag("assistant-sources-${first.id}").performClick()
+            compose.onNodeWithTag("assistant-content").performScrollToNode(hasTestTag("assistant-reference-${first.id}-0"))
+            capture("assistant-chat-sources-390")
+            compose.onNodeWithTag("assistant-reference-${first.id}-0").performClick()
+            capture("assistant-chat-evidence-390")
+        }
+    }
+
+    @Test fun actualModelAnswerAndCitationWhenSuccessfulLiveEvidenceExists() = conversation(390)
+
+    @Test
+    @Config(qualifiers = "vi-rVN-w360dp-h800dp-mdpi")
+    fun actualConversation360() = conversation(360)
+
+    @Test
+    @Config(qualifiers = "vi-rVN-w412dp-h915dp-mdpi")
+    fun actualConversation412LargeText() = conversation(412, large = true)
+
+    @Test fun actualConversation390Light() = conversation(390, dark = false)
+
+    @Test fun actualStreamedPreview390() {
+        val initial = capturedState(answer = true)
+        val input = File(requireNotNull(System.getProperty("uit.assistant.capture.input")))
+        val calls = Json.parseToJsonElement(File(input, "provider-calls.json").readText()).jsonArray
+        val sample = calls.first { !it.jsonObject["previewSample"]?.jsonPrimitive?.content.isNullOrBlank() }.jsonObject.getValue("previewSample").jsonPrimitive.content
+        val workspace = initial.library.workspaces.first()
+        val running = workspace.copy(turns = listOf(workspace.turns.first().copy(status = AssistantTurnStatus.RUNNING, facts = emptyList(), evidence = emptyList())))
+        val replay = initial.copy(library = AssistantLibrary(listOf(running)), selected = workspace.id, busy = true, progress = AssistantProgress("writing", draft = sample))
+        compose.setContent { UitTheme(dark = true, dynamic = false) { WorkspaceFrame(0, {}, {}, "", false, false, 0) { AssistantContent(replay) } } }
+        capture("assistant-chat-streaming-390")
     }
 }

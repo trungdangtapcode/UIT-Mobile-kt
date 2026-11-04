@@ -43,8 +43,8 @@
     <string name="as_reading">Reading article evidence…</string>
     <string name="as_thinking">Preparing the response…</string>
     <string name="as_stop">Stop</string>
-    <string name="as_question">Ask about the selected sources</string>
-    <string name="as_send">Send selected context</string>
+    <string name="as_question">Message UIT Assistant…</string>
+    <string name="as_send">Send message</string>
     <string name="as_name">Workspace name</string>
     <string name="as_source_state">Last checked: %1$s · %2$s</string>
     <string name="as_source_available">Available</string>
@@ -72,4 +72,15 @@
     <string name="as_entry">Ask UIT Assistant</string>
     <string name="as_access_error">The AI service rejected the credential or project access. Update the AI connection before retrying.</string>
     <string name="as_quota_error">The AI service reached a usage limit or is busy. Check your API account and retry later.</string>
+    <string name="as_chat_options">Chat options</string>
+    <string name="as_chat_context">Public notices · %1$d sources</string>
+    <string name="as_chat_welcome">What would you like to know?</string>
+    <string name="as_chat_scope_note">Answers use the selected public notices. Open sources above to review what is shared.</string>
+    <string name="as_latest">Latest message</string>
+    <string name="as_sources_count">Sources · %1$d</string>
+    <string name="as_copy">Copy answer</string>
+    <string name="as_writing">Writing a reply…</string>
+    <string name="as_verifying">Checking citations…</string>
+    <string name="as_draft">Draft · citations not checked yet</string>
+    <string name="as_composer_note">AI can be wrong. Check sources for important decisions.</string>
 </resources>

@@ -1,5 +1,6 @@
 package vn.edu.uit.mobile.dashboard
 
+import android.content.ClipData
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -14,13 +15,18 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import kotlinx.datetime.*
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
@@ -94,8 +100,14 @@ fun AssistantContent(
     var reference by remember { mutableStateOf<Pair<AssistantEvidence, AssistantReference>?>(null) }
     var checklistTurn by remember { mutableStateOf<AssistantTurn?>(null) }
     val scroll = rememberLazyListState()
+    var menu by remember { mutableStateOf(false) }
+    val coroutine = rememberCoroutineScope()
+    val clipboard = LocalClipboard.current
     val frozenNow = remember { kotlinx.datetime.Clock.System.now().epochSeconds }
-    LaunchedEffect(workspace?.id, workspace?.turns?.size) { if (workspace != null && workspace.turns.isNotEmpty()) scroll.animateScrollToItem(workspace.turns.size) }
+    // Follow a newly submitted question, not every token or the end of a long answer.
+    LaunchedEffect(workspace?.id, workspace?.turns?.size) {
+        if (workspace != null && workspace.turns.isNotEmpty()) scroll.animateScrollToItem(assistantQuestionIndex(workspace))
+    }
     Column(Modifier.fillMaxSize().testTag("assistant-screen")) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.as_back)) }
@@ -103,8 +115,27 @@ fun AssistantContent(
                 Text(stringResource(R.string.as_title), style = MaterialTheme.typography.titleLarge)
                 if (workspace != null) Text(workspace.name, style = MaterialTheme.typography.bodySmall, maxLines = 1)
             }
-            if (workspace != null) IconButton({ context = true }) { Icon(Icons.Outlined.Source, stringResource(R.string.as_context)) }
-            IconButton({ settings = true }, enabled = !state.busy) { Icon(Icons.Outlined.Settings, stringResource(R.string.as_connection)) }
+            if (workspace != null) {
+                Box {
+                    IconButton({ menu = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.as_chat_options)) }
+                    DropdownMenu(menu, { menu = false }, shape = TechnicalShapes.Control) {
+                        DropdownMenuItem({ Text(stringResource(R.string.as_rename)) }, {
+                            menu = false
+                            rename = true
+                        }, enabled = !state.busy)
+                        DropdownMenuItem({ Text(stringResource(R.string.as_connection)) }, {
+                            menu = false
+                            settings = true
+                        }, enabled = !state.busy)
+                        DropdownMenuItem({ Text(stringResource(R.string.as_delete)) }, {
+                            menu = false
+                            deletion = workspace.id
+                        })
+                    }
+                }
+            } else {
+                IconButton({ settings = true }, enabled = !state.busy) { Icon(Icons.Outlined.Settings, stringResource(R.string.as_connection)) }
+            }
         }
         if (state.problem != null || state.library.storageFailed) {
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
@@ -114,6 +145,10 @@ fun AssistantContent(
                             R.string.as_storage_error
                         } else if (state.problem == AssistantProblem.CONNECTION) {
                             R.string.as_connection_error
+                        } else if (state.problem == AssistantProblem.ACCESS) {
+                            R.string.as_access_error
+                        } else if (state.problem == AssistantProblem.QUOTA) {
+                            R.string.as_quota_error
                         } else if (state.problem == AssistantProblem.GENERATION) {
                             R.string.as_generation_error
                         } else {
@@ -126,6 +161,17 @@ fun AssistantContent(
                 Row {
                     TextButton(onDismiss) { Text(stringResource(R.string.as_dismiss)) }
                     if (state.library.storageFailed) TextButton({ reset = true }) { Text(stringResource(R.string.as_reset)) }
+                }
+            }
+        }
+        if (workspace != null) {
+            Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.Source, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    TextButton({ context = true }, Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 8.dp)) {
+                        Text(stringResource(R.string.as_chat_context, workspace.scope.sources.size), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelMedium)
+                        Icon(Icons.Outlined.ExpandMore, stringResource(R.string.as_context), Modifier.size(18.dp))
+                    }
                 }
             }
         }
@@ -152,112 +198,104 @@ fun AssistantContent(
                 }
                 if (state.library.workspaces.isNotEmpty()) item { TextButton({ reset = true }) { Text(stringResource(R.string.as_reset)) } }
             } else {
-                item {
-                    Panel(Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.as_scope), style = MaterialTheme.typography.labelLarge)
-                        Text(workspace.scope.sources.joinToString { it.label }, color = MaterialTheme.colorScheme.primary)
-                        if (workspace.scope.urls.isNotEmpty()) Text(stringResource(R.string.as_pinned, workspace.scope.urls.size), style = MaterialTheme.typography.bodySmall)
-                        Text(stringResource(R.string.as_send_disclosure), style = MaterialTheme.typography.bodySmall)
-                        Row(Modifier.horizontalScroll(rememberScrollState())) {
-                            TextButton({ context = true }) { Text(stringResource(R.string.as_context)) }
-                            TextButton({ rename = true }, enabled = !state.busy) { Text(stringResource(R.string.as_rename)) }
-                            TextButton({ deletion = workspace.id }) { Text(stringResource(R.string.as_delete)) }
-                        }
-                    }
-                }
                 if (workspace.turns.isEmpty()) {
                     item {
-                        Text(stringResource(R.string.as_empty_chat), style = MaterialTheme.typography.bodyLarge)
-                        TextButton({
-                            question = ""
-                            onRefresh()
-                        }) { Text(stringResource(R.string.as_refresh_sources)) }
+                        Column(Modifier.fillMaxWidth().padding(vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            UitEmblem(Modifier.size(40.dp))
+                            Text(stringResource(R.string.as_chat_welcome), style = MaterialTheme.typography.headlineSmall)
+                            Text(stringResource(R.string.as_empty_chat), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.as_chat_scope_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            TextButton(onRefresh) { Text(stringResource(R.string.as_refresh_sources)) }
+                        }
                     }
                 }
-                items(workspace.turns, key = { it.id }) { turn ->
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(stringResource(R.string.as_you), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                        Text(turn.question, style = MaterialTheme.typography.titleMedium)
-                        if (turn.status == AssistantTurnStatus.COMPLETE) {
-                            Text(stringResource(R.string.as_answer), style = MaterialTheme.typography.labelLarge)
-                            turn.facts.forEach { fact ->
+                workspace.turns.forEach { turn ->
+                    item(key = "${turn.id}-question") {
+                        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
+                            Surface(Modifier.fillMaxWidth(.88f).testTag("assistant-user-${turn.id}"), shape = TechnicalShapes.Panel, color = MaterialTheme.colorScheme.primaryContainer) {
+                                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(stringResource(R.string.as_you), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = .7f))
+                                    Text(turn.question, color = MaterialTheme.colorScheme.onPrimaryContainer, style = MaterialTheme.typography.bodyLarge)
+                                }
+                            }
+                        }
+                    }
+                    item(key = "${turn.id}-identity") {
+                        Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            UitEmblem(Modifier.size(28.dp))
+                            Text(stringResource(R.string.as_title), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                            if (turn.status == AssistantTurnStatus.COMPLETE && turn.model.isNotBlank()) Text(turn.model, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    if (turn.status == AssistantTurnStatus.COMPLETE) {
+                        val refs = turn.facts.flatMap { it.references }.distinct()
+                        turn.facts.forEachIndexed { index, fact ->
+                            item(key = "${turn.id}-fact-$index") {
+                                Column(Modifier.fillMaxWidth().testTag("assistant-answer-${turn.id}-$index"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    if (fact.kind != AssistantFactKind.FACT) Text(stringResource(if (fact.kind == AssistantFactKind.SUGGESTION) R.string.as_suggestion else R.string.as_unknown), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.tertiary)
+                                    val numbers = fact.references.map { refs.indexOf(it) + 1 }.joinToString(", ")
+                                    Text(fact.text + if (numbers.isEmpty()) "" else "  [$numbers]", style = MaterialTheme.typography.bodyLarge)
+                                }
+                            }
+                        }
+                        item(key = "${turn.id}-actions") {
+                            AssistantReplyActions(turn, state, frozenNow, refs, onReference = { reference = it }, onCoverage = { context = true }, onCopy = { coroutine.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("UIT Assistant", turn.facts.joinToString("\n\n") { it.text }))) } }, onChecklist = { checklistTurn = turn }, onCheck = { items -> onChecklist(workspace.id, turn.id, items) })
+                        }
+                    } else {
+                        item(key = "${turn.id}-status") {
+                            if (turn.status == AssistantTurnStatus.RUNNING && state.busy) {
+                                AssistantTyping(state.progress)
+                            } else {
                                 Text(
                                     stringResource(
-                                        when (fact.kind) {
-                                            AssistantFactKind.FACT -> R.string.as_fact
-                                            AssistantFactKind.SUGGESTION -> R.string.as_suggestion
-                                            AssistantFactKind.UNKNOWN -> R.string.as_unknown
+                                        when (turn.status) {
+                                            AssistantTurnStatus.CANCELLED -> R.string.as_cancelled
+                                            AssistantTurnStatus.INTERRUPTED -> R.string.as_interrupted
+                                            AssistantTurnStatus.RUNNING -> R.string.as_running
+                                            else -> R.string.as_failed
                                         }
                                     ),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = if (fact.kind == AssistantFactKind.UNKNOWN) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.bodyMedium
                                 )
-                                Text(fact.text, style = MaterialTheme.typography.bodyLarge)
-                                fact.references.forEachIndexed { index, ref ->
-                                    val source = turn.evidence.find { it.id == ref.evidenceId }
-                                    if (source != null) TextButton({ reference = source to ref }, Modifier.fillMaxWidth(), shape = TechnicalShapes.Control) { Text("[${index + 1}] ${source.source.label} · ${source.publishedDate}", style = MaterialTheme.typography.labelLarge) }
-                                }
+                                if (turn.status != AssistantTurnStatus.RUNNING) TextButton({ question = turn.question }) { Text(stringResource(R.string.as_reuse)) }
                             }
-                            Text(stringResource(R.string.as_historical, asTime(turn.at)), style = MaterialTheme.typography.bodySmall)
-                            if (turn.evidence.any { it.offline || it.abbreviated }) Text(stringResource(R.string.as_partial_evidence), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
-                            val changed = turn.evidence.any { e -> state.notices.items.find { it.url == e.url && it.bodyHtml.isNotEmpty() }?.let { assistantSourceVersion(it) != e.version } == true }
-                            if (changed || frozenNow - turn.at > 86400) Text(stringResource(R.string.as_stale), color = MaterialTheme.colorScheme.tertiary)
-                            TextButton({ context = true }) { Text(stringResource(R.string.as_coverage)) }
-                            TextButton({ checklistTurn = turn }, enabled = !state.busy) { Text(stringResource(if (turn.checklist.isEmpty()) R.string.as_checklist_create else R.string.as_checklist_edit)) }
-                            turn.checklist.forEach { task ->
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Checkbox(task.checked, { checked -> onChecklist(workspace.id, turn.id, turn.checklist.map { if (it.id == task.id) it.copy(checked = checked) else it }) }, enabled = !state.busy)
-                                    Text(task.text, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-                                }
-                            }
-                        } else {
-                            Text(
-                                stringResource(
-                                    when (turn.status) {
-                                        AssistantTurnStatus.RUNNING -> R.string.as_running
-                                        AssistantTurnStatus.CANCELLED -> R.string.as_cancelled
-                                        AssistantTurnStatus.INTERRUPTED -> R.string.as_interrupted
-                                        else -> R.string.as_failed
-                                    }
-                                ),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            if (turn.status != AssistantTurnStatus.RUNNING) TextButton({ question = turn.question }) { Text(stringResource(R.string.as_reuse)) }
                         }
-                        HorizontalDivider()
-                    }
-                }
-                if (state.busy) {
-                    item {
-                        Text(
-                            stringResource(
-                                when (state.progress?.tool) {
-                                    "search_announcements" -> R.string.as_searching
-                                    "read_announcement" -> R.string.as_reading
-                                    else -> R.string.as_thinking
-                                }
-                            ),
-                            Modifier.testTag("assistant-progress")
-                        )
-                        LinearProgressIndicator(Modifier.fillMaxWidth())
-                        TextButton(onStop) { Text(stringResource(R.string.as_stop)) }
                     }
                 }
             }
         }
         if (workspace != null) {
-            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                OutlinedTextField(question, { question = it.take(1200) }, Modifier.fillMaxWidth().testTag("assistant-question"), enabled = !state.busy, label = { Text(stringResource(R.string.as_question)) }, shape = TechnicalShapes.Field, maxLines = 4)
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    if (!state.connection.configured) TextButton({ settings = true }) { Text(stringResource(R.string.as_setup)) }
-                    Button({
-                        onAsk(question)
-                        question = ""
-                    }, enabled = !state.busy && state.connection.configured && question.isNotBlank() && workspace.turns.size < AssistantRules.TURNS, shape = TechnicalShapes.Control) { Text(stringResource(R.string.as_send)) }
+            val latestVisible by remember { derivedStateOf { scroll.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 } }
+            if (workspace.turns.isNotEmpty() && latestVisible < scroll.layoutInfo.totalItemsCount - 1) {
+                TextButton({ coroutine.launch { scroll.animateScrollToItem(scroll.layoutInfo.totalItemsCount - 1) } }, Modifier.align(Alignment.CenterHorizontally)) {
+                    Icon(Icons.Outlined.ArrowDownward, null, Modifier.size(16.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.as_latest))
+                }
+            }
+            Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (!state.connection.configured) TextButton({ settings = true }, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.as_setup)) }
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(question, { question = it.take(1200) }, Modifier.weight(1f).testTag("assistant-question"), placeholder = { Text(stringResource(R.string.as_question)) }, shape = TechnicalShapes.Field, maxLines = 4)
+                        FilledIconButton({
+                            if (state.busy) {
+                                onStop()
+                            } else {
+                                onAsk(question)
+                                question = ""
+                            }
+                        }, Modifier.size(56.dp).testTag("assistant-send"), enabled = state.busy || (state.connection.configured && question.isNotBlank() && workspace.turns.size < AssistantRules.TURNS), shape = TechnicalShapes.Control) {
+                            Icon(if (state.busy) Icons.Outlined.Stop else Icons.Outlined.ArrowUpward, stringResource(if (state.busy) R.string.as_stop else R.string.as_send))
+                        }
+                    }
+                    Text(stringResource(R.string.as_composer_note), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
     }
+
     if (create) {
         WorkspaceDialog(state.notices, { create = false }, onCreate = { name, scope ->
             create = false
@@ -428,3 +466,90 @@ fun AssistantContent(
     }
 }
 private fun asTime(seconds: Long): String = if (seconds <= 0) "—" else Instant.fromEpochSeconds(seconds).toLocalDateTime(TimeZone.of("Asia/Ho_Chi_Minh")).toString().replace('T', ' ').take(16) + " GMT+07"
+
+/** Number of lazy items preceding the most recent user message. */
+private fun assistantQuestionIndex(workspace: AssistantWorkspace): Int = workspace.turns.dropLast(1).sumOf { turn ->
+    if (turn.status == AssistantTurnStatus.COMPLETE) 3 + turn.facts.size else 3
+}
+
+@Composable
+private fun AssistantTyping(progress: AssistantProgress?) {
+    Column(Modifier.fillMaxWidth().testTag("assistant-progress"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+            Text(
+                stringResource(
+                    when (progress?.tool) {
+                        "search_announcements" -> R.string.as_searching
+                        "read_announcement" -> R.string.as_reading
+                        "writing" -> R.string.as_writing
+                        "verifying" -> R.string.as_verifying
+                        else -> R.string.as_thinking
+                    }
+                ),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        if (!progress?.draft.isNullOrBlank()) {
+            Text(stringResource(R.string.as_draft), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary)
+            Text(progress!!.draft, Modifier.testTag("assistant-draft"), style = MaterialTheme.typography.bodyLarge)
+        }
+    }
+}
+
+@Composable
+private fun AssistantReplyActions(
+    turn: AssistantTurn,
+    state: AssistantUiState,
+    now: Long,
+    refs: List<AssistantReference>,
+    onReference: (Pair<AssistantEvidence, AssistantReference>) -> Unit,
+    onCoverage: () -> Unit,
+    onCopy: () -> Unit,
+    onChecklist: () -> Unit,
+    onCheck: (List<AssistantChecklistItem>) -> Unit
+) {
+    var sources by rememberSaveable(turn.id) { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            TextButton({ sources = !sources }, Modifier.testTag("assistant-sources-${turn.id}"), shape = TechnicalShapes.Control, contentPadding = PaddingValues(horizontal = 8.dp)) {
+                Icon(Icons.Outlined.Source, null, Modifier.size(16.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.as_sources_count, turn.evidence.size))
+                Icon(if (sources) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, Modifier.size(18.dp))
+            }
+            Spacer(Modifier.weight(1f))
+            IconButton(onCopy) { Icon(Icons.Outlined.ContentCopy, stringResource(R.string.as_copy), Modifier.size(20.dp)) }
+            IconButton(onChecklist, enabled = !state.busy) { Icon(Icons.Outlined.Checklist, stringResource(if (turn.checklist.isEmpty()) R.string.as_checklist_create else R.string.as_checklist_edit), Modifier.size(20.dp)) }
+        }
+        if (sources) {
+            Panel(Modifier.fillMaxWidth(), spacing = 8.dp) {
+                Text(stringResource(R.string.as_historical, asTime(turn.at)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                turn.evidence.filter { e -> refs.any { it.evidenceId == e.id } }.forEach { evidence ->
+                    Text("${evidence.source.label} · ${evidence.publishedDate}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Text(evidence.title, style = MaterialTheme.typography.bodyMedium)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        refs.forEachIndexed { index, ref ->
+                            if (ref.evidenceId == evidence.id) {
+                                TextButton({ onReference(evidence to ref) }, Modifier.testTag("assistant-reference-${turn.id}-$index"), shape = TechnicalShapes.Control, contentPadding = PaddingValues(horizontal = 8.dp)) {
+                                    Text("[${index + 1}]")
+                                }
+                            }
+                        }
+                    }
+                }
+                TextButton(onCoverage) { Text(stringResource(R.string.as_coverage)) }
+            }
+        }
+        if (turn.evidence.any { it.offline || it.abbreviated }) Text(stringResource(R.string.as_partial_evidence), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
+        val changed = turn.evidence.any { e -> state.notices.items.find { it.url == e.url && it.bodyHtml.isNotEmpty() }?.let { assistantSourceVersion(it) != e.version } == true }
+        if (changed || now - turn.at > 86400) Text(stringResource(R.string.as_stale), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
+        turn.checklist.forEach { task ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(task.checked, { checked -> onCheck(turn.checklist.map { if (it.id == task.id) it.copy(checked = checked) else it }) }, enabled = !state.busy)
+                Text(task.text, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+}

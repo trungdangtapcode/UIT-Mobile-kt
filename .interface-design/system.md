@@ -211,8 +211,16 @@ and no implied university deadline. All public preferences are device-local.
 UIT Assistant: keep the existing five bottom destinations and enter from Today or
 an announcement. A one-column workspace list leads with the student-chosen label
 and selected sources. Chat keeps a compact context panel and a fixed bottom
-composer; answers use readable paragraphs with adjacent source actions, without
-bubble decoration. Source inspection shows the retained paragraph version in a
+composer. Right-aligned user messages use primaryContainer with the shared
+8dp/28dp cut-corner panel and 88% column width; left-aligned assistant replies use
+the reading canvas with a 28dp authentic emblem and compact role/model identity.
+Paragraphs remain unboxed; only suggestions and unknowns have kind labels. Numbered
+references map to a collapsed Sources control after each answer, alongside native
+Copy and Checklist actions. The header source selector is one 48dp row, with
+workspace management in an overflow menu. A 56dp cut-corner Send/Stop control sits
+beside the 1–4 line composer. Streaming previews carry a visible unverified-draft
+label and expose no citation or save actions. Follow new questions; let readers
+scroll long answers with an explicit Latest message action. Source inspection shows the retained paragraph version in a
 bounded scrollable dialog. Context, checklist review and connection forms reuse
 TechnicalShapes and native touch targets. Source scope is public-only in the initial
 release; configuration and Send remain explicit. Preserve Back to workspace and

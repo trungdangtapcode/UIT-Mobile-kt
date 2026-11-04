@@ -10,10 +10,11 @@ eligibility wording remains an open review gate.
 | Check | Result | What it establishes |
 | --- | --- | --- |
 | Isolated Koog 1.3.0 Android probe | Failed with Kotlin 2.3 metadata vs repo compiler 2.1 | Existing toolchain cannot consume the resolved artifacts; bounded native runtime selected |
-| Assistant repository tests | 12 passed | Source/tool loop persistence, cancellation, deletion fences, interrupted recovery, read-only scope, local saves and invalid-output repair |
+| Assistant repository tests | 13 passed | Source/tool loop persistence, cancellation, deletion fences, interrupted recovery, read-only scope, local saves and invalid-output repair |
 | Evidence adapter tests | 7 passed | Pinned scope, disabled source rejection, Vietnamese normalization, coverage, unprocessed media/truncation, versioning and storage failure |
+| Responses SSE/parser tests | 6 passed | Incremental delivery before completion, UTF-8/CRLF/multi-line events, failure/truncation/refusal, cancellation, size limits and escaped partial JSON |
 | Protocol/transport tests | 7 passed | Strict schemas, direct/gateway routing, no credential forwarding after connection change, quote integrity and refusal handling |
-| Compose interaction tests | 7 passed | Explicit create/send/save/delete, evidence navigation, connection requirements and stop controls |
+| Compose interaction tests | 9 passed | Explicit create/send/save/delete, evidence navigation, connection requirements and stop controls |
 | Python assistant gateway tests | 5 passed | Fixed tools/instructions, bounded input, rejected roles/file inputs, continuation and no server-side UIT tool execution |
 | Full Python gateway suite | 37 passed | Existing gateway behavior plus assistant contract regressions |
 | Public UIT capture | Passed | Anonymous production Portal reads and workspace persistence, without model credentials |
@@ -44,7 +45,15 @@ answer is presented as a live result.
 [Koog compiler observations](evidence/assistant-runtime-spike.json) ·
 [Live model status](evidence/assistant-live-model-status.json).
 
-## Phone gallery
+## Current chatbot gallery
+
+The conversation redesign and Direct-mode SSE run are recorded in the
+[chat design and verification record](../design/assistant/CHAT.md). It includes
+actual Luna answers at 360/390/412dp, larger text, light mode, a replayed real
+streaming frame and grouped citations. The earlier captures below show the prior
+layout and remain historical evidence.
+
+## Earlier phone gallery
 
 | State | Capture |
 | --- | --- |
@@ -117,3 +126,22 @@ factual accuracy or personal eligibility advice.
 
 The [AI provider evidence audit](AI-PROVIDER-AUDIT.md) preserves the earlier
 expired `.bashrc` result and distinguishes it from this successful `.env` retest.
+
+## Direct SSE verification after the chat redesign
+
+A separate authorized live run completed three questions over the same actual
+public notice through the new production SSE transport: **9 provider calls**, all
+`gpt-6-luna` and completed, with **417 nonempty decoded draft updates** delivered to
+repository progress. The provider reported **22,166 input tokens and 4,394 output
+tokens** for this run. These nine calls are additional to the 26 earlier calls,
+not a relabeling of buffered inference. [SSE evidence](evidence/assistant-sse-live.json)
+includes response IDs, per-call usage, preview counts, first structured-text
+callback times, sampled actual previews and retained public workspace data.
+
+Draft samples are real captured structured-output prefixes; host previews replay
+those samples rather than generating a typewriter effect or fabricating a model
+response. Deterministic tests separately verify callback delivery before a
+completion frame and exclusion of drafts from persisted answers. The new BCU
+summary distinguishes non-required registration explicitly; broader semantic
+accuracy remains an open review gate. Physical-device execution is still unverified.
+The Python gateway remains buffered; these streaming results apply to Direct mode.

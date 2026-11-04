@@ -9,6 +9,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+import practice_contract
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 MAX_BODY = 131072
@@ -28,10 +29,10 @@ def bounded_text(value, limit, allow_empty=False):
 
 
 def validate_request(data):
-    if not isinstance(data, dict) or type(data.get("version")) is not int or data.get("version") != 1 or data.get("mode") not in {"analyze", "ask"}:
+    if not isinstance(data, dict) or type(data.get("version")) is not int or data.get("version") != 1 or data.get("mode") not in {"analyze", "ask", "practice"}:
         raise StudyError(400, "invalid_request")
     mode = data["mode"]
-    question = bounded_text(data.get("question", ""), 1200, allow_empty=mode == "analyze")
+    question = bounded_text(data.get("question", ""), 1200, allow_empty=mode != "ask")
     language = data.get("language", "English")
     if language not in {"English", "Vietnamese"}:
         raise StudyError(400, "invalid_request")
@@ -51,7 +52,13 @@ def validate_request(data):
         clean.append({"id": key, "title": title, "text": text})
     if sum(len(s["text"]) for s in clean) > MAX_TEXT:
         raise StudyError(413, "source_limit")
-    return {"version": 1, "mode": mode, "question": question, "language": language, "sources": clean}
+    request = {"version": 1, "mode": mode, "question": question, "language": language, "sources": clean}
+    if mode == "practice":
+        try:
+            request["practice"] = practice_contract.options(data.get("practice"))
+        except ValueError:
+            raise StudyError(400, "invalid_practice") from None
+    return request
 
 
 def normalized(text):
@@ -139,9 +146,10 @@ class OpenAIProvider:
         self.key, self.model = key, model
 
     def generate(self, request):
-        payload = {"model": self.model, "store": False, "instructions": SYSTEM,
-                   "input": json.dumps(request, ensure_ascii=False), "max_output_tokens": 4096,
-                   "text": {"format": {"type": "json_schema", "name": "study_result", "strict": True, "schema": SCHEMA}}}
+        practice = request["mode"] == "practice"
+        payload = {"model": self.model, "store": False, "instructions": practice_contract.SYSTEM if practice else SYSTEM,
+                   "input": json.dumps(request, ensure_ascii=False), "max_output_tokens": 8192 if practice else 4096,
+                   "text": {"format": {"type": "json_schema", "name": "practice_result" if practice else "study_result", "strict": True, "schema": practice_contract.SCHEMA if practice else SCHEMA}}}
         req = urllib.request.Request("https://api.openai.com/v1/responses", data=json.dumps(payload).encode(), headers={
             "Content-Type": "application/json", "Authorization": "Bearer " + self.key,
         }, method="POST")
@@ -192,7 +200,14 @@ class Gateway:
                 raise StudyError(429, "busy")
             self.calls.append(now)
         try:
-            result = validate_result(self.provider.generate(request), request["sources"], request["mode"])
+            generated = self.provider.generate(request)
+            if request["mode"] == "practice":
+                try:
+                    result = practice_contract.result(generated, request["sources"], request["practice"])
+                except (ValueError, TypeError, KeyError):
+                    raise StudyError(502, "invalid_evidence") from None
+            else:
+                result = validate_result(generated, request["sources"], request["mode"])
             if len(json.dumps(result, ensure_ascii=False).encode()) > 64000:
                 raise StudyError(502, "response_limit")
             return {"version": 1, "requestId": secrets.token_hex(12), "model": self.provider.model,

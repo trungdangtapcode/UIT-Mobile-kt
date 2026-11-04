@@ -88,6 +88,7 @@ fun createOfflineCourseSourceLoader(storage: OfflineDownloadStorage): OfflineCou
 internal fun extractOfflineDocumentText(fileName: String, bytes: ByteArray): String? {
     if (bytes.isEmpty()) return null
     val ext = fileName.substringAfterLast('.', "").lowercase()
+    if (ext == "ipynb") return extractNotebookText(bytes)
     val isPdf = ext == "pdf" || (bytes.size >= 5 && bytes.copyOfRange(0, 5).toString(Charsets.US_ASCII) == "%PDF-")
     val raw = when {
         isPdf -> extractPdfText(bytes)

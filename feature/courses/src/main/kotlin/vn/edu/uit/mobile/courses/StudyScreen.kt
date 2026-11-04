@@ -237,7 +237,7 @@ import vn.edu.uit.mobile.feature.courses.R
     }
 }
 
-@Composable private fun StudyExcerptDialog(onDismiss: () -> Unit, onAdd: (String, String) -> Unit) {
+@Composable internal fun StudyExcerptDialog(onDismiss: () -> Unit, onAdd: (String, String) -> Unit) {
     var title by remember { mutableStateOf("") }
     var text by remember { mutableStateOf("") }
     AlertDialog(onDismissRequest = onDismiss, shape = TechnicalShapes.Dialog, title = { Text(stringResource(R.string.st_excerpt_title)) }, text = {
@@ -249,7 +249,7 @@ import vn.edu.uit.mobile.feature.courses.R
     }, confirmButton = { TextButton({ onAdd(title, text) }, enabled = title.isNotBlank() && text.isNotBlank()) { Text(stringResource(R.string.st_add_source)) } }, dismissButton = { TextButton(onDismiss) { Text(stringResource(R.string.st_cancel)) } })
 }
 
-@Composable fun StudyConnectionDialog(connection: StudyConnection, onDismiss: () -> Unit, onSave: (StudyConnectionMode, String, String, String) -> Unit, onDisconnect: () -> Unit) {
+@Composable fun StudyConnectionDialog(connection: StudyConnection, onDismiss: () -> Unit, onSave: (StudyConnectionMode, String, String, String) -> Unit, onDisconnect: () -> Unit, problem: String? = null, busy: Boolean = false) {
     var mode by remember { mutableStateOf(connection.mode) }
     var endpoint by remember { mutableStateOf(if (connection.mode == StudyConnectionMode.GATEWAY) connection.endpoint else "") }
     var secret by remember { mutableStateOf("") }
@@ -271,7 +271,7 @@ import vn.edu.uit.mobile.feature.courses.R
         }
         if (error == null) onSave(mode, endpoint.trim(), credential, modelId)
     }
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnBackPress = !busy, dismissOnClickOutside = !busy)) {
         Surface(Modifier.padding(16.dp).widthIn(max = 480.dp).fillMaxWidth().fillMaxHeight(0.9f), shape = TechnicalShapes.Dialog, color = MaterialTheme.colorScheme.surface) {
             Column(Modifier.padding(20.dp)) {
                 Text(stringResource(R.string.st_conn_title), style = MaterialTheme.typography.headlineSmall)
@@ -282,7 +282,7 @@ import vn.edu.uit.mobile.feature.courses.R
                             mode = option
                             secret = ""
                             error = null
-                        }, shape = TechnicalShapes.Field, modifier = Modifier.fillMaxWidth()) {
+                        }, enabled = !busy, shape = TechnicalShapes.Field, modifier = Modifier.fillMaxWidth()) {
                             RadioButton(selected = mode == option, onClick = null)
                             Spacer(Modifier.width(8.dp))
                             Text(stringResource(if (option == StudyConnectionMode.DIRECT) R.string.st_direct_mode else R.string.st_gateway_mode))
@@ -290,20 +290,21 @@ import vn.edu.uit.mobile.feature.courses.R
                     }
                     if (mode == StudyConnectionMode.DIRECT) {
                         Text(stringResource(R.string.st_direct_body), style = MaterialTheme.typography.bodySmall)
-                        OutlinedTextField(model, { model = it.take(100) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.st_model_id)) }, supportingText = { Text(stringResource(R.string.st_model_hint)) }, singleLine = true, shape = TechnicalShapes.Field)
+                        OutlinedTextField(model, { model = it.take(100) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.st_model_id)) }, supportingText = { Text(stringResource(R.string.st_model_hint)) }, singleLine = true, enabled = !busy, shape = TechnicalShapes.Field)
                     } else {
                         Text(stringResource(R.string.st_gateway_body), style = MaterialTheme.typography.bodySmall)
-                        OutlinedTextField(endpoint, { endpoint = it }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.st_endpoint)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), singleLine = true, shape = TechnicalShapes.Field)
+                        OutlinedTextField(endpoint, { endpoint = it }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.st_endpoint)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), singleLine = true, enabled = !busy, shape = TechnicalShapes.Field)
                     }
-                    OutlinedTextField(secret, { secret = it.take(1024) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(if (mode == StudyConnectionMode.DIRECT) R.string.st_api_key else R.string.st_token)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), visualTransformation = PasswordVisualTransformation(), singleLine = true, shape = TechnicalShapes.Field)
+                    OutlinedTextField(secret, { secret = it.take(1024) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(if (mode == StudyConnectionMode.DIRECT) R.string.st_api_key else R.string.st_token)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), visualTransformation = PasswordVisualTransformation(), singleLine = true, enabled = !busy, shape = TechnicalShapes.Field)
                     Text(stringResource(R.string.st_credentials_note), style = MaterialTheme.typography.bodySmall)
+                    problem?.let { InlineNotice(it, true) }
                     error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                    if (connection.configured) TextButton(onDisconnect, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_clear)) }
+                    if (connection.configured) TextButton(onDisconnect, enabled = !busy, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_clear)) }
                 }
                 Spacer(Modifier.height(12.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onDismiss, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_cancel)) }
-                    TextButton(::save, enabled = secret.isNotBlank(), shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_save_conn)) }
+                    TextButton(onDismiss, enabled = !busy, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_cancel)) }
+                    TextButton(::save, enabled = !busy && secret.isNotBlank(), shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_save_conn)) }
                 }
             }
         }

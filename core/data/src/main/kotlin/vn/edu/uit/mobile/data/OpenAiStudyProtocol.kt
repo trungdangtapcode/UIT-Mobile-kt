@@ -31,12 +31,15 @@ internal object OpenAiStudyProtocol {
         )
     }
     fun directResult(data: JsonObject): StudyAnswer {
+        val result = directPayload(data)
+        return StudyAnswer(data.getValue("model").jsonPrimitive.content, data.getValue("created_at").jsonPrimitive.double.toLong(), items(result))
+    }
+    fun directPayload(data: JsonObject): JsonObject {
         if (data["status"]?.jsonPrimitive?.content != "completed") throw StudyAiException("OpenAI did not complete the answer. Try less text or check the selected model.")
         val parts = data.getValue("output").jsonArray.filter { it.jsonObject["type"]?.jsonPrimitive?.content == "message" }.flatMap { it.jsonObject.getValue("content").jsonArray }
         if (parts.any { it.jsonObject["type"]?.jsonPrimitive?.content == "refusal" }) throw StudyAiException("OpenAI declined this request. Try another question or text selection.")
         val text = parts.filter { it.jsonObject["type"]?.jsonPrimitive?.content == "output_text" }.joinToString("") { it.jsonObject.getValue("text").jsonPrimitive.content }
-        val result = Json.parseToJsonElement(text).jsonObject
-        return StudyAnswer(data.getValue("model").jsonPrimitive.content, data.getValue("created_at").jsonPrimitive.double.toLong(), items(result))
+        return Json.parseToJsonElement(text).jsonObject
     }
     fun gatewayResult(data: JsonObject): StudyAnswer {
         require(data.getValue("version").jsonPrimitive.int == 1)

@@ -6,13 +6,16 @@ This branch adds two native Android workflows inside **Courses**:
   selected text through the configured connection, review stated requirements separately
   from suggestions, and explicitly add/edit/reorder/save a personal checklist.
 - **Ask course text:** select saved assignment/activity descriptions, verified offline
-  course documents (`.pdf`, `.txt`, `.md`, `.csv`, `.json`, `.html`) downloaded on the
+  course documents (`.pdf`, `.txt`, `.md`, `.csv`, `.json`, `.html`, `.ipynb`) downloaded on the
   device, or add a pasted excerpt, ask a question, and inspect the original text behind
   each citation.
 
 Verified offline course documents from `OfflineDownloadStorage` are extracted locally
 (including `FlateDecode` PDF text streams) and truncated to 12,000 characters per file
-so they can be selected alongside Moodle activity descriptions. The assistant does not
+so they can be selected alongside Moodle activity descriptions. Notebook v4 files
+read only Markdown/code source, preserving indentation and math; outputs, metadata
+and attachments are excluded and cells are never executed. See
+[notebook source limits](AI-PRACTICE.md#jupyter-notebook-sources). The assistant does not
 OCR profile scans or retrieve material from a shared vector index. An empty description
 is not treated as an empty document. Long source text stays visible for inspection but
 must be shortened into an explicit excerpt before sending. Select at most five

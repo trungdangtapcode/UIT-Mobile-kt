@@ -23,6 +23,7 @@ class UitApplication : Application() {
                     single<WorkloadRepository> { get<UitGraph>().workload }
                     single<RevisionRepository> { get<UitGraph>().revision }
                     single<PracticeRepository> { get<UitGraph>().practice }
+                    single<KnowledgeRepository> { get<UitGraph>().knowledge }
                     single<ReadingRepository> { get<UitGraph>().reading }
                 }
             )

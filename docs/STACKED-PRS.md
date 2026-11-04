@@ -8,7 +8,13 @@ The current stack is:
 | 2 | `feat/exam-revision-planner` | [#72](https://github.com/trungdangtapcode/UIT-Mobile-kt/pull/72) / #12 | `feat/configurable-workload` |
 | 3 | `feat/ai-practice-sets` | [#73](https://github.com/trungdangtapcode/UIT-Mobile-kt/pull/73) / [#50](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/50) | `feat/exam-revision-planner` |
 | 4 | `feat/ai-code-tutor` | [#74](https://github.com/trungdangtapcode/UIT-Mobile-kt/pull/74) / [#54](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/54) | `feat/ai-practice-sets` |
-| 5 | `feat/course-pdf-reader` | Course PDF reading / [#32](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/32) | `feat/ai-code-tutor` |
+| 5 | `feat/course-pdf-reader` | [#75](https://github.com/trungdangtapcode/UIT-Mobile-kt/pull/75) / [#32](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/32) | `feat/ai-code-tutor` |
+| 6 | `feat/knowledge-maps` | Knowledge maps / [#76](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/76) | `feat/course-pdf-reader` |
+
+Knowledge maps fork from reader head `5e9afc6da70d4807afb0ed712cedd3556c73ebc8`,
+with the two research documentation commits retained before implementation.
+The child targets `feat/course-pdf-reader` while #75 is open. Review the knowledge-map
+and related research delta only; do not merge this child into its parent branch.
 
 The course PDF reader branch forked from latest Code Tutor at
 `04ddce6bc20ca0189f4a8e35555524913f41e289`. Its PR targets

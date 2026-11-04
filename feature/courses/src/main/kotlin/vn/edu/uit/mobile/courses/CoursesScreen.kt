@@ -39,8 +39,14 @@ import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.courses.R
 import vn.edu.uit.mobile.model.*
 
-@Composable fun CoursesScreen(viewModel: CoursesViewModel, study: StudyViewModel? = null, onReturnToSearch: (() -> Unit)? = null, downloads: OfflineDownloadsViewModel? = null, bookmarks: BookmarksViewModel? = null, onBookmarks: (() -> Unit)? = null, practice: PracticeViewModel? = null, tutor: CodeTutorViewModel? = null, onReading: (() -> Unit)? = null, onOpenPdf: ((Course, CourseFile) -> Unit)? = null) {
+@Composable fun CoursesScreen(viewModel: CoursesViewModel, study: StudyViewModel? = null, onReturnToSearch: (() -> Unit)? = null, downloads: OfflineDownloadsViewModel? = null, bookmarks: BookmarksViewModel? = null, onBookmarks: (() -> Unit)? = null, practice: PracticeViewModel? = null, tutor: CodeTutorViewModel? = null, onReading: (() -> Unit)? = null, onOpenPdf: ((Course, CourseFile) -> Unit)? = null, knowledge: KnowledgeViewModel? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var showKnowledge by rememberSaveable { mutableStateOf(knowledge?.uiState?.value?.open == true) }
+    LaunchedEffect(showKnowledge, knowledge) { if (showKnowledge && knowledge != null && !knowledge.uiState.value.open) knowledge.open() }
+    if (showKnowledge && knowledge != null) {
+        KnowledgeScreen(knowledge) { showKnowledge = false }
+        return
+    }
     var showTutor by rememberSaveable { mutableStateOf(tutor?.uiState?.value?.open == true) }
     LaunchedEffect(showTutor, tutor) { if (showTutor && tutor != null && !tutor.uiState.value.open) tutor.open() }
     LaunchedEffect(state.selected?.accountId, state.selected?.id, showTutor) {
@@ -135,6 +141,12 @@ import vn.edu.uit.mobile.model.*
                 bookmarkBusy = bookmarkState?.busy == true,
                 onBookmarkCourse = bookmarks?.let { it::toggleCourse },
                 onDownloads = if (downloads == null) null else ({ showDownloads = true }),
+                onKnowledge = knowledge?.let { model ->
+                    {
+                        model.open(state.selected)
+                        showKnowledge = true
+                    }
+                },
                 onReading = onReading,
                 onTutor = tutor?.let { model ->
                     {
@@ -218,12 +230,12 @@ import vn.edu.uit.mobile.model.*
 }
 
 @Composable
-fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, onPickFile: (Assignment) -> Unit = {}, onReply: (Discussion) -> Unit = {}, onStudy: ((Assignment?) -> Unit)? = null, onDownloads: (() -> Unit)? = null, onBookmarks: (() -> Unit)? = null, onBookmarkDiscussion: ((Course, Discussion) -> Unit)? = null, savedBookmarkIds: Set<String> = emptySet(), bookmarkBusy: Boolean = false, onBookmarkCourse: ((Course) -> Unit)? = null, onPractice: (() -> Unit)? = null, onTutor: (() -> Unit)? = null, onReading: (() -> Unit)? = null) {
+fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, onPickFile: (Assignment) -> Unit = {}, onReply: (Discussion) -> Unit = {}, onStudy: ((Assignment?) -> Unit)? = null, onDownloads: (() -> Unit)? = null, onBookmarks: (() -> Unit)? = null, onBookmarkDiscussion: ((Course, Discussion) -> Unit)? = null, savedBookmarkIds: Set<String> = emptySet(), bookmarkBusy: Boolean = false, onBookmarkCourse: ((Course) -> Unit)? = null, onPractice: (() -> Unit)? = null, onTutor: (() -> Unit)? = null, onReading: (() -> Unit)? = null, onKnowledge: (() -> Unit)? = null) {
     val course = state.selected
-    if (course == null) CourseLibrary(state, onIntent, onDownloads, onBookmarks, onBookmarkCourse, savedBookmarkIds, bookmarkBusy, onPractice, onTutor, onReading) else CourseWorkspace(state, course, onIntent, onPickFile, onReply, onStudy, onBookmarkDiscussion, savedBookmarkIds, bookmarkBusy, onPractice, onTutor, onReading)
+    if (course == null) CourseLibrary(state, onIntent, onDownloads, onBookmarks, onBookmarkCourse, savedBookmarkIds, bookmarkBusy, onPractice, onTutor, onReading, onKnowledge) else CourseWorkspace(state, course, onIntent, onPickFile, onReply, onStudy, onBookmarkDiscussion, savedBookmarkIds, bookmarkBusy, onPractice, onTutor, onReading, onKnowledge)
 }
 
-@Composable private fun CourseLibrary(state: CoursesState, onIntent: (CoursesIntent) -> Unit, onDownloads: (() -> Unit)?, onBookmarks: (() -> Unit)?, onBookmarkCourse: ((Course) -> Unit)?, savedBookmarkIds: Set<String>, bookmarkBusy: Boolean, onPractice: (() -> Unit)?, onTutor: (() -> Unit)?, onReading: (() -> Unit)?) {
+@Composable private fun CourseLibrary(state: CoursesState, onIntent: (CoursesIntent) -> Unit, onDownloads: (() -> Unit)?, onBookmarks: (() -> Unit)?, onBookmarkCourse: ((Course) -> Unit)?, savedBookmarkIds: Set<String>, bookmarkBusy: Boolean, onPractice: (() -> Unit)?, onTutor: (() -> Unit)?, onReading: (() -> Unit)?, onKnowledge: (() -> Unit)?) {
     val courses = state.snapshot.courses.filter { (state.filter == "all" || it.classification == state.filter || state.filter == "hidden" && it.hidden) && "${it.shortname} ${it.fullname}".contains(state.query, true) }
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -232,6 +244,7 @@ fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, 
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item { PageHeading(stringResource(R.string.courses_title), stringResource(R.string.courses_subtitle)) }
+            if (onKnowledge != null) item { OutlinedButton(onKnowledge, shape = TechnicalShapes.Control, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.km_title)) } }
             if (onReading != null) item { OutlinedButton(onReading, shape = TechnicalShapes.Control) { Text(stringResource(R.string.rd_title)) } }
             if (onTutor != null) item { OutlinedButton(onTutor, shape = TechnicalShapes.Control) { Text(stringResource(R.string.ct_entry)) } }
             if (onPractice != null) item { OutlinedButton(onPractice, shape = TechnicalShapes.Control) { Text(stringResource(R.string.pp_saved_entry)) } }
@@ -261,7 +274,7 @@ fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, 
     }
 }
 
-@Composable private fun CourseWorkspace(state: CoursesState, course: Course, onIntent: (CoursesIntent) -> Unit, onPickFile: (Assignment) -> Unit, onReply: (Discussion) -> Unit, onStudy: ((Assignment?) -> Unit)?, onBookmarkDiscussion: ((Course, Discussion) -> Unit)?, savedBookmarkIds: Set<String>, bookmarkBusy: Boolean, onPractice: (() -> Unit)?, onTutor: (() -> Unit)?, onReading: (() -> Unit)?) {
+@Composable private fun CourseWorkspace(state: CoursesState, course: Course, onIntent: (CoursesIntent) -> Unit, onPickFile: (Assignment) -> Unit, onReply: (Discussion) -> Unit, onStudy: ((Assignment?) -> Unit)?, onBookmarkDiscussion: ((Course, Discussion) -> Unit)?, savedBookmarkIds: Set<String>, bookmarkBusy: Boolean, onPractice: (() -> Unit)?, onTutor: (() -> Unit)?, onReading: (() -> Unit)?, onKnowledge: (() -> Unit)?) {
     var collapsed by rememberSaveable(course.accountId, course.id) { mutableStateOf(listOf<Long>()) }
     var peopleQuery by rememberSaveable(course.accountId, course.id) { mutableStateOf("") }
     val accent = WorkspaceColors.course(course.id)
@@ -299,6 +312,7 @@ fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, 
                 if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 8.dp).height(3.dp))
             }
             state.error?.let { error -> item { InlineNotice(error.text(), true) } }
+            if (onKnowledge != null) item { OutlinedButton(onKnowledge, shape = TechnicalShapes.Control, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.km_title)) } }
             if (onReading != null) item { OutlinedButton(onReading, shape = TechnicalShapes.Control) { Text(stringResource(R.string.rd_title)) } }
             if (onTutor != null) item { OutlinedButton(onTutor, enabled = !state.loading, shape = TechnicalShapes.Control, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.ct_entry)) } }
             if (onPractice != null) item { OutlinedButton(onPractice, enabled = !state.loading, shape = TechnicalShapes.Control, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.pp_entry)) } }

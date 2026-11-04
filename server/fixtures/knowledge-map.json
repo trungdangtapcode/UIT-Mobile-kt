@@ -1,0 +1,57 @@
+{
+  "request": {
+    "version": 1,
+    "mode": "knowledge",
+    "question": "How does BFS explore a graph?",
+    "language": "English",
+    "sources": [
+      {
+        "id": "excerpt:graphs",
+        "title": "Authored traversal text",
+        "text": "Graph traversal includes BFS and DFS. BFS uses a FIFO queue and visits one distance layer at a time. DFS can use an explicit stack or recursion."
+      }
+    ]
+  },
+  "result": {
+    "status": "ready",
+    "message": "",
+    "title": "Traversal methods",
+    "nodes": [
+      {
+        "id": "bfs",
+        "label": "BFS",
+        "definition": "Visit distance layers using a queue.",
+        "citations": [
+          {
+            "sourceId": "excerpt:graphs",
+            "quote": "BFS uses a FIFO queue and visits one distance layer at a time."
+          }
+        ]
+      },
+      {
+        "id": "queue",
+        "label": "FIFO queue",
+        "definition": "The queue used by BFS.",
+        "citations": [
+          {
+            "sourceId": "excerpt:graphs",
+            "quote": "BFS uses a FIFO queue and visits one distance layer at a time."
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "from": "bfs",
+        "to": "queue",
+        "relation": "uses",
+        "citations": [
+          {
+            "sourceId": "excerpt:graphs",
+            "quote": "BFS uses a FIFO queue and visits one distance layer at a time."
+          }
+        ]
+      }
+    ]
+  }
+}

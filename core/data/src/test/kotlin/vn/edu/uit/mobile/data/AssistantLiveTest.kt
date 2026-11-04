@@ -32,32 +32,49 @@ class AssistantLiveTest {
         val providerCalls = mutableListOf<JsonObject>()
         val repo = LocalAssistantRepository(workspaceStore, announcements, {
             val production = study.assistantModel()
-            AssistantModel { payload ->
-                val started = System.nanoTime()
-                val response = production.step(payload)
-                val callNumber = providerCalls.size + 1
-                File(output, "provider-response-$callNumber.json").writeText(response.toString())
-                providerCalls += buildJsonObject {
-                    put("call", callNumber)
-                    put("responseId", response.getValue("id"))
-                    put("model", response.getValue("model"))
-                    put("status", response.getValue("status"))
-                    put("usage", response["usage"] ?: JsonNull)
-                    put("milliseconds", (System.nanoTime() - started) / 1000000)
-                    put("outputTypes", JsonArray(response.getValue("output").jsonArray.map { it.jsonObject.getValue("type") }))
+            object : AssistantModel {
+                override suspend fun step(payload: JsonObject): JsonObject = stream(payload) {}
+                override suspend fun stream(payload: JsonObject, onText: (String) -> Unit): JsonObject {
+                    val started = System.nanoTime()
+                    var deltaEvents = 0
+                    var firstDeltaMillis: Long? = null
+                    var previewSample = ""
+                    val response = production.stream(payload) { text ->
+                        deltaEvents++
+                        if (firstDeltaMillis == null) firstDeltaMillis = (System.nanoTime() - started) / 1000000
+                        val draft = AssistantDraft.text(text)
+                        if (previewSample.isEmpty() && draft.length >= 200) previewSample = draft
+                        onText(text)
+                    }
+                    val callNumber = providerCalls.size + 1
+                    File(output, "provider-response-$callNumber.json").writeText(response.toString())
+                    providerCalls += buildJsonObject {
+                        put("call", callNumber)
+                        put("transport", "Responses SSE")
+                        put("previewUpdates", deltaEvents)
+                        put("firstTextMillis", firstDeltaMillis?.let(::JsonPrimitive) ?: JsonNull)
+                        put("previewSample", previewSample)
+                        put("responseId", response.getValue("id"))
+                        put("model", response.getValue("model"))
+                        put("status", response.getValue("status"))
+                        put("usage", response["usage"] ?: JsonNull)
+                        put("milliseconds", (System.nanoTime() - started) / 1000000)
+                        put("outputTypes", JsonArray(response.getValue("output").jsonArray.map { it.jsonObject.getValue("type") }))
+                    }
+                    File(output, "provider-calls.json").writeText(Json { prettyPrint = true }.encodeToString(JsonArray.serializer(), JsonArray(providerCalls)))
+                    return response
                 }
-                File(output, "provider-calls.json").writeText(Json { prettyPrint = true }.encodeToString(JsonArray.serializer(), JsonArray(providerCalls)))
-                response
             }
         })
         val id = repo.create("Scholarship notice research", AssistantScope(setOf(AnnouncementSource.PORTAL), setOf(target)))
+        var visibleDrafts = 0
         val questions = listOf(
             "Tóm tắt đối tượng, yêu cầu và các mốc thời gian được nêu trong thông báo học bổng đã chọn. Đây là thông báo lịch sử; không coi các hạn trong bài là hạn sắp tới.",
             "Tôi nên chuẩn bị những gì? Phân biệt yêu cầu được nêu trong bài với gợi ý của bạn; trích nguồn cho các yêu cầu.",
             "Thông báo này có xác định chính xác giờ mở đăng ký học phần năm 2030 không? Nếu không có bằng chứng thì nói rõ chưa xác định."
         )
         try {
-            questions.forEach { question -> repo.ask(id, question, "Vietnamese") }
+            questions.forEach { question -> repo.ask(id, question, "Vietnamese") { progress -> if (progress.draft.isNotBlank()) visibleDrafts++ } }
         } finally {
             // Keep an inspectable local record even if a later turn fails validation.
             workspaceStore.entries["library"]?.let { File(output, "workspaces.json").writeText(it) }
@@ -65,6 +82,7 @@ class AssistantLiveTest {
         }
         val workspace = repo.library.value.workspaces.single()
         assertEquals(3, workspace.turns.size)
+        assertTrue("Actual SSE answer previews must reach repository progress", visibleDrafts > 0)
         workspace.turns.forEach { turn ->
             assertEquals(AssistantTurnStatus.COMPLETE, turn.status)
             AssistantRules.verify(turn.facts, turn.evidence)
@@ -82,6 +100,8 @@ class AssistantLiveTest {
             put("mode", "Production Kotlin client and runtime; public UIT GET only; explicit owner API key; no university credentials")
             put("source", target)
             put("requestedModel", model)
+            put("transport", "Responses SSE; transient draft; final citation validation")
+            put("visibleDraftUpdates", visibleDrafts)
             put("providerCalls", JsonArray(providerCalls))
             put("runtime", "Host JVM unit test, not physical Android execution")
             put(

@@ -74,4 +74,5 @@ internal object AssistantProtocol {
 
 internal fun interface AssistantModel {
     suspend fun step(payload: JsonObject): JsonObject
+    suspend fun stream(payload: JsonObject, onText: (String) -> Unit): JsonObject = step(payload)
 }

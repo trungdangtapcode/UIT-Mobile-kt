@@ -79,6 +79,27 @@ class AssistantRepositoryTest {
         }
     }
 
+    @Test fun streamedDraftIsTransientAndInvalidAnswerIsClearedBeforeRepair() = runTest {
+        val memory = AssistantMemory()
+        var calls = 0
+        val model = object : AssistantModel {
+            override suspend fun step(payload: JsonObject) = error("Streaming path required")
+            override suspend fun stream(payload: JsonObject, onText: (String) -> Unit): JsonObject {
+                onText("""{"facts":[{"text":"Unverified draft"""")
+                assertFalse(memory.entries.getValue("library").contains("Unverified draft"))
+                return if (calls++ == 0) assistantAnswer("""[{"kind":"FACT","text":"Unsupported claim","references":[]}]""") else assistantAnswer("""[{"kind":"UNKNOWN","text":"Not established.","references":[]}]""")
+            }
+        }
+        val repo = LocalAssistantRepository(memory, notices(), { model })
+        val id = repo.create("Draft lifecycle", scope)
+        val progress = mutableListOf<AssistantProgress>()
+        repo.ask(id, "What is established?", "English") { progress += it }
+        assertTrue(progress.any { it.draft == "Unverified draft" })
+        assertTrue(progress.filter { it.tool == "verifying" }.all { it.draft.isEmpty() })
+        assertFalse(memory.entries.getValue("library").contains("Unverified draft"))
+        assertEquals("Not established.", repo.library.value.workspaces.single().turns.single().facts.single().text)
+    }
+
     @Test fun toolsRetrieveEvidenceAndHistoryReopensOfflineWithoutUniversityMutations() = runTest {
         val memory = AssistantMemory()
         val notices = notices()

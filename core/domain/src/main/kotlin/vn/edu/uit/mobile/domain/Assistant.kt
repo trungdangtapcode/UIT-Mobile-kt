@@ -43,7 +43,9 @@ data class AssistantWorkspace(
     val revision: Long = 0
 )
 data class AssistantLibrary(val workspaces: List<AssistantWorkspace> = emptyList(), val storageFailed: Boolean = false)
-data class AssistantProgress(val tool: String, val results: Int = 0)
+
+/** Draft text is transient and unverified; it never belongs in persisted turns. */
+data class AssistantProgress(val tool: String, val results: Int = 0, val draft: String = "")
 interface AssistantRepository {
     val library: StateFlow<AssistantLibrary>
     suspend fun initialize()

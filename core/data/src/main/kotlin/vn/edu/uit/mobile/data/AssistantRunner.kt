@@ -39,8 +39,12 @@ internal class AssistantRunner(private val model: AssistantModel, private val an
             guard()
             require(input.sumOf { it.toString().toByteArray(Charsets.UTF_8).size } <= 110000) { "Context limit reached" }
             progress(AssistantProgress("thinking"))
-            val data = model.step(AssistantProtocol.payload(JsonArray(input), step, language))
+            val data = model.stream(AssistantProtocol.payload(JsonArray(input), step, language)) { json ->
+                progress(AssistantProgress("writing", draft = AssistantDraft.text(json)))
+            }
             guard()
+            // Clear an unverified preview before validation, repair or tool execution.
+            progress(AssistantProgress("verifying"))
             val output = AssistantProtocol.output(data)
             val functionCalls = output.filter { it.jsonObject["type"]?.jsonPrimitive?.content == "function_call" }
             if (functionCalls.isEmpty()) {

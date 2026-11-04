@@ -170,32 +170,40 @@ class ConnectedStudyAiRepository(
     }
     internal fun assistantModel(): AssistantModel {
         val expected = config() ?: error("Configure an AI connection")
-        return AssistantModel { payload ->
-            check(config() == expected) { "AI connection changed" }
-            assistantStep(payload).also { check(config() == expected) { "AI connection changed" } }
+        return object : AssistantModel {
+            override suspend fun step(payload: JsonObject): JsonObject = stream(payload) {}
+            override suspend fun stream(payload: JsonObject, onText: (String) -> Unit): JsonObject {
+                check(config() == expected) { "AI connection changed" }
+                return assistantStep(payload) { text ->
+                    check(config() == expected) { "AI connection changed" }
+                    onText(text)
+                }.also { check(config() == expected) { "AI connection changed" } }
+            }
         }
     }
-    internal suspend fun assistantStep(request: JsonObject): JsonObject = withContext(Dispatchers.IO) {
+    internal suspend fun assistantStep(request: JsonObject, onText: (String) -> Unit = {}): JsonObject = withContext(Dispatchers.IO) {
         require(request["mode"]?.jsonPrimitive?.content == "assistant")
-        exchange(null, request) { data, _ ->
+        exchange(null, request, onText) { data, _ ->
             AssistantProtocol.output(data)
             data
         }
     }
-    private suspend fun <T> exchange(course: Course?, request: JsonObject, decode: (JsonObject, Boolean) -> T): T {
+    private suspend fun <T> exchange(course: Course?, request: JsonObject, onText: ((String) -> Unit)? = null, decode: (JsonObject, Boolean) -> T): T {
         requireAccount(course)
         val config = config() ?: error("Configure an AI connection before generating an answer.")
         val direct = mode(config) == StudyConnectionMode.DIRECT
+        val streaming = direct && onText != null && request["mode"]?.jsonPrimitive?.content == "assistant"
         val endpoint = if (direct) "https://api.openai.com/v1/responses" else StudyAiRules.endpoint(config.getValue("endpoint").jsonPrimitive.content) + "/v1/study"
         return try {
             client.preparePost(endpoint) {
                 header("Authorization", "Bearer ${config.getValue("token").jsonPrimitive.content}")
                 header("Content-Type", "application/json")
+                if (streaming) header("Accept", "text/event-stream")
                 setBody(
                     if (direct) {
                         val model = config.getValue("model").jsonPrimitive.content
                         when (request["mode"]?.jsonPrimitive?.content) {
-                            "assistant" -> AssistantProtocol.request(model, request)
+                            "assistant" -> JsonObject(AssistantProtocol.request(model, request) + ("stream" to JsonPrimitive(streaming)))
                             "knowledge" -> KnowledgeProtocol.request(model, request)
                             "practice" -> PracticeProtocol.request(model, request)
                             "tutor" -> TutorProtocol.request(model, request)
@@ -227,15 +235,20 @@ class ConnectedStudyAiRepository(
                             }
                         )
                     }
-                    val bytes = ByteArrayOutputStream()
-                    val buffer = ByteArray(4096)
-                    while (true) {
-                        val count = channel.readAvailable(buffer, 0, buffer.size)
-                        if (count < 0) break
-                        require(bytes.size() + count <= if (direct || request["mode"]?.jsonPrimitive?.content == "assistant") 262144 else 65536) { "The AI response exceeded the supported size." }
-                        bytes.write(buffer, 0, count)
+                    val data = if (streaming) {
+                        require(response.headers["Content-Type"]?.substringBefore(';')?.trim() == "text/event-stream") { "Expected an SSE response" }
+                        AssistantStream.read(channel, requireNotNull(onText))
+                    } else {
+                        val bytes = ByteArrayOutputStream()
+                        val buffer = ByteArray(4096)
+                        while (true) {
+                            val count = channel.readAvailable(buffer, 0, buffer.size)
+                            if (count < 0) break
+                            require(bytes.size() + count <= if (direct || request["mode"]?.jsonPrimitive?.content == "assistant") 262144 else 65536) { "The AI response exceeded the supported size." }
+                            bytes.write(buffer, 0, count)
+                        }
+                        Json.parseToJsonElement(bytes.toString("UTF-8")).jsonObject
                     }
-                    val data = Json.parseToJsonElement(bytes.toString("UTF-8")).jsonObject
                     val answer = decode(data, direct)
                     requireAccount(course)
                     answer

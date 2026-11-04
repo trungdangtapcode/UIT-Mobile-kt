@@ -41,11 +41,13 @@ class AssistantProtocolTest {
                 assertNull(request.headers[HttpHeaders.Cookie])
                 val body = Json.parseToJsonElement((request.body as TextContent).text).jsonObject
                 assertFalse(body.getValue("store").jsonPrimitive.boolean)
+                assertTrue(body.getValue("stream").jsonPrimitive.boolean)
+                assertEquals("text/event-stream", request.headers[HttpHeaders.Accept])
                 assertEquals("required", body.getValue("tool_choice").jsonPrimitive.content)
                 assertFalse(body.getValue("parallel_tool_calls").jsonPrimitive.boolean)
                 assertEquals(setOf("search_announcements", "read_announcement"), body.getValue("tools").jsonArray.map { it.jsonObject.getValue("name").jsonPrimitive.content }.toSet())
                 assertTrue(body.getValue("text").jsonObject.getValue("format").jsonObject.getValue("strict").jsonPrimitive.boolean)
-                respond(assistantOutput(assistantCall("call", "search_announcements", "{\"query\":\"\"}")).toString(), headers = headersOf(HttpHeaders.ContentType, "application/json"))
+                respond(assistantSseComplete(assistantOutput(assistantCall("call", "search_announcements", "{\"query\":\"\"}"))), headers = headersOf(HttpHeaders.ContentType, "text/event-stream"))
             }
         ) { followRedirects = false }
         val study = ConnectedStudyAiRepository(memory, AssistantNoAccounts(), client)

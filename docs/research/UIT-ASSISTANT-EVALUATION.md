@@ -71,7 +71,8 @@ It requires completed turns, tool activity, resolvable quotes in the first two
 answers, an UNKNOWN in the third and no source mark-read change. The request uses
 a process environment key, not a command-line argument or committed credential.
 The current `.bashrc` key was read locally for the authorized test; the provider
-rejected access. No alternate endpoint or model was substituted.
+rejected access. A subsequent minimal diagnostic confirmed HTTP 401 with
+`expired_secret_key`; see the [sanitized HTTP evidence](evidence/assistant-auth-diagnostic.json). No alternate endpoint or model was substituted.
 
 After access is restored, run the opt-in model test, inspect the answers manually
 for meaning/audience/date correctness, then capture the actual successful answer
@@ -81,3 +82,6 @@ not a substitute for these measurements.
 
 Keep the PR draft while this live-model gate remains unresolved. Do not close the
 broader #46/#47/#55 work or merge merely because the deterministic checks pass.
+
+A subsequent [AI provider evidence audit](AI-PROVIDER-AUDIT.md) distinguishes this
+expired-key failure from historical successful calls and deterministic UI fixtures.

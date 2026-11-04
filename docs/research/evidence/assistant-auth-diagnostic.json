@@ -1,0 +1,12 @@
+{
+  "capturedAt": "2026-11-04T12:31:44.781862+00:00",
+  "endpoint": "https://api.openai.com/v1/responses",
+  "requestedModel": "gpt-6-luna",
+  "credentialSource": ".bashrc export OPENAI_API_KEY",
+  "requestContainsUniversityData": false,
+  "httpStatus": 401,
+  "requestId": "req_131ecbd106dd44d5b7f6de4f29d549b3",
+  "errorCode": "expired_secret_key",
+  "errorType": "invalid_request_error",
+  "errorMessage": "Your API key has expired. Create a new API key to continue."
+}

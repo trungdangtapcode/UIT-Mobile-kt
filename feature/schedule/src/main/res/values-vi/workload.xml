@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wl_entry">Khối lượng học tập</string>
+    <string name="wl_back">Lịch học</string>
+    <string name="wl_title">Khối lượng sắp tới</string>
+    <string name="wl_subtitle">Hạn nộp, lịch thi và thời gian học bạn ước tính còn lại.</string>
+    <string name="wl_configure">Cấu hình thời gian</string>
+    <string name="wl_reload">Đọc lại dữ liệu đã lưu</string>
+    <string name="wl_connect">Kết nối tài khoản</string>
+    <string name="wl_connect_hint">Đăng nhập dịch vụ UIT để xem dữ liệu học tập đã lưu.</string>
+    <string name="wl_range">%1$s — %2$s · GMT+07</string>
+    <string name="wl_known">Thời gian đã ước tính · %1$d phút</string>
+    <string name="wl_unknown">%1$d việc sắp tới chưa có ước tính</string>
+    <string name="wl_explain">Cách tính kết quả</string>
+    <string name="wl_gaps">%1$d giới hạn dữ liệu/cấu hình</string>
+    <string name="wl_submitted">Đã loại %1$d mục được nguồn ghi nhận đã nộp.</string>
+    <string name="wl_assumed">%1$d thời lượng thi là ước tính cá nhân để lập kế hoạch.</string>
+    <string name="wl_snapshot_note">Dựa trên nguồn đã lưu. Kết quả không bảo đảm bạn thực sự rảnh hoặc đã có kế hoạch học đầy đủ.</string>
+    <string name="wl_limitations">Kiểm tra các giả định</string>
+    <string name="wl_dates">Các mốc cần hoàn thành</string>
+    <string name="wl_estimate_note">Để trống nghĩa là chưa biết. Ước tính còn 0 phút không đánh dấu đã nộp bài trên LMS.</string>
+    <string name="wl_empty">Không có việc sắp tới trong dữ liệu đã lưu</string>
+    <string name="wl_empty_hint">Thiếu bản ghi đã lưu không có nghĩa là bạn đã hoàn thành việc học.</string>
+    <string name="wl_overdue">Quá hạn trong dữ liệu đã lưu · %1$d</string>
+    <string name="wl_overdue_hint">Việc quá hạn được giữ riêng, không tự đổi hạn hoặc cộng vào nhu cầu thời gian sắp tới.</string>
+    <string name="wl_unavailable">Ước tính chưa tìm thấy nguồn hiện tại</string>
+    <string name="wl_unavailable_hint">Vẫn được giữ trên máy. Thiếu nguồn không được coi là đã xóa hoặc đã nộp.</string>
+    <string name="wl_remove">Xóa ước tính đã lưu</string>
+    <string name="wl_personal">Quản lý khoảng bận cá nhân</string>
+    <string name="wl_personal_hint">Dùng Tìm giờ rảnh và lưu khoảng bận trên máy, rồi mở lại Khối lượng học tập. Bản nháp chưa lưu không được tính.</string>
+    <string name="wl_saved_source">%1$s · lưu lúc %2$s</string>
+    <string name="wl_close">Đóng</string>
+    <string name="wl_cutoff">Mốc hoàn thành cá nhân · %1$s %2$s GMT+07</string>
+    <string name="wl_demand">Tổng nhu cầu đã biết đến mốc này · %1$d phút</string>
+    <string name="wl_missing_prefix">%1$d việc trước mốc này chưa có ước tính thời gian còn lại.</string>
+    <string name="wl_formula">Nhu cầu cộng thời gian còn lại đã nhập trước mốc này. Khả dụng được tính sau khi gộp khoảng bận, trừ đệm và áp dụng khung giờ, ngân sách từng ngày, độ dài phiên tối thiểu.</string>
+    <string name="wl_not_schedule">Đủ thời gian ở từng mốc chưa bảo đảm các phiên học sẽ xếp được cùng nhau. Bản xem trước này không tự xếp phiên học.</string>
+    <string name="wl_minutes">Còn %1$d phút (ước tính cá nhân)</string>
+    <string name="wl_not_estimated">Chưa ước tính</string>
+    <string name="wl_exam">Chuẩn bị thi</string>
+    <string name="wl_deadline">Hạn hoàn thành</string>
+    <string name="wl_estimate">Nhập ước tính</string>
+    <string name="wl_edit_estimate">Sửa ước tính</string>
+    <string name="wl_load_error">Không đọc được dữ liệu kế hoạch. Dữ liệu cũ được giữ lại; hãy đọc lại hoặc chọn tài khoản khác.</string>
+    <string name="wl_save_error">Chưa lưu được thay đổi. Bản nháp vẫn được giữ trong hộp thoại.</string>
+    <string name="wl_input_error">Kiểm tra số phút nguyên và giới hạn cấu hình.</string>
+    <string name="wl_analysis_error">Chưa phân tích được nguồn đã lưu. Hãy đọc lại dữ liệu hoặc làm mới nguồn từ không gian học tập.</string>
+    <string name="wl_shortfall">Nhu cầu đã biết vượt khả dụng đã ghi nhận</string>
+    <string name="wl_uncertain">Cần thêm thông tin để đánh giá</string>
+    <string name="wl_within">Trong ngân sách đã nhập tại mốc này</string>
+    <string name="wl_capacity">Khả dụng theo dữ liệu · %1$d–%2$d phút (thận trọng–lạc quan)</string>
+    <string name="wl_capacity_exact">Khả dụng theo dữ liệu · %1$d phút</string>
+    <string name="wl_issue_calendar">Chọn tài khoản nguồn lịch học trong Cấu hình thời gian. App không tự gán tài khoản lịch.</string>
+    <string name="wl_issue_source">Một nguồn đã chọn không có dữ liệu đã lưu hoặc đang không đọc được. Thiếu dữ liệu không được coi là lịch trống.</string>
+    <string name="wl_issue_local">Một tài khoản có dữ liệu kế hoạch không đọc được. Các bản ghi vẫn được giữ lại.</string>
+    <string name="wl_issue_stale">Một nguồn quá ngưỡng độ mới đã đặt hoặc có thời điểm lưu ở tương lai.</string>
+    <string name="wl_issue_end">Một số sự kiện bận thiếu giờ kết thúc. App không tự đặt thời lượng; kịch bản thận trọng và lạc quan có thể khác nhau.</string>
+    <string name="wl_issue_conflict">Các bản ghi liên kết mâu thuẫn về thời gian, tham chiếu hoặc trạng thái nộp. Hãy kiểm tra nguồn trước khi dùng kết quả.</string>
+    <string name="wl_issue_personal">Không đọc được khoảng bận cá nhân đã lưu. App không tự coi là không có khoảng bận.</string>
+    <string name="wl_issue_budget">Ngân sách đang hiển thị là mặc định có thể sửa. Hãy xem và lưu trong Cấu hình thời gian.</string>
+    <string name="wl_issue_unscheduled">Một số bài tập chưa có hạn dùng được nên không nằm trong phân tích theo ngày.</string>
+    <string name="wl_cancel">Hủy</string>
+    <string name="wl_save">Lưu trên máy</string>
+    <string name="wl_estimate_help">Nhập số phút học còn lại, không phải tổng thời gian đã học. Để trống nếu chưa biết; xóa cả hai ô để bỏ ước tính. Thao tác này không nộp bài.</string>
+    <string name="wl_remaining">Số phút học còn lại · 0–60000</string>
+    <string name="wl_exam_duration">Ước tính thời lượng thi · 1–720 phút</string>
+    <string name="wl_duration_help">Giả định cá nhân tùy chọn khi nguồn thiếu giờ kết thúc thi. Không thay đổi lịch thi chính thức.</string>
+    <string name="wl_config_help">Cấu hình thuộc tài khoản đang lập kế hoạch. Mọi giờ dùng GMT+07. Mặc định chỉ được xác nhận khi bạn lưu.</string>
+    <string name="wl_horizon">%1$d ngày</string>
+    <string name="wl_teaching_source">Nguồn lịch học</string>
+    <string name="wl_no_calendar">Chưa chọn nguồn lịch học</string>
+    <string name="wl_source_help">Chọn một nguồn DAA hoặc Portal để tránh đếm cùng lịch thi từ hai dịch vụ. Ước tính thi được lưu theo tài khoản nguồn đó.</string>
+    <string name="wl_weekday_budget">Khung giờ theo từng thứ</string>
+    <string name="wl_window_start">Bắt đầu khung giờ · HH:mm</string>
+    <string name="wl_window_end">Kết thúc khung giờ · HH:mm</string>
+    <string name="wl_budget">Ngân sách học trong ngày · phút</string>
+    <string name="wl_budget_help">Nhập 0 cho ngày không học. Ngân sách khác 0 phải đủ phiên học tối thiểu. Ngày hôm nay chỉ tính khung giờ còn lại; không tự suy ra thời gian bạn đã học.</string>
+    <string name="wl_minimum">Phiên tối thiểu · 10–240 phút</string>
+    <string name="wl_buffer">Đệm di chuyển/nghỉ · 0–120 phút</string>
+    <string name="wl_lead">Hoàn thành trước hạn · 0–1440 phút</string>
+    <string name="wl_stale_hours">Ngưỡng độ mới · 1–168 giờ</string>
+    <string name="wl_other_events">Tính sự kiện lịch không phải deadline là khoảng bận</string>
+    <string name="wl_config_invalid">Kiểm tra từng thứ: khung HH:mm hợp lệ trong ngày, ngân sách bằng 0 hoặc từ độ dài phiên tối thiểu đến 720 phút, cùng các giới hạn đang hiển thị.</string>
+    <string name="wl_issue_refresh">Lần làm mới gần nhất báo lỗi. Các phần đã lưu có thể chưa đầy đủ; hãy kiểm tra nguồn gốc.</string>
+    <string name="wl_deficit">Thiếu %1$d phút tại mốc %2$s %3$s GMT+07</string>
+    <string name="wl_day_capacity_exact">Khả dụng cả ngày theo dữ liệu · %1$d phút</string>
+    <string name="wl_day_capacity">Khả dụng cả ngày theo dữ liệu · %1$d–%2$d phút</string>
+    <string-array name="wl_weekdays">
+        <item>Thứ Hai</item>
+        <item>Thứ Ba</item>
+        <item>Thứ Tư</item>
+        <item>Thứ Năm</item>
+        <item>Thứ Sáu</item>
+        <item>Thứ Bảy</item>
+        <item>Chủ nhật</item>
+    </string-array>
+</resources>

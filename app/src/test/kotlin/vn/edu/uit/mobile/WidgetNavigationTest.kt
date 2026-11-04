@@ -10,6 +10,7 @@ import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import org.junit.*
 import org.junit.Assert.*
 import org.junit.runner.RunWith
@@ -53,6 +54,14 @@ class WidgetNavigationTest {
                 module {
                     single<PortalRepository> { repository }
                     single<BookmarkRepository> { bookmarks }
+                    single<WorkloadRepository> {
+                        object : WorkloadRepository {
+                            override val accounts = owners.map { connected -> connected.map { WorkloadAccount(it, repository.snapshot.value) } }
+                            override suspend fun savePolicy(accountId: String, policy: WorkloadPolicy) = Unit
+                            override suspend fun saveEstimate(estimate: WorkloadEstimate) = Unit
+                            override suspend fun removeEstimate(ref: WorkloadRef) = Unit
+                        }
+                    }
                     single<AccountRepository> {
                         object : AccountRepository {
                             override val accounts = owners
@@ -125,6 +134,39 @@ class WidgetNavigationTest {
             activity.newIntent(WidgetRoute("schedule", "2026-10-27").intent(context))
             compose.onNodeWithContentDescription("Show schedule for 2026-10-27").assertIsSelected()
             compose.onNodeWithText("Share PNG").assertDoesNotExist()
+        } finally {
+            activity.pause().stop().destroy()
+        }
+    }
+
+    @Test fun scheduleWidgetClosesWorkloadAndOpensItsDate() {
+        val context = ApplicationProvider.getApplicationContext<Application>()
+        val activity = Robolectric.buildActivity(MainActivity::class.java, WidgetRoute("schedule", "2026-10-26").intent(context)).setup().visible()
+        try {
+            compose.onNodeWithText("Workload preview").performScrollTo().performClick()
+            compose.onNodeWithText("Upcoming workload").assertExists()
+            activity.newIntent(WidgetRoute("schedule", "2026-10-27").intent(context))
+            compose.onNodeWithContentDescription("Show schedule for 2026-10-27").assertIsSelected()
+            compose.onNodeWithText("Upcoming workload").assertDoesNotExist()
+        } finally {
+            activity.pause().stop().destroy()
+        }
+    }
+
+    @Test fun workloadReloadsItsSourcesWhenTheActivityIsRecreated() {
+        val context = ApplicationProvider.getApplicationContext<Application>()
+        val id = repository.snapshot.value.courses.first().accountId
+        owners.value = listOf(Account(id, "https://courses.uit.edu.vn", 1, "Synthetic", PortalType.MOODLE))
+        repository.snapshot.value = repository.snapshot.value.copy(assignments = emptyList(), events = emptyList(), exams = emptyList(), updatedAt = kotlinx.datetime.Clock.System.now().epochSeconds)
+        var activity = Robolectric.buildActivity(MainActivity::class.java, WidgetRoute("schedule", "2026-10-26").intent(context)).setup().visible()
+        try {
+            compose.onNodeWithText("Workload preview").performScrollTo().performClick()
+            compose.waitUntil(10_000) { compose.onAllNodesWithText("Known study time · 0 min").fetchSemanticsNodes().isNotEmpty() }
+            val saved = Bundle()
+            activity.saveInstanceState(saved).pause().stop().destroy()
+            activity = Robolectric.buildActivity(MainActivity::class.java).setup(saved).visible()
+            compose.waitUntil(10_000) { compose.onAllNodesWithText("Known study time · 0 min").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("Upcoming workload").assertExists()
         } finally {
             activity.pause().stop().destroy()
         }

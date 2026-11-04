@@ -182,3 +182,11 @@ Forum bookmark settings. See [local bookmarks](docs/BOOKMARKS.md).
 Schedule previews a one-to-seven-day PNG of saved classes with course, room and
 identity visibility choices before opening Android sharing. See
 [image contents, privacy and temporary copies](docs/TIMETABLE-IMAGE-SHARING.md).
+
+## Configurable workload
+
+Schedule compares entered remaining-study estimates with recorded capacity before
+upcoming cutoffs. Weekday windows, budgets, session minimums, buffers, finish lead,
+freshness and source selection are editable and stored locally. See
+[usage and ownership](docs/WORKLOAD.md) and the
+[algorithm, formulas and limitations](docs/WORKLOAD-ALGORITHM.md).

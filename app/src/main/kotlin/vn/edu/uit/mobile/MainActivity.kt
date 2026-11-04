@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
     private val repository: PortalRepository by inject()
     private val accounts: AccountRepository by inject()
     private val bookmarkRepository: BookmarkRepository by inject()
+    private val workloadRepository: WorkloadRepository by inject()
     private val studyRepository: StudyAiRepository by lazy { createStudyAiRepository(this, accounts) }
 
     override fun attachBaseContext(newBase: Context) {
@@ -73,6 +74,7 @@ class MainActivity : ComponentActivity() {
                 }
                 val dashboard = ownedViewModel { DashboardViewModel(repository) }
                 val schedule = ownedViewModel { ScheduleViewModel(repository, accounts, createFreeTimeBlockStorage(this)) }
+                val workload = ownedViewModel { WorkloadViewModel(workloadRepository, accounts, createFreeTimeBlockStorage(this), sync = repository.syncState) }
                 val downloads = ownedViewModel { OfflineDownloadsViewModel(repository, accounts, createOfflineDownloadStorage(this), observeDownloadWifi(applicationContext)) { wifiOnly -> OfflineDownloadWorker.enqueue(applicationContext, wifiOnly) } }
                 val search = ownedViewModel { WorkspaceSearchViewModel(repository, accounts) }
                 val bookmarks = ownedViewModel { BookmarksViewModel(bookmarkRepository, repository, accounts) }
@@ -100,7 +102,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, courses, search, downloads, bookmarks, study, inbox, academic, studentProfile, widgetRoute, {
+                UitShell(repository, dashboard, schedule, workload, courses, search, downloads, bookmarks, study, inbox, academic, studentProfile, widgetRoute, {
                     showWidgets = false
                     widgetRoute = null
                     setIntent(
@@ -158,6 +160,7 @@ private fun UitShell(
     repository: PortalRepository,
     dashboard: DashboardViewModel,
     schedule: ScheduleViewModel,
+    workload: WorkloadViewModel,
     courses: CoursesViewModel,
     search: WorkspaceSearchViewModel,
     downloads: OfflineDownloadsViewModel,
@@ -302,7 +305,7 @@ private fun UitShell(
                     courses.onIntent(CoursesIntent.Select(it))
                     selected = 2
                 }, onSchedule = { selected = 1 }, onInbox = { selected = 3 }, onConnect = { showAccounts = true })
-                1 -> ScheduleScreen(schedule) {
+                1 -> ScheduleScreen(schedule, workload) {
                     courses.onIntent(CoursesIntent.Select(it))
                     selected = 2
                 }

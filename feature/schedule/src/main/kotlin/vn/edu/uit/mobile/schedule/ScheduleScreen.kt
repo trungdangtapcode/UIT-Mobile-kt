@@ -112,17 +112,36 @@ class ScheduleViewModel(private val repository: PortalRepository, accounts: Acco
     }
 }
 
-@Composable fun ScheduleScreen(viewModel: ScheduleViewModel, onCourse: (Course) -> Unit) {
+@Composable fun ScheduleScreen(viewModel: ScheduleViewModel, workload: WorkloadViewModel? = null, onCourse: (Course) -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var exporting by rememberSaveable { mutableStateOf(false) }
     var finding by rememberSaveable { mutableStateOf(false) }
     var sharingImage by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(state.focusRequest) { if (state.focusRequest > 0) sharingImage = false }
+    var showingWorkload by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(showingWorkload, workload) { if (showingWorkload) workload?.open() }
+    DisposableEffect(workload) { onDispose { workload?.close() } }
+    LaunchedEffect(state.focusRequest) {
+        if (state.focusRequest > 0) {
+            sharingImage = false
+            showingWorkload = false
+            workload?.close()
+        }
+    }
     val freeTime by viewModel.freeTimePlanner.uiState.collectAsStateWithLifecycle()
     val activityContext = LocalContext.current
     val context = activityContext.applicationContext
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/calendar")) { uri -> viewModel.completeCalendarExport(context, uri) }
-    if (sharingImage) {
+    if (showingWorkload && workload != null) {
+        WorkloadScreen(workload, {
+            workload.close()
+            showingWorkload = false
+        }, {
+            workload.close()
+            showingWorkload = false
+            viewModel.freeTimePlanner.open(state.anchor)
+            finding = true
+        })
+    } else if (sharingImage) {
         val session = freeTime.session
         key(session) {
             TimetableImageScreen(state.snapshot, state.anchor, { sharingImage = false }) { plan ->
@@ -153,16 +172,28 @@ class ScheduleViewModel(private val repository: PortalRepository, accounts: Acco
             finding = false
         }, planner::date, planner::start, planner::end, planner::minimum, planner::buffer, { title, start, end -> planner.addForSession(planningSession, title, start, end) }, planner::remove, planner::saveOnDevice)
     } else {
-        ScheduleContent(state, viewModel::onIntent, onCourse, { exporting = true }, {
-            viewModel.freeTimePlanner.open(state.anchor)
-            finding = true
-        }, { sharingImage = true })
+        ScheduleContent(
+            state,
+            viewModel::onIntent,
+            onCourse,
+            { exporting = true },
+            {
+                viewModel.freeTimePlanner.open(state.anchor)
+                finding = true
+            },
+            { sharingImage = true },
+            workload?.let {
+                {
+                    showingWorkload = true
+                }
+            }
+        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {}, onCourse: (Course) -> Unit = {}, onExport: (() -> Unit)? = null, onFreeTime: (() -> Unit)? = null, onShareImage: (() -> Unit)? = null) {
+fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {}, onCourse: (Course) -> Unit = {}, onExport: (() -> Unit)? = null, onFreeTime: (() -> Unit)? = null, onShareImage: (() -> Unit)? = null, onWorkload: (() -> Unit)? = null) {
     var selected by remember { mutableStateOf<ScheduleEntry?>(null) }
     var semesters by remember { mutableStateOf(false) }
     var filter by rememberSaveable { mutableStateOf("All events") }
@@ -203,6 +234,7 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
             }
             if (onFreeTime != null) AssistChip(onClick = onFreeTime, shape = TechnicalShapes.Control, label = { Text(stringResource(R.string.sched_free_time)) }, leadingIcon = { Icon(Icons.Outlined.EventAvailable, null, Modifier.size(18.dp)) })
             if (onShareImage != null) AssistChip(onClick = onShareImage, shape = TechnicalShapes.Control, label = { Text(stringResource(R.string.ti_entry)) }, leadingIcon = { Icon(Icons.Outlined.Share, null, Modifier.size(18.dp)) })
+            if (onWorkload != null) AssistChip(onClick = onWorkload, shape = TechnicalShapes.Control, label = { Text(stringResource(R.string.wl_entry)) }, leadingIcon = { Icon(Icons.Outlined.Assessment, null, Modifier.size(18.dp)) })
         }
         item {
             Panel {

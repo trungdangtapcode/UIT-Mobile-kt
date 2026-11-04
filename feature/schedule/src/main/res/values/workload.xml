@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wl_entry">Workload preview</string>
+    <string name="wl_back">Schedule</string>
+    <string name="wl_title">Upcoming workload</string>
+    <string name="wl_subtitle">Deadlines, exams and your remaining study estimates.</string>
+    <string name="wl_configure">Configure budget</string>
+    <string name="wl_reload">Reload local data</string>
+    <string name="wl_connect">Connect an account</string>
+    <string name="wl_connect_hint">Sign in to a UIT service to inspect its saved workload.</string>
+    <string name="wl_range">%1$s — %2$s · GMT+07</string>
+    <string name="wl_known">Known study time · %1$d min</string>
+    <string name="wl_unknown">Upcoming items without an estimate · %1$d</string>
+    <string name="wl_explain">How this is calculated</string>
+    <string name="wl_gaps">Data/configuration limitations · %1$d</string>
+    <string name="wl_submitted">Excluded: %1$d recorded as officially submitted.</string>
+    <string name="wl_assumed">Personally estimated exam durations · %1$d</string>
+    <string name="wl_snapshot_note">Based on saved sources. This is not a guarantee of availability or a complete study schedule.</string>
+    <string name="wl_limitations">Check the assumptions</string>
+    <string name="wl_dates">Due dates</string>
+    <string name="wl_estimate_note">Blank means unknown. Zero remaining minutes never marks an LMS submission complete.</string>
+    <string name="wl_empty">No upcoming items in saved data</string>
+    <string name="wl_empty_hint">Missing cached records do not mean coursework is complete.</string>
+    <string name="wl_overdue">Overdue in saved data · %1$d</string>
+    <string name="wl_overdue_hint">Overdue items stay separate and are not silently moved to a new deadline or included in future demand.</string>
+    <string name="wl_unavailable">Estimates without a current source</string>
+    <string name="wl_unavailable_hint">Kept on this device. A missing source is not treated as deleted or submitted.</string>
+    <string name="wl_remove">Remove saved estimate</string>
+    <string name="wl_personal">Manage personal blocks</string>
+    <string name="wl_personal_hint">Use Find free time and save blocks on this device, then reopen Workload preview. Unsaved drafts are excluded.</string>
+    <string name="wl_saved_source">%1$s · saved %2$s</string>
+    <string name="wl_close">Close</string>
+    <string name="wl_cutoff">Personal planning cutoff · %1$s %2$s GMT+07</string>
+    <string name="wl_demand">Cumulative known demand · %1$d min</string>
+    <string name="wl_missing_prefix">Contributing items without an estimate · %1$d</string>
+    <string name="wl_formula">Demand sums entered remaining minutes up to this cutoff. Capacity merges busy intervals, subtracts buffers and respects weekday windows, daily budgets and minimum session length.</string>
+    <string name="wl_not_schedule">Having enough time at each cutoff does not guarantee these sessions fit together. This preview does not assign study sessions.</string>
+    <string name="wl_minutes">%1$d min remaining (personal estimate)</string>
+    <string name="wl_not_estimated">Not estimated</string>
+    <string name="wl_exam">Exam preparation</string>
+    <string name="wl_deadline">Deadline</string>
+    <string name="wl_estimate">Enter estimate</string>
+    <string name="wl_edit_estimate">Edit estimate</string>
+    <string name="wl_load_error">Local planning data could not be read. Existing data was retained; reload or choose another account.</string>
+    <string name="wl_save_error">Changes could not be saved. Your draft remains open.</string>
+    <string name="wl_input_error">Check the entered whole-minute values and configuration limits.</string>
+    <string name="wl_analysis_error">This saved source could not be analyzed. Reload local data or refresh the source from the workspace.</string>
+    <string name="wl_shortfall">Known demand exceeds recorded capacity</string>
+    <string name="wl_uncertain">More information is needed</string>
+    <string name="wl_within">Within the entered budget at this cutoff</string>
+    <string name="wl_capacity">Recorded capacity · %1$d–%2$d min (conservative–optimistic)</string>
+    <string name="wl_capacity_exact">Recorded capacity · %1$d min</string>
+    <string name="wl_issue_calendar">Choose a teaching-calendar account in Configure budget. No calendar was silently assigned.</string>
+    <string name="wl_issue_source">A selected source is unavailable or has no saved snapshot. Missing records are not assumed empty.</string>
+    <string name="wl_issue_local">A selected account has unreadable local planning data. Its saved records were retained.</string>
+    <string name="wl_issue_stale">A selected source exceeds your freshness threshold or has a future saved timestamp.</string>
+    <string name="wl_issue_end">Some busy events have no end time. Their duration is not invented; conservative and optimistic scenarios differ.</string>
+    <string name="wl_issue_conflict">Linked records disagree about timing, ownership reference or submission state. Inspect the source before relying on this projection.</string>
+    <string name="wl_issue_personal">Saved personal blocks could not be read. They were not silently assumed absent.</string>
+    <string name="wl_issue_budget">The displayed budget is an editable default. Review and save it in Configure budget.</string>
+    <string name="wl_issue_unscheduled">Some assignments have no usable due date and are outside the dated analysis.</string>
+    <string name="wl_cancel">Cancel</string>
+    <string name="wl_save">Save on device</string>
+    <string name="wl_estimate_help">Enter remaining study minutes, not total hours already spent. Leave blank for unknown; clear both fields to remove an estimate. This does not submit work.</string>
+    <string name="wl_remaining">Remaining study minutes · 0–60000</string>
+    <string name="wl_exam_duration">Planning exam duration · 1–720 min</string>
+    <string name="wl_duration_help">Optional personal assumption for an exam with no reported end. It never changes the official exam record.</string>
+    <string name="wl_config_help">Configuration belongs to this planning account. All times use GMT+07. Defaults are not confirmed until you save.</string>
+    <string name="wl_horizon">%1$d days</string>
+    <string name="wl_teaching_source">Teaching calendar</string>
+    <string name="wl_no_calendar">No teaching calendar selected</string>
+    <string name="wl_source_help">Choose one DAA or Portal source to avoid counting the same exam from two services. Its exam estimates stay with that source account.</string>
+    <string name="wl_weekday_budget">Weekday availability</string>
+    <string name="wl_window_start">Window start · HH:mm</string>
+    <string name="wl_window_end">Window end · HH:mm</string>
+    <string name="wl_budget">Daily study budget · minutes</string>
+    <string name="wl_budget_help">Zero is a day off. A nonzero budget must fit the minimum session size. Today means the remaining planning window; past study time is not inferred.</string>
+    <string name="wl_minimum">Minimum session · 10–240 min</string>
+    <string name="wl_buffer">Travel/break buffer · 0–120 min</string>
+    <string name="wl_lead">Finish before deadline · 0–1440 min</string>
+    <string name="wl_stale_hours">Freshness threshold · 1–168 hours</string>
+    <string name="wl_other_events">Include non-deadline calendar events as busy time</string>
+    <string name="wl_config_invalid">Check every weekday: valid same-day HH:mm windows, budgets of zero or minimum-session to 720 minutes, and the displayed policy limits.</string>
+    <string name="wl_issue_refresh">The last workspace refresh reported an error. Cached sections may be partial; inspect the original source.</string>
+    <string name="wl_deficit">Shortfall · %1$d min at %2$s %3$s GMT+07</string>
+    <string name="wl_day_capacity_exact">Whole-day recorded capacity · %1$d min</string>
+    <string name="wl_day_capacity">Whole-day recorded capacity · %1$d–%2$d min</string>
+    <string-array name="wl_weekdays">
+        <item>Monday</item>
+        <item>Tuesday</item>
+        <item>Wednesday</item>
+        <item>Thursday</item>
+        <item>Friday</item>
+        <item>Saturday</item>
+        <item>Sunday</item>
+    </string-array>
+</resources>

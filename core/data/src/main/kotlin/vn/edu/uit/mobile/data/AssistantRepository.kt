@@ -15,6 +15,7 @@ internal class LocalAssistantRepository(
     private val storage: StudyStorage,
     private val announcements: AnnouncementRepository,
     private val model: () -> AssistantModel,
+    private val forum: AssistantForumSource = AnonymousAssistantForumSource(),
     private val now: () -> Long = { System.currentTimeMillis() / 1000 }
 ) : AssistantRepository {
     private val mutex = Mutex()
@@ -93,7 +94,7 @@ internal class LocalAssistantRepository(
         var revision = 0L
         val turnId = UUID.randomUUID().toString()
         try {
-            val runner = AssistantRunner(model(), announcements)
+            val runner = AssistantRunner(model(), announcements, forum)
             val workspace = mutex.withLock {
                 val old = library.value.workspaces.first { it.id == id }
                 require(old.turns.size < AssistantRules.TURNS) { "Create a new workspace to continue" }
@@ -112,7 +113,7 @@ internal class LocalAssistantRepository(
             mutex.withLock {
                 check(epoch == token)
                 val old = library.value.workspaces.first { it.id == id && it.revision == revision }
-                val turn = old.turns.last().copy(status = AssistantTurnStatus.COMPLETE, facts = answer.facts, evidence = answer.evidence, events = answer.events, model = answer.model, coverage = answer.coverage)
+                val turn = old.turns.last().copy(status = AssistantTurnStatus.COMPLETE, facts = answer.facts, evidence = answer.evidence, events = answer.events, model = answer.model, coverage = answer.coverage, forumCoverage = answer.forumCoverage)
                 commit(library.value.copy(workspaces = library.value.workspaces.map { if (it.id == id) old.copy(turns = old.turns.dropLast(1) + turn) else it }))
             }
         } catch (error: Exception) {
@@ -129,6 +130,26 @@ internal class LocalAssistantRepository(
             throw error
         } finally {
             runMutex.unlock()
+        }
+    }
+    override suspend fun deleteTurn(workspaceId: String, turnId: String) = edit(workspaceId) { workspace ->
+        require(workspace.turns.any { it.id == turnId && it.status != AssistantTurnStatus.RUNNING })
+        workspace.copy(turns = workspace.turns.filterNot { it.id == turnId })
+    }
+    override suspend fun inspectForum(scope: AssistantForumScope): AssistantForumCoverage = forum.read(scope).coverage
+    override suspend fun recheckForum(workspaceId: String, turnId: String): AssistantForumCheck = withContext(Dispatchers.IO) {
+        initialize()
+        val workspace = mutex.withLock { library.value.workspaces.first { it.id == workspaceId } }
+        val turn = workspace.turns.first { it.id == turnId && it.status == AssistantTurnStatus.COMPLETE }
+        val old = requireNotNull(turn.forumCoverage)
+        val scope = requireNotNull(workspace.scope.forum)
+        try {
+            val current = forum.read(scope).coverage
+            AssistantForumCheck(now(), if (current.sourceVersion == old.sourceVersion) AssistantForumFreshness.CURRENT else AssistantForumFreshness.CHANGED, current)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            AssistantForumCheck(now(), AssistantForumFreshness.UNAVAILABLE)
         }
     }
     override suspend fun checklist(workspaceId: String, turnId: String, items: List<AssistantChecklistItem>) = edit(workspaceId) { workspace ->

@@ -89,6 +89,7 @@ class LocalForumRepository(private val remote: ForumTransport, private val stora
         }
         storage.write("cache", encoded)
     }
+    override suspend fun loadPublic(request: ForumRequest): ForumLoaded = load(request)
     override suspend fun load(request: ForumRequest): ForumLoaded = withContext(Dispatchers.IO) {
         // Revision permissions may change independently of cached topic metadata.
         // Never persist or replay history offline after a permission revocation.
@@ -179,6 +180,7 @@ class LocalForumRepository(private val remote: ForumTransport, private val stora
             writeLocal(state.copy(positions = (listOf(position.copy(offsetDp = position.offsetDp.coerceIn(0, 10000))) + state.positions.filterNot { it.topic.id == position.topic.id }).take(120)))
         }
     }
+    override suspend fun imagePublic(url: String): ByteArray = image(url)
     override suspend fun image(url: String): ByteArray = remote.image(url)
     override suspend fun clear() = localOperation {
         generation++

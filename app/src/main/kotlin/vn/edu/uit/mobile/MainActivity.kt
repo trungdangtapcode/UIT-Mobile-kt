@@ -332,15 +332,24 @@ private fun UitShell(
     ) {
         if (showAssistant) {
             key(assistantSeed) {
+                val forumSeed = assistantSeed?.takeIf { it.startsWith("forum:") }?.split(':')?.let { parts ->
+                    if (parts.size == 4) AssistantForumScope(parts[1].toLong(), parts[2].toInt(), parts[3].toInt()) else null
+                }
                 AssistantScreen(assistant, {
                     showAssistant = false
                     assistantSeed = null
-                }, assistantSeed) { url ->
+                }, initialUrl = assistantSeed.takeIf { forumSeed == null }, initialForum = forumSeed) { url ->
                     showAssistant = false
                     assistantSeed = null
                     returnToAssistant = true
-                    announcementTarget = url
-                    showAnnouncements = true
+                    val target = ForumUrls.target(url)
+                    if (target != null) {
+                        showAnnouncements = false
+                        forum.openPublicTopic(target.topicId, target.postNumber)
+                    } else {
+                        announcementTarget = url
+                        showAnnouncements = true
+                    }
                 }
             }
         } else if (showAnnouncements) {
@@ -360,7 +369,25 @@ private fun UitShell(
         } else if (readingState.open) {
             CourseReadingScreen(reading)
         } else if (forumState.open) {
-            ForumScreen(forum)
+            ForumScreen(
+                forum,
+                onAssistant = { scope ->
+                    returnToAssistant = false
+                    assistantSeed = "forum:${scope.topicId}:${scope.startNumber}:${scope.limit}"
+                    showAssistant = true
+                },
+                onReturn = if (returnToAssistant) {
+                    (
+                        {
+                            forum.close()
+                            returnToAssistant = false
+                            showAssistant = true
+                        }
+                        )
+                } else {
+                    null
+                }
+            )
         } else if (showBookmarks) {
             // Retain filters and list position while source detail replaces the collection.
             bookmarkScreenState.SaveableStateProvider("saved-items") {

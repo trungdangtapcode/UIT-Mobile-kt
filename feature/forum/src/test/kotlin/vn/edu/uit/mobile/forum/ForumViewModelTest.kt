@@ -19,6 +19,11 @@ class ForumViewModelTest {
     }
     private class Repo : ForumRepository {
         val calls = mutableListOf<ForumRequest>()
+        val publicCalls = mutableListOf<ForumRequest>()
+        override suspend fun loadPublic(request: ForumRequest): ForumLoaded {
+            publicCalls += request
+            return load(request)
+        }
         var local = ForumLocalState()
         var failure: ForumFailure? = null
         var revisionGate: CompletableDeferred<Unit>? = null
@@ -56,6 +61,23 @@ class ForumViewModelTest {
         override suspend fun clear() {
             local = ForumLocalState()
         }
+    }
+
+    @Test fun publicCitationNavigationUsesAnonymousReadsAndDoesNotSaveReadingState() = runTest(dispatcher) {
+        val repo = Repo()
+        val vm = ForumViewModel(repo)
+        vm.openPublicTopic(7, 123)
+        runCurrent()
+        assertTrue(vm.uiState.value.open && vm.uiState.value.publicCitation)
+        assertEquals(repo.calls, repo.publicCalls)
+        assertEquals(7L, vm.uiState.value.topic!!.id)
+        vm.position(vm.uiState.value.posts.first(), 12)
+        vm.save(vm.uiState.value.topic!!)
+        advanceUntilIdle()
+        assertTrue(repo.local.positions.isEmpty() && repo.local.saved.isEmpty())
+        vm.window(true)
+        runCurrent()
+        assertEquals(repo.calls, repo.publicCalls)
     }
 
     @Test fun discoveryKeepsFilterPeriodAndTagThroughPaginationAndBack() = runTest(dispatcher) {

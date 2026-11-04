@@ -175,4 +175,10 @@
     <string name="f_chat_window">Đang hiển thị 500 tin nhắn. Tải tin cũ hơn hoặc mới hơn để tiếp tục.</string>
     <string name="f_bookmark_other">Loại đánh dấu này mở trên website Forum nếu có liên kết.</string>
     <string name="f_draft_local">Bản nháp ở trên thiết bị này, không đồng bộ lên website Forum.</string>
+    <string name="f_ai_digest">Tóm tắt / hỏi AI</string>
+    <string name="f_ai_disclosure">Chọn tối đa %1$d bài công khai từ một số bài. App kiểm tra truy cập không đăng nhập trước. AI đã cấu hình chỉ nhận văn bản công khai được chọn khi bạn gửi. Không dùng topic riêng, tin nhắn hay phiên tài khoản.</string>
+    <string name="f_ai_first">Bắt đầu từ bài số</string>
+    <string name="f_ai_count">Số bài tối đa</string>
+    <string name="f_ai_open">Mở trong Trợ lý UIT</string>
+    <string name="f_public_ai_source">Nguồn trích dẫn công khai · đọc không đăng nhập</string>
 </resources>

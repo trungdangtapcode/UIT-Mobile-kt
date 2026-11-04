@@ -16,7 +16,7 @@ class AssistantContractTest(unittest.TestCase):
         self.assertFalse(payload["store"])
         self.assertFalse(payload["parallel_tool_calls"])
         self.assertEqual("required", payload["tool_choice"])
-        self.assertEqual({"search_announcements", "read_announcement"}, {tool["name"] for tool in payload["tools"]})
+        self.assertEqual({"search_announcements", "read_announcement", "read_forum_topic"}, {tool["name"] for tool in payload["tools"]})
         self.assertTrue(payload["text"]["format"]["strict"])
 
     def test_client_cannot_override_instructions_tools_roles_or_limits(self):
@@ -49,3 +49,14 @@ class AssistantContractTest(unittest.TestCase):
         result = assistant_contract.payload("fixture-model", data)
         self.assertEqual(data["input"], result["input"])
         self.assertEqual("auto", result["tool_choice"])
+
+
+class ForumAssistantContractTest(unittest.TestCase):
+    def test_forum_continuation_is_fixed_and_gateway_does_not_fetch_posts(self):
+        data = copy.deepcopy(REQUEST)
+        data["step"] = 1
+        call = {"type": "function_call", "call_id": "forum", "name": "read_forum_topic", "arguments": "{}"}
+        data["input"] += [call, {"type": "function_call_output", "call_id": "forum", "output": "{\"coverage\":{}}"}]
+        with patch("urllib.request.urlopen", side_effect=AssertionError("No UIT networking")):
+            self.assertEqual(data["input"], assistant_contract.payload("fixture-model", data)["input"])
+            self.assertEqual("read_forum_topic", assistant_contract.result({"status": "completed", "model": "fixture-model", "output": [call]})["output"][0]["name"])

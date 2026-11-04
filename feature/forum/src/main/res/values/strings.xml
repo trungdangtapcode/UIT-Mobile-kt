@@ -175,4 +175,10 @@
     <string name="f_chat_window">Showing 500 messages. Load older or newer messages to continue.</string>
     <string name="f_bookmark_other">This bookmark type opens on the Forum website when a link is available.</string>
     <string name="f_draft_local">Drafts stay on this device. They are not synced to the Forum website.</string>
+    <string name="f_ai_digest">Summarize / ask AI</string>
+    <string name="f_ai_disclosure">Select up to %1$d public posts starting at a post number. Anonymous access is checked first. The configured AI receives selected public text only when you send. Private topics, messages and account sessions are excluded.</string>
+    <string name="f_ai_first">Starting post number</string>
+    <string name="f_ai_count">Maximum posts</string>
+    <string name="f_ai_open">Open in UIT Assistant</string>
+    <string name="f_public_ai_source">Public citation · anonymous reading</string>
 </resources>

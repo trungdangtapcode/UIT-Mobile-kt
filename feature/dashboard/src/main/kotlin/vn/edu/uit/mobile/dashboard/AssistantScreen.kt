@@ -33,12 +33,15 @@ import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.dashboard.R
 
 @Composable
-fun AssistantScreen(vm: AssistantViewModel, onBack: () -> Unit, initialUrl: String? = null, onOriginal: (String) -> Unit = {}) {
+fun AssistantScreen(vm: AssistantViewModel, onBack: () -> Unit, initialUrl: String? = null, initialForum: AssistantForumScope? = null, onOriginal: (String) -> Unit = {}) {
     val state by vm.state.collectAsStateWithLifecycle()
     var restored by rememberSaveable { mutableStateOf<String?>(null) }
-    var seeded by rememberSaveable(initialUrl) { mutableStateOf(false) }
-    LaunchedEffect(initialUrl) {
-        if (initialUrl != null && !seeded) {
+    var seeded by rememberSaveable(initialUrl, initialForum) { mutableStateOf(false) }
+    LaunchedEffect(initialUrl, initialForum) {
+        if (initialForum != null && !seeded) {
+            seeded = true
+            vm.createForForum(initialForum)
+        } else if (initialUrl != null && !seeded) {
             seeded = true
             vm.createFor(initialUrl)
         }
@@ -67,7 +70,7 @@ fun AssistantScreen(vm: AssistantViewModel, onBack: () -> Unit, initialUrl: Stri
         },
         onAsk = { vm.ask(it, language) }, onStop = vm::stop, onDismiss = vm::dismiss,
         onRefresh = vm::refresh, onConfigure = vm::configure, onDisconnect = vm::disconnect,
-        onChecklist = vm::checklist, onOriginal = onOriginal
+        onChecklist = vm::checklist, onOriginal = onOriginal, onRecheckForum = vm::recheckForum, onDeleteTurn = vm::deleteTurn
     )
 }
 
@@ -87,7 +90,9 @@ fun AssistantContent(
     onConfigure: (StudyConnectionMode, String, String, String) -> Unit = { _, _, _, _ -> },
     onDisconnect: () -> Unit = {},
     onChecklist: (String, String, List<AssistantChecklistItem>) -> Unit = { _, _, _ -> },
-    onOriginal: (String) -> Unit = {}
+    onOriginal: (String) -> Unit = {},
+    onRecheckForum: (String) -> Unit = {},
+    onDeleteTurn: (String) -> Unit = {}
 ) {
     val workspace = state.library.workspaces.find { it.id == state.selected }
     var create by rememberSaveable { mutableStateOf(false) }
@@ -99,6 +104,7 @@ fun AssistantContent(
     var question by rememberSaveable(workspace?.id) { mutableStateOf("") }
     var reference by remember { mutableStateOf<Pair<AssistantEvidence, AssistantReference>?>(null) }
     var checklistTurn by remember { mutableStateOf<AssistantTurn?>(null) }
+    var deletionTurn by remember { mutableStateOf<String?>(null) }
     val scroll = rememberLazyListState()
     var menu by remember { mutableStateOf(false) }
     val coroutine = rememberCoroutineScope()
@@ -164,12 +170,28 @@ fun AssistantContent(
                 }
             }
         }
+        if (state.preparingContext) {
+            LinearProgressIndicator(Modifier.fillMaxWidth())
+            Text(stringResource(R.string.as_forum_checking), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
+        }
         if (workspace != null) {
             Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.Source, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     TextButton({ context = true }, Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 8.dp)) {
-                        Text(stringResource(R.string.as_chat_context, workspace.scope.sources.size), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelMedium)
+                        Text(
+                            if (workspace.scope.forum != null && workspace.scope.sources.isEmpty()) {
+                                stringResource(R.string.as_forum_only)
+                            } else if (workspace.scope.forum != null) {
+                                stringResource(R.string.as_forum_context, workspace.scope.sources.size)
+                            } else {
+                                stringResource(R.string.as_chat_context, workspace.scope.sources.size)
+                            },
+                            Modifier.weight(1f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.labelMedium
+                        )
                         Icon(Icons.Outlined.ExpandMore, stringResource(R.string.as_context), Modifier.size(18.dp))
                     }
                 }
@@ -188,7 +210,7 @@ fun AssistantContent(
                 items(state.library.workspaces, key = { it.id }) { saved ->
                     Panel(Modifier.fillMaxWidth()) {
                         Text(saved.name, style = MaterialTheme.typography.titleMedium)
-                        Text(saved.scope.sources.joinToString { it.label }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                        Text((saved.scope.sources.map { it.label } + listOfNotNull(saved.scope.forum?.let { "UIT Forum" })).joinToString(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                         Text(stringResource(R.string.as_turn_count, saved.turns.size), style = MaterialTheme.typography.bodySmall)
                         Row {
                             TextButton({ onSelect(saved.id) }) { Text(stringResource(R.string.as_open)) }
@@ -205,7 +227,13 @@ fun AssistantContent(
                             Text(stringResource(R.string.as_chat_welcome), style = MaterialTheme.typography.headlineSmall)
                             Text(stringResource(R.string.as_empty_chat), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(stringResource(R.string.as_chat_scope_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            TextButton(onRefresh) { Text(stringResource(R.string.as_refresh_sources)) }
+                            if (workspace.scope.forum != null) {
+                                val digest = stringResource(R.string.as_forum_digest_question)
+                                OutlinedButton({ question = digest }, enabled = !state.busy, shape = TechnicalShapes.Control) { Text(stringResource(R.string.as_forum_digest)) }
+                                ForumScopeText(requireNotNull(workspace.scope.forum))
+                            } else {
+                                TextButton(onRefresh) { Text(stringResource(R.string.as_refresh_sources)) }
+                            }
                         }
                     }
                 }
@@ -221,10 +249,13 @@ fun AssistantContent(
                         }
                     }
                     item(key = "${turn.id}-identity") {
-                        Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            UitEmblem(Modifier.size(28.dp))
-                            Text(stringResource(R.string.as_title), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                            if (turn.status == AssistantTurnStatus.COMPLETE && turn.model.isNotBlank()) Text(turn.model, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                UitEmblem(Modifier.size(28.dp))
+                                Text(stringResource(R.string.as_title), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                                if (turn.status == AssistantTurnStatus.COMPLETE && turn.model.isNotBlank()) Text(turn.model, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            turn.forumCoverage?.let { ForumCoverageText(it) }
                         }
                     }
                     if (turn.status == AssistantTurnStatus.COMPLETE) {
@@ -239,7 +270,7 @@ fun AssistantContent(
                             }
                         }
                         item(key = "${turn.id}-actions") {
-                            AssistantReplyActions(turn, state, frozenNow, refs, onReference = { reference = it }, onCoverage = { context = true }, onCopy = { coroutine.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("UIT Assistant", turn.facts.joinToString("\n\n") { it.text }))) } }, onChecklist = { checklistTurn = turn }, onCheck = { items -> onChecklist(workspace.id, turn.id, items) })
+                            AssistantReplyActions(turn, state, frozenNow, refs, onReference = { reference = it }, onCoverage = { context = true }, onCopy = { coroutine.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("UIT Assistant", turn.facts.joinToString("\n\n") { it.text }))) } }, onChecklist = { checklistTurn = turn }, onCheck = { items -> onChecklist(workspace.id, turn.id, items) }, onRecheck = { onRecheckForum(turn.id) }, onReuse = { question = turn.question }, onDelete = { deletionTurn = turn.id })
                         }
                     } else {
                         item(key = "${turn.id}-status") {
@@ -296,6 +327,14 @@ fun AssistantContent(
         }
     }
 
+    if (deletionTurn != null) {
+        AlertDialog(onDismissRequest = { deletionTurn = null }, shape = TechnicalShapes.Dialog, title = { Text(stringResource(R.string.as_delete_answer)) }, text = { Text(stringResource(R.string.as_delete_answer_help)) }, confirmButton = {
+            TextButton({
+                deletionTurn?.let(onDeleteTurn)
+                deletionTurn = null
+            }) { Text(stringResource(R.string.as_delete_answer)) }
+        }, dismissButton = { TextButton({ deletionTurn = null }) { Text(stringResource(R.string.as_cancel)) } })
+    }
     if (create) {
         WorkspaceDialog(state.notices, { create = false }, onCreate = { name, scope ->
             create = false
@@ -327,23 +366,30 @@ fun AssistantContent(
             Text(stringResource(R.string.as_context), style = MaterialTheme.typography.titleLarge)
             Text(stringResource(R.string.as_public_only))
             Text(stringResource(R.string.as_send_disclosure))
+            workspace.scope.forum?.let { ForumScopeText(it) }
             workspace.scope.sources.forEach { source ->
                 val value = state.notices.sources.getValue(source)
                 Text(source.label, style = MaterialTheme.typography.titleSmall)
                 Text(stringResource(R.string.as_source_state, asTime(value.checkedAt), if (value.enabled && !value.failed) stringResource(R.string.as_source_available) else stringResource(R.string.as_source_unavailable)), style = MaterialTheme.typography.bodySmall)
             }
             val items = state.notices.items.filter { it.source in workspace.scope.sources && (workspace.scope.urls.isEmpty() || it.url in workspace.scope.urls) }
-            Text(stringResource(R.string.as_cache_count, items.size), style = MaterialTheme.typography.bodyMedium)
+            if (workspace.scope.sources.isNotEmpty()) Text(stringResource(R.string.as_cache_count, items.size), style = MaterialTheme.typography.bodyMedium)
             items.sortedByDescending { it.publishedDate }.take(12).forEach { item -> Text(item.title, style = MaterialTheme.typography.bodySmall) }
             Text(stringResource(R.string.as_coverage_help))
-            TextButton(onRefresh, enabled = !state.busy) { Text(stringResource(R.string.as_refresh_sources)) }
+            if (workspace.scope.sources.isNotEmpty()) TextButton(onRefresh, enabled = !state.busy) { Text(stringResource(R.string.as_refresh_sources)) }
             TextButton({ context = false }) { Text(stringResource(R.string.as_close)) }
         }
     }
     reference?.let { (source, ref) ->
         AssistantDialog({ reference = null }) {
             Text(source.title, style = MaterialTheme.typography.titleLarge)
-            Text("${source.source.label} · ${source.publishedDate}", color = MaterialTheme.colorScheme.primary)
+            Text("${source.sourceLabel} · ${asSourceTime(source.publishedDate)}", color = MaterialTheme.colorScheme.primary)
+            source.forum?.let { post ->
+                Text(stringResource(R.string.as_forum_post_revision, post.postId, post.revision, asSourceTime(post.updated.ifBlank { post.created })), style = MaterialTheme.typography.bodySmall)
+                post.replyTo?.let { Text(stringResource(R.string.as_forum_reply_to, it), style = MaterialTheme.typography.bodySmall) }
+                if (post.staff == true) Text(stringResource(R.string.as_forum_staff), style = MaterialTheme.typography.labelMedium)
+                if (post.accepted == true) Text(stringResource(R.string.as_forum_accepted), style = MaterialTheme.typography.labelMedium)
+            }
             Text(stringResource(R.string.as_evidence_version, source.version.take(12), asTime(source.fetchedAt), ref.paragraph + 1), style = MaterialTheme.typography.bodySmall)
             Text(ref.quote, style = MaterialTheme.typography.titleMedium)
             Text(source.paragraphs.getOrNull(ref.paragraph).orEmpty(), style = MaterialTheme.typography.bodyLarge)
@@ -398,6 +444,12 @@ fun AssistantContent(
 
 @Composable private fun WorkspaceDialog(inbox: AnnouncementInbox, onDismiss: () -> Unit, onCreate: (String, AssistantScope) -> Unit) {
     var name by rememberSaveable { mutableStateOf("") }
+    var includeForum by rememberSaveable { mutableStateOf(false) }
+    var forumUrl by rememberSaveable { mutableStateOf("") }
+    var start by rememberSaveable { mutableStateOf("1") }
+    var count by rememberSaveable { mutableStateOf("20") }
+    val target = ForumUrls.target(forumUrl)
+    val forumScope = if (includeForum && target != null) AssistantForumScope(target.topicId, start.toIntOrNull() ?: 0, count.toIntOrNull() ?: 0).takeIf { runCatching { AssistantRules.forum(it) }.isSuccess } else null
     var sources by rememberSaveable { mutableStateOf(inbox.sources.filterValues { it.enabled }.keys.sortedBy { if (it == AnnouncementSource.PORTAL) 0 else it.ordinal + 1 }.take(1).map { it.name }) }
     AssistantDialog(onDismiss) {
         Text(stringResource(R.string.as_create), style = MaterialTheme.typography.titleLarge)
@@ -413,8 +465,23 @@ fun AssistantContent(
                 }
             }
         }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(includeForum, { includeForum = it }, Modifier.testTag("assistant-include-forum"))
+            Text(stringResource(R.string.as_forum_include))
+        }
+        if (includeForum) {
+            OutlinedTextField(forumUrl, {
+                forumUrl = it.take(2048)
+                ForumUrls.target(it)?.let { target -> start = target.postNumber.toString() }
+            }, Modifier.fillMaxWidth().testTag("assistant-forum-url"), label = { Text(stringResource(R.string.as_forum_url)) }, shape = TechnicalShapes.Field)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(start, { start = it.filter(Char::isDigit).take(7) }, Modifier.weight(1f), label = { Text(stringResource(R.string.as_forum_start)) }, shape = TechnicalShapes.Field)
+                OutlinedTextField(count, { count = it.filter(Char::isDigit).take(2) }, Modifier.weight(1f), label = { Text(stringResource(R.string.as_forum_count)) }, shape = TechnicalShapes.Field)
+            }
+            Text(stringResource(R.string.as_forum_boundary, AssistantRules.FORUM_POSTS), style = MaterialTheme.typography.bodySmall)
+        }
         Text(stringResource(R.string.as_send_disclosure), style = MaterialTheme.typography.bodySmall)
-        DialogActions(onDismiss, { onCreate(name, AssistantScope(sources.map(AnnouncementSource::valueOf).toSet())) }, name.isNotBlank() && sources.isNotEmpty() && sources.all { inbox.sources.getValue(AnnouncementSource.valueOf(it)).enabled })
+        DialogActions(onDismiss, { onCreate(name, AssistantScope(sources.map(AnnouncementSource::valueOf).toSet(), forum = forumScope)) }, name.isNotBlank() && (sources.isNotEmpty() || forumScope != null) && (!includeForum || forumScope != null) && sources.all { inbox.sources.getValue(AnnouncementSource.valueOf(it)).enabled })
     }
 }
 
@@ -465,6 +532,8 @@ fun AssistantContent(
         TextButton(save, enabled = enabled) { Text(stringResource(R.string.as_save)) }
     }
 }
+private fun asSourceTime(value: String): String = runCatching { asTime(Instant.parse(value).epochSeconds) }.getOrDefault(value)
+
 private fun asTime(seconds: Long): String = if (seconds <= 0) "—" else Instant.fromEpochSeconds(seconds).toLocalDateTime(TimeZone.of("Asia/Ho_Chi_Minh")).toString().replace('T', ' ').take(16) + " GMT+07"
 
 /** Number of lazy items preceding the most recent user message. */
@@ -482,6 +551,7 @@ private fun AssistantTyping(progress: AssistantProgress?) {
                     when (progress?.tool) {
                         "search_announcements" -> R.string.as_searching
                         "read_announcement" -> R.string.as_reading
+                        "read_forum_topic" -> R.string.as_forum_reading
                         "writing" -> R.string.as_writing
                         "verifying" -> R.string.as_verifying
                         else -> R.string.as_thinking
@@ -508,10 +578,34 @@ private fun AssistantReplyActions(
     onCoverage: () -> Unit,
     onCopy: () -> Unit,
     onChecklist: () -> Unit,
-    onCheck: (List<AssistantChecklistItem>) -> Unit
+    onCheck: (List<AssistantChecklistItem>) -> Unit,
+    onRecheck: () -> Unit,
+    onReuse: () -> Unit,
+    onDelete: () -> Unit
 ) {
     var sources by rememberSaveable(turn.id) { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        turn.forumCoverage?.let { coverage ->
+            val checked = state.forumChecks[turn.id]
+            if (checked != null) {
+                Text(
+                    stringResource(
+                        when (checked.freshness) {
+                            AssistantForumFreshness.CURRENT -> R.string.as_forum_current
+                            AssistantForumFreshness.CHANGED -> R.string.as_forum_changed
+                            AssistantForumFreshness.UNAVAILABLE -> R.string.as_forum_unavailable
+                        },
+                        asTime(checked.at)
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+            }
+            Row {
+                TextButton(onRecheck, enabled = !state.busy && !state.checkingForum, modifier = Modifier.testTag("assistant-recheck-${turn.id}")) { Text(stringResource(if (state.checkingForum) R.string.as_forum_checking else R.string.as_forum_recheck)) }
+                if (checked?.freshness == AssistantForumFreshness.CHANGED) TextButton(onReuse) { Text(stringResource(R.string.as_reuse)) }
+            }
+        }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             TextButton({ sources = !sources }, Modifier.testTag("assistant-sources-${turn.id}"), shape = TechnicalShapes.Control, contentPadding = PaddingValues(horizontal = 8.dp)) {
                 Icon(Icons.Outlined.Source, null, Modifier.size(16.dp))
@@ -521,13 +615,14 @@ private fun AssistantReplyActions(
             }
             Spacer(Modifier.weight(1f))
             IconButton(onCopy) { Icon(Icons.Outlined.ContentCopy, stringResource(R.string.as_copy), Modifier.size(20.dp)) }
+            if (turn.forumCoverage != null) IconButton(onDelete, enabled = !state.busy) { Icon(Icons.Outlined.DeleteOutline, stringResource(R.string.as_delete_answer), Modifier.size(20.dp)) }
             IconButton(onChecklist, enabled = !state.busy) { Icon(Icons.Outlined.Checklist, stringResource(if (turn.checklist.isEmpty()) R.string.as_checklist_create else R.string.as_checklist_edit), Modifier.size(20.dp)) }
         }
         if (sources) {
             Panel(Modifier.fillMaxWidth(), spacing = 8.dp) {
                 Text(stringResource(R.string.as_historical, asTime(turn.at)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 turn.evidence.filter { e -> refs.any { it.evidenceId == e.id } }.forEach { evidence ->
-                    Text("${evidence.source.label} · ${evidence.publishedDate}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Text("${evidence.sourceLabel} · ${asSourceTime(evidence.publishedDate)}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                     Text(evidence.title, style = MaterialTheme.typography.bodyMedium)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         refs.forEachIndexed { index, ref ->
@@ -552,4 +647,17 @@ private fun AssistantReplyActions(
             }
         }
     }
+}
+
+@Composable
+private fun ForumScopeText(scope: AssistantForumScope) {
+    Text(stringResource(R.string.as_forum_scope, scope.topicId, scope.startNumber, scope.limit), style = MaterialTheme.typography.bodyMedium)
+    Text(stringResource(R.string.as_forum_boundary, AssistantRules.FORUM_POSTS), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+}
+
+@Composable
+private fun ForumCoverageText(coverage: AssistantForumCoverage) {
+    Text(stringResource(R.string.as_forum_coverage, coverage.loadedIds.size, coverage.selectedIds.size, coverage.firstNumber, coverage.lastNumber, coverage.streamCount), Modifier.testTag("assistant-forum-coverage"), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+    if (coverage.moreBefore || coverage.moreAfter) Text(stringResource(R.string.as_forum_partial), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
+    if (coverage.unavailableIds.isNotEmpty() || coverage.abbreviated) Text(stringResource(R.string.as_forum_omitted), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
 }

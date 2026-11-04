@@ -13,6 +13,7 @@ typealias ForumComposer = ForumDraft
 enum class ForumTab { LATEST, CATEGORIES, TAGS, SEARCH, SAVED }
 data class ForumState(
     val open: Boolean = false,
+    val publicCitation: Boolean = false,
     val user: ForumUser? = null,
     val loginVisible: Boolean = false,
     val memberVisible: Boolean = false,
@@ -98,8 +99,28 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
     private var pendingPosition: ForumPosition? = null
     private val attemptedCategories = mutableSetOf<Long>()
     private var feedStamp: Pair<Long, Boolean> = 0L to false
+    private suspend fun read(request: ForumRequest): ForumLoaded = if (state.value.publicCitation) repository.loadPublic(request) else repository.load(request)
+    fun openPublicTopic(id: Long, number: Int) {
+        accountWork?.cancel()
+        commandWork?.cancel()
+        draftWork?.cancel()
+        work?.cancel()
+        historyWork?.cancel()
+        positionWork?.cancel()
+        saveWork?.cancel()
+        accountSerial++
+        draftSerial++
+        historySerial++
+        localSerial++
+        serial++
+        pendingPosition = null
+        resumed = false
+        attemptedCategories.clear()
+        state.value = ForumState(open = true, publicCitation = true)
+        topic(id, number)
+    }
     fun open() {
-        state.value = state.value.copy(open = true)
+        state.value = state.value.copy(open = true, publicCitation = false)
         if (!resumed && accountRepository != null) {
             resumed = true
             val token = ++accountSerial
@@ -204,7 +225,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         launch({ latest(category, append) }) { token ->
             if (state.value.categories.isEmpty()) {
                 try {
-                    val c = repository.load(ForumRequest.Categories)
+                    val c = read(ForumRequest.Categories)
                     if (serial == token) state.value = state.value.copy(categories = c.document.categories, filters = c.document.filters)
                 } catch (e: ForumException) {
                     if (e.reason in listOf(ForumFailure.RATE_LIMIT, ForumFailure.AUTHENTICATION)) throw e
@@ -217,7 +238,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
             } else {
                 ForumRequest.Feed(selection.filter, page, selection.period, selection.tag?.id)
             }
-            val loaded = repository.load(request)
+            val loaded = read(request)
             if (serial != token) return@launch
             val old = if (append) state.value.topics else emptyList()
             val topics = (old + loaded.document.topics).distinctBy { it.id }.take(1000)
@@ -236,7 +257,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         closeHistory()
         state.value = state.value.copy(tab = ForumTab.TAGS, topic = null, more = false)
         launch(::tags) { token ->
-            val result = repository.load(ForumRequest.Tags)
+            val result = read(ForumRequest.Tags)
             if (token == serial) {
                 feedStamp = result.fetchedAt to result.offline
                 state.value = state.value.copy(tags = result.document.tags, tagsTruncated = result.document.tagsTruncated, fetchedAt = result.fetchedAt, offline = result.offline)
@@ -253,7 +274,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
             ForumTab.TAGS -> tags()
             ForumTab.CATEGORIES -> launch({ tab(tab) }) { token ->
                 if (state.value.categories.isEmpty()) {
-                    val result = repository.load(ForumRequest.Categories)
+                    val result = read(ForumRequest.Categories)
                     if (token == serial) state.value = state.value.copy(categories = result.document.categories, filters = result.document.filters, fetchedAt = result.fetchedAt, offline = result.offline)
                 }
                 enrichCategories(state.value.topics.map { it.categoryId } + state.value.hits.map { it.topic.categoryId } + state.value.categories.mapNotNull { it.parentId }, token)
@@ -270,7 +291,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         if (page > 100) return
         if (!append) state.value = state.value.copy(tab = ForumTab.SEARCH, query = q, topic = null, hits = emptyList(), more = false)
         launch({ search(q, append) }) { token ->
-            val result = repository.load(ForumRequest.Search(q, page))
+            val result = read(ForumRequest.Search(q, page))
             if (serial != token) return@launch
             val old = if (append) state.value.hits else emptyList()
             val hits = (old + result.document.hits).distinctBy { it.id }.take(1000)
@@ -286,7 +307,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         val same = state.value.topic?.id == id
         if (!same) state.value = state.value.copy(topic = ForumTopic(id, "", 0, 0, ""), posts = emptyList(), stream = emptyList(), unavailable = 0)
         launch({ topic(id, number, offsetDp) }) { token ->
-            val result = repository.load(ForumRequest.Topic(id, number))
+            val result = read(ForumRequest.Topic(id, number))
             if (serial != token) return@launch
             val doc = result.document
             val indexes = doc.posts.map { doc.stream.indexOf(it.id) }.filter { it >= 0 }
@@ -307,7 +328,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
             if (state.value.categories.any { it.id == id } || id in attemptedCategories) continue
             remaining--
             try {
-                val result = repository.load(ForumRequest.Category(id))
+                val result = read(ForumRequest.Category(id))
                 if (token != serial) return
                 attemptedCategories += id
                 val c = result.document.categories
@@ -335,7 +356,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         val ids = s.stream.subList(first, last)
         if (ids.isEmpty()) return
         launch({ window(forward) }) { token ->
-            val result = repository.load(ForumRequest.Posts(topic.id, ids))
+            val result = read(ForumRequest.Posts(topic.id, ids))
             if (serial != token) return@launch
             val all = (s.posts + result.document.posts).distinctBy { it.id }.sortedBy { s.stream.indexOf(it.id) }
             val kept = if (forward) all.takeLast(ForumLimits.WINDOW) else all.take(ForumLimits.WINDOW)
@@ -345,6 +366,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         }
     }
     fun save(topic: ForumTopic) {
+        if (state.value.publicCitation) return
         if (state.value.topic?.id != topic.id && state.value.topics.none { it.id == topic.id } && state.value.local.saved.none { it.id == topic.id }) return
         saveValue(topic, state.value.local.saved.none { it.id == topic.id })
     }
@@ -364,6 +386,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         }
     }
     fun position(post: ForumPost, offsetDp: Int) {
+        if (state.value.publicCitation) return
         val topic = state.value.topic ?: return
         if (post.topicId != topic.id) return
         pendingPosition = ForumPosition(topic, post.id, post.number, offsetDp.coerceIn(0, 10000))
@@ -410,7 +433,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         state.value = state.value.copy(historyPost = post, history = null, historyLoading = true, historyError = null, historyRequestedVersion = version)
         historyWork = viewModelScope.launch {
             try {
-                val result = repository.load(ForumRequest.Revision(post.topicId, post.id, version)).document.revision ?: throw ForumException(ForumFailure.INVALID)
+                val result = read(ForumRequest.Revision(post.topicId, post.id, version)).document.revision ?: throw ForumException(ForumFailure.INVALID)
                 if (serial == historySerial) state.value = state.value.copy(history = result)
             } catch (e: CancellationException) {
                 throw e
@@ -703,7 +726,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         }
     }
     suspend fun image(url: String): ByteArray = try {
-        repository.image(url)
+        if (state.value.publicCitation) repository.imagePublic(url) else repository.image(url)
     } catch (e: ForumException) {
         if (e.reason == ForumFailure.AUTHENTICATION) withContext(Dispatchers.Main) { failure(e) }
         throw e

@@ -10,7 +10,7 @@
     <string name="as_dismiss">Đóng</string>
     <string name="as_reset">Xóa toàn bộ lịch sử trợ lý</string>
     <string name="as_intro">Hỏi về thông báo chính thức của UIT. Tạo workspace theo chủ đề và kiểm tra nguồn cho từng câu trả lời.</string>
-    <string name="as_public_only">Phiên bản này đọc thông báo công khai đã chọn. Workspace chưa bao gồm hồ sơ cá nhân, tài liệu môn học, Forum và tin nhắn riêng.</string>
+    <string name="as_public_only">Workspace đọc thông báo công khai đã chọn và bài Forum công khai được đính kèm. Không bao gồm hồ sơ cá nhân, tài liệu môn học, topic riêng hay tin nhắn.</string>
     <string name="as_create">Tạo workspace</string>
     <string name="as_setup">Thiết lập kết nối AI</string>
     <string name="as_limits">Tối đa %1$d workspace và %2$d câu hỏi mỗi workspace.</string>
@@ -54,7 +54,7 @@
     <string name="as_close">Đóng</string>
     <string name="as_evidence_version">Phiên bản %1$s · tải lúc %2$s · đoạn %3$d</string>
     <string name="as_quote_limits">Trích dẫn đã được đối chiếu với đoạn nguồn. Khớp câu chữ chưa chứng minh kết luận đúng; cần kiểm tra ngữ cảnh và đối tượng áp dụng.</string>
-    <string name="as_original">Mở thông báo gốc</string>
+    <string name="as_original">Mở bài gốc</string>
     <string name="as_checklist_help">Kiểm tra và sửa trước khi lưu. Đây là việc chuẩn bị cục bộ của bạn, không phải yêu cầu chính thức hay thao tác nộp hồ sơ. Xóa nội dung để bỏ checklist.</string>
     <string name="as_checklist_lines">Mỗi dòng một việc</string>
     <string name="as_delete_help">Xóa lịch sử cục bộ đã chọn, bản nguồn và checklist? Không thể hoàn tác. Bài viết gốc của UIT không bị thay đổi.</string>
@@ -83,4 +83,29 @@
     <string name="as_verifying">Đang kiểm tra trích dẫn…</string>
     <string name="as_draft">Bản nháp · chưa kiểm tra trích dẫn</string>
     <string name="as_composer_note">AI có thể sai. Kiểm tra nguồn trước quyết định quan trọng.</string>
+    <string name="as_forum_context">Topic Forum · %1$d nguồn thông báo</string>
+    <string name="as_forum_include">Thêm topic Forum công khai</string>
+    <string name="as_forum_url">URL topic UIT Forum</string>
+    <string name="as_forum_start">Bắt đầu từ bài số</string>
+    <string name="as_forum_count">Số bài</string>
+    <string name="as_forum_boundary">Chỉ đọc công khai không đăng nhập, tối đa %1$d bài. Văn bản có thể bị rút gọn; không phân tích ảnh, bình chọn, tệp và spoiler ẩn. Không đọc topic riêng, tin nhắn hay gửi đánh dấu đã đọc.</string>
+    <string name="as_forum_scope">Topic Forum %1$d · từ bài #%2$d · tối đa %3$d bài được liệt kê</string>
+    <string name="as_forum_digest">Tóm tắt các bài đã chọn</string>
+    <string name="as_forum_digest_question">Tóm tắt các bài Forum công khai đã chọn. Phân biệt câu hỏi, câu trả lời được đề xuất, ý kiến mâu thuẫn, đính chính và điểm chưa rõ. Ghi nhận đúng tác giả và trích dẫn bài cụ thể. Nêu phạm vi đã đọc và phần còn thiếu; không coi một cửa sổ bài là toàn bộ topic.</string>
+    <string name="as_forum_coverage">Đã đọc %1$d/%2$d bài đã chọn · #%3$d–#%4$d · topic có %5$d bài được liệt kê</string>
+    <string name="as_forum_partial">Chỉ bao phủ phạm vi đã chọn. Topic còn bài nằm ngoài phạm vi này.</string>
+    <string name="as_forum_omitted">Một số bài, phần văn bản hoặc nội dung phi văn bản chưa được đọc. Kiểm tra bài gốc để xem phần còn thiếu.</string>
+    <string name="as_forum_recheck">Kiểm tra sửa đổi và bài mới</string>
+    <string name="as_forum_checking">Đang kiểm tra bài công khai…</string>
+    <string name="as_forum_current">Kiểm tra %1$s · văn bản đã chọn và danh sách bài khớp bản lưu.</string>
+    <string name="as_forum_changed">Kiểm tra %1$s · nội dung hoặc danh sách bài đã thay đổi. Hỏi lại để tạo câu trả lời mới.</string>
+    <string name="as_forum_unavailable">Kiểm tra %1$s · không đọc được nguồn công khai hiện tại; chưa xác minh lại câu trả lời đã lưu.</string>
+    <string name="as_forum_reading">Đang đọc các bài Forum công khai đã chọn…</string>
+    <string name="as_forum_post_revision">Post ID %1$d · phiên bản %2$d · cập nhật %3$s</string>
+    <string name="as_forum_reply_to">Trả lời bài #%1$d</string>
+    <string name="as_forum_staff">Forum xác nhận trạng thái staff</string>
+    <string name="as_forum_accepted">Forum xác nhận câu trả lời được chấp nhận</string>
+    <string name="as_forum_only">UIT Forum · Bài công khai đã chọn</string>
+    <string name="as_delete_answer">Xóa câu trả lời</string>
+    <string name="as_delete_answer_help">Xóa câu hỏi, câu trả lời, bản nguồn và checklist cục bộ của lượt này? Các tin nhắn khác và bài Forum gốc vẫn giữ nguyên.</string>
 </resources>

@@ -19,6 +19,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.text.DateFormat
 import java.time.Instant
@@ -29,19 +31,28 @@ import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.forum.R
 
-@Composable fun ForumScreen(viewModel: ForumViewModel) {
+@Composable fun ForumScreen(viewModel: ForumViewModel, onAssistant: (AssistantForumScope) -> Unit = {}, onReturn: (() -> Unit)? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val actions = ForumAccountActions(viewModel::account, { viewModel.compose(create = true) }, { viewModel.compose(it) }, viewModel::edit, viewModel::submit, viewModel::resumeDraft)
     var link by remember { mutableStateOf<String?>(null) }
     var clear by remember { mutableStateOf(false) }
-    BackHandler { if (state.topic != null) viewModel.back() else viewModel.close() }
+    fun back() {
+        if (onReturn != null) {
+            onReturn()
+        } else if (state.topic != null) {
+            viewModel.back()
+        } else {
+            viewModel.close()
+        }
+    }
+    BackHandler { back() }
     ForumContent(
         state, viewModel::tab, viewModel::latest, viewModel::search, viewModel::topic, viewModel::save, viewModel::window, viewModel::position, viewModel::retry,
-        { if (state.topic != null) viewModel.back() else viewModel.close() }, { clear = true },
+        { back() }, { clear = true },
         { raw ->
             val target = ForumUrls.target(raw)
             if (target != null) viewModel.topic(target.topicId, target.postNumber) else ForumUrls.safe(raw)?.let { link = it }
-        }, viewModel::image, { url -> ForumUrls.safe(url)?.let { link = it } }, { post -> viewModel.history(post) }, viewModel::discover, if (viewModel.supportsAccount) actions else null
+        }, viewModel::image, { url -> ForumUrls.safe(url)?.let { link = it } }, { post -> viewModel.history(post) }, viewModel::discover, if (viewModel.supportsAccount && !state.publicCitation) actions else null, onAssistant
     )
     if (state.loginVisible) ForumLoginDialog(state, viewModel::login, viewModel::dismissAccount)
     if (state.memberVisible) {
@@ -110,7 +121,8 @@ import vn.edu.uit.mobile.feature.forum.R
     onBrowser: (String) -> Unit = onLink,
     onHistory: (ForumPost) -> Unit = {},
     onDiscover: (ForumFilter, ForumPeriod, ForumTag?) -> Unit = { _, _, _ -> },
-    accountActions: ForumAccountActions? = null
+    accountActions: ForumAccountActions? = null,
+    onAssistant: (AssistantForumScope) -> Unit = {}
 ) {
     val listState = rememberLazyListState()
     LaunchedEffect(state.tab, state.filter, state.period, state.tag?.id, state.category?.id, state.query) { listState.scrollToItem(0) }
@@ -140,7 +152,8 @@ import vn.edu.uit.mobile.feature.forum.R
                 ForumTab.entries.forEach { tab -> Tab(selected = state.tab == tab, onClick = { onTab(tab) }, text = { Text(stringResource(tabLabel(tab))) }) }
             }
         }
-        if (state.user != null) Text(state.user.username, style = MaterialTheme.typography.labelSmall)
+        if (state.publicCitation) Text(stringResource(R.string.f_public_ai_source), style = MaterialTheme.typography.labelSmall)
+        if (state.user != null && !state.publicCitation) Text(state.user.username, style = MaterialTheme.typography.labelSmall)
         if (accountActions != null && state.user?.canCreateTopic == true && state.topic == null && !state.memberVisible) TextButton(onClick = accountActions.create, enabled = !state.commandBusy) { Text(stringResource(R.string.f_new_topic)) }
         if (accountActions != null && state.user != null && state.draft != null) TextButton(onClick = accountActions.draft, enabled = !state.commandBusy) { Text(stringResource(R.string.f_resume_draft)) }
         if (state.accountError != null && !state.loginVisible && !state.memberVisible && state.composer == null) ForumAccountError(state)
@@ -165,7 +178,7 @@ import vn.edu.uit.mobile.feature.forum.R
         if (state.fetchedAt > 0) Text(stringResource(if (state.offline) R.string.f_cached else R.string.f_retrieved, date(state.fetchedAt)), style = MaterialTheme.typography.labelSmall, color = if (state.offline) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant)
         val topic = state.topic
         if (topic != null) {
-            ForumReader(state, onTopic, onSave, onWindow, onPosition, onLink, imageLoader, onBrowser, onHistory, accountActions)
+            ForumReader(state, onTopic, onSave, onWindow, onPosition, onLink, imageLoader, onBrowser, onHistory, accountActions, onAssistant)
         } else {
             var query by rememberSaveable { mutableStateOf(state.query) }
             var tagQuery by rememberSaveable { mutableStateOf("") }
@@ -262,13 +275,20 @@ import vn.edu.uit.mobile.feature.forum.R
     HorizontalDivider()
 }
 
-@Composable private fun ColumnScope.ForumReader(state: ForumState, onTopic: (Long, Int, Int) -> Unit, onSave: (ForumTopic) -> Unit, onWindow: (Boolean) -> Unit, onPosition: (ForumPost, Int) -> Unit, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, onBrowser: (String) -> Unit, onHistory: (ForumPost) -> Unit, accountActions: ForumAccountActions?) {
+@Composable private fun ColumnScope.ForumReader(state: ForumState, onTopic: (Long, Int, Int) -> Unit, onSave: (ForumTopic) -> Unit, onWindow: (Boolean) -> Unit, onPosition: (ForumPost, Int) -> Unit, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, onBrowser: (String) -> Unit, onHistory: (ForumPost) -> Unit, accountActions: ForumAccountActions?, onAssistant: (AssistantForumScope) -> Unit) {
     val topic = state.topic ?: return
     val list = rememberLazyListState()
     val density = LocalDensity.current
     var appliedJump by rememberSaveable { mutableStateOf("") }
     val jumpKey = "${state.readerSession}:${topic.id}:${state.scrollVersion}"
     var number by rememberSaveable(topic.id) { mutableStateOf("") }
+    var digest by rememberSaveable(topic.id) { mutableStateOf(false) }
+    if (digest) {
+        ForumAiRangeDialog(topic, state.anchorNumber, { digest = false }) { scope ->
+            digest = false
+            onAssistant(scope)
+        }
+    }
     val position = state.local.positions.firstOrNull { it.topic.id == topic.id }
     LaunchedEffect(jumpKey) {
         if (appliedJump == jumpKey) return@LaunchedEffect
@@ -284,7 +304,7 @@ import vn.edu.uit.mobile.feature.forum.R
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         OutlinedTextField(number, { number = it.filter(Char::isDigit).take(7) }, Modifier.weight(1f).testTag("forum-jump"), label = { Text(stringResource(R.string.f_number)) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), shape = TechnicalShapes.Control)
         TextButton(onClick = { number.toIntOrNull()?.takeIf { it > 0 }?.let { onTopic(topic.id, it, 0) } }, enabled = !state.loading && (number.toIntOrNull() ?: 0) > 0) { Text(stringResource(R.string.f_go)) }
-        IconButton(onClick = { onSave(topic) }) {
+        IconButton(onClick = { onSave(topic) }, enabled = !state.publicCitation) {
             val saved = state.local.saved.any { it.id == topic.id }
             Icon(if (saved) Icons.Outlined.BookmarkAdded else Icons.Outlined.BookmarkBorder, stringResource(if (saved) R.string.f_unsave else R.string.f_save))
         }
@@ -301,6 +321,11 @@ import vn.edu.uit.mobile.feature.forum.R
                 Text(stringResource(R.string.f_window, if (state.end == 0) 0 else state.start + 1, state.end, state.stream.size, state.posts.size), style = MaterialTheme.typography.labelSmall)
                 if (state.unavailable > 0) Text(stringResource(R.string.f_missing, state.unavailable), style = MaterialTheme.typography.bodySmall)
                 if (state.posts.isNotEmpty() && state.posts.none { it.number == state.anchorNumber }) Text(stringResource(R.string.f_jump_missing), style = MaterialTheme.typography.bodySmall)
+                OutlinedButton(onClick = { digest = true }, enabled = !state.loading && !state.commandBusy && !state.accountBusy, shape = TechnicalShapes.Control, modifier = Modifier.testTag("forum-ai-entry")) {
+                    Icon(Icons.Outlined.AutoAwesome, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.f_ai_digest))
+                }
                 TextButton(onClick = { onBrowser(topic.url) }) { Text(stringResource(R.string.f_browser)) }
                 if (state.start > 0) OutlinedButton(onClick = { onWindow(false) }, enabled = !state.loading, shape = TechnicalShapes.Control) { Text(stringResource(R.string.f_previous)) }
             }
@@ -375,3 +400,26 @@ internal fun errorLabel(error: ForumFailure) = when (error) {
 }
 private fun date(epoch: Long): String = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(epoch * 1000))
 internal fun isoDate(raw: String): String = runCatching { date(Instant.parse(raw).epochSecond) }.getOrDefault(raw)
+
+@Composable
+private fun ForumAiRangeDialog(topic: ForumTopic, anchor: Int, dismiss: () -> Unit, open: (AssistantForumScope) -> Unit) {
+    var first by rememberSaveable { mutableStateOf(anchor.coerceAtLeast(1).toString()) }
+    var count by rememberSaveable { mutableStateOf("20") }
+    val scope = AssistantForumScope(topic.id, first.toIntOrNull() ?: 0, count.toIntOrNull() ?: 0)
+    val valid = runCatching { AssistantRules.forum(scope) }.isSuccess
+    Dialog(dismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(Modifier.padding(16.dp).widthIn(max = 480.dp).fillMaxWidth().heightIn(max = 680.dp), shape = TechnicalShapes.Dialog) {
+            Column(Modifier.verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.f_ai_digest), style = MaterialTheme.typography.titleLarge)
+                Text(topic.title, style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.f_ai_disclosure, AssistantRules.FORUM_POSTS), style = MaterialTheme.typography.bodyMedium)
+                OutlinedTextField(first, { first = it.filter(Char::isDigit).take(7) }, Modifier.fillMaxWidth().testTag("forum-ai-first"), label = { Text(stringResource(R.string.f_ai_first)) }, singleLine = true, shape = TechnicalShapes.Field, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                OutlinedTextField(count, { count = it.filter(Char::isDigit).take(2) }, Modifier.fillMaxWidth().testTag("forum-ai-count"), label = { Text(stringResource(R.string.f_ai_count)) }, singleLine = true, shape = TechnicalShapes.Field, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(dismiss) { Text(stringResource(R.string.f_cancel)) }
+                    TextButton({ open(scope) }, enabled = valid) { Text(stringResource(R.string.f_ai_open)) }
+                }
+            }
+        }
+    }
+}

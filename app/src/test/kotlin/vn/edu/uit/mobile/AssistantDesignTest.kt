@@ -58,7 +58,7 @@ class AssistantDesignTest {
         compose.onNodeWithTag("assistant-content").performScrollToNode(hasTestTag("assistant-reference-turn-0"))
         compose.onNodeWithTag("assistant-reference-turn-0").performClick()
         compose.onAllNodesWithText("Submit an application before Friday.").onFirst().assertExists()
-        compose.onNodeWithText("Open original announcement").performScrollTo().performClick()
+        compose.onNodeWithText("Open original source").performScrollTo().performClick()
         assertEquals(source.url, url)
     }
 
@@ -87,7 +87,7 @@ class AssistantDesignTest {
         compose.onNodeWithTag("assistant-question").performTextInput("Question")
         compose.onNodeWithContentDescription("Send message").assertIsNotEnabled()
         compose.onNodeWithContentDescription("Context and sources").performClick()
-        compose.onNodeWithText("This release reads selected public university notices. Personal records, course files, Forum posts and private messages are outside this workspace.").assertExists()
+        compose.onNodeWithText("This workspace reads selected public university notices and explicitly attached public Forum posts. Personal records, course files, private topics and messages are excluded.").assertExists()
     }
 
     @Test fun activeRequestOffersStopAndDisablesSecondSend() {
@@ -115,5 +115,46 @@ class AssistantDesignTest {
         compose.onNodeWithText("Draft · citations not checked yet").assertExists()
         compose.onNodeWithTag("assistant-sources-turn").assertDoesNotExist()
         compose.onNodeWithContentDescription("Draft a local checklist").assertDoesNotExist()
+    }
+
+    @Test fun forumSummaryPresetFillsTheComposerWithoutCallingTheModel() {
+        var sent = ""
+        val forum = workspace.copy(scope = AssistantScope(emptySet(), forum = AssistantForumScope(7)), turns = emptyList())
+        compose.setContent { UitTheme { AssistantContent(state.copy(library = AssistantLibrary(listOf(forum))), onAsk = { sent = it }) } }
+        compose.onNodeWithText("Summarize selected posts").performClick()
+        assertEquals("", sent)
+        compose.onNodeWithTag("assistant-question").assertTextContains("Summarize the selected public Forum posts", substring = true)
+        compose.onNodeWithContentDescription("Send message").performClick()
+        assertTrue(sent.contains("Attribute claims"))
+    }
+
+    @Test fun forumSourceRecheckIsExplicitAndDoesNotGenerateAnotherAnswer() {
+        var checked = ""
+        var sent = false
+        val post = AssistantForumPost(7, 22, 5, "author22", "2026-11-01", "2026-11-02", 2)
+        val evidence = source.copy(id = "forum_7_22", url = "https://forum.uit.edu.vn/t/7/5", source = null, forum = post)
+        val coverage = AssistantForumCoverage(7, "Public topic", 1, 100, listOf(22), listOf(22), emptyList(), 5, 5, true, true, "", "a".repeat(64), "b".repeat(64), false)
+        val reply = turn.copy(evidence = listOf(evidence), facts = listOf(AssistantFact(AssistantFactKind.FACT, "Prepare an application.", listOf(AssistantReference(evidence.id, 0, "Submit an application before Friday.")))), forumCoverage = coverage)
+        val forum = workspace.copy(scope = AssistantScope(emptySet(), forum = AssistantForumScope(7, 5, 1)), turns = listOf(reply))
+        compose.setContent { UitTheme { AssistantContent(state.copy(library = AssistantLibrary(listOf(forum))), onRecheckForum = { checked = it }, onAsk = { sent = true }) } }
+        compose.onNodeWithTag("assistant-forum-coverage").assertExists()
+        compose.onNodeWithText("This covers a selected window. Other posts exist outside it.").assertExists()
+        compose.onNodeWithTag("assistant-content").performScrollToNode(hasTestTag("assistant-recheck-turn"))
+        compose.onNodeWithTag("assistant-recheck-turn").performClick()
+        assertEquals("turn", checked)
+        assertFalse(sent)
+    }
+
+    @Test fun invalidForumLinkCannotCreateAWorkspace() {
+        var selected: AssistantScope? = null
+        compose.setContent { UitTheme { AssistantContent(AssistantUiState(), onCreate = { _, scope -> selected = scope }) } }
+        compose.onNodeWithText("Create workspace").performClick()
+        compose.onNodeWithText("Workspace name").performTextInput("Forum research")
+        compose.onNodeWithTag("assistant-include-forum").performScrollTo().performClick()
+        compose.onNodeWithTag("assistant-forum-url").performScrollTo().performTextInput("https://evil.example/t/7")
+        compose.onNodeWithText("Save", substring = false).performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithTag("assistant-forum-url").performScrollTo().performTextReplacement("https://forum.uit.edu.vn/t/7/5")
+        compose.onNodeWithText("Save", substring = false).performScrollTo().performClick()
+        assertEquals(AssistantForumScope(7, 5, 20), selected?.forum)
     }
 }

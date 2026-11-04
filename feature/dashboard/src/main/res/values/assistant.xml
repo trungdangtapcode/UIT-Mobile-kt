@@ -10,7 +10,7 @@
     <string name="as_dismiss">Dismiss</string>
     <string name="as_reset">Delete all assistant history</string>
     <string name="as_intro">Ask about official UIT notices. Keep a workspace for each topic and inspect the sources behind every answer.</string>
-    <string name="as_public_only">This release reads selected public university notices. Personal records, course files, Forum posts and private messages are outside this workspace.</string>
+    <string name="as_public_only">This workspace reads selected public university notices and explicitly attached public Forum posts. Personal records, course files, private topics and messages are excluded.</string>
     <string name="as_create">Create workspace</string>
     <string name="as_setup">Set up AI connection</string>
     <string name="as_limits">Up to %1$d workspaces and %2$d questions per workspace.</string>
@@ -19,7 +19,7 @@
     <string name="as_delete">Delete workspace</string>
     <string name="as_scope">Allowed public context</string>
     <string name="as_pinned">Only %1$d explicitly attached articles are in scope.</string>
-    <string name="as_send_disclosure">Sending allows the configured AI service to process relevant titles and text from these sources, plus recent chat history. Credentials are never included. Chat history and source snapshots are shared on this device across sign-ins.</string>
+    <string name="as_send_disclosure">Sending allows the configured AI service to process relevant titles and text from these sources, including attached public Forum posts, plus recent chat history. Credentials are never included. Chat history and source snapshots are shared on this device across sign-ins.</string>
     <string name="as_rename">Rename workspace</string>
     <string name="as_empty_chat">Ask what a notice requires, compare announcements, or find a stated deadline.</string>
     <string name="as_refresh_sources">Refresh selected announcement feeds</string>
@@ -54,7 +54,7 @@
     <string name="as_close">Close</string>
     <string name="as_evidence_version">Version %1$s · retrieved %2$s · paragraph %3$d</string>
     <string name="as_quote_limits">This quote was checked against the supplied paragraph. Quote matching alone does not prove the conclusion; review the surrounding source and audience restrictions.</string>
-    <string name="as_original">Open original announcement</string>
+    <string name="as_original">Open original source</string>
     <string name="as_checklist_help">Review and edit before saving. These are your local preparation tasks, not official requirements or submissions. Empty the field to remove the checklist.</string>
     <string name="as_checklist_lines">One task per line</string>
     <string name="as_delete_help">Delete the selected local history, evidence snapshots and checklists? This cannot be undone. Original UIT articles are unaffected.</string>
@@ -83,4 +83,29 @@
     <string name="as_verifying">Checking citations…</string>
     <string name="as_draft">Draft · citations not checked yet</string>
     <string name="as_composer_note">AI can be wrong. Check sources for important decisions.</string>
+    <string name="as_forum_context">Forum topic · %1$d notice sources</string>
+    <string name="as_forum_include">Include a public Forum topic</string>
+    <string name="as_forum_url">UIT Forum topic URL</string>
+    <string name="as_forum_start">Starting post number</string>
+    <string name="as_forum_count">Post count</string>
+    <string name="as_forum_boundary">Anonymous public reads only, up to %1$d posts. Text may be clipped; images, polls, attachments and concealed spoilers are not interpreted. No private topics, messages or mark-read actions.</string>
+    <string name="as_forum_scope">Forum topic %1$d · from post #%2$d · up to %3$d posts</string>
+    <string name="as_forum_digest">Summarize selected posts</string>
+    <string name="as_forum_digest_question">Summarize the selected public Forum posts. Separate the question, proposed answers, disagreements, corrections and unknowns. Attribute claims to their authors and cite exact posts. State the coverage and omissions; do not present a partial window as the whole topic.</string>
+    <string name="as_forum_coverage">Read %1$d/%2$d selected posts · #%3$d–#%4$d · topic lists: %5$d</string>
+    <string name="as_forum_partial">This covers a selected window. Other posts exist outside it.</string>
+    <string name="as_forum_omitted">Some selected text/posts or non-text content could not be included. Review original posts for missing context.</string>
+    <string name="as_forum_recheck">Check edits and new replies</string>
+    <string name="as_forum_checking">Checking public posts…</string>
+    <string name="as_forum_current">Checked %1$s · selected source content and listed posts match this snapshot.</string>
+    <string name="as_forum_changed">Checked %1$s · source text or the topic stream changed. Ask again for a new answer.</string>
+    <string name="as_forum_unavailable">Checked %1$s · current public sources unavailable; this saved answer was not revalidated.</string>
+    <string name="as_forum_reading">Reading the selected public Forum posts…</string>
+    <string name="as_forum_post_revision">Post ID %1$d · revision %2$d · updated %3$s</string>
+    <string name="as_forum_reply_to">Reply to post #%1$d</string>
+    <string name="as_forum_staff">Staff status reported by the Forum</string>
+    <string name="as_forum_accepted">Accepted answer reported by the Forum</string>
+    <string name="as_forum_only">UIT Forum · Selected public posts</string>
+    <string name="as_delete_answer">Delete answer</string>
+    <string name="as_delete_answer_help">Delete this question, answer, retained source copies and local checklist? Other messages and original Forum posts are unchanged.</string>
 </resources>

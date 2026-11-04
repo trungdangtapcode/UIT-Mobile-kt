@@ -283,3 +283,12 @@ used to prove the mutation contracts.
 These are partial rows. Host-rendered login/account reads and local-server writes
 are different acceptance evidence; neither proves full web parity or installed
 Android behavior. Full remaining gaps stay in the matrix and draft PR #79.
+
+## Public AI context increment (#51)
+
+The public topic-window connector and source-backed digest are documented in
+[Forum AI](../FORUM-AI.md). They reuse the general assistant and preserve selected
+post identity, authorship, coverage and retained versions. This is an AI reading
+capability, not completion of any missing account, mutation, synchronization or
+full-web-parity row. Original-post navigation uses explicit anonymous citation
+mode; assistant reads have no tracking or account-write capability.

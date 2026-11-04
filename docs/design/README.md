@@ -95,6 +95,14 @@ See [Forum behavior and reproduction](../FORUM.md),
 The app's Forum client is anonymous; these images do not establish app SSO,
 Android Keystore behavior or device networking.
 
+## Public Forum AI digest
+
+The [Forum AI gallery](FORUM-AI.md) shows actual UIT topic context and real
+`gpt-6-luna` answers in the existing native chat, at 360/390/412dp, dark/light and
+130% text. It includes post-range selection and retained-source inspection, with
+[provenance](forum-ai/provenance.json) and [evaluation limits](../research/FORUM-AI-EVALUATION.md).
+These are production Compose replays on the host, without a university session.
+
 ## Render on a rootless server
 
 An Android SDK and JDK are required; an emulator, KVM and root are not:

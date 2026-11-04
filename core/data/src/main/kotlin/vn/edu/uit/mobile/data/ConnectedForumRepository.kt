@@ -156,6 +156,7 @@ class ConnectedForumRepository(
             throw e
         }
     }
+    override suspend fun loadPublic(request: ForumRequest): ForumLoaded = guest.load(request)
     override suspend fun load(request: ForumRequest): ForumLoaded {
         val token = epoch.get()
         if (memberMode && user == null) throw ForumException(ForumFailure.AUTHENTICATION)
@@ -164,6 +165,7 @@ class ConnectedForumRepository(
     }
     override suspend fun member(request: ForumMemberRequest) = authenticated { api.read(it, request) }
     override suspend fun command(command: ForumCommand) = authenticated { api.send(it, command) }
+    override suspend fun imagePublic(url: String): ByteArray = guest.image(url)
     override suspend fun image(url: String): ByteArray {
         val token = epoch.get()
         if (memberMode && user == null) throw ForumException(ForumFailure.AUTHENTICATION)

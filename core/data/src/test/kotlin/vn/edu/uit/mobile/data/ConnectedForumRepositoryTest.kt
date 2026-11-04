@@ -64,6 +64,22 @@ class ConnectedForumRepositoryTest {
         ) { followRedirects = false }
     }
 
+    @Test fun publicCitationReadsBypassEvenAnExpiredMemberSession() = runTest {
+        val server = Server()
+        val guest = Guest()
+        val storage = Storage()
+        val repo = ConnectedForumRepository(guest, ForumSessionClient(server.http), storage)
+        repo.login("member", "not-a-real-password")
+        val saved = storage.values.toMap()
+        server.expired = true
+        repo.loadPublic(ForumRequest.Topic(99))
+        repo.imagePublic("https://forum.uit.edu.vn/uploads/public.png")
+        assertEquals(1, guest.calls)
+        assertFalse(server.started.isCompleted)
+        assertEquals(saved, storage.values)
+        server.http.close()
+    }
+
     @Test fun privateContentAndTemporarySavesNeverEnterGuestStorage() = runTest {
         val server = Server()
         val guest = Guest()

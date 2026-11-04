@@ -3,19 +3,47 @@ package vn.edu.uit.mobile.domain
 import kotlinx.coroutines.flow.StateFlow
 
 /** Public-only initial scope. No account IDs or university credentials enter this contract. */
-data class AssistantScope(val sources: Set<AnnouncementSource> = setOf(AnnouncementSource.PORTAL), val urls: Set<String> = emptySet())
+data class AssistantScope(val sources: Set<AnnouncementSource> = setOf(AnnouncementSource.PORTAL), val urls: Set<String> = emptySet(), val forum: AssistantForumScope? = null)
+data class AssistantForumScope(val topicId: Long, val startNumber: Int = 1, val limit: Int = 20)
+data class AssistantForumPost(val topicId: Long, val postId: Long, val number: Int, val username: String, val created: String, val updated: String, val revision: Int, val replyTo: Int? = null, val staff: Boolean? = null, val accepted: Boolean? = null)
+data class AssistantForumCoverage(
+    val topicId: Long,
+    val title: String,
+    val checkedAt: Long,
+    val streamCount: Int,
+    val selectedIds: List<Long>,
+    val loadedIds: List<Long>,
+    val unavailableIds: List<Long>,
+    val firstNumber: Int,
+    val lastNumber: Int,
+    val moreBefore: Boolean,
+    val moreAfter: Boolean,
+    val latestAt: String,
+    val streamVersion: String,
+    val sourceVersion: String,
+    val abbreviated: Boolean
+)
+data class AssistantForumRead(val evidence: List<AssistantEvidence>, val coverage: AssistantForumCoverage)
+fun interface AssistantForumSource {
+    suspend fun read(scope: AssistantForumScope): AssistantForumRead
+}
+enum class AssistantForumFreshness { CURRENT, CHANGED, UNAVAILABLE }
+data class AssistantForumCheck(val at: Long, val freshness: AssistantForumFreshness, val coverage: AssistantForumCoverage? = null)
 data class AssistantEvidence(
     val id: String,
     val url: String,
-    val source: AnnouncementSource,
+    val source: AnnouncementSource?,
     val title: String,
     val publishedDate: String,
     val fetchedAt: Long,
     val version: String,
     val paragraphs: List<String>,
     val offline: Boolean = false,
-    val abbreviated: Boolean = false
-)
+    val abbreviated: Boolean = false,
+    val forum: AssistantForumPost? = null
+) {
+    val sourceLabel: String get() = forum?.let { "UIT Forum · @${it.username} · #${it.number}" } ?: requireNotNull(source).label
+}
 data class AssistantReference(val evidenceId: String, val paragraph: Int, val quote: String)
 enum class AssistantFactKind { FACT, SUGGESTION, UNKNOWN }
 data class AssistantFact(val kind: AssistantFactKind, val text: String, val references: List<AssistantReference> = emptyList())
@@ -32,7 +60,8 @@ data class AssistantTurn(
     val events: List<AssistantToolEvent> = emptyList(),
     val model: String = "",
     val coverage: String = "",
-    val checklist: List<AssistantChecklistItem> = emptyList()
+    val checklist: List<AssistantChecklistItem> = emptyList(),
+    val forumCoverage: AssistantForumCoverage? = null
 )
 data class AssistantWorkspace(
     val id: String,
@@ -55,6 +84,9 @@ interface AssistantRepository {
     suspend fun clear()
     suspend fun ask(id: String, question: String, language: String, progress: (AssistantProgress) -> Unit = {})
     suspend fun checklist(workspaceId: String, turnId: String, items: List<AssistantChecklistItem>)
+    suspend fun deleteTurn(workspaceId: String, turnId: String): Unit = error("Individual answer deletion is unavailable")
+    suspend fun inspectForum(scope: AssistantForumScope): AssistantForumCoverage = error("Forum context is unavailable")
+    suspend fun recheckForum(workspaceId: String, turnId: String): AssistantForumCheck = error("Forum context is unavailable")
 }
 
 fun assistantSourceVersion(item: OfficialAnnouncement): String = practiceDigest(listOf("assistant-text-v2", item.url, item.source.name, item.title, item.publishedDate, item.bodyHtml))
@@ -62,14 +94,20 @@ fun assistantSourceVersion(item: OfficialAnnouncement): String = practiceDigest(
 object AssistantRules {
     const val WORKSPACES = 12
     const val TURNS = 12
-    const val EVIDENCE = 6
+    const val ANNOUNCEMENTS = 6
+    const val FORUM_POSTS = 40
+    const val EVIDENCE = ANNOUNCEMENTS + FORUM_POSTS
     const val MAX_CALLS = 8
     const val MAX_STEPS = 6
     const val MAX_PASSAGE = 1800
     const val MAX_PARAGRAPHS = 64
     fun scope(value: AssistantScope) {
-        require(value.sources.isNotEmpty() && value.sources.size <= AnnouncementSource.entries.size)
+        require((value.sources.isNotEmpty() || value.forum != null) && value.sources.size <= AnnouncementSource.entries.size)
         require(value.urls.size <= 8 && value.urls.all { url -> value.sources.any { AnnouncementUrls.article(url, it) == url } })
+        value.forum?.let(::forum)
+    }
+    fun forum(value: AssistantForumScope) {
+        require(value.topicId > 0 && value.startNumber in 1..1000000 && value.limit in 1..FORUM_POSTS)
     }
     fun name(value: String) {
         require(value.isNotBlank() && value.length <= 80)

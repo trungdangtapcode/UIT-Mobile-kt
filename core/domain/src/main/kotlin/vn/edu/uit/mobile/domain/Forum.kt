@@ -95,10 +95,14 @@ data class ForumLocalState(val saved: List<ForumTopic> = emptyList(), val positi
 data class ForumTarget(val topicId: Long, val postNumber: Int = 1)
 interface ForumRepository {
     suspend fun load(request: ForumRequest): ForumLoaded
+
+    /** Explicit public citation navigation must not inherit an authenticated transport. */
+    suspend fun loadPublic(request: ForumRequest): ForumLoaded = throw ForumException(ForumFailure.FORBIDDEN)
     suspend fun local(): ForumLocalState
     suspend fun save(topic: ForumTopic, saved: Boolean): ForumLocalState
     suspend fun position(position: ForumPosition)
     suspend fun image(url: String): ByteArray
+    suspend fun imagePublic(url: String): ByteArray = throw ForumException(ForumFailure.FORBIDDEN)
     suspend fun clear()
 }
 

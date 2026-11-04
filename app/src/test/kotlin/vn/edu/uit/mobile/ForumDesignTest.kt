@@ -14,10 +14,10 @@ import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.forum.*
 import vn.edu.uit.mobile.forum.network.ForumParser
 
+/** Fixture-based behavior checks only; published Forum captures must use live UIT responses. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w390dp-h844dp-mdpi", application = Application::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-/** Fixture-based behavior checks only; published Forum captures must use live UIT responses. */
 class ForumDesignTest {
     @get:Rule val compose = createComposeRule()
 
@@ -28,6 +28,7 @@ class ForumDesignTest {
     private fun show(state: ForumState) {
         compose.setContent { UitTheme(dark = true, dynamic = false) { WorkspaceFrame(3, {}, {}, "", false, false, 0) { ForumContent(state) } } }
     }
+
     @Test fun publicFeed390() {
         show(state())
         compose.onNodeWithText(ForumFixtures.TITLE).assertExists()

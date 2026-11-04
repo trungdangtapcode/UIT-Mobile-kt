@@ -55,7 +55,7 @@ interface AssistantRepository {
     suspend fun checklist(workspaceId: String, turnId: String, items: List<AssistantChecklistItem>)
 }
 
-fun assistantSourceVersion(item: OfficialAnnouncement): String = practiceDigest(listOf("assistant-text-v1", item.url, item.source.name, item.title, item.publishedDate, item.bodyHtml))
+fun assistantSourceVersion(item: OfficialAnnouncement): String = practiceDigest(listOf("assistant-text-v2", item.url, item.source.name, item.title, item.publishedDate, item.bodyHtml))
 
 object AssistantRules {
     const val WORKSPACES = 12
@@ -64,6 +64,7 @@ object AssistantRules {
     const val MAX_CALLS = 8
     const val MAX_STEPS = 6
     const val MAX_PASSAGE = 1800
+    const val MAX_PARAGRAPHS = 64
     fun scope(value: AssistantScope) {
         require(value.sources.isNotEmpty() && value.sources.size <= AnnouncementSource.entries.size)
         require(value.urls.size <= 8 && value.urls.all { url -> value.sources.any { AnnouncementUrls.article(url, it) == url } })
@@ -77,7 +78,7 @@ object AssistantRules {
     }
     fun normalize(value: String): String = value.replace(Regex("[\\s\\p{Z}]+"), " ").trim()
     fun verify(facts: List<AssistantFact>, evidence: List<AssistantEvidence>) {
-        require(facts.size in 1..8 && evidence.size <= EVIDENCE)
+        require(facts.size in 1..12 && evidence.size <= EVIDENCE)
         val sources = evidence.associateBy { it.id }
         facts.forEach { fact ->
             require(fact.text.isNotBlank() && fact.text.length <= 1800 && fact.references.size <= 4)

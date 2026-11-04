@@ -27,6 +27,12 @@ class AssistantProtocolTest {
         assertEquals(AssistantProtocol.schema, contract.getValue("schema"))
     }
 
+    @Test fun providerSchemaEnforcesTheSameSectionAndReferenceLimitsAsTheValidator() {
+        val facts = AssistantProtocol.schema.jsonObject.getValue("properties").jsonObject.getValue("facts").jsonObject
+        assertEquals(12, facts.getValue("maxItems").jsonPrimitive.int)
+        assertEquals(4, facts.getValue("items").jsonObject.getValue("properties").jsonObject.getValue("references").jsonObject.getValue("maxItems").jsonPrimitive.int)
+    }
+
     @Test fun directRequestsAreStatelessStrictAndOnlyAdvertiseReadTools() = runTest {
         val memory = AssistantMemory()
         val client = HttpClient(

@@ -1,19 +1,25 @@
 {
-  "capturedAt": "2026-11-04T12:20:09.248481+00:00",
+  "capturedAt": "2026-11-04T12:52:09.986380185Z",
   "attemptedModel": "gpt-6-luna",
   "provider": "https://api.openai.com/v1/responses",
   "scope": "Public Portal scholarship announcement; no university account credentials",
-  "result": "provider_access_rejected",
-  "observedApplicationError": "OpenAI rejected the API key or project access. Check your personal key and model permissions.",
-  "completeModelAnswers": 0,
+  "result": "live_model_verified_with_dotenv",
+  "completeModelAnswers": 3,
   "semanticQualityVerified": false,
   "apiKeyIncluded": false,
-  "modelEvaluation": "Not completed. No generated or mock answer is published as a successful live response.",
+  "modelEvaluation": "Three real final-round turns passed production tool/citation validation. Semantic review concerns are recorded separately; PR remains draft.",
   "publicSourceCapture": "Passed independently through the production public client and announcement repository.",
-  "httpStatus": 401,
-  "errorCode": "expired_secret_key",
-  "errorMessage": "Your API key has expired. Create a new API key to continue.",
-  "diagnosticRequestId": "req_131ecbd106dd44d5b7f6de4f29d549b3",
-  "diagnosticCapturedAt": "2026-11-04T12:31:44.781862+00:00",
-  "diagnosticScope": "Separate minimal Responses request with no university data; same key read from .bashrc. The earlier integration-test HTTP request ID was not recorded."
+  "previousBashrcAttempt": {
+    "result": "provider_access_rejected",
+    "httpStatus": 401,
+    "errorCode": "expired_secret_key",
+    "errorMessage": "Your API key has expired. Create a new API key to continue.",
+    "diagnosticRequestId": "req_131ecbd106dd44d5b7f6de4f29d549b3",
+    "diagnosticCapturedAt": "2026-11-04T12:31:44.781862+00:00"
+  },
+  "credentialSource": "Ignored local .env",
+  "latestEvidence": "assistant-luna-live.json",
+  "finalRoundProviderCalls": 9,
+  "allRoundsProviderCalls": 26,
+  "lastResponseId": "resp_01cc292de7b09d29016aeb2a76c97487d095329f482878c429"
 }

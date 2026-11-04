@@ -4,11 +4,11 @@ Audit date: 2026-11-04. This audit answers whether a failing current key means t
 older AI features were never tested with a real model. It separates transport,
 source provenance, UI fixtures and answer-quality acceptance.
 
-## Current credential: exact observed failure
+## Earlier `.bashrc` credential: exact observed failure
 
 The key assignment exists at line 151 of the owner's `.bashrc`. The API process
 initially did not inherit the environment variable; the live test launcher read
-the literal export locally and supplied it to the test process. The current
+the literal export locally and supplied it to the test process. That earlier
 failure is therefore not explained by an absent key.
 
 A separate minimal request was sent to `https://api.openai.com/v1/responses` with
@@ -24,8 +24,10 @@ request ID: req_131ecbd106dd44d5b7f6de4f29d549b3
 [Sanitized diagnostic](evidence/assistant-auth-diagnostic.json). This request ID
 belongs to the new minimal diagnostic, not the earlier integration-test request,
 whose raw HTTP status/request ID had not been retained. No credential is included.
-The assistant has zero completed live-model answers in its current evaluation;
-PR #82 remains draft. A replacement valid credential is required before retrying.
+The owner subsequently supplied a new ignored `.env` credential. That retest
+completed three real Luna turns with nine final-round requests; see the
+[actual live evidence](evidence/assistant-luna-live.json). PR #82 remains draft for
+semantic review, rather than a provider-access failure.
 
 ## Historical feature evidence
 
@@ -35,7 +37,7 @@ PR #82 remains draft. A replacement valid credential is required before retrying
 | Code Tutor (#54) | Three archived completed raw provider responses with response IDs, token usage and `model=gpt-6-luna`, dated 2026-11-02; aggregate evidence separately records three final production calls after the capture round | Two authored code examples and one selected real notebook cell | Published UI gallery uses authored fixtures. Offline replay of captured responses uses MockEngine and is not a new provider call. |
 | Knowledge Maps (#76) | Public evaluation files record initial and corrected live `gpt-6-luna` rounds; no original HTTP request logs were located in this audit | Authored graph-traversal text | UI gallery uses deterministic fixtures. Real API usage here does not establish real UIT-course coverage or semantic accuracy. |
 | Initial Assignment Breakdown / Course Q&A (#48/#49) | No successful live-provider artifact located for that initial delivery | Deterministic source fixtures in the documented checks | Existing documentation says provider access/quality needs a separate live run; do not report those checks as successful real inference. |
-| UIT Assistant (#82) | Real request attempted; current key rejected, then exact expiry confirmed by a separate diagnostic | Real public UIT announcement metadata; no successful model answer | Public gallery shows actual downloaded context and an empty chat, not an invented successful answer. |
+| UIT Assistant (#82) | Earlier `.bashrc` key expired; new `.env` key completed 9 final-round Luna calls / 3 turns | Actual public UIT scholarship notice, including 51 text paragraphs | Gallery now includes recorded real model answers and exact source inspection; semantic caveats remain documented. |
 
 Supporting records:
 

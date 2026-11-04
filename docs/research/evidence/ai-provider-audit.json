@@ -1,18 +1,6 @@
 {
   "auditedAt": "2026-11-04T12:33:40.432501+00:00",
   "scope": "Local evidence audit, not new paid model runs for historical features. No university credentials or private course text included.",
-  "currentAssistantDiagnostic": {
-    "capturedAt": "2026-11-04T12:31:44.781862+00:00",
-    "endpoint": "https://api.openai.com/v1/responses",
-    "requestedModel": "gpt-6-luna",
-    "credentialSource": ".bashrc export OPENAI_API_KEY",
-    "requestContainsUniversityData": false,
-    "httpStatus": 401,
-    "requestId": "req_131ecbd106dd44d5b7f6de4f29d549b3",
-    "errorCode": "expired_secret_key",
-    "errorType": "invalid_request_error",
-    "errorMessage": "Your API key has expired. Create a new API key to continue."
-  },
   "archivedCodeTutorProviderMetadata": [
     {
       "capture": "provider-raw-1.json",
@@ -96,5 +84,19 @@
     "Knowledge Maps public evidence records live model calls on authored teaching text; original HTTP request logs were not located in this audit.",
     "No successful live-provider evidence was located for the initial Assignment Breakdown/Course Q&A delivery.",
     "UI test screenshots can use synthetic fixtures even when separate live API checks exist; screenshot provenance must be read independently."
-  ]
+  ],
+  "previousBashrcDiagnostic": {
+    "capturedAt": "2026-11-04T12:31:44.781862+00:00",
+    "endpoint": "https://api.openai.com/v1/responses",
+    "requestedModel": "gpt-6-luna",
+    "credentialSource": ".bashrc export OPENAI_API_KEY",
+    "requestContainsUniversityData": false,
+    "httpStatus": 401,
+    "requestId": "req_131ecbd106dd44d5b7f6de4f29d549b3",
+    "errorCode": "expired_secret_key",
+    "errorType": "invalid_request_error",
+    "errorMessage": "Your API key has expired. Create a new API key to continue."
+  },
+  "latestAssistantEvidence": "assistant-luna-live.json",
+  "latestAssistantOutcome": "New ignored .env key succeeded: 9 final-round calls, 3 completed turns; semantic caveats remain documented."
 }

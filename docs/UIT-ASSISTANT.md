@@ -138,7 +138,7 @@ Presence of unprocessed media and text truncation is flagged. Missing or disable
 sources return a bounded tool error, allowing an explicit UNKNOWN response.
 
 Evidence identity uses a source-permalink hash. Its version hashes the extractor
-version (`assistant-text-v1`), URL, source, title, publication date and article HTML.
+version (`assistant-text-v2`), URL, source, title, publication date and article HTML.
 Citations include the evidence ID, zero-based paragraph index and short quote.
 Stored answers preserve the exact paragraph version. The reader compares available
 current cache versions and flags changes; it also warns on answers older than a
@@ -182,7 +182,7 @@ them requires re-running storage, protocol and phone acceptance tests.
 | Scope / pinned articles | Selected enabled source set / at most 8 URLs; the article entry attaches one |
 | Recent completed history sent | 3 turns, at most 4,000 characters of answer prose each |
 | Model steps / tool calls | 6 / 8 per question |
-| Evidence / paragraphs per article | 6 articles / 16 paragraphs |
+| Evidence / paragraphs per article | 6 articles / 64 paragraphs |
 | Passage / all extracted text | 1,800 characters / 32,000 characters |
 | Serialized input | 110,000 UTF-8 bytes |
 | Request timeout / overall runtime | Existing 60-second transport / 180 seconds |

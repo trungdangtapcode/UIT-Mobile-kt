@@ -29,14 +29,40 @@ class AssistantLiveTest {
         val study = ConnectedStudyAiRepository(AssistantMemory(), AssistantNoAccounts())
         study.configureDirect(key, model)
         val workspaceStore = AssistantMemory()
-        val repo = createAssistantRepository(announcements, study, workspaceStore)
+        val providerCalls = mutableListOf<JsonObject>()
+        val repo = LocalAssistantRepository(workspaceStore, announcements, {
+            val production = study.assistantModel()
+            AssistantModel { payload ->
+                val started = System.nanoTime()
+                val response = production.step(payload)
+                val callNumber = providerCalls.size + 1
+                File(output, "provider-response-$callNumber.json").writeText(response.toString())
+                providerCalls += buildJsonObject {
+                    put("call", callNumber)
+                    put("responseId", response.getValue("id"))
+                    put("model", response.getValue("model"))
+                    put("status", response.getValue("status"))
+                    put("usage", response["usage"] ?: JsonNull)
+                    put("milliseconds", (System.nanoTime() - started) / 1000000)
+                    put("outputTypes", JsonArray(response.getValue("output").jsonArray.map { it.jsonObject.getValue("type") }))
+                }
+                File(output, "provider-calls.json").writeText(Json { prettyPrint = true }.encodeToString(JsonArray.serializer(), JsonArray(providerCalls)))
+                response
+            }
+        })
         val id = repo.create("Scholarship notice research", AssistantScope(setOf(AnnouncementSource.PORTAL), setOf(target)))
         val questions = listOf(
             "Tóm tắt đối tượng, yêu cầu và các mốc thời gian được nêu trong thông báo học bổng đã chọn. Đây là thông báo lịch sử; không coi các hạn trong bài là hạn sắp tới.",
             "Tôi nên chuẩn bị những gì? Phân biệt yêu cầu được nêu trong bài với gợi ý của bạn; trích nguồn cho các yêu cầu.",
             "Thông báo này có xác định chính xác giờ mở đăng ký học phần năm 2030 không? Nếu không có bằng chứng thì nói rõ chưa xác định."
         )
-        questions.forEach { question -> repo.ask(id, question, "Vietnamese") }
+        try {
+            questions.forEach { question -> repo.ask(id, question, "Vietnamese") }
+        } finally {
+            // Keep an inspectable local record even if a later turn fails validation.
+            workspaceStore.entries["library"]?.let { File(output, "workspaces.json").writeText(it) }
+            noticeStore.entries["inbox"]?.let { File(output, "notices.json").writeText(it) }
+        }
         val workspace = repo.library.value.workspaces.single()
         assertEquals(3, workspace.turns.size)
         workspace.turns.forEach { turn ->
@@ -46,6 +72,7 @@ class AssistantLiveTest {
         }
         assertTrue(workspace.turns.take(2).all { it.evidence.isNotEmpty() && it.facts.any { fact -> fact.references.isNotEmpty() } })
         assertTrue(workspace.turns.last().facts.any { it.kind == AssistantFactKind.UNKNOWN })
+        assertTrue("The deadline beyond the former prefix must be available", workspace.turns.first().evidence.any { it.paragraphs.any { p -> "đến hết ngày 01/11/2026" in p } })
         assertTrue(announcements.state.value.items.first { it.url == target }.unread)
         // Public source snapshots only. The connection credential is in a different in-memory store.
         File(output, "workspaces.json").writeText(requireNotNull(workspaceStore.entries["library"]))
@@ -55,6 +82,7 @@ class AssistantLiveTest {
             put("mode", "Production Kotlin client and runtime; public UIT GET only; explicit owner API key; no university credentials")
             put("source", target)
             put("requestedModel", model)
+            put("providerCalls", JsonArray(providerCalls))
             put("runtime", "Host JVM unit test, not physical Android execution")
             put(
                 "turns",

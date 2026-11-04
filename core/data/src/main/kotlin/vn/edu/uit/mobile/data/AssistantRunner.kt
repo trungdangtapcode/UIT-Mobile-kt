@@ -58,7 +58,7 @@ internal class AssistantRunner(private val model: AssistantModel, private val an
                     input.addAll(output)
                     input += buildJsonObject {
                         put("role", "user")
-                        put("content", "Your answer failed evidence validation. Read allowed evidence if needed; copy exact quotes and zero-based paragraph IDs. Otherwise return UNKNOWN without unsupported factual claims.")
+                        put("content", "Your answer failed evidence validation. Use at most twelve sections and at most four references per section. Read allowed evidence if needed; copy exact quotes and zero-based paragraph IDs. Otherwise return UNKNOWN without unsupported factual claims.")
                     }
                 }
             } else {

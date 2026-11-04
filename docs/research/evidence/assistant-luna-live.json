@@ -1,0 +1,844 @@
+{
+  "capturedAt": "2026-11-04T12:52:09.986380185Z",
+  "mode": "Production Kotlin client and runtime; public UIT GET only; explicit owner API key; no university credentials",
+  "source": "https://portal.uit.edu.vn/bai-viet/thong-bao-dang-ky-xet-cap-cac-loai-hoc-bong-hk-1-nh-2026-2027",
+  "requestedModel": "gpt-6-luna",
+  "providerCalls": [
+    {
+      "call": 1,
+      "responseId": "resp_0036248ca385f823016aeb2a49d51c87d086c41de203632cc5",
+      "model": "gpt-6-luna",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 760,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 33,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 793
+      },
+      "milliseconds": 2016,
+      "outputTypes": [
+        "function_call"
+      ]
+    },
+    {
+      "call": 2,
+      "responseId": "resp_0036248ca385f823016aeb2a4b91c887d0bdcb1ebb2f6b97b6",
+      "model": "gpt-6-luna",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 969,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 33,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1002
+      },
+      "milliseconds": 1111,
+      "outputTypes": [
+        "function_call"
+      ]
+    },
+    {
+      "call": 3,
+      "responseId": "resp_0036248ca385f823016aeb2a4d102087d0a113f6fc5cfbc7ef",
+      "model": "gpt-6-luna",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 3390,
+        "input_tokens_details": {
+          "cache_write_tokens": 3387,
+          "cached_tokens": 0
+        },
+        "output_tokens": 2993,
+        "output_tokens_details": {
+          "reasoning_tokens": 694
+        },
+        "total_tokens": 6383
+      },
+      "milliseconds": 23010,
+      "outputTypes": [
+        "reasoning",
+        "reasoning",
+        "message"
+      ]
+    },
+    {
+      "call": 4,
+      "responseId": "resp_06e0c0ed2bbea764016aeb2a640f8087d09f58f091b7cd2011",
+      "model": "gpt-6-luna",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1656,
+        "input_tokens_details": {
+          "cache_write_tokens": 1530,
+          "cached_tokens": 0
+        },
+        "output_tokens": 44,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1700
+      },
+      "milliseconds": 1239,
+      "outputTypes": [
+        "function_call"
+      ]
+    },
+    {
+      "call": 5,
+      "responseId": "resp_06e0c0ed2bbea764016aeb2a65520087d0bdd450ab197ab016",
+      "model": "gpt-6-luna",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1876,
+        "input_tokens_details": {
+          "cache_write_tokens": 220,
+          "cached_tokens": 1653
+        },
+        "output_tokens": 33,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 1909
+      },
+      "milliseconds": 1277,
+      "outputTypes": [
+        "function_call"
+      ]
+    },
+    {
+      "call": 6,
+      "responseId": "resp_06e0c0ed2bbea764016aeb2a673fc887d09c59ed5fbe5a2577",
+      "model": "gpt-6-luna",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 4297,
+        "input_tokens_details": {
+          "cache_write_tokens": 2421,
+          "cached_tokens": 1873
+        },
+        "output_tokens": 1584,
+        "output_tokens_details": {
+          "reasoning_tokens": 224
+        },
+        "total_tokens": 5881
+      },
+      "milliseconds": 12386,
+      "outputTypes": [
+        "reasoning",
+        "message"
+      ]
+    },
+    {
+      "call": 7,
+      "responseId": "resp_01cc292de7b09d29016aeb2a73a3f087d086b3810ca85c7920",
+      "model": "gpt-6-luna",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 2222,
+        "input_tokens_details": {
+          "cache_write_tokens": 2096,
+          "cached_tokens": 0
+        },
+        "output_tokens": 34,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 2256
+      },
+      "milliseconds": 1407,
+      "outputTypes": [
+        "function_call"
+      ]
+    },
+    {
+      "call": 8,
+      "responseId": "resp_01cc292de7b09d29016aeb2a75109487d090840dbc5d18f527",
+      "model": "gpt-6-luna",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 2432,
+        "input_tokens_details": {
+          "cache_write_tokens": 210,
+          "cached_tokens": 2219
+        },
+        "output_tokens": 33,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 2465
+      },
+      "milliseconds": 1050,
+      "outputTypes": [
+        "function_call"
+      ]
+    },
+    {
+      "call": 9,
+      "responseId": "resp_01cc292de7b09d29016aeb2a76c97487d095329f482878c429",
+      "model": "gpt-6-luna",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 4853,
+        "input_tokens_details": {
+          "cache_write_tokens": 2421,
+          "cached_tokens": 2429
+        },
+        "output_tokens": 307,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 5160
+      },
+      "milliseconds": 3348,
+      "outputTypes": [
+        "message"
+      ]
+    }
+  ],
+  "runtime": "Host JVM unit test, not physical Android execution",
+  "turns": [
+    {
+      "model": "gpt-6-luna",
+      "status": "COMPLETE",
+      "question": "Tóm tắt đối tượng, yêu cầu và các mốc thời gian được nêu trong thông báo học bổng đã chọn. Đây là thông báo lịch sử; không coi các hạn trong bài là hạn sắp tới.",
+      "toolCalls": [
+        "search_announcements",
+        "read_announcement"
+      ],
+      "evidenceVersions": [
+        "7bd35f2aa1912b15b5e8dddb28ff7a853d7baf2187a4749959b3a7aa95332015"
+      ],
+      "facts": [
+        {
+          "kind": "FACT",
+          "text": "Đối tượng HB KKHT và HB CTTT: sinh viên hệ đại học chính quy, văn bằng 1, đang theo học tại Trường và có nguyện vọng nhận học bổng. Thông báo nêu các trường hợp không đăng ký: sinh viên chương trình liên kết BCU (vì có chương trình học bổng riêng), sinh viên văn bằng 2 hoặc liên thông, và toàn bộ sinh viên khóa 2026.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 12,
+              "quote": "tất cả sinh viên đang theo học hệ đại học hệ chính quy (văn bằng 1) tại Trường có nguyện vọng nhận học bổng"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 13,
+              "quote": "Sinh viên chương trình liên kết BCU không cần đăng ký học bổng này do có chương trình học bổng riêng."
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 14,
+              "quote": "Sinh viên các chương trình văn bằng 2, liên thông không đăng ký học bổng này."
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 15,
+              "quote": "Tất cả sinh viên khóa 2026 không đăng ký học bổng này."
+            }
+          ]
+        },
+        {
+          "kind": "FACT",
+          "text": "Đối tượng HB ngoài ngân sách (HB NNS): sinh viên chính quy văn bằng 1, sinh viên chương trình liên kết BCU và OUN, ở tất cả các khóa, nếu có nguyện vọng nhận học bổng đều có thể đăng ký.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 16,
+              "quote": "tất cả sinh viên chính qui (văn bằng 1), chương trình liên kết BCU, OUN tất cả các khóa có nguyện vọng nhận học bổng đều có thể đăng ký."
+            }
+          ]
+        },
+        {
+          "kind": "FACT",
+          "text": "Thông báo nêu HB KKHT dựa trên điểm học tập và rèn luyện của HK2 năm học 2025–2026; HB CTTT dựa trên điểm học tập và rèn luyện của HK2 năm học 2026–2027. HB NNS áp dụng cho các học bổng triển khai từ 01/11/2026 đến 10/04/2027. Đây là các mốc/kỳ xét được ghi trong thông báo, không phải hạn sắp tới.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 3,
+              "quote": "Dựa trên điểm học tập và điểm rèn luyện của học kỳ 2 năm học 2025-2026"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 4,
+              "quote": "Dựa trên điểm học tập và điểm rèn luyện của học kỳ 2 năm học 2026-2027"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 5,
+              "quote": "các học bổng triển khai từ 01/11/2026-10/04/2027"
+            }
+          ]
+        },
+        {
+          "kind": "FACT",
+          "text": "Người có nguyện vọng xét HB KKHT, HB CTTT hoặc HB NNS phải đăng ký theo thông báo; chỉ xét học bổng với sinh viên đã đăng ký. Thông báo hướng dẫn đăng ký có hai tab KKHT và NNS. HB tuyển sinh không bắt buộc đăng ký.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 6,
+              "quote": "sinh viên không bắt buộc phải đăng ký"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 24,
+              "quote": "Lưu ý có 2 tab KKHT và NNS"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 30,
+              "quote": "Chỉ xét học bổng đối với sinh viên có đăng ký theo thông báo."
+            }
+          ]
+        },
+        {
+          "kind": "FACT",
+          "text": "Các trường hợp thông báo nêu là không được xét học bổng gồm: có học phần dưới 5,0 trong học kỳ tính; học quá thời gian thiết kế chương trình (kể cả thời gian bảo lưu, tạm hoãn); không phát sinh học phí học kỳ hiện tại (không tính học phí gia hạn); không tham gia BHYT trong học kỳ tính; bị kỷ luật từ khiển trách trở lên trong học kỳ tính; hoặc học dưới 14 tín chỉ ở học kỳ xét. Môn ngoại ngữ được miễn vẫn được tính số tín chỉ.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 35,
+              "quote": "Không xét học bổng đối với các trường hợp:"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 36,
+              "quote": "Có học phần đạt điểm dưới 5.0 trong học kỳ tính."
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 37,
+              "quote": "Học quá thời gian thiết kế của chương trình đào tạo"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 38,
+              "quote": "không có phát sinh Học phí Học kỳ (HPHK) trong học kỳ hiện tại"
+            }
+          ]
+        },
+        {
+          "kind": "FACT",
+          "text": "Thông báo còn nêu: sinh viên tốt nghiệp đợt 3 năm 2026 (kể cả tốt nghiệp trước hạn), không phát sinh học phí học kỳ tại HK1 năm học 2026–2027 thì không tham gia xét HB KKHT. Các tiêu chí loại trừ khác được nêu gồm không tham gia BHYT, bị kỷ luật từ khiển trách trở lên, hoặc học dưới 14 tín chỉ; ngoại ngữ được miễn vẫn tính tín chỉ.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 34,
+              "quote": "sẽ không tham gia xét học bổng KKHT"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 39,
+              "quote": "Sinh viên không tham gia Bảo hiểm Y tế trong học kỳ tính."
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 40,
+              "quote": "bị kỷ luật từ mức khiển trách trở lên"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 41,
+              "quote": "Sinh viên học dưới 14 tín chỉ tại học kỳ xét."
+            }
+          ]
+        },
+        {
+          "kind": "FACT",
+          "text": "Với HB NNS, hồ sơ tóm tắt theo thông báo gồm hoàn cảnh gia đình (nếu có khó khăn), thành tích học tập/nghiên cứu và hoạt động xã hội. Sau khi đăng ký thành công, sinh viên tự chuẩn bị minh chứng tương ứng; khi học bổng được đăng trên forum, sinh viên chủ động chọn học bổng và nộp hồ sơ theo thông báo của học bổng đó.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 44,
+              "quote": "HOÀN CẢNH GIA ĐÌNH: Trình bày hoàn cảnh gia đình có khó khăn ( nếu có)."
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 45,
+              "quote": "THÀNH TÍCH HỌC TẬP, NGHIÊN CỨU KHOA HỌC"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 46,
+              "quote": "HOẠT ĐỘNG XÃ HỘI"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 47,
+              "quote": "sinh viên tự chuẩn bị sẵn các minh chứng tương ứng"
+            }
+          ]
+        },
+        {
+          "kind": "FACT",
+          "text": "Thông báo yêu cầu cập nhật tài khoản PVComBank trong lý lịch sinh viên; tài khoản phải đứng tên chính sinh viên. Trường có thể từ chối cấp học bổng nếu sinh viên cung cấp sai tài khoản.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 32,
+              "quote": "Tài khoản ngân hàng sinh viên cung cấp phải là tài khoản của chính sinh viên."
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 32,
+              "quote": "Trường có thể từ chối cấp học bổng nếu sinh viên cung cấp sai tài khoản."
+            }
+          ]
+        },
+        {
+          "kind": "FACT",
+          "text": "Các mốc đăng ký và công bố được thông báo: đăng ký từ ngày ra thông báo đến hết 01/11/2026; danh sách sinh viên đã đăng ký xét học bổng được công khai ngày 04/11/2026. Đây là mốc lịch sử trong bài, không phải hạn sắp tới.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 27,
+              "quote": "Thời gian đăng ký từ ngày ra thông báo đến hết ngày 01/11/2026"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 28,
+              "quote": "Thông báo công khai danh sách sinh viên đã đăng ký xét học bổng: 04/11/2026"
+            }
+          ]
+        },
+        {
+          "kind": "FACT",
+          "text": "Nguyên tắc xét được nêu: sinh viên có thể đăng ký nguyện vọng cả HB KKHT/HB CTTT và HB NNS; trong mỗi học kỳ được xét ưu tiên nhận một HB NNS, trừ trường hợp đặc biệt do hội đồng quyết định. Nếu đủ điều kiện nhận nhiều loại trong nhóm HB tuyển sinh, HB KKHT, HB chương trình chất lượng cao và HB CTTT, sẽ được xét nhận một học bổng có giá trị cao nhất.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 18,
+              "quote": "có quyền đăng ký nguyện vọng nhận cả 02 loại học bổng"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 19,
+              "quote": "được xét ưu tiên nhận 01 học bổng Ngoài ngân sách"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 21,
+              "quote": "sẽ được xét nhận 01 học bổng có giá trị cao nhất"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "id": "notice_627f82bae28a499221b9020f",
+          "url": "https://portal.uit.edu.vn/bai-viet/thong-bao-dang-ky-xet-cap-cac-loai-hoc-bong-hk-1-nh-2026-2027",
+          "title": "Thông báo đăng ký xét cấp các loại học bổng HK 1 – NH 2026-2027",
+          "publishedDate": "2026-10-19",
+          "version": "7bd35f2aa1912b15b5e8dddb28ff7a853d7baf2187a4749959b3a7aa95332015",
+          "fetchedAt": 1793796684,
+          "paragraphs": [
+            "THÔNG BÁO",
+            "V/v đăng ký xét cấp các loại học bổng Học kỳ 1 – Năm học 2026-2027",
+            "Trường Đại học Công nghệ Thông tin thông báo sinh viên đăng ký nguyện vọng xét cấp học bổng trong Học kỳ 1 Năm học 2026-2027. Các loại học bổng áp dụng trong thông báo này:",
+            "Học bổng khuyến khích học tập (HB KKHT) học kỳ 1 năm học 2026-2027 ( Dựa trên điểm học tập và điểm rèn luyện của học kỳ 2 năm học 2025-2026).",
+            "Học bổng của Sinh viên Chương trình Tiên tiến (HB CTTT) học kỳ 1 năm học 2026-2027( Dựa trên điểm học tập và điểm rèn luyện của học kỳ 2 năm học 2026-2027).",
+            "Học bổng ngoài ngân sách (HB NNS) học kỳ 1 năm học 2026-2027 (Áp dụng cho các học bổng triển khai từ 01/11/2026-10/04/2027). Sinh viên xem hướng dẫn khai hồ sơ tại Mục 7.",
+            "Đối với học bổng tuyển sinh (HB TS), sinh viên không bắt buộc phải đăng ký (Xem thêm mục 4).",
+            "1. Mục đích:",
+            "Học bổng Khuyến khích học tập (HB KKHT) căn cứ theo tiêu chí học tập và rèn luyện đúng theo quy định Học bổng Khuyến khích học tập hiện hành. Nhưng với tinh thần phụng sự theo triết lý giáo dục của Nhà trường, học bổng Khuyến khích học tập là gửi gắm sự khuyến khích những sinh viên có học lực tốt, có hoàn cảnh khó khăn cần được hỗ trợ vươn lên trong học tập và rèn luyện.",
+            "Học bổng Khuyến khích học tập sẽ đạt đúng tinh thần và thông điệp nhân văn hơn khi tiếp sức thêm cho những sinh viên học tốt phấn đấu vượt qua sự khó khăn trong cuộc sống. Do đó, nhà trường khuyến khích các bạn sinh viên có học lực tốt, hoàn cảnh ổn định, chưa khó khăn, chưa bức thiết hãy khoan đăng ký để dành suất cho các bạn khó khăn và cần hỗ trợ hơn.",
+            "Đối với các học bổng ngoài ngân sách căn cứ theo yêu cầu và tiêu chuẩn từ đơn vị cấp học bổng. Hội đồng xét học bổng sẽ xem xét lựa chọn hồ sơ phù hợp để cấp học bổng cho sinh viên.",
+            "2. Đối tượng",
+            "Đối với HB KKHT, HB CTTT: tất cả sinh viên đang theo học hệ đại học hệ chính quy (văn bằng 1) tại Trường có nguyện vọng nhận học bổng. Các trường hợp không đăng ký học bổng KKHT",
+            "Sinh viên chương trình liên kết BCU không cần đăng ký học bổng này do có chương trình học bổng riêng.",
+            "Sinh viên các chương trình văn bằng 2, liên thông không đăng ký học bổng này.",
+            "Tất cả sinh viên khóa 2026 không đăng ký học bổng này.",
+            "Đối với HB NNS: tất cả sinh viên chính qui (văn bằng 1), chương trình liên kết BCU, OUN tất cả các khóa có nguyện vọng nhận học bổng đều có thể đăng ký.",
+            "3. Nguyên tắc xét học bổng:",
+            "Sinh viên có quyền đăng ký nguyện vọng nhận cả 02 loại học bổng: HB KKHT-HB CTTT và HB NNS.",
+            "Trong mỗi học kỳ một sinh viên được xét ưu tiên nhận 01 học bổng Ngoài ngân sách. Trừ các trường hợp đặc biệt do hội đồng xét học bổng quyết định.",
+            "Đối với học bổng Tuyển sinh, Học bổng khuyến khích học tập, Học bổng chương trình chất lượng cao, Học bổng chương trình tiên tiến:",
+            "Nếu sinh viên có đăng ký nhu cầu nhận học bổng, đồng thời thỏa điều kiện nhận nhiều loại học bổng, sẽ được xét nhận 01 học bổng có giá trị cao nhất.",
+            "Đối với sinh viên đủ điều kiện nhận học bổng tuyển sinh, không bắt buộc phải đăng ký HB KKHT, HB CTTT. Trong trường hợp này sinh viên chỉ được nhận học bổng tuyển sinh.",
+            "5. Cách thức đăng ký:",
+            "- Tất cả sinh viên có nguyện vọng xét HB KKHT- HB CTTT , HB NNS đăng ký tại (Lưu ý có 2 tab KKHT và NNS) : https://portal.uit.edu.vn/sinh-vien/hoc-bong",
+            "Lưu ý: các mục kiểm tra điều kiện chỉ mang tính tham khảo (có thể sai lệch do phúc khảo, bổ sung...) sinh viên chủ động bấm đăng ký học bổng đúng thời hạn. Mọi sai sót nếu có sinh viên liên hệ phòng CTSV để được giải đáp. Phòng CTSV sẽ không giải quyết vấn đề không đăng ký đúng hạn vì bất cứ lý do gì.",
+            "- Sau khi đăng ký thành công sinh viên kiểm tra kỹ trạng thái đăng ký thành công được ghi nhận trên hệ thống.",
+            "- Thời gian đăng ký từ ngày ra thông báo đến hết ngày 01/11/2026",
+            "- Thông báo công khai danh sách sinh viên đã đăng ký xét học bổng: 04/11/2026",
+            "6. Lưu ý:",
+            "Chỉ xét học bổng đối với sinh viên có đăng ký theo thông báo.",
+            "Qui định chung về học bổng: https://ctsv.uit.edu.vn/bai-viet/quy-dinh-lien-quan-den-hoc-bong-sinh-vien",
+            "Sinh viên cập nhật tài khoản ngân hàng PVComBank trong lý lịch sinh viên. Tài khoản ngân hàng sinh viên cung cấp phải là tài khoản của chính sinh viên. Trường có thể từ chối cấp học bổng nếu sinh viên cung cấp sai tài khoản.",
+            "Nếu chưa đăng ký tài khoản ngân hàng PVComBank, thực hiện theo thông báo sau: https://ctsv.uit.edu.vn/bai-viet/thong-bao-vv-thay-doi-ngan-hang-nhan-ca...",
+            "Sinh viên tốt nghiệp đợt 3 năm 2026 (Kế cả tốt nghiệp trước hạn) không phát sinh Học phí học kỳ tại HK1 năm học 2026-2027 sẽ không tham gia xét học bổng KKHT .",
+            "Không xét học bổng đối với các trường hợp:",
+            "a. Có học phần đạt điểm dưới 5.0 trong học kỳ tính.",
+            "b. Học quá thời gian thiết kế của chương trình đào tạo (tính cả thời gian SV xin bảo lưu, tạm hoãn).",
+            "c. Sinh viên không có phát sinh Học phí Học kỳ (HPHK) trong học kỳ hiện tại (không tính học phí gia hạn).",
+            "d. Sinh viên không tham gia Bảo hiểm Y tế trong học kỳ tính.",
+            "e. Sinh viên bị kỷ luật từ mức khiển trách trở lên trong học kỳ tính.",
+            "f. Sinh viên học dưới 14 tín chỉ tại học kỳ xét. Lưu ý: Các môn ngoại ngữ được miễn được tính số tín chỉ",
+            "7. Hướng dẫn khai hồ sơ HB NNS:",
+            "- Sinh viên khai tóm tắt hồ sơ học bổng NNS theo cấu trúc như sau",
+            "1. HOÀN CẢNH GIA ĐÌNH: Trình bày hoàn cảnh gia đình có khó khăn ( nếu có). Gia đình có bao nhiêu người. Ai là nguồn thi nhập chính. Thu nhập của gia đình mỗi tháng như thế nào. Gia đình và bản thân sinh viên đang có những khó khăn gì….",
+            "2. THÀNH TÍCH HỌC TẬP, NGHIÊN CỨU KHOA HỌC: Tóm tắt trình độ ngoại ngữ. Giải thưởng học thuật, nghiên cứu khoa học. Các bài báo đã xuất bản….",
+            "3. HOẠT ĐỘNG XÃ HỘI: Tóm tắt các hoạt động vì cộng đồng đã tham gia, khen thưởng nếu có….",
+            "- Sau khi đăng ký thành công, sinh viên tự chuẩn bị sẵn các minh chứng tương ứng. Khi có học bổng ngoài ngân sách được đăng tại forum.Sinh viên chủ động nộp lựa chọn học bổng để nộp hồ sơ theo thông báo của học bổng đó.",
+            "* Mọi thắc mắc sinh viên vui lòng liên hệ:",
+            "- Hướng dẫn chi tiết và giải đáp thắc mắc tại Forum trường: https://forum.uit.edu.vn/t/huong-dan-dang-ky-cac-loai-hoc-bong-hk1-2026-...",
+            "- Email: ctsv@uit.edu.vn"
+          ],
+          "offline": false,
+          "abbreviated": true
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-luna",
+      "status": "COMPLETE",
+      "question": "Tôi nên chuẩn bị những gì? Phân biệt yêu cầu được nêu trong bài với gợi ý của bạn; trích nguồn cho các yêu cầu.",
+      "toolCalls": [
+        "search_announcements",
+        "read_announcement"
+      ],
+      "evidenceVersions": [
+        "7bd35f2aa1912b15b5e8dddb28ff7a853d7baf2187a4749959b3a7aa95332015"
+      ],
+      "facts": [
+        {
+          "kind": "FACT",
+          "text": "Yêu cầu được nêu: nếu muốn xét HB KKHT, HB CTTT hoặc HB NNS, sinh viên phải đăng ký; thông báo nói chỉ xét học bổng với sinh viên đã đăng ký. Khi đăng ký thành công, cần kiểm tra hệ thống ghi nhận trạng thái thành công. Các mốc đăng ký đến hết 01/11/2026 và công khai danh sách ngày 04/11/2026 là mốc lịch sử trong thông báo, không phải hạn sắp tới.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 24,
+              "quote": "Tất cả sinh viên có nguyện vọng xét HB KKHT- HB CTTT , HB NNS đăng ký"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 26,
+              "quote": "kiểm tra kỹ trạng thái đăng ký thành công"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 27,
+              "quote": "đến hết ngày 01/11/2026"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 30,
+              "quote": "Chỉ xét học bổng đối với sinh viên có đăng ký theo thông báo."
+            }
+          ]
+        },
+        {
+          "kind": "FACT",
+          "text": "Yêu cầu được nêu về tài khoản nhận học bổng: cập nhật tài khoản PVComBank trong lý lịch sinh viên; tài khoản phải đứng tên chính sinh viên. Thông báo nói Trường có thể từ chối cấp học bổng nếu cung cấp sai tài khoản.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 32,
+              "quote": "Tài khoản ngân hàng sinh viên cung cấp phải là tài khoản của chính sinh viên."
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 32,
+              "quote": "cập nhật tài khoản ngân hàng PVComBank trong lý lịch sinh viên"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 32,
+              "quote": "Trường có thể từ chối cấp học bổng nếu sinh viên cung cấp sai tài khoản."
+            }
+          ]
+        },
+        {
+          "kind": "FACT",
+          "text": "Đối với HB NNS, thông báo yêu cầu khai tóm tắt hồ sơ theo các nhóm: hoàn cảnh gia đình (nếu có khó khăn), thành tích học tập/nghiên cứu khoa học và hoạt động xã hội. Sau khi đăng ký thành công, sinh viên tự chuẩn bị minh chứng tương ứng; khi có học bổng được đăng trên forum, sinh viên chủ động chọn và nộp hồ sơ theo thông báo của học bổng đó. Bài không nêu danh mục minh chứng cụ thể áp dụng cho mọi học bổng.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 44,
+              "quote": "Trình bày hoàn cảnh gia đình có khó khăn ( nếu có)."
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 45,
+              "quote": "THÀNH TÍCH HỌC TẬP, NGHIÊN CỨU KHOA HỌC"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 46,
+              "quote": "HOẠT ĐỘNG XÃ HỘI"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 47,
+              "quote": "tự chuẩn bị sẵn các minh chứng tương ứng"
+            }
+          ]
+        },
+        {
+          "kind": "FACT",
+          "text": "Nếu bạn dự định xét học bổng thuộc diện có điều kiện loại trừ được nêu trong bài, hãy đối chiếu tình trạng của mình: bài liệt kê học phần dưới 5,0, quá thời gian thiết kế chương trình, không phát sinh học phí học kỳ (không tính học phí gia hạn), không tham gia BHYT trong học kỳ tính, bị kỷ luật từ khiển trách trở lên, hoặc học dưới 14 tín chỉ ở học kỳ xét. Bài ghi môn ngoại ngữ được miễn vẫn được tính vào số tín chỉ. Đây là các điều kiện bài nêu, không phải danh sách giấy tờ cần nộp.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 36,
+              "quote": "Có học phần đạt điểm dưới 5.0"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 37,
+              "quote": "Học quá thời gian thiết kế của chương trình đào tạo"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 39,
+              "quote": "không tham gia Bảo hiểm Y tế trong học kỳ tính."
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 41,
+              "quote": "học dưới 14 tín chỉ tại học kỳ xét"
+            }
+          ]
+        },
+        {
+          "kind": "SUGGESTION",
+          "text": "Gợi ý chuẩn bị, không phải yêu cầu chính thức được nêu: sắp xếp sẵn các giấy tờ/minh chứng mình có theo ba nhóm hồ sơ HB NNS (hoàn cảnh gia đình nếu có, học tập/nghiên cứu, hoạt động xã hội), rồi kiểm tra lại yêu cầu riêng khi từng học bổng NNS được đăng. Bài yêu cầu minh chứng tương ứng nhưng không liệt kê giấy tờ cụ thể.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 44,
+              "quote": "HOÀN CẢNH GIA ĐÌNH"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 45,
+              "quote": "THÀNH TÍCH HỌC TẬP, NGHIÊN CỨU KHOA HỌC"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 46,
+              "quote": "HOẠT ĐỘNG XÃ HỘI"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 47,
+              "quote": "theo thông báo của học bổng đó"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "id": "notice_627f82bae28a499221b9020f",
+          "url": "https://portal.uit.edu.vn/bai-viet/thong-bao-dang-ky-xet-cap-cac-loai-hoc-bong-hk-1-nh-2026-2027",
+          "title": "Thông báo đăng ký xét cấp các loại học bổng HK 1 – NH 2026-2027",
+          "publishedDate": "2026-10-19",
+          "version": "7bd35f2aa1912b15b5e8dddb28ff7a853d7baf2187a4749959b3a7aa95332015",
+          "fetchedAt": 1793796711,
+          "paragraphs": [
+            "THÔNG BÁO",
+            "V/v đăng ký xét cấp các loại học bổng Học kỳ 1 – Năm học 2026-2027",
+            "Trường Đại học Công nghệ Thông tin thông báo sinh viên đăng ký nguyện vọng xét cấp học bổng trong Học kỳ 1 Năm học 2026-2027. Các loại học bổng áp dụng trong thông báo này:",
+            "Học bổng khuyến khích học tập (HB KKHT) học kỳ 1 năm học 2026-2027 ( Dựa trên điểm học tập và điểm rèn luyện của học kỳ 2 năm học 2025-2026).",
+            "Học bổng của Sinh viên Chương trình Tiên tiến (HB CTTT) học kỳ 1 năm học 2026-2027( Dựa trên điểm học tập và điểm rèn luyện của học kỳ 2 năm học 2026-2027).",
+            "Học bổng ngoài ngân sách (HB NNS) học kỳ 1 năm học 2026-2027 (Áp dụng cho các học bổng triển khai từ 01/11/2026-10/04/2027). Sinh viên xem hướng dẫn khai hồ sơ tại Mục 7.",
+            "Đối với học bổng tuyển sinh (HB TS), sinh viên không bắt buộc phải đăng ký (Xem thêm mục 4).",
+            "1. Mục đích:",
+            "Học bổng Khuyến khích học tập (HB KKHT) căn cứ theo tiêu chí học tập và rèn luyện đúng theo quy định Học bổng Khuyến khích học tập hiện hành. Nhưng với tinh thần phụng sự theo triết lý giáo dục của Nhà trường, học bổng Khuyến khích học tập là gửi gắm sự khuyến khích những sinh viên có học lực tốt, có hoàn cảnh khó khăn cần được hỗ trợ vươn lên trong học tập và rèn luyện.",
+            "Học bổng Khuyến khích học tập sẽ đạt đúng tinh thần và thông điệp nhân văn hơn khi tiếp sức thêm cho những sinh viên học tốt phấn đấu vượt qua sự khó khăn trong cuộc sống. Do đó, nhà trường khuyến khích các bạn sinh viên có học lực tốt, hoàn cảnh ổn định, chưa khó khăn, chưa bức thiết hãy khoan đăng ký để dành suất cho các bạn khó khăn và cần hỗ trợ hơn.",
+            "Đối với các học bổng ngoài ngân sách căn cứ theo yêu cầu và tiêu chuẩn từ đơn vị cấp học bổng. Hội đồng xét học bổng sẽ xem xét lựa chọn hồ sơ phù hợp để cấp học bổng cho sinh viên.",
+            "2. Đối tượng",
+            "Đối với HB KKHT, HB CTTT: tất cả sinh viên đang theo học hệ đại học hệ chính quy (văn bằng 1) tại Trường có nguyện vọng nhận học bổng. Các trường hợp không đăng ký học bổng KKHT",
+            "Sinh viên chương trình liên kết BCU không cần đăng ký học bổng này do có chương trình học bổng riêng.",
+            "Sinh viên các chương trình văn bằng 2, liên thông không đăng ký học bổng này.",
+            "Tất cả sinh viên khóa 2026 không đăng ký học bổng này.",
+            "Đối với HB NNS: tất cả sinh viên chính qui (văn bằng 1), chương trình liên kết BCU, OUN tất cả các khóa có nguyện vọng nhận học bổng đều có thể đăng ký.",
+            "3. Nguyên tắc xét học bổng:",
+            "Sinh viên có quyền đăng ký nguyện vọng nhận cả 02 loại học bổng: HB KKHT-HB CTTT và HB NNS.",
+            "Trong mỗi học kỳ một sinh viên được xét ưu tiên nhận 01 học bổng Ngoài ngân sách. Trừ các trường hợp đặc biệt do hội đồng xét học bổng quyết định.",
+            "Đối với học bổng Tuyển sinh, Học bổng khuyến khích học tập, Học bổng chương trình chất lượng cao, Học bổng chương trình tiên tiến:",
+            "Nếu sinh viên có đăng ký nhu cầu nhận học bổng, đồng thời thỏa điều kiện nhận nhiều loại học bổng, sẽ được xét nhận 01 học bổng có giá trị cao nhất.",
+            "Đối với sinh viên đủ điều kiện nhận học bổng tuyển sinh, không bắt buộc phải đăng ký HB KKHT, HB CTTT. Trong trường hợp này sinh viên chỉ được nhận học bổng tuyển sinh.",
+            "5. Cách thức đăng ký:",
+            "- Tất cả sinh viên có nguyện vọng xét HB KKHT- HB CTTT , HB NNS đăng ký tại (Lưu ý có 2 tab KKHT và NNS) : https://portal.uit.edu.vn/sinh-vien/hoc-bong",
+            "Lưu ý: các mục kiểm tra điều kiện chỉ mang tính tham khảo (có thể sai lệch do phúc khảo, bổ sung...) sinh viên chủ động bấm đăng ký học bổng đúng thời hạn. Mọi sai sót nếu có sinh viên liên hệ phòng CTSV để được giải đáp. Phòng CTSV sẽ không giải quyết vấn đề không đăng ký đúng hạn vì bất cứ lý do gì.",
+            "- Sau khi đăng ký thành công sinh viên kiểm tra kỹ trạng thái đăng ký thành công được ghi nhận trên hệ thống.",
+            "- Thời gian đăng ký từ ngày ra thông báo đến hết ngày 01/11/2026",
+            "- Thông báo công khai danh sách sinh viên đã đăng ký xét học bổng: 04/11/2026",
+            "6. Lưu ý:",
+            "Chỉ xét học bổng đối với sinh viên có đăng ký theo thông báo.",
+            "Qui định chung về học bổng: https://ctsv.uit.edu.vn/bai-viet/quy-dinh-lien-quan-den-hoc-bong-sinh-vien",
+            "Sinh viên cập nhật tài khoản ngân hàng PVComBank trong lý lịch sinh viên. Tài khoản ngân hàng sinh viên cung cấp phải là tài khoản của chính sinh viên. Trường có thể từ chối cấp học bổng nếu sinh viên cung cấp sai tài khoản.",
+            "Nếu chưa đăng ký tài khoản ngân hàng PVComBank, thực hiện theo thông báo sau: https://ctsv.uit.edu.vn/bai-viet/thong-bao-vv-thay-doi-ngan-hang-nhan-ca...",
+            "Sinh viên tốt nghiệp đợt 3 năm 2026 (Kế cả tốt nghiệp trước hạn) không phát sinh Học phí học kỳ tại HK1 năm học 2026-2027 sẽ không tham gia xét học bổng KKHT .",
+            "Không xét học bổng đối với các trường hợp:",
+            "a. Có học phần đạt điểm dưới 5.0 trong học kỳ tính.",
+            "b. Học quá thời gian thiết kế của chương trình đào tạo (tính cả thời gian SV xin bảo lưu, tạm hoãn).",
+            "c. Sinh viên không có phát sinh Học phí Học kỳ (HPHK) trong học kỳ hiện tại (không tính học phí gia hạn).",
+            "d. Sinh viên không tham gia Bảo hiểm Y tế trong học kỳ tính.",
+            "e. Sinh viên bị kỷ luật từ mức khiển trách trở lên trong học kỳ tính.",
+            "f. Sinh viên học dưới 14 tín chỉ tại học kỳ xét. Lưu ý: Các môn ngoại ngữ được miễn được tính số tín chỉ",
+            "7. Hướng dẫn khai hồ sơ HB NNS:",
+            "- Sinh viên khai tóm tắt hồ sơ học bổng NNS theo cấu trúc như sau",
+            "1. HOÀN CẢNH GIA ĐÌNH: Trình bày hoàn cảnh gia đình có khó khăn ( nếu có). Gia đình có bao nhiêu người. Ai là nguồn thi nhập chính. Thu nhập của gia đình mỗi tháng như thế nào. Gia đình và bản thân sinh viên đang có những khó khăn gì….",
+            "2. THÀNH TÍCH HỌC TẬP, NGHIÊN CỨU KHOA HỌC: Tóm tắt trình độ ngoại ngữ. Giải thưởng học thuật, nghiên cứu khoa học. Các bài báo đã xuất bản….",
+            "3. HOẠT ĐỘNG XÃ HỘI: Tóm tắt các hoạt động vì cộng đồng đã tham gia, khen thưởng nếu có….",
+            "- Sau khi đăng ký thành công, sinh viên tự chuẩn bị sẵn các minh chứng tương ứng. Khi có học bổng ngoài ngân sách được đăng tại forum.Sinh viên chủ động nộp lựa chọn học bổng để nộp hồ sơ theo thông báo của học bổng đó.",
+            "* Mọi thắc mắc sinh viên vui lòng liên hệ:",
+            "- Hướng dẫn chi tiết và giải đáp thắc mắc tại Forum trường: https://forum.uit.edu.vn/t/huong-dan-dang-ky-cac-loai-hoc-bong-hk1-2026-...",
+            "- Email: ctsv@uit.edu.vn"
+          ],
+          "offline": false,
+          "abbreviated": true
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-luna",
+      "status": "COMPLETE",
+      "question": "Thông báo này có xác định chính xác giờ mở đăng ký học phần năm 2030 không? Nếu không có bằng chứng thì nói rõ chưa xác định.",
+      "toolCalls": [
+        "search_announcements",
+        "read_announcement"
+      ],
+      "evidenceVersions": [
+        "7bd35f2aa1912b15b5e8dddb28ff7a853d7baf2187a4749959b3a7aa95332015"
+      ],
+      "facts": [
+        {
+          "kind": "FACT",
+          "text": "Không. Thông báo được chọn là về đăng ký xét học bổng Học kỳ 1 năm học 2026–2027; thông báo nêu thời gian đăng ký đến hết ngày 01/11/2026, không xác định giờ mở đăng ký học phần năm 2030.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 1,
+              "quote": "đăng ký xét cấp các loại học bổng Học kỳ 1 – Năm học 2026-2027"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 27,
+              "quote": "Thời gian đăng ký từ ngày ra thông báo đến hết ngày 01/11/2026"
+            }
+          ]
+        },
+        {
+          "kind": "UNKNOWN",
+          "text": "Giờ mở đăng ký học phần năm 2030 chưa xác định được từ thông báo này; thông báo không cung cấp bằng chứng về mốc đó.",
+          "references": [
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 23,
+              "quote": "5. Cách thức đăng ký:"
+            },
+            {
+              "id": "notice_627f82bae28a499221b9020f",
+              "paragraph": 27,
+              "quote": "Thời gian đăng ký từ ngày ra thông báo đến hết ngày 01/11/2026"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "id": "notice_627f82bae28a499221b9020f",
+          "url": "https://portal.uit.edu.vn/bai-viet/thong-bao-dang-ky-xet-cap-cac-loai-hoc-bong-hk-1-nh-2026-2027",
+          "title": "Thông báo đăng ký xét cấp các loại học bổng HK 1 – NH 2026-2027",
+          "publishedDate": "2026-10-19",
+          "version": "7bd35f2aa1912b15b5e8dddb28ff7a853d7baf2187a4749959b3a7aa95332015",
+          "fetchedAt": 1793796726,
+          "paragraphs": [
+            "THÔNG BÁO",
+            "V/v đăng ký xét cấp các loại học bổng Học kỳ 1 – Năm học 2026-2027",
+            "Trường Đại học Công nghệ Thông tin thông báo sinh viên đăng ký nguyện vọng xét cấp học bổng trong Học kỳ 1 Năm học 2026-2027. Các loại học bổng áp dụng trong thông báo này:",
+            "Học bổng khuyến khích học tập (HB KKHT) học kỳ 1 năm học 2026-2027 ( Dựa trên điểm học tập và điểm rèn luyện của học kỳ 2 năm học 2025-2026).",
+            "Học bổng của Sinh viên Chương trình Tiên tiến (HB CTTT) học kỳ 1 năm học 2026-2027( Dựa trên điểm học tập và điểm rèn luyện của học kỳ 2 năm học 2026-2027).",
+            "Học bổng ngoài ngân sách (HB NNS) học kỳ 1 năm học 2026-2027 (Áp dụng cho các học bổng triển khai từ 01/11/2026-10/04/2027). Sinh viên xem hướng dẫn khai hồ sơ tại Mục 7.",
+            "Đối với học bổng tuyển sinh (HB TS), sinh viên không bắt buộc phải đăng ký (Xem thêm mục 4).",
+            "1. Mục đích:",
+            "Học bổng Khuyến khích học tập (HB KKHT) căn cứ theo tiêu chí học tập và rèn luyện đúng theo quy định Học bổng Khuyến khích học tập hiện hành. Nhưng với tinh thần phụng sự theo triết lý giáo dục của Nhà trường, học bổng Khuyến khích học tập là gửi gắm sự khuyến khích những sinh viên có học lực tốt, có hoàn cảnh khó khăn cần được hỗ trợ vươn lên trong học tập và rèn luyện.",
+            "Học bổng Khuyến khích học tập sẽ đạt đúng tinh thần và thông điệp nhân văn hơn khi tiếp sức thêm cho những sinh viên học tốt phấn đấu vượt qua sự khó khăn trong cuộc sống. Do đó, nhà trường khuyến khích các bạn sinh viên có học lực tốt, hoàn cảnh ổn định, chưa khó khăn, chưa bức thiết hãy khoan đăng ký để dành suất cho các bạn khó khăn và cần hỗ trợ hơn.",
+            "Đối với các học bổng ngoài ngân sách căn cứ theo yêu cầu và tiêu chuẩn từ đơn vị cấp học bổng. Hội đồng xét học bổng sẽ xem xét lựa chọn hồ sơ phù hợp để cấp học bổng cho sinh viên.",
+            "2. Đối tượng",
+            "Đối với HB KKHT, HB CTTT: tất cả sinh viên đang theo học hệ đại học hệ chính quy (văn bằng 1) tại Trường có nguyện vọng nhận học bổng. Các trường hợp không đăng ký học bổng KKHT",
+            "Sinh viên chương trình liên kết BCU không cần đăng ký học bổng này do có chương trình học bổng riêng.",
+            "Sinh viên các chương trình văn bằng 2, liên thông không đăng ký học bổng này.",
+            "Tất cả sinh viên khóa 2026 không đăng ký học bổng này.",
+            "Đối với HB NNS: tất cả sinh viên chính qui (văn bằng 1), chương trình liên kết BCU, OUN tất cả các khóa có nguyện vọng nhận học bổng đều có thể đăng ký.",
+            "3. Nguyên tắc xét học bổng:",
+            "Sinh viên có quyền đăng ký nguyện vọng nhận cả 02 loại học bổng: HB KKHT-HB CTTT và HB NNS.",
+            "Trong mỗi học kỳ một sinh viên được xét ưu tiên nhận 01 học bổng Ngoài ngân sách. Trừ các trường hợp đặc biệt do hội đồng xét học bổng quyết định.",
+            "Đối với học bổng Tuyển sinh, Học bổng khuyến khích học tập, Học bổng chương trình chất lượng cao, Học bổng chương trình tiên tiến:",
+            "Nếu sinh viên có đăng ký nhu cầu nhận học bổng, đồng thời thỏa điều kiện nhận nhiều loại học bổng, sẽ được xét nhận 01 học bổng có giá trị cao nhất.",
+            "Đối với sinh viên đủ điều kiện nhận học bổng tuyển sinh, không bắt buộc phải đăng ký HB KKHT, HB CTTT. Trong trường hợp này sinh viên chỉ được nhận học bổng tuyển sinh.",
+            "5. Cách thức đăng ký:",
+            "- Tất cả sinh viên có nguyện vọng xét HB KKHT- HB CTTT , HB NNS đăng ký tại (Lưu ý có 2 tab KKHT và NNS) : https://portal.uit.edu.vn/sinh-vien/hoc-bong",
+            "Lưu ý: các mục kiểm tra điều kiện chỉ mang tính tham khảo (có thể sai lệch do phúc khảo, bổ sung...) sinh viên chủ động bấm đăng ký học bổng đúng thời hạn. Mọi sai sót nếu có sinh viên liên hệ phòng CTSV để được giải đáp. Phòng CTSV sẽ không giải quyết vấn đề không đăng ký đúng hạn vì bất cứ lý do gì.",
+            "- Sau khi đăng ký thành công sinh viên kiểm tra kỹ trạng thái đăng ký thành công được ghi nhận trên hệ thống.",
+            "- Thời gian đăng ký từ ngày ra thông báo đến hết ngày 01/11/2026",
+            "- Thông báo công khai danh sách sinh viên đã đăng ký xét học bổng: 04/11/2026",
+            "6. Lưu ý:",
+            "Chỉ xét học bổng đối với sinh viên có đăng ký theo thông báo.",
+            "Qui định chung về học bổng: https://ctsv.uit.edu.vn/bai-viet/quy-dinh-lien-quan-den-hoc-bong-sinh-vien",
+            "Sinh viên cập nhật tài khoản ngân hàng PVComBank trong lý lịch sinh viên. Tài khoản ngân hàng sinh viên cung cấp phải là tài khoản của chính sinh viên. Trường có thể từ chối cấp học bổng nếu sinh viên cung cấp sai tài khoản.",
+            "Nếu chưa đăng ký tài khoản ngân hàng PVComBank, thực hiện theo thông báo sau: https://ctsv.uit.edu.vn/bai-viet/thong-bao-vv-thay-doi-ngan-hang-nhan-ca...",
+            "Sinh viên tốt nghiệp đợt 3 năm 2026 (Kế cả tốt nghiệp trước hạn) không phát sinh Học phí học kỳ tại HK1 năm học 2026-2027 sẽ không tham gia xét học bổng KKHT .",
+            "Không xét học bổng đối với các trường hợp:",
+            "a. Có học phần đạt điểm dưới 5.0 trong học kỳ tính.",
+            "b. Học quá thời gian thiết kế của chương trình đào tạo (tính cả thời gian SV xin bảo lưu, tạm hoãn).",
+            "c. Sinh viên không có phát sinh Học phí Học kỳ (HPHK) trong học kỳ hiện tại (không tính học phí gia hạn).",
+            "d. Sinh viên không tham gia Bảo hiểm Y tế trong học kỳ tính.",
+            "e. Sinh viên bị kỷ luật từ mức khiển trách trở lên trong học kỳ tính.",
+            "f. Sinh viên học dưới 14 tín chỉ tại học kỳ xét. Lưu ý: Các môn ngoại ngữ được miễn được tính số tín chỉ",
+            "7. Hướng dẫn khai hồ sơ HB NNS:",
+            "- Sinh viên khai tóm tắt hồ sơ học bổng NNS theo cấu trúc như sau",
+            "1. HOÀN CẢNH GIA ĐÌNH: Trình bày hoàn cảnh gia đình có khó khăn ( nếu có). Gia đình có bao nhiêu người. Ai là nguồn thi nhập chính. Thu nhập của gia đình mỗi tháng như thế nào. Gia đình và bản thân sinh viên đang có những khó khăn gì….",
+            "2. THÀNH TÍCH HỌC TẬP, NGHIÊN CỨU KHOA HỌC: Tóm tắt trình độ ngoại ngữ. Giải thưởng học thuật, nghiên cứu khoa học. Các bài báo đã xuất bản….",
+            "3. HOẠT ĐỘNG XÃ HỘI: Tóm tắt các hoạt động vì cộng đồng đã tham gia, khen thưởng nếu có….",
+            "- Sau khi đăng ký thành công, sinh viên tự chuẩn bị sẵn các minh chứng tương ứng. Khi có học bổng ngoài ngân sách được đăng tại forum.Sinh viên chủ động nộp lựa chọn học bổng để nộp hồ sơ theo thông báo của học bổng đó.",
+            "* Mọi thắc mắc sinh viên vui lòng liên hệ:",
+            "- Hướng dẫn chi tiết và giải đáp thắc mắc tại Forum trường: https://forum.uit.edu.vn/t/huong-dan-dang-ky-cac-loai-hoc-bong-hk1-2026-...",
+            "- Email: ctsv@uit.edu.vn"
+          ],
+          "offline": false,
+          "abbreviated": true
+        }
+      ]
+    }
+  ],
+  "credentialSource": "Ignored local .env; passed only as process environment",
+  "mechanicalValidation": "passed for all three turns",
+  "review": {
+    "reviewer": "Codex source comparison; not independent human acceptance",
+    "registrationDeadlineAvailable": true,
+    "historicalDatesNotPresentedAsUpcoming": true,
+    "unanswerableQuestionReturnedUnknown": true,
+    "remainingQualityConcerns": [
+      "The first summary groups the BCU separate-program/non-required-registration clause with non-registration cases. Its wording needs a closer audience/eligibility review before use as personal advice.",
+      "Some summaries group multiple requirements under a small set of quotations. Reference integrity is not an entailment guarantee."
+    ],
+    "releaseGate": "Keep draft for semantic review; provider access is now verified."
+  },
+  "earlierRounds": [
+    {
+      "round": "initial-prefix",
+      "providerCalls": 11,
+      "purpose": "Explicit diagnostic round; no model fallback",
+      "outcome": "Three completed turns with incomplete source text"
+    },
+    {
+      "round": "expanded-text-before-schema-fix",
+      "providerCalls": 6,
+      "purpose": "Explicit diagnostic round; no model fallback",
+      "outcome": "Output rejected by citation-cardinality validator"
+    }
+  ],
+  "allRoundsProviderCalls": 26
+}

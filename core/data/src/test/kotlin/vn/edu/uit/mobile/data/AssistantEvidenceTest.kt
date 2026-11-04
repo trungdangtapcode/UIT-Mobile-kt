@@ -62,8 +62,18 @@ class AssistantEvidenceTest {
         tools.call("read_announcement", buildJsonObject { put("source_id", "notice_" + announcementHash(one.url).take(24)) })
         val item = tools.evidence.values.single()
         assertTrue(item.abbreviated)
-        assertEquals(16, item.paragraphs.size)
+        assertTrue(item.paragraphs.size <= AssistantRules.MAX_PARAGRAPHS)
+        assertTrue(item.paragraphs.sumOf { it.length } <= 32000)
         assertTrue(item.paragraphs.all { it.length <= AssistantRules.MAX_PASSAGE })
+    }
+
+    @Test fun deadlineInALaterParagraphRemainsAvailableWithinTheTextBudget() = runTest {
+        val body = (1..24).joinToString("") { "<p>Public notice paragraph $it.</p>" } + "<p>Applications close on 01/11/2026.</p>"
+        val tools = AssistantEvidenceTools(repository(body), AssistantScope())
+        tools.call("search_announcements", buildJsonObject { put("query", "") })
+        tools.call("read_announcement", buildJsonObject { put("source_id", "notice_" + announcementHash(one.url).take(24)) })
+        assertTrue(tools.evidence.values.single().paragraphs.any { "Applications close on 01/11/2026." in it })
+        assertFalse(tools.evidence.values.single().abbreviated)
     }
 
     @Test fun sourceVersionIncludesMetadataAndExtractorIdentity() {

@@ -126,7 +126,7 @@ internal object AssistantCodec {
                     val source = AnnouncementSource.valueOf(e.s("source"))
                     require(source in scope.sources && AnnouncementUrls.article(e.s("url"), source) == e.s("url") && (scope.urls.isEmpty() || e.s("url") in scope.urls))
                     val paragraphs = e.a("paragraphs").map { it.jsonPrimitive.content }
-                    require(e.s("title").length <= 1000 && paragraphs.size in 1..16 && paragraphs.all { it.length <= AssistantRules.MAX_PASSAGE } && e.s("version").matches(Regex("[a-f0-9]{64}")))
+                    require(e.s("title").length <= 1000 && paragraphs.size in 1..AssistantRules.MAX_PARAGRAPHS && paragraphs.all { it.length <= AssistantRules.MAX_PASSAGE } && e.s("version").matches(Regex("[a-f0-9]{64}")))
                     AssistantEvidence(e.s("id"), e.s("url"), source, e.s("title"), e.s("date"), e.n("at"), e.s("version"), paragraphs, e.b("offline"), e.b("abbreviated"))
                 }
                 val facts = t.a("facts").map { entry ->

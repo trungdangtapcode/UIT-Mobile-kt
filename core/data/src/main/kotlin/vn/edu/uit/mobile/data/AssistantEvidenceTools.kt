@@ -81,10 +81,18 @@ internal class AssistantEvidenceTools(private val repository: AnnouncementReposi
                 doc.select("br").forEach { it.after("\n") }
                 doc.select("p,li,tr,h1,h2,h3,h4,blockquote,pre").forEach { it.after("\n") }
                 val text = doc.wholeText().lines().map(AssistantRules::normalize).filter { it.isNotBlank() }
-                val paragraphs = text.flatMap { it.chunked(AssistantRules.MAX_PASSAGE) }.take(16)
+                var remaining = 32000 - totalChars
+                require(remaining >= 8) { "Evidence budget reached" }
+                val paragraphs = buildList {
+                    for (passage in text.flatMap { it.chunked(AssistantRules.MAX_PASSAGE) }.take(AssistantRules.MAX_PARAGRAPHS)) {
+                        if (remaining <= 0) break
+                        val excerpt = passage.take(remaining)
+                        add(excerpt)
+                        remaining -= excerpt.length
+                    }
+                }
                 require(paragraphs.isNotEmpty()) { "No supported text extracted" }
                 val chars = paragraphs.sumOf { it.length }
-                require(totalChars + chars <= 32000) { "Evidence budget reached" }
                 totalChars += chars
                 val value = AssistantEvidence(id, url, loaded.item.source, loaded.item.title, loaded.item.publishedDate, loaded.item.bodySavedAt, assistantSourceVersion(loaded.item), paragraphs, loaded.offline, mediaMissing || text.sumOf { it.length } > chars)
                 evidence[id] = value

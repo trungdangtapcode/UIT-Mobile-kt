@@ -34,15 +34,28 @@ class PassageSearchViewModelTest {
     private class Repo : PassageSearchRepository {
         override val library = MutableStateFlow(PassageLibrary(listOf(PassageFixtures.index)))
         var pendingCatalog: CompletableDeferred<Unit>? = null
+        var pendingCheck: CompletableDeferred<Unit>? = null
+        var checks = 0
+        var failCheck = false
         var pendingSearch: CompletableDeferred<Unit>? = null
         var queries = 0
         var builds = 0
+        var downloaded = true
         override suspend fun initialize() = Unit
         override suspend fun candidates(course: Course): List<PassageCandidate> {
             pendingCatalog?.let { withContext(NonCancellable) { it.await() } }
-            return listOf(PassageCandidate(PassageFixtures.spec, true))
+            return listOf(PassageCandidate(PassageFixtures.spec, downloaded))
         }
         override suspend fun build(course: Course, ids: Set<String>, config: PassageConfig, embedding: PassageEmbeddingConfig?, progress: (Int, Int) -> Unit) {
+            builds++
+        }
+        override suspend fun check(course: Course, ids: Set<String>, config: PassageConfig, embedding: PassageEmbeddingConfig?): PassageUpdatePlan {
+            checks++
+            if (failCheck) error("Local verification failed")
+            pendingCheck?.let { withContext(NonCancellable) { it.await() } }
+            return PassageUpdatePlan(course.accountId, course.id, "test-review", 1, config, embedding, listOf(PassageFileCheck(PassageFixtures.spec, PassageFileStatus.KEYWORDS_READY, 1, 0, false)), 0, 1, 0, 0, 0)
+        }
+        override suspend fun update(course: Course, plan: PassageUpdatePlan, progress: (Int, Int) -> Unit) {
             builds++
         }
         override suspend fun search(course: Course, query: String, mode: PassageSearchMode): PassageSearchResult {
@@ -123,5 +136,81 @@ class PassageSearchViewModelTest {
         assertNull(vm.state.value.course)
         assertTrue(vm.state.value.candidates.isEmpty())
         assertNull(vm.state.value.inspection)
+    }
+
+    @Test fun existingScopeIsSelectedAndCheckingNeverUpdatesUntilConfirmed() = runTest(dispatcher) {
+        val repo = Repo()
+        val vm = create(repo)
+        advanceUntilIdle()
+        vm.select(fixture.course)
+        advanceUntilIdle()
+        assertEquals(setOf(fixture.spec.id), vm.state.value.selected)
+        vm.check(PassageConfig(), null)
+        advanceUntilIdle()
+        assertEquals(1, repo.checks)
+        assertEquals(0, repo.builds)
+        assertNotNull(vm.state.value.plan)
+        vm.update()
+        advanceUntilIdle()
+        assertEquals(1, repo.builds)
+        vm.toggle(fixture.spec.id)
+        assertNull(vm.state.value.plan)
+        vm.update()
+        advanceUntilIdle()
+        assertEquals(1, repo.builds)
+    }
+
+    @Test fun lateLocalCheckCannotExposeAPlanAfterAccountRemoval() = runTest(dispatcher) {
+        val repo = Repo()
+        val owners = Owners()
+        val vm = create(repo, owners)
+        advanceUntilIdle()
+        vm.select(fixture.course)
+        advanceUntilIdle()
+        repo.pendingCheck = CompletableDeferred()
+        vm.check(PassageConfig(), PassageEmbeddingConfig())
+        runCurrent()
+        owners.remove(fixture.course.accountId)
+        runCurrent()
+        repo.pendingCheck!!.complete(Unit)
+        advanceUntilIdle()
+        assertNull(vm.state.value.course)
+        assertNull(vm.state.value.plan)
+        assertEquals(0, repo.builds)
+    }
+
+    @Test fun reloadingADeletedDownloadKeepsItsSelectionRemovable() = runTest(dispatcher) {
+        val repo = Repo()
+        val vm = create(repo)
+        advanceUntilIdle()
+        vm.select(fixture.course)
+        advanceUntilIdle()
+        repo.downloaded = false
+        vm.refresh()
+        advanceUntilIdle()
+        assertEquals(setOf(fixture.spec.id), vm.state.value.selected)
+        vm.toggle(fixture.spec.id)
+        assertTrue(vm.state.value.selected.isEmpty())
+        vm.toggle(fixture.spec.id)
+        assertTrue(vm.state.value.selected.isEmpty())
+    }
+
+    @Test fun aFailedRecheckCannotLeaveAnOldTransferReviewActionable() = runTest(dispatcher) {
+        val repo = Repo()
+        val vm = create(repo)
+        advanceUntilIdle()
+        vm.select(fixture.course)
+        advanceUntilIdle()
+        vm.check(PassageConfig(), null)
+        advanceUntilIdle()
+        assertNotNull(vm.state.value.plan)
+        repo.failCheck = true
+        vm.check(PassageConfig(), null)
+        advanceUntilIdle()
+        assertEquals(PassageWork.CHECK, vm.state.value.problem)
+        assertNull(vm.state.value.plan)
+        vm.update()
+        advanceUntilIdle()
+        assertEquals(0, repo.builds)
     }
 }

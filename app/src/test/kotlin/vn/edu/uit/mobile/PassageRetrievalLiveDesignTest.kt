@@ -42,11 +42,11 @@ class PassageRetrievalLiveDesignTest {
         Assume.assumeTrue("Run actual material retrieval evaluation first", File(input, "report.json").isFile && File(input, "index.json").isFile)
         return input
     }
-    private fun state(queryId: String): PassageSearchState = runBlocking {
+    private fun state(queryId: String, localOnly: Boolean = false): PassageSearchState = runBlocking {
         val input = input()
         // Restore the real index through the public repository, keeping the codec and scope checks in production.
         val report = Json.parseToJsonElement(File(input, "report.json").readText()).jsonObject
-        val raw = File(input, "index.json").readText()
+        val raw = File(input, "sync-index.json").takeIf { it.isFile }?.readText() ?: File(input, "index.json").readText()
         val root = Json.parseToJsonElement(raw).jsonObject
         val owner = root.getValue("owner").jsonPrimitive.content
         val courseId = root.getValue("course").jsonPrimitive.long
@@ -58,9 +58,15 @@ class PassageRetrievalLiveDesignTest {
             override suspend fun saveSessions(sessions: List<vn.edu.uit.mobile.model.PortalSession>) = error("No university session")
         }
         val downloads = PrivateOfflineDownloadStorage(File(input, "verified-materials"), Memory(""))
-        val repository = LocalPassageSearchRepository(Memory(raw), owners, FakePortalRepository().snapshot, createPassageDocumentLoader(downloads), downloads, object : StudyAiRepository by ConnectedStudyAiRepository(Memory(""), owners) {})
+        val section = first.getValue("section").jsonPrimitive.content.removePrefix("section:").toLong()
+        val file = vn.edu.uit.mobile.model.CourseFile(first.getValue("name").jsonPrimitive.content, first.getValue("url").jsonPrimitive.content, first.getValue("bytes").jsonPrimitive.long)
+        val portal = FakePortalRepository().apply {
+            snapshot.value = vn.edu.uit.mobile.model.PortalSnapshot(courses = listOf(course), sections = mapOf("$owner:$courseId" to listOf(vn.edu.uit.mobile.model.CourseSection(section, first.getValue("sectionName").jsonPrimitive.content, listOf(vn.edu.uit.mobile.model.CourseModule(1, courseId, file.name, "resource", "", files = listOf(file)))))))
+        }
+        val repository = LocalPassageSearchRepository(Memory(raw), owners, portal.snapshot, createPassageDocumentLoader(downloads), downloads, object : StudyAiRepository by ConnectedStudyAiRepository(Memory(""), owners) {})
         try {
             repository.initialize()
+            if (localOnly) repository.build(course, setOf(vn.edu.uit.mobile.domain.offlineDownloadId(course, file)), PassageConfig(), null)
             val index = repository.library.value.indexes.single()
             check(index.documents.single().version == report.getValue("sourceHash").jsonPrimitive.content)
             val replay = Json.parseToJsonElement(File(input, "replay.json").readText()).jsonObject.getValue(queryId).jsonObject
@@ -69,7 +75,7 @@ class PassageRetrievalLiveDesignTest {
                 val passage = index.passages.first { it.id == id }
                 PassageHit(passage, index.documents.first { it.spec.id == passage.documentId }, 0.0)
             }
-            PassageSearchState(courses = listOf(course), course = course, candidates = index.documents.map { PassageCandidate(it.spec, true) }, selected = index.documents.map { it.spec.id }.toSet(), query = replay.getValue("query").jsonPrimitive.content, mode = PassageSearchMode.HYBRID, library = repository.library.value, result = PassageSearchResult(hits, PassageSearchMode.HYBRID, PassageSearchMode.HYBRID))
+            PassageSearchState(courses = listOf(course), course = course, candidates = index.documents.map { PassageCandidate(it.spec, true) }, selected = index.documents.map { it.spec.id }.toSet(), query = replay.getValue("query").jsonPrimitive.content, mode = if (localOnly) PassageSearchMode.BM25 else PassageSearchMode.HYBRID, library = repository.library.value, result = if (localOnly) null else PassageSearchResult(hits, PassageSearchMode.HYBRID, PassageSearchMode.HYBRID), plan = repository.check(course, index.documents.map { it.spec.id }.toSet(), index.config, if (localOnly) PassageEmbeddingConfig() else index.embedding))
         } finally {
             repository.close()
         }
@@ -88,6 +94,17 @@ class PassageRetrievalLiveDesignTest {
         capture("retrieval-scope-$suffix")
         compose.onNodeWithTag("passage-search").performScrollToIndex(4)
         capture("retrieval-results-$suffix")
+        compose.onNodeWithTag("passage-search").performScrollToNode(hasTestTag("passage-manage"))
+        compose.onNodeWithTag("passage-manage").performClick()
+        capture("updates-files-$suffix")
+        compose.onNodeWithTag("passage-build").performClick()
+        capture("updates-review-$suffix")
+        if (width == 390 && dark) {
+            compose.onNodeWithText("Hủy").performClick()
+            compose.onNodeWithContentDescription("Chi tiết tìm kiếm").performClick()
+            capture("updates-details-390")
+            compose.onNodeWithText("Đóng").assertIsDisplayed().performClick()
+        }
     }
 
     @Test fun actualResults390() = phone(390)
@@ -118,6 +135,17 @@ class PassageRetrievalLiveDesignTest {
         compose.onNodeWithTag("passage-search").performScrollToNode(hasTestTag("passage-manage"))
         compose.onNodeWithTag("passage-manage").performClick()
         capture("retrieval-selection-390")
+    }
+
+    @Test fun actualNewTransferReview390() {
+        val initial = state("hidden-phase-vietnamese", localOnly = true)
+        check(initial.plan!!.transfers > 0 && initial.plan!!.reused == 0)
+        compose.setContent { UitTheme(dark = true, dynamic = false) { WorkspaceFrame(2, {}, {}, "", false, false, 0) { PassageSearchContent(initial) } } }
+        compose.onNodeWithTag("passage-manage").performScrollTo().performClick()
+        compose.onNodeWithTag("passage-enable-semantic").performScrollTo().performClick()
+        compose.onNodeWithTag("passage-build").performClick()
+        compose.onNodeWithTag("passage-confirm-update").assertIsNotEnabled()
+        capture("updates-new-transfer-390")
     }
 
     @Test fun actualIdentifierResult390() {

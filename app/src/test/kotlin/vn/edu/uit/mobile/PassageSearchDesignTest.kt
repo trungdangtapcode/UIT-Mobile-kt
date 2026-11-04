@@ -43,31 +43,54 @@ class PassageSearchDesignTest {
         assertEquals(fixture.hit, inspected)
     }
 
-    @Test fun semanticTransferRequiresBothExplicitSelectionAndADirectConnection() {
-        var builds = 0
-        compose.setContent { UitTheme { PassageSearchContent(state, onBuild = { _, _ -> builds++ }) } }
+    private fun plan(embedding: PassageEmbeddingConfig? = null, transfers: Int = 0) = PassageUpdatePlan(fixture.course.accountId, fixture.course.id, "reviewed", 1793836800, PassageConfig(), embedding, listOf(PassageFileCheck(fixture.spec, PassageFileStatus.KEYWORDS_READY, 1, 0, false)), 0, 1, 0, transfers, if (transfers > 0) 100 else 0)
+
+    @Test fun semanticTransferRequiresBothAReviewedPlanAndADirectConnection() {
+        var updates = 0
+        compose.setContent { UitTheme { PassageSearchContent(state.copy(plan = plan(PassageEmbeddingConfig(), 1)), onUpdate = { updates++ }) } }
         compose.onNodeWithTag("passage-manage").performScrollTo().performClick()
         compose.onNodeWithTag("passage-enable-semantic").performScrollTo().performClick()
-        compose.onNodeWithTag("passage-build").assertIsNotEnabled()
-        assertEquals(0, builds)
+        compose.onNodeWithTag("passage-build").performClick()
+        compose.onNodeWithTag("passage-confirm-update").assertIsNotEnabled()
+        assertEquals(0, updates)
     }
 
-    @Test fun localBuildIsExplicitAndNeedsNoAiKey() {
-        var builds = 0
-        var semantic: PassageEmbeddingConfig? = PassageEmbeddingConfig()
+    @Test fun checkingFilesAndConfirmingLocalUpdateAreSeparateActionsWithoutAnAiKey() {
+        var checks = 0
+        var updates = 0
+        var current by mutableStateOf(state)
         compose.setContent {
             UitTheme {
-                PassageSearchContent(state, onBuild = { _, embedding ->
-                    builds++
-                    semantic = embedding
-                })
+                PassageSearchContent(current, onCheck = { _, embedding ->
+                    assertNull(embedding)
+                    checks++
+                    current = current.copy(plan = plan())
+                }, onUpdate = { updates++ })
             }
         }
         compose.onNodeWithTag("passage-manage").performScrollTo().performClick()
-        assertEquals(0, builds)
-        compose.onNodeWithTag("passage-build").assertIsEnabled().performClick()
-        assertEquals(1, builds)
-        assertNull(semantic)
+        compose.onNodeWithTag("passage-check").assertIsEnabled().performClick()
+        assertEquals(1, checks)
+        assertEquals(0, updates)
+        compose.onNodeWithTag("passage-build").performClick()
+        compose.onNodeWithText("No AI request is needed for this update.").assertExists()
+        compose.onNodeWithTag("passage-confirm-update").assertIsEnabled().performClick()
+        assertEquals(1, updates)
+    }
+
+    @Test fun aPreviouslySelectedFileCanStillBeDeselectedAfterItsDownloadIsRemoved() {
+        var toggled: String? = null
+        compose.setContent { UitTheme { PassageSearchContent(state.copy(candidates = listOf(PassageCandidate(fixture.spec, false))), onToggle = { toggled = it }) } }
+        compose.onNodeWithTag("passage-manage").performScrollTo().performClick()
+        compose.onNodeWithTag("passage-source-${fixture.spec.id}").assertIsEnabled().performClick()
+        assertEquals(fixture.spec.id, toggled)
+    }
+
+    @Test fun unverifiedPreparedFilesAreNeverLabeledSyncedWithMoodle() {
+        compose.setContent { UitTheme { PassageSearchContent(state) } }
+        compose.onNodeWithTag("passage-manage").performScrollTo().performClick()
+        compose.onNodeWithText("Prepared · check saved version").assertExists()
+        compose.onNodeWithText("Moodle changes are not checked here. Download the latest file from the course first.").assertExists()
     }
 
     @Test fun confirmedResetIsAvailableEvenWhenCorruptStorageHasNoSelectedIndex() {

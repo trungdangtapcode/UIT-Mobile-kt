@@ -262,4 +262,164 @@ class PassageSearchRepositoryTest {
             repo.close()
         }
     }
+
+    @Test fun localCheckAndUnchangedUpdateReuseVectorsWithoutProviderCallsAfterRestart() = runTest {
+        val lab = Lab()
+        val ids = setOf(lab.spec(lab.one).id)
+        val embedding = PassageEmbeddingConfig()
+        val first = lab.repo()
+        first.build(lab.one, ids, PassageConfig(), embedding)
+        val calls = lab.calls
+        val original = first.library.value.indexes.single()
+        first.close()
+        val repo = lab.repo()
+        try {
+            val plan = repo.check(lab.one, ids, PassageConfig(), embedding)
+            assertEquals(calls, lab.calls)
+            assertEquals(PassageFileStatus.SMART_READY, plan.files.single().status)
+            assertEquals(original.passages.size, plan.reused)
+            assertEquals(0, plan.transfers)
+            lab.fail = true
+            repo.update(lab.one, plan)
+            assertEquals(calls, lab.calls)
+            val saved = repo.library.value.indexes.single()
+            assertEquals(original.passages.map { it.id }, saved.passages.map { it.id })
+            assertEquals(PassageUpdateReceipt(original.passages.size, 0, 0, 0), saved.update)
+            assertEquals(saved.update, PassageIndexCodec.decode(PassageIndexCodec.encode(saved), lab.one.accountId).update)
+        } finally {
+            repo.close()
+        }
+    }
+
+    @Test fun changedSourceIdentityRebindsLocationsButReusesExactTextAndCannotCrossOwners() = runTest {
+        val lab = Lab()
+        val repo = lab.repo()
+        val spec = lab.spec(lab.one)
+        try {
+            repo.build(lab.one, setOf(spec.id), PassageConfig(), PassageEmbeddingConfig())
+            val old = repo.library.value.indexes.single()
+            lab.docs[spec.id] = lab.docs.getValue(spec.id).copy(version = "b".repeat(64))
+            val plan = repo.check(lab.one, setOf(spec.id), PassageConfig(), PassageEmbeddingConfig())
+            assertEquals(PassageFileStatus.CHANGED, plan.files.single().status)
+            assertEquals(0, plan.transfers)
+            repo.update(lab.one, plan)
+            val current = repo.library.value.indexes.single()
+            assertNotEquals(old.passages.single().id, current.passages.single().id)
+            assertEquals(1, lab.calls)
+            assertEquals("b".repeat(64), repo.inspect(lab.one, repo.search(lab.one, "isolation", PassageSearchMode.BM25).hits.single()).hit.document.version)
+            val other = repo.check(lab.two, setOf(lab.spec(lab.two).id), PassageConfig(), PassageEmbeddingConfig())
+            assertEquals(0, other.reused)
+            assertEquals(1, other.transfers)
+        } finally {
+            repo.close()
+        }
+    }
+
+    @Test fun oneChangedCellOnlyTransfersItsNewTextAndModelChangeCannotReuseVectors() = runTest {
+        val lab = Lab()
+        val spec = lab.spec(lab.one)
+        lab.docs[spec.id] = lab.docs.getValue(spec.id).copy(parts = listOf(PassagePart(1, PassagePartKind.NOTEBOOK_MARKDOWN, "Unchanged introduction"), PassagePart(2, PassagePartKind.NOTEBOOK_CODE, "old_identifier()")))
+        val repo = lab.repo()
+        try {
+            repo.build(lab.one, setOf(spec.id), PassageConfig(), PassageEmbeddingConfig())
+            lab.docs[spec.id] = lab.docs.getValue(spec.id).copy(version = "b".repeat(64), parts = lab.docs.getValue(spec.id).parts.take(1) + PassagePart(2, PassagePartKind.NOTEBOOK_CODE, "new_identifier()"))
+            val plan = repo.check(lab.one, setOf(spec.id), PassageConfig(), PassageEmbeddingConfig())
+            assertEquals(1, plan.reused)
+            assertEquals(1, plan.transfers)
+            repo.update(lab.one, plan)
+            assertEquals(PassageUpdateReceipt(1, 1, 1, 0), repo.library.value.indexes.single().update)
+            val changedModel = repo.check(lab.one, setOf(spec.id), PassageConfig(), PassageEmbeddingConfig(dimensions = 256))
+            assertEquals(0, changedModel.reused)
+            assertEquals(2, changedModel.transfers)
+        } finally {
+            repo.close()
+        }
+    }
+
+    @Test fun staleReviewCannotSendAnyTextAndFailureKeepsPreviousSmartIndex() = runTest {
+        val lab = Lab()
+        val spec = lab.spec(lab.one)
+        val repo = lab.repo()
+        try {
+            repo.build(lab.one, setOf(spec.id), PassageConfig(), PassageEmbeddingConfig())
+            val old = repo.library.value.indexes.single()
+            val plan = repo.check(lab.one, setOf(spec.id), PassageConfig(), PassageEmbeddingConfig())
+            lab.docs[spec.id] = lab.docs.getValue(spec.id).copy(version = "b".repeat(64), parts = listOf(PassagePart(1, PassagePartKind.TEXT, "Different material")))
+            assertTrue(runCatching { repo.update(lab.one, plan) }.isFailure)
+            assertEquals(1, lab.calls)
+            val fresh = repo.check(lab.one, setOf(spec.id), PassageConfig(), PassageEmbeddingConfig())
+            lab.fail = true
+            assertTrue(runCatching { repo.update(lab.one, fresh) }.isFailure)
+            assertEquals(old.revision, repo.library.value.indexes.single().revision)
+        } finally {
+            repo.close()
+        }
+    }
+
+    @Test fun unreadableSelectedFileBlocksUpdateAndKeywordOnlyNeverEmbeds() = runTest {
+        val lab = Lab()
+        val spec = lab.spec(lab.one)
+        val repo = lab.repo(PassageDocumentLoader { error("Unreadable local file") })
+        try {
+            val plan = repo.check(lab.one, setOf(spec.id), PassageConfig(), null)
+            assertFalse(plan.canUpdate)
+            assertEquals(PassageFileStatus.UNAVAILABLE, plan.files.single().status)
+            assertTrue(runCatching { repo.update(lab.one, plan) }.isFailure)
+            assertEquals(0, lab.calls)
+        } finally {
+            repo.close()
+        }
+        val working = lab.repo()
+        try {
+            working.update(lab.one, working.check(lab.one, setOf(spec.id), PassageConfig(), null))
+            assertEquals(PassageUpdateReceipt(0, 0, 0, 0), working.library.value.indexes.single().update)
+            assertEquals(0, lab.calls)
+        } finally {
+            working.close()
+        }
+    }
+
+    @Test fun duplicateNewTextIsSentOnceAndReboundToBothSourceCells() = runTest {
+        val lab = Lab()
+        val spec = lab.spec(lab.one)
+        lab.docs[spec.id] = lab.docs.getValue(spec.id).copy(parts = listOf(1, 2).map { PassagePart(it, PassagePartKind.NOTEBOOK_MARKDOWN, "Repeated source paragraph") })
+        val repo = lab.repo()
+        try {
+            val plan = repo.check(lab.one, setOf(spec.id), PassageConfig(), PassageEmbeddingConfig())
+            assertEquals(2, plan.passages)
+            assertEquals(1, plan.transfers)
+            repo.update(lab.one, plan)
+            val index = repo.library.value.indexes.single()
+            assertEquals(2, index.vectors.size)
+            assertEquals(PassageUpdateReceipt(0, 2, 1, 0), index.update)
+            assertEquals(listOf(1, 2), repo.search(lab.one, "Repeated", PassageSearchMode.BM25).hits.map { it.passage.ordinal }.sorted())
+        } finally {
+            repo.close()
+        }
+    }
+
+    @Test fun sourceReplacementDuringProviderCallCannotPublishReviewedVectors() = runTest {
+        val lab = Lab()
+        val spec = lab.spec(lab.one)
+        val first = lab.repo()
+        first.build(lab.one, setOf(spec.id), PassageConfig(), PassageEmbeddingConfig())
+        val revision = first.library.value.indexes.single().revision
+        first.close()
+        lab.docs[spec.id] = lab.docs.getValue(spec.id).copy(version = "b".repeat(64), parts = listOf(PassagePart(1, PassagePartKind.TEXT, "New source before request")))
+        val service = object : StudyAiRepository by lab.ai {
+            override suspend fun embed(course: Course, texts: List<String>, config: PassageEmbeddingConfig): PassageEmbeddingBatch {
+                val result = lab.ai.embed(course, texts, config)
+                lab.docs[spec.id] = lab.docs.getValue(spec.id).copy(version = "c".repeat(64))
+                return result
+            }
+        }
+        val repo = lab.repo(service = service)
+        try {
+            val plan = repo.check(lab.one, setOf(spec.id), PassageConfig(), PassageEmbeddingConfig())
+            assertTrue(runCatching { repo.update(lab.one, plan) }.isFailure)
+            assertEquals(revision, repo.library.value.indexes.single().revision)
+        } finally {
+            repo.close()
+        }
+    }
 }

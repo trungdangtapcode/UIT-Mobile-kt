@@ -102,65 +102,123 @@ class LocalPassageSearchRepository(private val storage: StudyStorage, private va
         lexicalCache = null
         mutable.value = PassageLibrary(mutable.value.indexes.filterNot { it.owner == index.owner } + index)
     }
-    override suspend fun build(course: Course, ids: Set<String>, config: PassageConfig, embedding: PassageEmbeddingConfig?, progress: (Int, Int) -> Unit) = withContext(Dispatchers.IO) {
-        initialize()
+    private data class Prepared(val documents: List<PassageDocument>, val infos: List<PassageDocumentInfo>, val passages: List<CoursePassage>, val reused: Map<String, List<Float>>, val plan: PassageUpdatePlan)
+    private fun vectorKey(text: String, embedding: PassageEmbeddingConfig) = practiceDigest(listOf("embedding-text-v1", embedding.model, embedding.dimensions.toString(), text))
+    private suspend fun prepare(course: Course, ids: Set<String>, config: PassageConfig, embedding: PassageEmbeddingConfig?, token: Long): Prepared {
         config.validate()
         embedding?.validate()
         require(ids.size in 1..PassageRules.DOCUMENTS)
+        val catalog = allowed(course)
+        val selected = ids.sorted().map { requireNotNull(catalog[it]) }
+        val previous = mutable.value.indexes.firstOrNull { it.owner == course.accountId && it.courseId == course.id }
+        val reusable = if (embedding != null && previous?.embedding == embedding && previous.vectors.size == previous.passages.size) {
+            previous.passages.indices.associate { vectorKey(previous.passages[it].text, embedding) to previous.vectors[it] }
+        } else {
+            emptyMap()
+        }
+        val docs = mutableListOf<PassageDocument>()
+        val infos = mutableListOf<PassageDocumentInfo>()
+        val passages = mutableListOf<CoursePassage>()
+        val files = selected.mapIndexed { i, spec ->
+            guard(course, token, selected)
+            val doc = try {
+                loader.load(spec).also { require(it.spec == spec) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+            if (doc == null) {
+                PassageFileCheck(spec, PassageFileStatus.UNAVAILABLE, 0, 0, false)
+            } else {
+                docs += doc
+                val all = PassageRules.chunks(doc, config)
+                val kept = all.take((PassageRules.PASSAGES - passages.size) / (selected.size - i))
+                passages += kept
+                val partial = doc.partial || kept.size < all.size
+                infos += PassageDocumentInfo(spec, doc.version, partial)
+                val count = if (embedding == null) 0 else kept.count { vectorKey(it.text, embedding) in reusable }
+                val old = previous?.documents?.firstOrNull { it.spec.id == spec.id }
+                val status = when {
+                    kept.isEmpty() -> PassageFileStatus.UNAVAILABLE
+                    old == null -> PassageFileStatus.NEW
+                    !sameSource(spec, old.spec) || old.version != doc.version || previous.config != config -> PassageFileStatus.CHANGED
+                    count == kept.size && count > 0 -> PassageFileStatus.SMART_READY
+                    else -> PassageFileStatus.KEYWORDS_READY
+                }
+                PassageFileCheck(spec, status, kept.size, count, partial)
+            }
+        }
+        guard(course, token, selected)
+        val reused = if (embedding == null) 0 else passages.count { vectorKey(it.text, embedding) in reusable }
+        val pending = if (embedding == null) emptyList() else passages.filter { vectorKey(it.text, embedding) !in reusable }.distinctBy { vectorKey(it.text, embedding) }
+        val fingerprint = practiceDigest(listOf(course.accountId, course.id.toString(), previous?.revision.orEmpty(), config.toString(), embedding.toString()) + files.map { it.spec.id + it.status.name } + infos.map { it.spec.id + it.version })
+        val plan = PassageUpdatePlan(course.accountId, course.id, fingerprint, System.currentTimeMillis() / 1000, config, embedding, files, previous?.documents?.count { it.spec.id !in ids } ?: 0, passages.size, reused, pending.size, pending.sumOf { it.text.length })
+        return Prepared(docs, infos, passages, reusable, plan)
+    }
+    override suspend fun check(course: Course, ids: Set<String>, config: PassageConfig, embedding: PassageEmbeddingConfig?): PassageUpdatePlan = withContext(Dispatchers.IO) {
+        initialize()
+        val token = epoch
+        prepare(course, ids, config, embedding, token).plan
+    }
+    override suspend fun update(course: Course, plan: PassageUpdatePlan, progress: (Int, Int) -> Unit) {
+        require(plan.owner == course.accountId && plan.courseId == course.id && plan.canUpdate)
+        buildSelected(course, plan.files.map { it.spec.id }.toSet(), plan.config, plan.embedding, plan.fingerprint, progress)
+    }
+    override suspend fun build(course: Course, ids: Set<String>, config: PassageConfig, embedding: PassageEmbeddingConfig?, progress: (Int, Int) -> Unit) = buildSelected(course, ids, config, embedding, null, progress)
+    private suspend fun buildSelected(course: Course, ids: Set<String>, config: PassageConfig, embedding: PassageEmbeddingConfig?, fingerprint: String?, progress: (Int, Int) -> Unit) = withContext(Dispatchers.IO) {
+        initialize()
         val token = lock.withLock {
             check(!mutable.value.storageFailed)
             ++epoch
         }
-        val catalog = allowed(course)
-        val selected = ids.sorted().map { requireNotNull(catalog[it]) }
-        val documents = selected.map { spec ->
-            guard(course, token, selected)
-            loader.load(spec).also { require(it.spec == spec) }
-        }
-        val passages = mutableListOf<CoursePassage>()
-        var limited = false
-        val infos = documents.mapIndexed { i, doc ->
-            val chunks = PassageRules.chunks(doc, config)
-            val allowance = (PassageRules.PASSAGES - passages.size) / (documents.size - i)
-            val kept = chunks.take(allowance)
-            if (kept.size < chunks.size) limited = true
-            passages += kept
-            PassageDocumentInfo(doc.spec, doc.version, doc.partial || kept.size < chunks.size)
-        }
-        require(passages.isNotEmpty())
+        val prepared = prepare(course, ids, config, embedding, token)
+        val plan = prepared.plan
+        check(plan.canUpdate) { "A selected file is unavailable or unsupported" }
+        check(fingerprint == null || fingerprint == plan.fingerprint) { "Files changed since the transfer review; check again" }
+        val selected = prepared.documents.map { it.spec }
+        val passages = prepared.passages
         var vectors = emptyList<List<Float>>()
         var tokens = 0L
+        var requests = 0
         var failed = false
+        val previous = mutable.value.indexes.firstOrNull { it.owner == course.accountId && it.courseId == course.id }
         if (embedding != null) {
-            val produced = mutableListOf<List<Float>>()
+            val produced = prepared.reused.toMutableMap()
             try {
+                val pending = passages.filter { vectorKey(it.text, embedding) !in produced }.distinctBy { vectorKey(it.text, embedding) }
                 val batches = mutableListOf<MutableList<CoursePassage>>()
-                passages.forEach { passage ->
+                pending.forEach { passage ->
                     val last = batches.lastOrNull()
                     if (last == null || last.size >= PassageRules.BATCH || last.sumOf { it.text.toByteArray(Charsets.UTF_8).size } + passage.text.toByteArray(Charsets.UTF_8).size > 64000) batches += mutableListOf(passage) else last += passage
                 }
+                progress(0, pending.size)
+                var completed = 0
                 batches.forEach { batch ->
                     guard(course, token, selected)
-                    // No URLs/account identifiers go to the provider; source text is the explicit selected transfer.
+                    // Only new, explicitly reviewed text leaves the phone; owner/source metadata is excluded.
+                    requests++
                     val result = ai.embed(course, batch.map { it.text }, embedding)
                     require(result.model == embedding.model && result.vectors.size == batch.size && result.tokens >= 0)
-                    produced += result.vectors.map { PassageRules.normalize(it, embedding.dimensions) }
-                    tokens += result.tokens
                     guard(course, token, selected)
-                    progress(produced.size, passages.size)
+                    batch.zip(result.vectors).forEach { (p, v) -> produced[vectorKey(p.text, embedding)] = PassageRules.normalize(v, embedding.dimensions) }
+                    tokens += result.tokens
+                    completed += batch.size
+                    progress(completed, pending.size)
                 }
-                vectors = produced
+                vectors = passages.map { produced.getValue(vectorKey(it.text, embedding)) }
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                // An unsuccessful update must not replace an existing usable smart-search generation.
+                if (previous?.vectors?.isNotEmpty() == true) throw e
                 failed = true
             }
         }
         guard(course, token, selected)
-        // Recheck bytes after potentially slow embedding, not only catalog membership.
-        documents.forEach { check(loader.load(it.spec).version == it.version) { "Source changed during indexing" } }
+        prepared.documents.forEach { check(loader.load(it.spec).version == it.version) { "Source changed during indexing" } }
         guard(course, token, selected)
-        val index = PassageIndex(course.accountId, course.id, UUID.randomUUID().toString(), System.currentTimeMillis() / 1000, config, infos, passages, embedding, vectors, tokens, failed, limited)
+        val index = PassageIndex(course.accountId, course.id, UUID.randomUUID().toString(), System.currentTimeMillis() / 1000, config, prepared.infos, passages, embedding, vectors, tokens, failed, prepared.infos.any { it.partial }, PassageUpdateReceipt(if (failed) 0 else plan.reused, if (failed || embedding == null) 0 else passages.size - plan.reused, requests, plan.removed))
         lock.withLock {
             guard(course, token, selected)
             persist(index)
@@ -182,7 +240,7 @@ class LocalPassageSearchRepository(private val storage: StudyStorage, private va
         }
         if (valid.size == original.documents.size) return original to 0
         val positions = original.passages.indices.filter { i -> original.passages[i].documentId in valid.map { it.spec.id } }
-        val updated = original.copy(revision = UUID.randomUUID().toString(), documents = valid, passages = positions.map { original.passages[it] }, vectors = if (original.vectors.isEmpty()) emptyList() else positions.map { original.vectors[it] })
+        val updated = original.copy(revision = UUID.randomUUID().toString(), update = null, documents = valid, passages = positions.map { original.passages[it] }, vectors = if (original.vectors.isEmpty()) emptyList() else positions.map { original.vectors[it] })
         lock.withLock {
             check(mutable.value.indexes.any { it.revision == original.revision })
             check(course.accountId in owners())

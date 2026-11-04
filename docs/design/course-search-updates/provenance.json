@@ -1,0 +1,62 @@
+{
+  "capturedAt": "2026-11-04T19:33:18.916142+00:00",
+  "runtime": "Robolectric API 35 native Compose rendering; preview package; no emulator or physical phone. Platform window dimming may differ on device.",
+  "source": "Authorized NT409.R11 Lab01-student.ipynb capture from November 2, 2026, through the verified-byte loader and production repository. Identity anonymized.",
+  "sourceHash": "a5ddc366250ea69e2f82e1fd933b509cfeb9e82c12abeb2758744a606436fdad",
+  "network": "No university requests or provider calls during check, unchanged update or rendering. Actual saved embedding vectors came from the earlier live OpenAI evaluation.",
+  "newTransferState": "A separate production keyword-only preparation of the same actual notebook followed by an unsent semantic update plan; no source text was authored or altered. The disabled send action reflects the absence of a configured connection in the capture.",
+  "widthsDp": [
+    360,
+    390,
+    412
+  ],
+  "fontScale": {
+    "412": 1.3
+  },
+  "appearances": [
+    "dark",
+    "light"
+  ],
+  "images": [
+    {
+      "file": "updates-details-390.png",
+      "sha256": "13f8686ac10bc3c1f7553504ce29e92ef730f77f266beccff73d71eb5ab0d7d5"
+    },
+    {
+      "file": "updates-files-360.png",
+      "sha256": "32cd2b07d2c28f65205a151a68a2a3ccde095ada12576c86a21da90ee12b4d65"
+    },
+    {
+      "file": "updates-files-390-light.png",
+      "sha256": "c087919a7eb011889b309e2555b2b33423023aa09d931bb8d19adcbf802275ea"
+    },
+    {
+      "file": "updates-files-390.png",
+      "sha256": "a1648dca097b10b5acec16228787cb5e95234ff0d37af761c65706740c54abd1"
+    },
+    {
+      "file": "updates-files-412-large-text.png",
+      "sha256": "28fdd6853df40332e9f7e73b9eadd9184243739b60fc323426691f89fb636d17"
+    },
+    {
+      "file": "updates-new-transfer-390.png",
+      "sha256": "ba0ae17a44353d0a287163d153403750021563c1d3fb35d3b34d9f66df712589"
+    },
+    {
+      "file": "updates-review-360.png",
+      "sha256": "398524dc97208c54dd3bf7b2e71fd2eeefbb9cfa512cd969078ba04f71ffc441"
+    },
+    {
+      "file": "updates-review-390-light.png",
+      "sha256": "8fecf749902f87707e7b9b9b1e5158f9fa2e7ce7acb0d43b2a47f628b721ae1f"
+    },
+    {
+      "file": "updates-review-390.png",
+      "sha256": "cb9e33ea56bdb72f81352bada2b30d22908f74582e67af77ec1b27a7640639d8"
+    },
+    {
+      "file": "updates-review-412-large-text.png",
+      "sha256": "c3faf3b8e78a4772b5ba2f9f1d3e2fd44ae23337aa004b431acac9946cbb7a39"
+    }
+  ]
+}

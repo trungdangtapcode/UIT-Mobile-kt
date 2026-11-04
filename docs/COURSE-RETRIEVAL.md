@@ -104,3 +104,16 @@ The [original scope matrix](research/SEMANTIC-COURSE-SEARCH.md#november-5-implem
 keeps page-aware PDF navigation, a packaged local embedder and independent
 multi-course/physical-device gates open. Host evidence and this optional cloud
 adapter do not close those remaining requirements.
+
+## Saved-file checks and incremental updates
+
+The Files & updates view now separates local file verification, offline readiness
+and optional AI readiness. Check saved files computes a transfer review without an
+API call. Updates reuse exact-text vectors from the same account/course and matching
+model/dimensions, then send only missing unique text after confirmation. A persisted
+receipt exposes reuse, newly embedded rows and request count. Checks describe saved
+bytes on this device, not the latest Moodle server version.
+
+See the [student preview guide](COURSE-SEARCH-PREVIEW.md),
+[interaction design](design/COURSE-SEARCH-UPDATES.md) and
+[algorithm](research/COURSE-SEARCH-UPDATES.md) for recovery, migration and limits.

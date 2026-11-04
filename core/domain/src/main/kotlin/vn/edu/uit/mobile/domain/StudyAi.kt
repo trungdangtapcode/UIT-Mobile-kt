@@ -25,6 +25,7 @@ interface StudyAiRepository {
     suspend fun disconnect()
     suspend fun generate(course: Course, mode: String, sources: List<StudySource>, question: String, language: String): StudyAnswer
     suspend fun generatePractice(course: Course, sources: List<StudySource>, options: PracticeOptions): PracticeGeneration = throw StudyAiException("Practice generation is unavailable for this connection.")
+    suspend fun tutor(course: Course?, request: TutorRequest): TutorResult = throw StudyAiException("Code tutoring is unavailable for this connection.")
     suspend fun tasks(course: Course, assignmentId: Long): List<StudyTask>
     suspend fun saveTasks(course: Course, assignmentId: Long, tasks: List<StudyTask>)
 }

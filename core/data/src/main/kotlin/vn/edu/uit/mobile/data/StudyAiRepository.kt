@@ -126,7 +126,8 @@ class ConnectedStudyAiRepository(
         )
     }
     override suspend fun disconnect() = withContext(Dispatchers.IO) { storage.remove("connection") }
-    private suspend fun requireAccount(course: Course) {
+    private suspend fun requireAccount(course: Course?) {
+        if (course == null) return
         check(accounts.accounts.first().any { it.id == course.accountId }) { "This course account was removed. Open the course again." }
     }
     override suspend fun generate(course: Course, mode: String, sources: List<StudySource>, question: String, language: String): StudyAnswer = withContext(Dispatchers.IO) {
@@ -158,7 +159,12 @@ class ConnectedStudyAiRepository(
         PracticeRules.request(sources, options)
         exchange(course, PracticeProtocol.payload(sources, options)) { data, direct -> PracticeProtocol.result(data, direct).also { PracticeRules.generation(it, sources, options) } }
     }
-    private suspend fun <T> exchange(course: Course, request: JsonObject, decode: (JsonObject, Boolean) -> T): T {
+    override suspend fun tutor(course: Course?, request: TutorRequest): TutorResult = withContext(Dispatchers.IO) {
+        TutorRules.request(request)
+        require(course != null || request.sources.isEmpty()) { "Choose a course before adding course context." }
+        exchange(course, TutorProtocol.payload(request)) { data, direct -> TutorProtocol.result(data, direct, request).also { TutorRules.result(it, request) } }
+    }
+    private suspend fun <T> exchange(course: Course?, request: JsonObject, decode: (JsonObject, Boolean) -> T): T {
         requireAccount(course)
         val config = config() ?: error("Configure an AI connection before generating an answer.")
         val direct = mode(config) == StudyConnectionMode.DIRECT
@@ -170,7 +176,11 @@ class ConnectedStudyAiRepository(
                 setBody(
                     if (direct) {
                         val model = config.getValue("model").jsonPrimitive.content
-                        if (request["mode"]?.jsonPrimitive?.content == "practice") PracticeProtocol.request(model, request).toString() else OpenAiStudyProtocol.request(model, request).toString()
+                        when (request["mode"]?.jsonPrimitive?.content) {
+                            "practice" -> PracticeProtocol.request(model, request)
+                            "tutor" -> TutorProtocol.request(model, request)
+                            else -> OpenAiStudyProtocol.request(model, request)
+                        }.toString()
                     } else {
                         request.toString()
                     }

@@ -6,7 +6,16 @@ The current stack is:
 | --- | --- | --- | --- |
 | 1 | `feat/configurable-workload` | [#71](https://github.com/trungdangtapcode/UIT-Mobile-kt/pull/71) / #10 | `main` |
 | 2 | `feat/exam-revision-planner` | [#72](https://github.com/trungdangtapcode/UIT-Mobile-kt/pull/72) / #12 | `feat/configurable-workload` |
-| 3 | `feat/ai-practice-sets` | AI quiz & flashcards / [#50](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/50) | `feat/exam-revision-planner` |
+| 3 | `feat/ai-practice-sets` | [#73](https://github.com/trungdangtapcode/UIT-Mobile-kt/pull/73) / [#50](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/50) | `feat/exam-revision-planner` |
+| 4 | `feat/ai-code-tutor` | AI Code Tutor / [#54](https://github.com/trungdangtapcode/UIT-Mobile-kt/issues/54) | `feat/ai-practice-sets` |
+
+The Code Tutor branch forked from AI practice at
+`54143a2ae6c7bb4dd62a55de957a5ee1073962bf`. Its PR targets
+`feat/ai-practice-sets` while #73 is open. Keep it draft until the parent stack
+lands and the [human quality review gate](CODE-TUTOR-EVALUATION.md#human-quality-review-gate)
+is resolved. Land #71 → #72 → #73 → Code Tutor; no child is merged into a parent
+feature branch. Apply the same comparison/rebase procedure below to each child,
+using that child's recorded fork point only after its parent has actually landed.
 
 The AI practice branch forked from the revision planner at
 `c0cd52e5c2684ad8391f01497fdecff025ebdfc7`. Its PR targets

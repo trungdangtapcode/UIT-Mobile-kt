@@ -153,6 +153,14 @@ Add/Cancel actions; validation stays in the form. Unknown end times and missing
 saved data remain explicit. Account-session changes dismiss the form and clear
 personal planning drafts. These are local planning aids, not room bookings.
 
+Code Tutor: keep the numbered selected-code pane as the anchor inside Courses.
+Use a monospaced gutter and code, horizontal scroll for long lines and bounded
+vertical scroll. Keep Explain/Hints/Test ideas in horizontal cut-corner controls.
+Distinguish exact code evidence, checked course context, model suggestions and
+unknowns using text labels. Short evidence dialogs wrap content; long proposals
+scroll with Copy/Close actions retained. Preserve physical bottom-right cuts and
+native controls. No chat bubbles, execution buttons or automatic edit application.
+
 ## References and evidence
 
 - [Research and baseline audit](../docs/design/AI-SLOP-AUDIT.md)

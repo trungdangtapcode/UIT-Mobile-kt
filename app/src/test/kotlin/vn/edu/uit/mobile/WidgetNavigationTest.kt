@@ -54,6 +54,12 @@ class WidgetNavigationTest {
                 module {
                     single<PortalRepository> { repository }
                     single<BookmarkRepository> { bookmarks }
+                    single<RevisionRepository> {
+                        object : RevisionRepository {
+                            override val accounts = owners.map { connected -> connected.filter { it.portal != PortalType.MOODLE }.map { RevisionAccount(it.id) } }
+                            override suspend fun replace(accountId: String, expected: RevisionWorkspace, value: RevisionWorkspace) = Unit
+                        }
+                    }
                     single<WorkloadRepository> {
                         object : WorkloadRepository {
                             override val accounts = owners.map { connected -> connected.map { WorkloadAccount(it, repository.snapshot.value) } }
@@ -167,6 +173,27 @@ class WidgetNavigationTest {
             activity = Robolectric.buildActivity(MainActivity::class.java).setup(saved).visible()
             compose.waitUntil(10_000) { compose.onAllNodesWithText("Known study time · 0 min").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("Upcoming workload").assertExists()
+        } finally {
+            activity.pause().stop().destroy()
+        }
+    }
+
+    @Test fun revisionReloadsAfterActivityRecreationAndWidgetFocusClosesIt() {
+        val context = ApplicationProvider.getApplicationContext<Application>()
+        owners.value = listOf(Account("teaching", "https://portal.uit.edu.vn", 1, "Teaching", PortalType.UIT_PORTAL))
+        repository.snapshot.value = repository.snapshot.value.copy(assignments = emptyList(), events = emptyList(), exams = emptyList(), updatedAt = kotlinx.datetime.Clock.System.now().epochSeconds)
+        var activity = Robolectric.buildActivity(MainActivity::class.java, WidgetRoute("schedule", "2026-10-26").intent(context)).setup().visible()
+        try {
+            compose.onNodeWithText("Exam revision planner").performScrollTo().performClick()
+            compose.waitUntil(10_000) { compose.onAllNodesWithText("0 of 0 effort min completed").fetchSemanticsNodes().isNotEmpty() }
+            val saved = Bundle()
+            activity.saveInstanceState(saved).pause().stop().destroy()
+            activity = Robolectric.buildActivity(MainActivity::class.java).setup(saved).visible()
+            compose.waitUntil(10_000) { compose.onAllNodesWithText("0 of 0 effort min completed").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("Exam revision", substring = false).assertExists()
+            activity.newIntent(WidgetRoute("schedule", "2026-10-27").intent(context))
+            compose.onNodeWithContentDescription("Show schedule for 2026-10-27").assertIsSelected()
+            compose.onNodeWithText("Exam revision", substring = false).assertDoesNotExist()
         } finally {
             activity.pause().stop().destroy()
         }

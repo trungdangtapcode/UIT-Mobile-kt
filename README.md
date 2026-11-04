@@ -190,3 +190,11 @@ upcoming cutoffs. Weekday windows, budgets, session minimums, buffers, finish le
 freshness and source selection are editable and stored locally. See
 [usage and ownership](docs/WORKLOAD.md) and the
 [algorithm, formulas and limitations](docs/WORKLOAD-ALGORITHM.md).
+
+## Exam revision planner
+
+Schedule builds editable local revision-session drafts for selected DAA/Portal
+exams. Topics share the teaching account's budget; completed/locked sessions are
+preserved and unplaced effort remains explicit. See [usage](docs/EXAM-REVISION.md),
+the [constructive algorithm](docs/EXAM-REVISION-ALGORITHM.md) and
+[stacked PR landing order](docs/STACKED-PRS.md).

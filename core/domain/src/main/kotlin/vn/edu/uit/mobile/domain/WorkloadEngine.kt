@@ -9,7 +9,8 @@ enum class WorkloadPressure { SHORTFALL, UNCERTAIN, WITHIN_ENTERED_BUDGET }
 data class WorkloadTask(val item: WorkloadItem, val estimate: WorkloadEstimate?)
 data class WorkloadCapacity(val conservative: Long, val optimistic: Long)
 data class WorkloadCheckpoint(val cutoff: Long, val demand: Long, val missingEstimates: Int, val capacity: WorkloadCapacity, val pressure: WorkloadPressure)
-data class WorkloadDay(val date: LocalDate, val tasks: List<WorkloadTask>, val capacity: WorkloadCapacity)
+data class StudyInterval(val start: Long, val end: Long)
+data class WorkloadDay(val date: LocalDate, val tasks: List<WorkloadTask>, val capacity: WorkloadCapacity, val available: List<StudyInterval> = emptyList())
 data class WorkloadSourceStamp(val account: Account, val updatedAt: Long)
 data class WorkloadResult(val from: LocalDate, val through: LocalDate, val tasks: List<WorkloadTask>, val overdue: List<WorkloadTask>, val submittedCount: Int, val checkpoints: List<WorkloadCheckpoint>, val days: List<WorkloadDay>, val issues: Set<WorkloadIssue>, val assumedExamEnds: Int, val orphanEstimates: List<WorkloadEstimate>, val sources: List<WorkloadSourceStamp>)
 
@@ -127,7 +128,7 @@ class WorkloadEngine {
         }
         val days = full.mapIndexed { i, c ->
             val date = today.plus(i, DateTimeUnit.DAY)
-            WorkloadDay(date, future.filter { Instant.fromEpochSeconds(it.item.due).toLocalDateTime(UitTimeZone).date == date }, c)
+            WorkloadDay(date, future.filter { Instant.fromEpochSeconds(it.item.due).toLocalDateTime(UitTimeZone).date == date }, c, if (missingBusyData) emptyList() else capacityDays[i].low.map { StudyInterval(it.start, it.end) })
         }
         val currentIds = all.map { it.item.ref.id }.toSet()
         return WorkloadResult(today, through, future, overdue, all.count { it.item.officialSubmitted == true && it.item.due in now until horizonEnd }, checkpoints, days, issues, assumed, selected.flatMap { it.estimates }.filter { it.ref.id !in currentIds }, selected.map { WorkloadSourceStamp(it.account, it.snapshot.updatedAt) })

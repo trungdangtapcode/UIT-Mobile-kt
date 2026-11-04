@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.*
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.automirrored.outlined.EventNote
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -112,18 +113,23 @@ class ScheduleViewModel(private val repository: PortalRepository, accounts: Acco
     }
 }
 
-@Composable fun ScheduleScreen(viewModel: ScheduleViewModel, workload: WorkloadViewModel? = null, onCourse: (Course) -> Unit) {
+@Composable fun ScheduleScreen(viewModel: ScheduleViewModel, workload: WorkloadViewModel? = null, revision: RevisionViewModel? = null, onCourse: (Course) -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var exporting by rememberSaveable { mutableStateOf(false) }
     var finding by rememberSaveable { mutableStateOf(false) }
     var sharingImage by rememberSaveable { mutableStateOf(false) }
     var showingWorkload by rememberSaveable { mutableStateOf(false) }
+    var showingRevision by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(showingRevision, revision) { if (showingRevision) revision?.open() }
+    DisposableEffect(revision) { onDispose { revision?.close() } }
     LaunchedEffect(showingWorkload, workload) { if (showingWorkload) workload?.open() }
     DisposableEffect(workload) { onDispose { workload?.close() } }
     LaunchedEffect(state.focusRequest) {
         if (state.focusRequest > 0) {
             sharingImage = false
             showingWorkload = false
+            showingRevision = false
+            revision?.close()
             workload?.close()
         }
     }
@@ -131,7 +137,12 @@ class ScheduleViewModel(private val repository: PortalRepository, accounts: Acco
     val activityContext = LocalContext.current
     val context = activityContext.applicationContext
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/calendar")) { uri -> viewModel.completeCalendarExport(context, uri) }
-    if (showingWorkload && workload != null) {
+    if (showingRevision && revision != null) {
+        RevisionScreen(revision) {
+            revision.close()
+            showingRevision = false
+        }
+    } else if (showingWorkload && workload != null) {
         WorkloadScreen(workload, {
             workload.close()
             showingWorkload = false
@@ -186,14 +197,15 @@ class ScheduleViewModel(private val repository: PortalRepository, accounts: Acco
                 {
                     showingWorkload = true
                 }
-            }
+            },
+            revision?.let { { showingRevision = true } }
         )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {}, onCourse: (Course) -> Unit = {}, onExport: (() -> Unit)? = null, onFreeTime: (() -> Unit)? = null, onShareImage: (() -> Unit)? = null, onWorkload: (() -> Unit)? = null) {
+fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {}, onCourse: (Course) -> Unit = {}, onExport: (() -> Unit)? = null, onFreeTime: (() -> Unit)? = null, onShareImage: (() -> Unit)? = null, onWorkload: (() -> Unit)? = null, onRevision: (() -> Unit)? = null) {
     var selected by remember { mutableStateOf<ScheduleEntry?>(null) }
     var semesters by remember { mutableStateOf(false) }
     var filter by rememberSaveable { mutableStateOf("All events") }
@@ -235,6 +247,7 @@ fun ScheduleContent(state: ScheduleState, onIntent: (ScheduleIntent) -> Unit = {
             if (onFreeTime != null) AssistChip(onClick = onFreeTime, shape = TechnicalShapes.Control, label = { Text(stringResource(R.string.sched_free_time)) }, leadingIcon = { Icon(Icons.Outlined.EventAvailable, null, Modifier.size(18.dp)) })
             if (onShareImage != null) AssistChip(onClick = onShareImage, shape = TechnicalShapes.Control, label = { Text(stringResource(R.string.ti_entry)) }, leadingIcon = { Icon(Icons.Outlined.Share, null, Modifier.size(18.dp)) })
             if (onWorkload != null) AssistChip(onClick = onWorkload, shape = TechnicalShapes.Control, label = { Text(stringResource(R.string.wl_entry)) }, leadingIcon = { Icon(Icons.Outlined.Assessment, null, Modifier.size(18.dp)) })
+            if (onRevision != null) AssistChip(onClick = onRevision, shape = TechnicalShapes.Control, label = { Text(stringResource(R.string.rp_entry)) }, leadingIcon = { Icon(Icons.AutoMirrored.Outlined.EventNote, null, Modifier.size(18.dp)) })
         }
         item {
             Panel {

@@ -62,6 +62,14 @@ source extraction, with format/size limits. See
 proposes versioned passage indexing, local lexical/embedding retrieval, source
 navigation and bilingual/device evaluation gates for the next search feature.
 
+[UIT Assistant](docs/UIT-ASSISTANT.md) adds encrypted local workspaces, multi-turn
+questions over selected official notices, read-only search/read tools, inspectable
+citations and editable local checklists. It uses the existing direct/gateway AI
+connection. Personal academic context, course documents and Forum context remain
+later phases in the [broader design](docs/research/UIT-ASSISTANT.md). See the
+[evaluation record](docs/research/UIT-ASSISTANT-EVALUATION.md) for live verification
+and provider-access limits.
+
 **Knowledge maps** creates an editable concept map from explicitly selected
 course text, with labeled directed relationships and inspectable source copies.
 Reviewed maps reopen offline. See [usage, limits and phone/model evidence](docs/KNOWLEDGE-MAPS.md).

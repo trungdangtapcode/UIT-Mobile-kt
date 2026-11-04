@@ -89,7 +89,7 @@ class AnnouncementsViewModel(val repository: AnnouncementRepository) : ViewModel
 }
 
 @Composable
-fun AnnouncementsScreen(vm: AnnouncementsViewModel, onBack: () -> Unit, initialUrl: String? = null, onRequestPermission: () -> Unit = {}) {
+fun AnnouncementsScreen(vm: AnnouncementsViewModel, onBack: () -> Unit, initialUrl: String? = null, onRequestPermission: () -> Unit = {}, onAssistant: (String?) -> Unit = {}) {
     val inbox by vm.inbox.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     val problem by vm.problem.collectAsStateWithLifecycle()
@@ -142,6 +142,7 @@ fun AnnouncementsScreen(vm: AnnouncementsViewModel, onBack: () -> Unit, initialU
             runCatching { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)) }.onFailure { vm.problem.value = true }
         },
         onLink = { target -> runCatching { uri.openUri(requireNotNull(AnnouncementUrls.safe(target, "https://portal.uit.edu.vn"))) }.onFailure { vm.problem.value = true } },
+        onAssistant = onAssistant,
         imageLoader = vm.repository::image
     )
 }
@@ -153,6 +154,7 @@ fun AnnouncementsContent(
     problem: Boolean = false,
     selected: String? = null,
     document: AnnouncementDocument? = null,
+    onAssistant: (String?) -> Unit = {},
     onBack: () -> Unit = {},
     onRefresh: () -> Unit = {},
     onSelect: (String) -> Unit = {},
@@ -222,6 +224,7 @@ fun AnnouncementsContent(
                         Text(stringResource(R.string.ann_reminder_set, savedTime(item!!.reminderAt)))
                         TextButton({ onReminder(item.url, 0) }) { Text(stringResource(R.string.ann_remove_reminder)) }
                     }
+                    TextButton({ onAssistant(selected) }) { Text(stringResource(R.string.as_ask_article)) }
                     TextButton({ onLink(selected) }) { Text(stringResource(R.string.ann_original)) }
                 }
             }
@@ -262,6 +265,7 @@ fun AnnouncementsContent(
             }
             item {
                 Text(stringResource(R.string.ann_checked, "Portal UIT", savedTime(inbox.sources.getValue(AnnouncementSource.PORTAL).checkedAt)), style = MaterialTheme.typography.bodySmall)
+                TextButton({ onAssistant(null) }) { Text(stringResource(R.string.as_entry)) }
                 Text(stringResource(R.string.ann_intro), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (!inbox.alertsEnabled) TextButton({ onAlerts(true) }) { Text(stringResource(R.string.ann_enable_alerts)) }
                 OutlinedTextField(query, { query = it.take(200) }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.ann_search)) }, shape = TechnicalShapes.Field, singleLine = true)

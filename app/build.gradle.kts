@@ -40,7 +40,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     // Compose rendering uses the debug-only host Activity supplied by ui-test-manifest.
-    if (name.contains("Release")) exclude("**/AnnouncementsDesignTest.class", "**/AnnouncementsLiveDesignTest.class", "**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class", "**/ForumAccountDesignTest.class", "**/ForumAccountLiveTest.class")
+    if (name.contains("Release")) exclude("**/AssistantDesignTest.class", "**/AssistantLiveDesignTest.class", "**/AnnouncementsDesignTest.class", "**/AnnouncementsLiveDesignTest.class", "**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class", "**/ForumAccountDesignTest.class", "**/ForumAccountLiveTest.class")
     val accountLive = providers.gradleProperty("forumAccountLive").getOrElse("false").toBoolean()
     systemProperty("uit.forum.account.live", accountLive.toString())
     systemProperty("uit.forum.account.dir", layout.buildDirectory.dir("outputs/forum-account-private").get().asFile.absolutePath)
@@ -64,4 +64,13 @@ tasks.withType<Test>().configureEach {
     systemProperty("uit.announcements.output", layout.buildDirectory.dir("outputs/announcements-live").get().asFile.absolutePath)
     outputs.upToDateWhen { !live }
     outputs.doNotCacheIf("Public announcement live evidence must contact UIT") { live }
+}
+
+tasks.withType<Test>().configureEach {
+    val preview = providers.gradleProperty("assistantPreview").getOrElse("false").toBoolean()
+    systemProperty("uit.assistant.preview", preview.toString())
+    systemProperty("uit.assistant.capture.input", rootProject.layout.projectDirectory.dir("core/data/build/outputs/assistant-live").asFile.absolutePath)
+    systemProperty("uit.assistant.capture.output", layout.buildDirectory.dir("outputs/assistant-live").get().asFile.absolutePath)
+    outputs.upToDateWhen { !preview }
+    outputs.doNotCacheIf("Assistant public-source render evidence is explicitly requested") { preview }
 }

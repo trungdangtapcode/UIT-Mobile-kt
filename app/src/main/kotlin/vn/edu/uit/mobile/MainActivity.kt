@@ -55,6 +55,7 @@ import vn.edu.uit.mobile.widgets.*
 
 class MainActivity : ComponentActivity() {
     private var announcementRoute by mutableStateOf<String?>(null)
+    private val assistantRepository: AssistantRepository by lazy { getKoin().getOrNull<AssistantRepository>() ?: vn.edu.uit.mobile.data.UitGraph.get(this).assistant }
     private val announcementRepository: AnnouncementRepository by lazy { getKoin().getOrNull<AnnouncementRepository>() ?: vn.edu.uit.mobile.data.createAnnouncementRepository(this) }
     private var widgetRoute by mutableStateOf<WidgetRoute?>(null)
     private val repository: PortalRepository by inject()
@@ -102,6 +103,7 @@ class MainActivity : ComponentActivity() {
                 val tutor = ownedViewModel { CodeTutorViewModel(studyRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this)), createOfflineTutorCodeLoader(createOfflineDownloadStorage(this))) }
                 val knowledge = ownedViewModel { KnowledgeViewModel(studyRepository, knowledgeRepository, accounts, repository, createKnowledgeSourceLoader(createOfflineDownloadStorage(this))) }
                 val reading = ownedViewModel { CourseReadingViewModel(readingRepository, accounts, repository, createOfflineDownloadStorage(this), createReadingDocumentLoader(createOfflineDownloadStorage(this)), nativeReadingPdfFactory(cacheDir)) }
+                val assistant = ownedViewModel { AssistantViewModel(assistantRepository, studyRepository, announcementRepository) }
                 val announcements = ownedViewModel { AnnouncementsViewModel(announcementRepository) }
                 val forum = ownedViewModel { ForumViewModel(forumRepository) }
                 val inbox = ownedViewModel { InboxViewModel(repository) }
@@ -126,7 +128,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, practice, tutor, knowledge, reading, forum, inbox, academic, studentProfile, announcements, announcementRoute, {
+                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, practice, tutor, knowledge, reading, forum, inbox, academic, studentProfile, announcements, assistant, announcementRoute, {
                     announcementRoute = null
                     intent.removeExtra(vn.edu.uit.mobile.data.AnnouncementSyncWorker.EXTRA_ANNOUNCEMENT)
                 }, { if (Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS) }, widgetRoute, {
@@ -205,6 +207,7 @@ private fun UitShell(
     academic: AcademicViewModel,
     studentProfile: StudentProfileViewModel,
     announcements: AnnouncementsViewModel,
+    assistant: AssistantViewModel,
     announcementRoute: String?,
     onAnnouncementConsumed: () -> Unit,
     onAnnouncementPermission: () -> Unit,
@@ -212,11 +215,15 @@ private fun UitShell(
     onWidgetRouteConsumed: () -> Unit,
     accounts: @Composable ((vn.edu.uit.mobile.model.Account) -> Unit) -> Unit
 ) {
+    var showAssistant by rememberSaveable { mutableStateOf(false) }
+    var returnToAssistant by rememberSaveable { mutableStateOf(false) }
+    var assistantSeed by rememberSaveable { mutableStateOf<String?>(null) }
     var showAnnouncements by rememberSaveable { mutableStateOf(false) }
     var announcementTarget by rememberSaveable { mutableStateOf<String?>(null) }
     LaunchedEffect(announcementRoute) {
         if (announcementRoute != null) {
             announcementTarget = announcementRoute
+            showAssistant = false
             showAnnouncements = true
             onAnnouncementConsumed()
         }
@@ -235,6 +242,9 @@ private fun UitShell(
     var profileAccountId by rememberSaveable { mutableStateOf<String?>(null) }
     fun openProfile(account: vn.edu.uit.mobile.model.Account? = null) {
         val navigate = {
+            returnToAssistant = false
+            showAssistant = false
+            assistant.stop()
             showAnnouncements = false
             showBookmarks = false
             returnToBookmarks = false
@@ -286,6 +296,9 @@ private fun UitShell(
     WorkspaceFrame(
         selected, { destination ->
             val navigate = {
+                returnToAssistant = false
+                showAssistant = false
+                assistant.stop()
                 showAnnouncements = false
                 forum.close()
                 selected = destination
@@ -303,6 +316,9 @@ private fun UitShell(
         errorMessage = sync.error?.text(),
         onSearch = {
             val navigate = {
+                returnToAssistant = false
+                showAssistant = false
+                assistant.stop()
                 showAnnouncements = false
                 showBookmarks = false
                 returnToBookmarks = false
@@ -314,12 +330,32 @@ private fun UitShell(
             if (reading.uiState.value.open) reading.leave(navigate) else navigate()
         }
     ) {
-        if (showAnnouncements) {
+        if (showAssistant) {
+            key(assistantSeed) {
+                AssistantScreen(assistant, {
+                    showAssistant = false
+                    assistantSeed = null
+                }, assistantSeed) { url ->
+                    showAssistant = false
+                    assistantSeed = null
+                    returnToAssistant = true
+                    announcementTarget = url
+                    showAnnouncements = true
+                }
+            }
+        } else if (showAnnouncements) {
             key(announcementTarget) {
                 AnnouncementsScreen(announcements, {
                     showAnnouncements = false
                     announcementTarget = null
-                }, announcementTarget, onAnnouncementPermission)
+                    if (returnToAssistant) {
+                        returnToAssistant = false
+                        showAssistant = true
+                    }
+                }, announcementTarget, onAnnouncementPermission, onAssistant = { url ->
+                    assistantSeed = url
+                    showAssistant = true
+                })
             }
         } else if (readingState.open) {
             CourseReadingScreen(reading)
@@ -386,6 +422,9 @@ private fun UitShell(
                 }, onSchedule = { selected = 1 }, onInbox = { selected = 3 }, onConnect = { showAccounts = true }, onAnnouncements = {
                     announcementTarget = null
                     showAnnouncements = true
+                }, onAssistant = {
+                    assistantSeed = null
+                    showAssistant = true
                 })
                 1 -> ScheduleScreen(schedule, workload, revision) {
                     courses.onIntent(CoursesIntent.Select(it))

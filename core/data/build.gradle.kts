@@ -15,3 +15,11 @@ dependencies {
     implementation(libs.work)
     implementation(libs.core.ktx)
 }
+
+tasks.withType<Test>().configureEach {
+    val live = providers.gradleProperty("assistantLive").getOrElse("false").toBoolean()
+    systemProperty("uit.assistant.live", live.toString())
+    systemProperty("uit.assistant.live.output", layout.buildDirectory.dir("outputs/assistant-live").get().asFile.absolutePath)
+    outputs.upToDateWhen { !live }
+    outputs.doNotCacheIf("Live assistant evaluation must use current sources and model") { live }
+}

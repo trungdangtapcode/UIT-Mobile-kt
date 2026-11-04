@@ -1,0 +1,15 @@
+{
+  "captured_at_utc": "2026-11-02T19:50:15.082193+00:00",
+  "environment": "Isolated localhost rootless Docker Discourse; generated accounts and content",
+  "upstream_revision": "b81bee142d364526b432788251986871952b5ddb",
+  "production_UIT_requests": 0,
+  "university_credentials_used": false,
+  "app_mutation_acceptance": false,
+  "checks": [
+    "Generated local users authenticate with session cookies and CSRF",
+    "Create and edit yield permitted cooked content and an inline revision diff",
+    "Reply targets and bookmark create/delete work in the isolated lab",
+    "XHR current-user/feed/topic/notification GETs without Discourse-Present or tracking parameters preserve sampled last-seen, read-position and notification state"
+  ],
+  "limits": "Upstream contracts only. UIT customization, session rotation, other implicit writes and installed Android authentication remain unverified."
+}

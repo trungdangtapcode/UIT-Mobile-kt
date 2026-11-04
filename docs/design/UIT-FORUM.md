@@ -1,6 +1,6 @@
 # UIT Forum: native phone workspace
 
-This direction currently covers the initial reader. Full student-facing web
+This direction covers the reader and its native account increment. Full student-facing web
 parity remains the target; use the [parity matrix](../research/UIT-FORUM-PARITY.md)
 to design the missing workflows and verify actual UIT behavior before expanding
 the interface. A browser handoff does not complete a native parity requirement.
@@ -39,3 +39,37 @@ production client, parser, repository and Compose reader. Behavior tests may use
 fixtures but must not export screenshots. Inspect public captures before
 publishing; account screenshots and student support replies remain local.
 See the gallery provenance manifest for source routes, capture time and hashes.
+
+## Native account workspace
+
+The toolbar account action opens a full-height phone login form, then an account
+workspace with Notifications / Forum bookmarks / Chat. Keep account identity
+visible and clearly distinguish local disconnect, temporary saves and server
+bookmarks. Native personal lists follow account capabilities; no counters or
+sample notices are invented.
+
+Login and composer use the same TechnicalShapes, 16dp gutters and keyboard-aware
+scrolling content with bottom actions. Their full-height layout avoids an unstable
+intrinsic-height alert dialog on the host renderer and gives the keyboard enough
+space on narrow phones. Password state is transient. Publishing requires an
+explicit button; errors and uncertain submission outcomes retain entered text.
+
+Chat separates channel history from an opened thread. The selected thread is
+visible above its messages and the send action retains that thread ID. Every
+message uses the semantic Forum renderer, including nested content and explicit
+media loading. No background typing/read events are emitted. Realtime updates,
+new conversations/threads and message management remain open parity work.
+
+[Account behavior and evidence](../FORUM-ACCOUNTS.md) documents the actual UIT
+login/read-only capture and local mutation acceptance. Public images include only
+inspected empty forms from that live flow. Private account lists stay local;
+fixture interaction tests do not export screenshots.
+
+| Native login | Native composer after actual login |
+| --- | --- |
+| ![Empty Forum login](previews/forum-native-login.png) | ![Empty Forum composer](previews/forum-native-composer.png) |
+
+[Capture provenance and hashes](previews/forum-account-provenance.json). These are
+390dp Vietnamese Robolectric screens. No draft text or synthetic Forum content is
+inserted, and no post is submitted. Authenticated account-list captures remain
+private. Passing host rendering does not establish installed-device acceptance.

@@ -37,6 +37,11 @@ class AnonymousForumClient(
     override suspend fun get(request: ForumRequest): String {
         val path = when (request) {
             ForumRequest.Categories -> "/site.json"
+            ForumRequest.Tags -> "/tags.json"
+            is ForumRequest.Feed -> {
+                require(!request.filter.memberOnly && request.page in 0..99 && (request.tagId?.let { it > 0 } != false))
+                request.tagId?.let { "/tag/$it/l/${request.filter.route}.json" } ?: "/${request.filter.route}.json"
+            }
             is ForumRequest.Category -> {
                 require(request.id > 0)
                 "/c/${request.id}/show.json"
@@ -53,6 +58,10 @@ class AnonymousForumClient(
                 require(request.id > 0 && request.postNumber > 0)
                 if (request.postNumber == 1) "/t/${request.id}.json" else "/t/${request.id}/${request.postNumber}.json"
             }
+            is ForumRequest.Revision -> {
+                require(request.topicId > 0 && request.postId > 0 && request.version > 1)
+                "/posts/${request.postId}/revisions/${request.version}.json"
+            }
             is ForumRequest.Posts -> {
                 require(request.topicId > 0 && request.ids.size in 1..ForumLimits.BATCH && request.ids.all { it > 0 })
                 "/t/${request.topicId}/posts.json"
@@ -61,6 +70,10 @@ class AnonymousForumClient(
         return requestBytes(ForumLimits.ORIGIN + path, 4 * 1024 * 1024, false, (request as? ForumRequest.Latest)?.takeIf { it.categoryId != null }) {
             when (request) {
                 is ForumRequest.Latest -> parameter("page", request.page)
+                is ForumRequest.Feed -> {
+                    parameter("page", request.page)
+                    if (request.filter == ForumFilter.TOP) parameter("period", request.period.route)
+                }
                 is ForumRequest.Search -> {
                     parameter("q", request.query)
                     parameter("page", request.page)

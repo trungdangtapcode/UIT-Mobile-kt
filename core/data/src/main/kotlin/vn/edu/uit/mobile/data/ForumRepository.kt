@@ -8,7 +8,7 @@ import kotlinx.serialization.json.*
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.forum.network.*
 
-fun createForumRepository(context: Context): ForumRepository = LocalForumRepository(AnonymousForumClient(), StudyPrivateStorage(context, "forum_public", "uit.forum.public.v1"))
+fun createForumRepository(context: Context): ForumRepository = ConnectedForumRepository(LocalForumRepository(AnonymousForumClient(), StudyPrivateStorage(context, "forum_public", "uit.forum.public.v1")), ForumSessionClient(), StudyPrivateStorage(context, "forum_session", "uit.forum.session.v1"))
 
 /** Guest namespace: public responses and local preferences never share a UIT account. */
 class LocalForumRepository(private val remote: ForumTransport, private val storage: StudyStorage, private val now: () -> Long = { System.currentTimeMillis() / 1000 }) : ForumRepository {
@@ -90,6 +90,9 @@ class LocalForumRepository(private val remote: ForumTransport, private val stora
         storage.write("cache", encoded)
     }
     override suspend fun load(request: ForumRequest): ForumLoaded = withContext(Dispatchers.IO) {
+        // Revision permissions may change independently of cached topic metadata.
+        // Never persist or replay history offline after a permission revocation.
+        if (request is ForumRequest.Revision) return@withContext ForumLoaded(ForumParser.parse(request, remote.get(request)), now())
         val key = ForumUrls.key(request)
         val epoch = mutex.withLock { generation }
         try {

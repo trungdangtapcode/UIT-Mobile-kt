@@ -1,6 +1,5 @@
 package vn.edu.uit.mobile.forum
 
-import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -14,13 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,6 +31,7 @@ import vn.edu.uit.mobile.feature.forum.R
 
 @Composable fun ForumScreen(viewModel: ForumViewModel) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val actions = ForumAccountActions(viewModel::account, { viewModel.compose(create = true) }, { viewModel.compose(it) }, viewModel::edit, viewModel::submit, viewModel::resumeDraft)
     var link by remember { mutableStateOf<String?>(null) }
     var clear by remember { mutableStateOf(false) }
     BackHandler { if (state.topic != null) viewModel.back() else viewModel.close() }
@@ -44,8 +41,29 @@ import vn.edu.uit.mobile.feature.forum.R
         { raw ->
             val target = ForumUrls.target(raw)
             if (target != null) viewModel.topic(target.topicId, target.postNumber) else ForumUrls.safe(raw)?.let { link = it }
-        }, viewModel::image, { url -> ForumUrls.safe(url)?.let { link = it } }
+        }, viewModel::image, { url -> ForumUrls.safe(url)?.let { link = it } }, { post -> viewModel.history(post) }, viewModel::discover, if (viewModel.supportsAccount) actions else null
     )
+    if (state.loginVisible) ForumLoginDialog(state, viewModel::login, viewModel::dismissAccount)
+    if (state.memberVisible) {
+        ForumMemberDialog(state, { tab, append, channel ->
+            viewModel.member(tab, append, channel, state.threadId.takeIf { channel?.id == state.channel?.id && channel != null })
+        }, viewModel::submit, { id, number ->
+            viewModel.dismissAccount()
+            viewModel.topic(id, number)
+        }, viewModel::disconnect, viewModel::dismissAccount, { url -> ForumUrls.safe(url)?.let { link = it } }, viewModel::image, { id -> viewModel.member(ForumMemberTab.CHAT, channel = state.channel, threadId = id) }, { viewModel.member(ForumMemberTab.CHAT, append = true, channel = state.channel, threadId = state.threadId, newer = true) }, viewModel::openBookmark)
+    }
+    state.composer?.let { ForumComposerDialog(state, viewModel::submit, viewModel::dismissComposer, viewModel::updateDraft, viewModel::discardDraft) }
+    if (state.draftChoiceVisible) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissDraftChoice,
+            shape = TechnicalShapes.Dialog,
+            title = { Text(stringResource(R.string.f_existing_draft)) },
+            text = { Text(stringResource(R.string.f_existing_draft_note)) },
+            confirmButton = { TextButton(onClick = viewModel::resumeDraft) { Text(stringResource(R.string.f_resume_draft)) } },
+            dismissButton = { TextButton(onClick = viewModel::dismissDraftChoice) { Text(stringResource(R.string.f_cancel)) } }
+        )
+    }
+    if (state.historyPost != null) ForumHistoryDialog(state, viewModel::history, viewModel::closeHistory, { url -> ForumUrls.safe(url)?.let { link = it } }, viewModel::image)
     link?.let { url ->
         val handler = LocalUriHandler.current
         var failed by remember(url) { mutableStateOf(false) }
@@ -89,9 +107,13 @@ import vn.edu.uit.mobile.feature.forum.R
     onClear: () -> Unit = {},
     onLink: (String) -> Unit = {},
     imageLoader: suspend (String) -> ByteArray = { throw ForumException(ForumFailure.NETWORK) },
-    onBrowser: (String) -> Unit = onLink
+    onBrowser: (String) -> Unit = onLink,
+    onHistory: (ForumPost) -> Unit = {},
+    onDiscover: (ForumFilter, ForumPeriod, ForumTag?) -> Unit = { _, _, _ -> },
+    accountActions: ForumAccountActions? = null
 ) {
     val listState = rememberLazyListState()
+    LaunchedEffect(state.tab, state.filter, state.period, state.tag?.id, state.category?.id, state.query) { listState.scrollToItem(0) }
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(if (state.topic == null) R.string.f_close else R.string.f_back)) }
@@ -99,7 +121,8 @@ import vn.edu.uit.mobile.feature.forum.R
                 Text(stringResource(R.string.f_title), style = MaterialTheme.typography.titleLarge)
                 Text("forum.uit.edu.vn", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
             }
-            IconButton(enabled = !state.loading, onClick = {
+            accountActions?.let { actions -> IconButton(onClick = actions.account, enabled = !state.accountBusy && !state.commandBusy) { Icon(Icons.Outlined.Person, stringResource(R.string.f_account)) } }
+            IconButton(enabled = !state.loading && !state.commandBusy, onClick = {
                 val t = state.topic
                 if (t != null) {
                     onTopic(t.id, state.anchorNumber, 0)
@@ -117,6 +140,11 @@ import vn.edu.uit.mobile.feature.forum.R
                 ForumTab.entries.forEach { tab -> Tab(selected = state.tab == tab, onClick = { onTab(tab) }, text = { Text(stringResource(tabLabel(tab))) }) }
             }
         }
+        if (state.user != null) Text(state.user.username, style = MaterialTheme.typography.labelSmall)
+        if (accountActions != null && state.user?.canCreateTopic == true && state.topic == null && !state.memberVisible) TextButton(onClick = accountActions.create, enabled = !state.commandBusy) { Text(stringResource(R.string.f_new_topic)) }
+        if (accountActions != null && state.user != null && state.draft != null) TextButton(onClick = accountActions.draft, enabled = !state.commandBusy) { Text(stringResource(R.string.f_resume_draft)) }
+        if (state.accountError != null && !state.loginVisible && !state.memberVisible && state.composer == null) ForumAccountError(state)
+        if (state.commandBusy || state.accountBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
         if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth().testTag("forum-loading"))
         state.error?.let { error ->
             Surface(shape = TechnicalShapes.Control, color = MaterialTheme.colorScheme.errorContainer) {
@@ -137,9 +165,15 @@ import vn.edu.uit.mobile.feature.forum.R
         if (state.fetchedAt > 0) Text(stringResource(if (state.offline) R.string.f_cached else R.string.f_retrieved, date(state.fetchedAt)), style = MaterialTheme.typography.labelSmall, color = if (state.offline) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant)
         val topic = state.topic
         if (topic != null) {
-            ForumReader(state, onTopic, onSave, onWindow, onPosition, onLink, imageLoader, onBrowser)
+            ForumReader(state, onTopic, onSave, onWindow, onPosition, onLink, imageLoader, onBrowser, onHistory, accountActions)
         } else {
             var query by rememberSaveable { mutableStateOf(state.query) }
+            var tagQuery by rememberSaveable { mutableStateOf("") }
+            if (state.tab == ForumTab.LATEST && state.category == null) ForumFeedControls(state, onDiscover)
+            if (state.tab == ForumTab.TAGS) {
+                OutlinedTextField(tagQuery, { tagQuery = it.take(200) }, Modifier.fillMaxWidth().testTag("forum-tag-query"), label = { Text(stringResource(R.string.f_find_tag)) }, singleLine = true, shape = TechnicalShapes.Control)
+                if (state.tagsTruncated) Text(stringResource(R.string.f_tags_truncated), style = MaterialTheme.typography.labelSmall)
+            }
             if (state.tab == ForumTab.SEARCH) {
                 OutlinedTextField(query, { query = it.take(200) }, Modifier.fillMaxWidth().testTag("forum-query"), label = { Text(stringResource(R.string.f_search_hint)) }, maxLines = 3, shape = TechnicalShapes.Control)
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -149,6 +183,18 @@ import vn.edu.uit.mobile.feature.forum.R
             }
             LazyColumn(Modifier.weight(1f).testTag("forum-list"), state = listState, contentPadding = PaddingValues(bottom = 24.dp)) {
                 when (state.tab) {
+                    ForumTab.TAGS -> {
+                        val tags = state.tags.filter { it.name.contains(tagQuery.trim(), ignoreCase = true) }.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+                        if (tags.isEmpty() && !state.loading) item { Text(stringResource(R.string.f_no_tags), Modifier.padding(vertical = 24.dp)) }
+                        items(tags, key = { it.id }) { tag ->
+                            Column(Modifier.fillMaxWidth().clickable { onDiscover(ForumFilter.LATEST, state.period, tag) }.padding(vertical = 12.dp).testTag("forum-tag-${tag.id}"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(tag.name, style = MaterialTheme.typography.titleMedium)
+                                Text(stringResource(R.string.f_tag_topics, tag.count), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                if (tag.description.isNotBlank()) Text(tag.description, style = MaterialTheme.typography.bodySmall)
+                            }
+                            HorizontalDivider()
+                        }
+                    }
                     ForumTab.CATEGORIES -> {
                         val sorted = state.categories.filter { it.parentId == null }.flatMap { parent -> listOf(parent) + state.categories.filter { it.parentId == parent.id }.sortedBy { it.name } } + state.categories.filter { it.parentId != null && state.categories.none { p -> p.id == it.parentId } }
                         items(sorted, key = { it.id }) { category ->
@@ -160,7 +206,7 @@ import vn.edu.uit.mobile.feature.forum.R
                         }
                     }
                     ForumTab.SAVED -> {
-                        item { Text(stringResource(R.string.f_local_note), Modifier.padding(vertical = 12.dp), style = MaterialTheme.typography.bodyMedium) }
+                        item { Text(stringResource(if (state.user == null) R.string.f_local_note else R.string.f_member_local_note), Modifier.padding(vertical = 12.dp), style = MaterialTheme.typography.bodyMedium) }
                         if (state.local.saved.isEmpty()) item { EmptyForum() }
                         items(state.local.saved, key = { it.id }) { t ->
                             val position = state.local.positions.firstOrNull { it.topic.id == t.id }
@@ -216,7 +262,7 @@ import vn.edu.uit.mobile.feature.forum.R
     HorizontalDivider()
 }
 
-@Composable private fun ColumnScope.ForumReader(state: ForumState, onTopic: (Long, Int, Int) -> Unit, onSave: (ForumTopic) -> Unit, onWindow: (Boolean) -> Unit, onPosition: (ForumPost, Int) -> Unit, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, onBrowser: (String) -> Unit) {
+@Composable private fun ColumnScope.ForumReader(state: ForumState, onTopic: (Long, Int, Int) -> Unit, onSave: (ForumTopic) -> Unit, onWindow: (Boolean) -> Unit, onPosition: (ForumPost, Int) -> Unit, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, onBrowser: (String) -> Unit, onHistory: (ForumPost) -> Unit, accountActions: ForumAccountActions?) {
     val topic = state.topic ?: return
     val list = rememberLazyListState()
     val density = LocalDensity.current
@@ -244,6 +290,7 @@ import vn.edu.uit.mobile.feature.forum.R
         }
     }
     if (position != null) TextButton(onClick = { onTopic(topic.id, position.postNumber, position.offsetDp) }, enabled = !state.loading) { Text(stringResource(R.string.f_resume, position.postNumber)) }
+    if (position == null) state.remoteReadNumber?.let { remote -> TextButton(onClick = { onTopic(topic.id, remote, 0) }, enabled = !state.loading) { Text(stringResource(R.string.f_resume_server, remote)) } }
     LazyColumn(Modifier.weight(1f).testTag("forum-reader"), state = list, contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item(key = "heading") {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -266,7 +313,31 @@ import vn.edu.uit.mobile.feature.forum.R
                     Text(stringResource(R.string.f_post, post.number), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                 }
                 Text(isoDate(post.created), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                SelectionContainerCompat { post.blocks.forEach { block -> ForumBlockView(block, onLink, imageLoader, topic.url + "/${post.number}", onBrowser) } }
+                post.replyTo?.let { parent -> TextButton(onClick = { onTopic(topic.id, parent, 0) }) { Text(stringResource(R.string.f_reply_to, parent)) } }
+                if (post.version > 1) {
+                    if (post.canViewHistory) {
+                        TextButton(onClick = { onHistory(post) }, modifier = Modifier.testTag("forum-history-${post.id}")) { Text(stringResource(R.string.f_history, post.version)) }
+                    } else {
+                        Text(stringResource(R.string.f_edited), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+                SelectionContainerCompat {
+                    post.blocks.forEach { block ->
+                        ForumBlockView(block, onLink, imageLoader, topic.url + "/${post.number}", onBrowser) { poll ->
+                            ForumPollView(
+                                poll,
+                                state.user != null && accountActions != null && !state.commandBusy && !state.commandUncertain && forumAccountReady(state),
+                                post.id,
+                                { options -> accountActions?.submit?.invoke(ForumCommand.Vote(post.id, poll.name, options)) },
+                                { accountActions?.submit?.invoke(ForumCommand.RemoveVote(post.id, poll.name)) },
+                                onLink,
+                                imageLoader,
+                                topic.url + "/${post.number}"
+                            )
+                        }
+                    }
+                }
+                if (accountActions != null && state.user != null) ForumPostActions(state, post, accountActions, onLink, imageLoader)
             }
         }
         if (state.posts.isEmpty() && !state.loading) item { Text(stringResource(R.string.f_no_posts)) }
@@ -278,71 +349,23 @@ import vn.edu.uit.mobile.feature.forum.R
     androidx.compose.foundation.text.selection.SelectionContainer { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { content() } }
 }
 
-@Composable private fun ForumBlockView(block: ForumBlock, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, source: String, onBrowser: (String) -> Unit) {
-    when (block.kind) {
-        ForumBlockKind.CODE -> Surface(modifier = Modifier.fillMaxWidth(), shape = TechnicalShapes.Control, color = MaterialTheme.colorScheme.surfaceContainerHighest) { Text(block.text, Modifier.horizontalScroll(rememberScrollState()).padding(12.dp), fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodyMedium) }
-        ForumBlockKind.QUOTE -> Surface(shape = TechnicalShapes.Control, color = MaterialTheme.colorScheme.surfaceContainerHigh) { Text(block.text, Modifier.padding(12.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        ForumBlockKind.HEADING -> Text(block.text, style = MaterialTheme.typography.titleMedium)
-        ForumBlockKind.DETAILS -> {
-            var expanded by remember { mutableStateOf(false) }
-            TextButton(onClick = { expanded = !expanded }) { Text(stringResource(R.string.f_details)) }
-            if (expanded) Text(block.text)
-        }
-        ForumBlockKind.TABLE -> Column(Modifier.horizontalScroll(rememberScrollState())) {
-            block.rows.forEach { row ->
-                Row { row.forEach { cell -> Text(cell, Modifier.width(160.dp).padding(8.dp), style = MaterialTheme.typography.bodyMedium) } }
-                HorizontalDivider()
-            }
-        }
-        ForumBlockKind.IMAGE -> ForumImage(block, imageLoader, onLink)
-        ForumBlockKind.OMITTED -> TextButton(onClick = { onBrowser(source) }) { Text(stringResource(R.string.f_abbreviated)) }
-        ForumBlockKind.UNSUPPORTED -> TextButton(onClick = { onBrowser(source) }) { Text(stringResource(R.string.f_unsupported)) }
-        else -> if (block.text.isNotBlank()) Text(block.text, style = MaterialTheme.typography.bodyLarge)
-    }
-    if (block.kind != ForumBlockKind.IMAGE) block.links.forEach { link -> TextButton(onClick = { onLink(link.url) }, contentPadding = PaddingValues(0.dp)) { Text(link.label + " ↗", style = MaterialTheme.typography.bodyMedium) } }
-}
-
-@Composable private fun ForumImage(block: ForumBlock, loader: suspend (String) -> ByteArray, onLink: (String) -> Unit) {
-    val url = block.links.firstOrNull()?.url ?: return
-    var requested by remember(url) { mutableStateOf(false) }
-    var bitmap by remember(url) { mutableStateOf<ImageBitmap?>(null) }
-    var failed by remember(url) { mutableStateOf(false) }
-    val supported = ForumUrls.image(url) != null
-    LaunchedEffect(url, requested) {
-        if (requested && supported) {
-            try {
-                bitmap = withContext(Dispatchers.IO) {
-                    val bytes = loader(url)
-                    require(bytes.size <= 3 * 1024 * 1024)
-                    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
-                    require(bounds.outWidth in 1..4096 && bounds.outHeight in 1..4096 && bounds.outWidth.toLong() * bounds.outHeight <= 8000000)
-                    val options = BitmapFactory.Options().apply { inSampleSize = if (maxOf(bounds.outWidth, bounds.outHeight) > 2048) 2 else 1 }
-                    requireNotNull(BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)).asImageBitmap()
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                failed = true
-            }
-        }
-    }
-    bitmap?.let { Image(it, block.text, Modifier.fillMaxWidth().heightIn(max = 480.dp)) }
-    if (bitmap == null) OutlinedButton(onClick = { if (supported) requested = true else onLink(url) }, enabled = !requested, shape = TechnicalShapes.Control) { Text(stringResource(if (supported) R.string.f_image else R.string.f_external_image)) }
-    if (failed) Text(stringResource(R.string.f_image_failed), style = MaterialTheme.typography.bodySmall)
-    if (block.text.isNotBlank()) Text(block.text, style = MaterialTheme.typography.labelSmall)
-}
-
 @Composable private fun EmptyForum() {
     Text(stringResource(R.string.f_empty), Modifier.padding(vertical = 24.dp), style = MaterialTheme.typography.bodyLarge)
 }
 private fun tabLabel(tab: ForumTab) = when (tab) {
-    ForumTab.LATEST -> R.string.f_latest
+    ForumTab.LATEST -> R.string.f_topics
     ForumTab.CATEGORIES -> R.string.f_categories
+    ForumTab.TAGS -> R.string.f_tags
     ForumTab.SEARCH -> R.string.f_search
     ForumTab.SAVED -> R.string.f_saved
 }
-private fun errorLabel(error: ForumFailure) = when (error) {
+internal fun errorLabel(error: ForumFailure) = when (error) {
+    ForumFailure.AUTHENTICATION -> R.string.f_auth_error
+    ForumFailure.SECOND_FACTOR -> R.string.f_second_factor_required
+    ForumFailure.FORBIDDEN -> R.string.f_forbidden
+    ForumFailure.REJECTED -> R.string.f_rejected
+    ForumFailure.CONFLICT -> R.string.f_conflict
+    ForumFailure.UNCERTAIN -> R.string.f_uncertain
     ForumFailure.NETWORK -> R.string.f_network
     ForumFailure.RATE_LIMIT -> R.string.f_rate
     ForumFailure.UNAVAILABLE -> R.string.f_unavailable
@@ -351,4 +374,4 @@ private fun errorLabel(error: ForumFailure) = when (error) {
     ForumFailure.CAPACITY -> R.string.f_capacity
 }
 private fun date(epoch: Long): String = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(epoch * 1000))
-private fun isoDate(raw: String): String = runCatching { date(Instant.parse(raw).epochSecond) }.getOrDefault(raw)
+internal fun isoDate(raw: String): String = runCatching { date(Instant.parse(raw).epochSecond) }.getOrDefault(raw)

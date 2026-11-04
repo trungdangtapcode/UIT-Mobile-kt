@@ -72,6 +72,38 @@ class ForumLiveDesignTest {
             val feed = vm.uiState.value.topics
             assertTrue(feed.isNotEmpty())
             capture("forum-real-latest")
+            compose.onNodeWithTag("forum-filter").performClick()
+            compose.onNodeWithText("Nổi bật").performClick()
+            settled()
+            assertEquals(ForumFilter.TOP, vm.uiState.value.filter)
+            capture("forum-real-top")
+            compose.onNodeWithTag("forum-period").performClick()
+            compose.onNodeWithText("Tháng qua").performClick()
+            settled()
+            assertEquals(ForumPeriod.MONTHLY, vm.uiState.value.period)
+            capture("forum-real-top-monthly")
+            compose.onNodeWithTag("forum-filter").performClick()
+            compose.onNodeWithText("Sôi nổi").performClick()
+            settled()
+            assertEquals(ForumFilter.HOT, vm.uiState.value.filter)
+            capture("forum-real-hot")
+            compose.onNodeWithTag("forum-filter").performClick()
+            compose.onNodeWithText("Nhiều bình chọn").performClick()
+            settled()
+            assertEquals(ForumFilter.VOTES, vm.uiState.value.filter)
+            capture("forum-real-votes")
+            compose.onNodeWithText("Thẻ").performClick()
+            settled()
+            val tags = vm.uiState.value.tags
+            assertTrue(tags.isNotEmpty())
+            val selectedTag = tags.first { it.count > 0 }
+            compose.onNodeWithTag("forum-tag-query").performTextInput(selectedTag.name)
+            compose.onNodeWithTag("forum-tag-${selectedTag.id}").assertIsDisplayed()
+            capture("forum-real-tags")
+            compose.onNodeWithTag("forum-tag-${selectedTag.id}").performClick()
+            settled()
+            assertEquals(selectedTag.id, vm.uiState.value.tag?.id)
+            capture("forum-real-tag-topics")
             compose.runOnIdle { vm.tab(ForumTab.CATEGORIES) }
             settled()
             capture("forum-real-categories")
@@ -108,7 +140,47 @@ class ForumLiveDesignTest {
                 capture("forum-real-announcement")
                 compose.onNodeWithTag("forum-reader").performScrollToIndex(1)
                 capture("forum-real-announcement-body")
+                compose.onNodeWithTag("forum-reader").performScrollToNode(hasText("Tải ảnh"))
+                compose.onAllNodesWithText("Tải ảnh").onFirst().performClick()
+                compose.waitUntil(30000) {
+                    org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+                    compose.onAllNodesWithTag("forum-image-open").fetchSemanticsNodes().isNotEmpty()
+                }
+                compose.onAllNodesWithTag("forum-image-open").onFirst().performScrollTo().performClick()
+                compose.onNodeWithTag("forum-image-viewer").assertIsDisplayed()
+                compose.waitUntil(30000) {
+                    org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+                    compose.onAllNodesWithTag("forum-image-loading").fetchSemanticsNodes().isEmpty()
+                }
+                compose.onNodeWithText("Ảnh không khả dụng hoặc vượt giới hạn kích thước an toàn.").assertDoesNotExist()
+                capture("forum-real-image-fullscreen")
+                compose.onNodeWithText("Phóng to").performClick()
+                capture("forum-real-image-zoom")
+                compose.onNodeWithText("Đóng ảnh").performClick()
             }
+            var edited: ForumPost? = null
+            for (candidate in feed.filter { it.title.startsWith("Thông báo") }.take(4)) {
+                compose.runOnIdle { vm.topic(candidate.id) }
+                settled()
+                edited = vm.uiState.value.posts.firstOrNull { it.number == 1 && it.canViewHistory && it.version > 1 }
+                if (edited != null) break
+            }
+            val historyPost = requireNotNull(edited) { "No editable official post available for live history verification" }
+            compose.onNodeWithTag("forum-reader").performScrollToNode(hasTestTag("forum-history-${historyPost.id}"))
+            compose.onNodeWithTag("forum-history-${historyPost.id}").performClick()
+            compose.waitUntil(30000) {
+                org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+                !vm.uiState.value.historyLoading
+            }
+            assertNull(vm.uiState.value.historyError)
+            assertEquals(historyPost.id, vm.uiState.value.history?.postId)
+            compose.onNodeWithTag("forum-history-reader").assertIsDisplayed()
+            capture("forum-real-history")
+            compose.onNodeWithText("Trước").performClick()
+            capture("forum-real-history-before")
+            compose.onNodeWithText("Sau").performClick()
+            capture("forum-real-history-after")
+            compose.runOnIdle { vm.closeHistory() }
             File(output, "provenance.txt").writeText(
                 buildString {
                     appendLine("Captured: ${Instant.now()}")
@@ -116,7 +188,9 @@ class ForumLiveDesignTest {
                     appendLine("Network: live HTTPS to https://forum.uit.edu.vn; no fixture response substitution")
                     appendLine("Account: anonymous; this does not verify app SSO or an installed Android device")
                     appendLine("Local persistence for this host test: in-memory StudyStorage; no Android Keystore claim")
+                    appendLine("Discovery: anonymous_list_filters; Top weekly/monthly, Hot, Votes; /tags.json and /tag/${selectedTag.id}/l/latest.json")
                     appendLine("Topic: ${selected.url}; stream IDs: ${initial.stream.size}; initial bodies: ${initial.posts.size}")
+                    appendLine("History: https://forum.uit.edu.vn/t/${historyPost.topicId}/${historyPost.number}; post ID ${historyPost.id}; version ${historyPost.version}")
                     appendLine("Announcement: ${announcement?.url ?: "none in current feed"}")
                     appendLine("Jump requested: $jump; loaded numbers: $jumpedNumbers")
                     appendLine("Requests: ${synchronized(requests) { requests.toList() }}")

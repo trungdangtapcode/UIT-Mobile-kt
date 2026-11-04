@@ -29,6 +29,57 @@ class ForumDesignTest {
         compose.setContent { UitTheme(dark = true, dynamic = false) { WorkspaceFrame(3, {}, {}, "", false, false, 0) { ForumContent(state) } } }
     }
 
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-mdpi")
+    fun discoveryControlsRemainReachableWithLargeText() {
+        RuntimeEnvironment.setFontScale(1.3f)
+        var selected: ForumFilter? = null
+        var period: ForumPeriod? = null
+        compose.setContent {
+            UitTheme(dark = true, dynamic = false) {
+                ForumContent(
+                    state().copy(filter = ForumFilter.TOP, filters = listOf(ForumFilter.LATEST, ForumFilter.TOP, ForumFilter.HOT)),
+                    onDiscover = { f, p, _ ->
+                        selected = f
+                        period = p
+                    }
+                )
+            }
+        }
+        compose.onNodeWithTag("forum-period").assertIsDisplayed().performClick()
+        compose.onNodeWithText("All time").performClick()
+        org.junit.Assert.assertEquals(ForumPeriod.ALL, period)
+        compose.onNodeWithTag("forum-filter").performClick()
+        compose.onNodeWithText("Most voted").assertDoesNotExist()
+        compose.onNodeWithText("Hot").performClick()
+        org.junit.Assert.assertEquals(ForumFilter.HOT, selected)
+    }
+
+    @Test
+    @Config(qualifiers = "w412dp-h892dp-mdpi")
+    fun tagSearchKeepsServerIdentityAndShowsAnEmptyMatch() {
+        val tag = ForumTag(29, "Operating Systems", 7)
+        var selected: ForumTag? = null
+        compose.setContent { UitTheme(dark = true, dynamic = false) { ForumContent(state().copy(tab = ForumTab.TAGS, tags = listOf(tag)), onDiscover = { _, _, t -> selected = t }) } }
+        compose.onNodeWithTag("forum-tag-query").performTextInput("systems")
+        compose.onNodeWithText(tag.name).performClick()
+        org.junit.Assert.assertEquals(tag, selected)
+        compose.onNodeWithTag("forum-tag-query").performTextReplacement("no match")
+        compose.onNodeWithText(tag.name).assertDoesNotExist()
+        compose.onNodeWithText("No matching tags.").assertIsDisplayed()
+    }
+
+    @Test fun spoilerContentIsAbsentFromSemanticsUntilExplicitlyRevealed() {
+        val blocks = ForumParser.blocks("<p>Visible</p><div class='spoiler'><p>Concealed answer</p></div>")
+        show(state().copy(topic = ForumFixtures.topic, posts = listOf(ForumPost(1, 901, 1, "reader", "", blocks)), stream = listOf(1), end = 1))
+        compose.onNodeWithText("Concealed answer").assertDoesNotExist()
+        compose.onNodeWithTag("forum-reader").performScrollToNode(hasText("Reveal hidden content"))
+        compose.onNodeWithText("Reveal hidden content").performClick()
+        compose.onNodeWithText("Concealed answer").assertExists()
+        compose.onNodeWithText("Hide content").performClick()
+        compose.onNodeWithText("Concealed answer").assertDoesNotExist()
+    }
+
     @Test fun publicFeed390() {
         show(state())
         compose.onNodeWithText(ForumFixtures.TITLE).assertExists()

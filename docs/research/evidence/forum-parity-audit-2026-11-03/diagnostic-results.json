@@ -1,0 +1,33 @@
+{
+  "audited_commit": "5c907fdb4a91f421516046d4fc56018c7780a129",
+  "meaning": "Passing diagnostic assertions confirm observed defects, NOT product acceptance. Fixtures only; no screenshots, networking or university account.",
+  "results": [
+    {
+      "class": "vn.edu.uit.mobile.ForumParityAuditProbeTest",
+      "timestamp": "2026-11-03T06:09:56",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "cases": [
+        "reproductionOlderChatPageIsDiscardedAtFiveHundredMessages",
+        "reproductionComposerDraftDisappearsAfterStateRestoration",
+        "reproductionComposerDismissalDiscardsDraftWithoutRecovery"
+      ],
+      "source": "ForumParityAuditProbeTest.kt.txt",
+      "sha256": "ea640df6a5cfa2dca0f02513bfb2d99e059263fa173fa34cf9d2e4ec86587376"
+    },
+    {
+      "class": "vn.edu.uit.mobile.forum.network.ForumParityNetworkAuditProbeTest",
+      "timestamp": "2026-11-03T06:10:40",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "cases": [
+        "reproductionChatBookmarkIsDroppedFromServerBookmarkList()",
+        "reproductionMultiplePollWithoutMaxOnlyAllowsOneSelection()"
+      ],
+      "source": "ForumParityNetworkAuditProbeTest.kt.txt",
+      "sha256": "6e67aaf80c9b4737ea7289047755e751d9e62f5b2a39dee6ca58ad17aaf8ef8c"
+    }
+  ]
+}

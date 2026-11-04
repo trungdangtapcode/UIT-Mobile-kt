@@ -1,0 +1,29 @@
+{
+  "audited_commit": "5c907fdb4a91f421516046d4fc56018c7780a129",
+  "observed_generator": "Discourse 2026.10.0-latest - https://github.com/discourse/discourse version b81bee142d364526b432788251986871952b5ddb",
+  "source": "https://forum.uit.edu.vn/t/164929/1",
+  "native_json_source": "https://forum.uit.edu.vn/t/164929.json",
+  "viewport_dp_or_css_px": [
+    390,
+    844
+  ],
+  "account_mode": "anonymous",
+  "data": "Actual UIT content; original captures, no fixtures or image edits",
+  "browser_blocked_mutation_requests": 2,
+  "native_command": "./gradlew :app:testDebugUnitTest --tests '*ForumLiveDesignTest' -PforumLive=true -PrecordUi=true",
+  "limits": "Separate captures about two minutes apart, not an atomic server snapshot. Dark/native and light/web themes intentionally differ. No authenticated visual equivalence, Android device or native account Keystore acceptance is implied.",
+  "captures": [
+    {
+      "file": "uit-web-announcement-390.png",
+      "captured_at_utc": "2026-11-03T06:06:48.183796+00:00",
+      "runtime": "Chromium; anonymous context; non-read requests blocked",
+      "sha256": "b58d8cb0e4f223b6acc3c95cef599fec20a117126b8ef4ad17cb156d57612fea"
+    },
+    {
+      "file": "native-announcement-390.png",
+      "captured_at_utc": "2026-11-03T06:08:48.588177+00:00",
+      "runtime": "Production anonymous client/parser/repository/ViewModel/Compose on Robolectric; memory storage",
+      "sha256": "c18a07817af345193991f357221ba77cc582f3a01c9e180f929c6cc12208e37b"
+    }
+  ]
+}

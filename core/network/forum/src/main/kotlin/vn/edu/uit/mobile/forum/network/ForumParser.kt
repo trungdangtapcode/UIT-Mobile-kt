@@ -1,8 +1,6 @@
 package vn.edu.uit.mobile.forum.network
 
 import com.fleeksoft.ksoup.Ksoup
-import com.fleeksoft.ksoup.nodes.Element
-import com.fleeksoft.ksoup.nodes.TextNode
 import kotlinx.serialization.json.*
 import vn.edu.uit.mobile.domain.*
 
@@ -14,16 +12,27 @@ object ForumParser {
     private fun JsonObject.o(key: String) = (get(key) as? JsonObject) ?: JsonObject(emptyMap())
     private fun text(value: String) = Ksoup.parseBodyFragment(value.take(64000)).text()
     private fun topic(o: JsonObject) = ForumTopic(o.n("id"), text(o.s("title")).take(1000), o.n("category_id"), o.n("posts_count").coerceIn(0, Int.MAX_VALUE.toLong()).toInt(), o.s("last_posted_at").take(40), o.b("pinned"), o.b("closed"), o.a("tags").mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.take(80) }.take(20))
-    fun parse(request: ForumRequest, raw: String): ForumDocument {
+    fun parse(request: ForumRequest, raw: String, authenticated: Boolean = false): ForumDocument {
         try {
             val root = Json.parseToJsonElement(raw).jsonObject
             return when (request) {
                 ForumRequest.Categories -> {
                     require(root["categories"] is JsonArray)
-                    ForumDocument(categories = categories(root.a("categories")))
+                    val advertised = root.a(if (authenticated) "filters" else "anonymous_list_filters").mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
+                    ForumDocument(categories = categories(root.a("categories"), authenticated), filters = ForumFilter.entries.filter { (authenticated || !it.memberOnly) && (it == ForumFilter.LATEST || it.route in advertised) })
                 }
-                is ForumRequest.Category -> ForumDocument(categories = categories(listOf(root.o("category"))).filter { it.id == request.id })
-                is ForumRequest.Latest -> {
+                is ForumRequest.Category -> ForumDocument(categories = categories(listOf(root.o("category")), authenticated).filter { it.id == request.id })
+                ForumRequest.Tags -> {
+                    require(root["tags"] is JsonArray)
+                    val tags = root.a("tags")
+                    ForumDocument(
+                        tags = tags.take(10000).map { it.jsonObject }.filter { !it.b("pm_only") }.map {
+                            ForumTag(it.n("id"), text(it.s("name").ifBlank { it.s("text") }).take(200), it.n("count").coerceIn(0, Int.MAX_VALUE.toLong()).toInt(), text(it.s("description")).take(1000))
+                        }.filter { it.id > 0 && it.name.isNotBlank() }.distinctBy { it.id },
+                        tagsTruncated = tags.size > 10000
+                    )
+                }
+                is ForumRequest.Latest, is ForumRequest.Feed -> {
                     require(root["topic_list"] is JsonObject && root.o("topic_list")["topics"] is JsonArray)
                     val list = root.o("topic_list")
                     ForumDocument(topics = list.a("topics").take(100).map { topic(it.jsonObject) }.filter { it.id > 0 }.distinctBy { it.id }, more = list.s("more_topics_url").isNotBlank())
@@ -40,12 +49,33 @@ object ForumParser {
                     )
                 }
                 is ForumRequest.Topic -> {
-                    if (root.s("archetype") == "private_message" || !root.s("deleted_at").isBlank() || root.s("visible") == "false") throw ForumException(ForumFailure.UNAVAILABLE)
+                    if (!authenticated && root.s("archetype") == "private_message" || !root.s("deleted_at").isBlank() || root.s("visible") == "false") throw ForumException(ForumFailure.UNAVAILABLE)
                     require(root.n("id") == request.id && root.o("post_stream")["stream"] is JsonArray)
                     val stream = root.o("post_stream").a("stream").mapNotNull { it.jsonPrimitive.longOrNull }.distinct()
                     require(stream.size <= ForumLimits.STREAM && stream.all { it > 0 })
                     val posts = posts(root, request.id).filter { it.id in stream }
-                    ForumDocument(topic = topic(root), stream = stream, posts = posts.sortedBy { stream.indexOf(it.id) })
+                    ForumDocument(
+                        topic = topic(root),
+                        stream = stream,
+                        posts = posts.sortedBy { stream.indexOf(it.id) },
+                        canReply = authenticated && root.o("details").b("can_create_post"),
+                        lastReadPostNumber = root.n("last_read_post_number").toInt().takeIf { authenticated && it > 0 },
+                        reactionChoices = root.a("valid_reactions").mapNotNull { (it as? JsonPrimitive)?.contentOrNull }.filter { it.matches(Regex("[a-zA-Z0-9_+:-]{1,80}")) }.take(50)
+                    )
+                }
+                is ForumRequest.Revision -> {
+                    require(root.n("post_id") == request.postId && root.n("current_revision").toInt() == request.version)
+                    if (root.b("current_hidden") || root.b("previous_hidden")) throw ForumException(ForumFailure.UNAVAILABLE)
+                    ForumDocument(
+                        revision = ForumRevision(
+                            request.postId, request.version,
+                            root.n("previous_revision").toInt().takeIf { it in 2 until request.version },
+                            root.n("next_revision").toInt().takeIf { it > request.version },
+                            root.s("display_username").ifBlank { root.s("username") }.take(100), root.s("created_at").take(40),
+                            root.s("edit_reason").take(1000), blocks(root.o("body_changes").s("inline")),
+                            blocks(root.o("title_changes").s("inline")), root.b("diff_error"), root.n("current_version").toInt().coerceAtLeast(1)
+                        )
+                    )
                 }
                 is ForumRequest.Posts -> {
                     require(root.n("id") == request.topicId && root.o("post_stream")["posts"] is JsonArray)
@@ -58,73 +88,34 @@ object ForumParser {
             throw ForumException(ForumFailure.INVALID)
         }
     }
-    private fun categories(values: List<JsonElement>) = values.take(500).map { it.jsonObject }.filter { !it.b("read_restricted") }.map { ForumCategory(it.n("id"), text(it.s("name")), it.n("parent_category_id").takeIf { v -> v > 0 }, text(it.s("description_text")).take(500)) }.filter { it.id > 0 }.distinctBy { it.id }
+    private fun categories(values: List<JsonElement>, authenticated: Boolean) = values.take(500).map { it.jsonObject }.filter { authenticated || !it.b("read_restricted") }.map { ForumCategory(it.n("id"), text(it.s("name")), it.n("parent_category_id").takeIf { v -> v > 0 }, text(it.s("description_text")).take(500), authenticated && it.n("permission") == 1L) }.filter { it.id > 0 }.distinctBy { it.id }
     private fun posts(root: JsonObject, id: Long): List<ForumPost> = root.o("post_stream").a("posts").take(ForumLimits.WINDOW).map { it.jsonObject }.filter {
         it.n("topic_id") == id && it.n("id") > 0 && it.n("post_number") in 1..Int.MAX_VALUE.toLong() && !it.b("hidden") && it.s("deleted_at").isBlank() && !it.b("user_deleted")
-    }.map { ForumPost(it.n("id"), id, it.n("post_number").toInt(), it.s("username").take(100), it.s("created_at").take(40), blocks(it.s("cooked"))) }.distinctBy { it.id }
+    }.map {
+        val post = it
+        val polls = it.a("polls").take(20).map { p ->
+            val poll = p.jsonObject
+            ForumPoll(
+                poll.s("name"), poll.s("type"), poll.s("status"),
+                poll.a("options").take(100).map { option ->
+                    val o = option.jsonObject
+                    ForumPollOption(o.s("id"), blocks(o.s("html")), o.s("votes").toIntOrNull())
+                },
+                post.o("polls_votes").a(poll.s("name")).mapNotNull { v -> (v as? JsonPrimitive)?.contentOrNull }, poll.s("voters").toIntOrNull(), if (poll.s("type") == "multiple") poll.s("min").toIntOrNull()?.takeIf { n -> n >= 0 } ?: 1 else 1, if (poll.s("type") == "multiple") poll.s("max").toIntOrNull()?.takeIf { n -> n <= poll.a("options").size } ?: poll.a("options").size else 1, poll.s("results"), text(poll.s("title")).take(1000)
+            )
+        }
+        ForumPost(
+            it.n("id"), id, it.n("post_number").toInt(), it.s("username").take(100), it.s("created_at").take(40), ForumHtml.parse(it.s("cooked"), polls.associateBy { p -> p.name }), it.n("version").toInt().coerceAtLeast(1), it.s("updated_at").take(40), it.b("can_view_edit_history"), it.n("reply_to_post_number").toInt().takeIf { n -> n > 0 },
+            canEdit = it.b("can_edit"), canLike = it.a("actions_summary").map { a -> a.jsonObject }.any { a -> a.n("id") == 2L && (a.b("can_act") || a.b("can_undo")) },
+            liked = it.a("actions_summary").map { a -> a.jsonObject }.any { a -> a.n("id") == 2L && a.b("acted") },
+            likeCount = it.a("actions_summary").map { a -> a.jsonObject }.firstOrNull { a -> a.n("id") == 2L }?.n("count")?.coerceIn(0, Int.MAX_VALUE.toLong())?.toInt() ?: 0,
+            reactions = it.a("reactions").take(50).map { r ->
+                val o = r.jsonObject
+                ForumReaction(o.s("id"), o.n("count").coerceIn(0, Int.MAX_VALUE.toLong()).toInt(), it.o("current_user_reaction").s("id") == o.s("id"), it.o("current_user_reaction").b("can_undo"))
+            },
+            polls = polls
+        )
+    }.distinctBy { it.id }
 
-    fun blocks(html: String): List<ForumBlock> {
-        var abbreviated = html.length > 64000
-        fun clipped(value: String, limit: Int): String {
-            if (value.length > limit) abbreviated = true
-            return value.take(limit)
-        }
-        val doc = Ksoup.parseBodyFragment(html.take(64000))
-        val hasEmbed = doc.select("iframe,object,embed,video,audio").isNotEmpty()
-        doc.select("script,style,form,input,button,iframe,object,embed,svg,canvas,link,meta").remove()
-        // Discourse emoji are inline textual reactions, not image attachments.
-        doc.select("img.emoji").forEach { it.replaceWith(TextNode(it.attr("alt").take(80))) }
-        val output = mutableListOf<ForumBlock>()
-        fun links(e: Element) = e.select("a[href]").mapNotNull { a -> ForumUrls.safe(a.attr("href"))?.let { ForumLink(a.text().take(300).ifBlank { it }, it) } }.distinctBy { it.url }.take(40)
-        fun visit(e: Element, depth: Int) {
-            if (output.size >= 200 || depth > 32) {
-                abbreviated = true
-                return
-            }
-            val tag = e.tagName()
-            when {
-                tag == "pre" -> output += ForumBlock(ForumBlockKind.CODE, clipped(e.wholeText(), 16000))
-                tag == "table" -> output += ForumBlock(ForumBlockKind.TABLE, "", rows = e.select("tr").take(100).map { row -> row.select("th,td").take(12).map { it.text().take(1000) } })
-                tag == "blockquote" || (tag == "aside" && e.hasClass("quote")) -> output += ForumBlock(ForumBlockKind.QUOTE, clipped(e.text(), 8000), links(e))
-                tag == "details" -> output += ForumBlock(ForumBlockKind.DETAILS, clipped(e.text(), 10000), links(e))
-                tag == "img" -> {
-                    val url = ForumUrls.safe(e.attr("src"))
-                    if (url != null) output += ForumBlock(ForumBlockKind.IMAGE, e.attr("alt").take(300), listOf(ForumLink(e.attr("alt").ifBlank { "Image" }, url)))
-                }
-                tag in listOf("video", "audio") -> output += ForumBlock(ForumBlockKind.UNSUPPORTED, "")
-                tag == "li" -> {
-                    val marker = if (e.parent()?.tagName() == "ol") ((e.parent()?.attr("start")?.toIntOrNull() ?: 1) + (e.parent()?.children()?.filter { it.tagName() == "li" }?.indexOf(e) ?: 0)).toString() + ". " else "• "
-                    val copy = e.clone()
-                    copy.select("ul,ol").remove()
-                    output += ForumBlock(ForumBlockKind.TEXT, marker + clipped(copy.text(), 10000), links(copy))
-                    e.children().filter { it.tagName() in listOf("ul", "ol") }.forEach { visit(it, depth + 1) }
-                }
-                tag.matches(Regex("h[1-6]")) -> output += ForumBlock(ForumBlockKind.HEADING, clipped(e.text(), 2000), links(e))
-                tag == "p" || e.children().isEmpty() -> {
-                    if (e.text().isNotBlank()) {
-                        val onlyLink = tag == "a" || e.ownText().isBlank() && e.children().size == 1 && e.children().first()?.tagName() == "a"
-                        output += ForumBlock(if (onlyLink) ForumBlockKind.LINK else ForumBlockKind.TEXT, if (onlyLink) "" else clipped(e.text(), 10000), links(e))
-                    }
-                    e.select("img").forEach { visit(it, depth + 1) }
-                }
-                else -> {
-                    if (e.ownText().isNotBlank()) output += ForumBlock(ForumBlockKind.TEXT, clipped(e.ownText(), 10000))
-                    e.children().forEach { visit(it, depth + 1) }
-                }
-            }
-        }
-        doc.body().childNodes().forEach { node ->
-            if (output.size >= 200) {
-                abbreviated = true
-                return@forEach
-            }
-            when (node) {
-                is Element -> visit(node, 0)
-                is TextNode -> if (node.text().isNotBlank()) output += ForumBlock(ForumBlockKind.TEXT, clipped(node.text(), 10000))
-            }
-        }
-        if (hasEmbed && output.none { it.kind == ForumBlockKind.UNSUPPORTED }) output += ForumBlock(ForumBlockKind.UNSUPPORTED, "")
-        if (abbreviated) output += ForumBlock(ForumBlockKind.OMITTED, "")
-        return output
-    }
+    fun blocks(html: String): List<ForumBlock> = ForumHtml.parse(html)
 }

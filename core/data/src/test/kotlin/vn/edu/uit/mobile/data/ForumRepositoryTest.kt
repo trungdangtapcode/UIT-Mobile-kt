@@ -35,6 +35,31 @@ class ForumRepositoryTest {
         override suspend fun image(url: String): ByteArray = error("No implicit image fetch")
     }
 
+    @Test fun historyIsNeverPersistedOrReplayedAfterNetworkOrPermissionFailure() = runTest {
+        val memory = Memory()
+        var failure: ForumFailure? = null
+        val remote = object : ForumTransport {
+            override suspend fun get(request: ForumRequest): String {
+                failure?.let { throw ForumException(it) }
+                return """{"post_id":2,"current_revision":3,"body_changes":{"inline":"<p>history</p>"}}"""
+            }
+            override suspend fun image(url: String): ByteArray = error("Unexpected image")
+        }
+        val repo = LocalForumRepository(remote, memory)
+        val request = ForumRequest.Revision(1, 2, 3)
+        assertNotNull(repo.load(request).document.revision)
+        assertTrue(memory.values.isEmpty())
+        for (reason in listOf(ForumFailure.NETWORK, ForumFailure.UNAVAILABLE)) {
+            failure = reason
+            try {
+                repo.load(request)
+                fail("History was replayed")
+            } catch (e: ForumException) {
+                assertEquals(reason, e.reason)
+            }
+        }
+    }
+
     @Test fun transientFailureUsesDatedSnapshotButRateLimitDoesNot() = runTest {
         val remote = Remote()
         val memory = Memory()

@@ -20,7 +20,10 @@ object ForumFixtures {
     const val LATEST = """{"topic_list":{"more_topics_url":"/latest?page=1","topics":[{"id":901,"title":"Getting started with the campus Linux lab","category_id":29,"posts_count":125,"last_posted_at":"2026-11-03T02:00:00Z","pinned":true},{"id":902,"title":"Library opening hours during exam week","category_id":8,"posts_count":7,"last_posted_at":"2026-11-02T10:00:00Z"}]}}"""
     const val SEARCH = """{"topics":[{"id":901,"title":"Getting started with the campus Linux lab","category_id":29,"posts_count":125}],"posts":[{"id":1050,"topic_id":901,"post_number":99,"blurb":"Try a <span class='search-highlight'>small input</span> before the full dataset."}],"grouped_search_result":{"more_full_page_results":false}}"""
     fun response(request: ForumRequest): String = when (request) {
+        is ForumRequest.Revision -> error("Revision fixture must be supplied explicitly")
         ForumRequest.Categories -> CATEGORIES
+        ForumRequest.Tags -> """{"tags":[]}"""
+        is ForumRequest.Feed -> if (request.page == 0) LATEST else """{"topic_list":{"topics":[]}}"""
         is ForumRequest.Category -> """{"category":{"id":${request.id},"name":"Public category"}}"""
         is ForumRequest.Latest -> if (request.page == 0) LATEST else """{"topic_list":{"topics":[]}}"""
         is ForumRequest.Search -> SEARCH

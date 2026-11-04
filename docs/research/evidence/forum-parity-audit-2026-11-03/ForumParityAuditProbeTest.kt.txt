@@ -1,0 +1,86 @@
+package vn.edu.uit.mobile
+
+import android.app.Application
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.StateRestorationTester
+import androidx.lifecycle.ViewModelStore
+import org.junit.*
+import org.junit.Assert.*
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.*
+import vn.edu.uit.mobile.designsystem.*
+import vn.edu.uit.mobile.domain.*
+import vn.edu.uit.mobile.forum.*
+
+/** Diagnostic probes assert observed defects, NOT desired acceptance behavior. No screenshots or networking. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35], qualifiers = "w390dp-h844dp-mdpi", application = Application::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class ForumParityAuditProbeTest {
+    @get:Rule val compose = createComposeRule()
+    private class Repo : ForumAccountRepository {
+        var commands = 0
+        override suspend fun resume(): ForumUser? = null
+        override suspend fun login(username: String, password: String, secondFactor: String) = ForumUser(7,"audit-fixture","",true,true)
+        override suspend fun disconnect() = Unit
+        override suspend fun member(request: ForumMemberRequest): ForumAccountPage {
+            if (request !is ForumMemberRequest.Messages) return ForumAccountPage()
+            val end = request.before?.minus(1) ?: 600L
+            val start = (end - 49).coerceAtLeast(1)
+            return ForumAccountPage(messages = (start..end).map { ForumChatMessage(it,3,"fixture","",emptyList()) }, more = start > 1)
+        }
+        override suspend fun command(command: ForumCommand): ForumCommandResult { commands++; return ForumCommandResult() }
+        override suspend fun load(request: ForumRequest) = ForumLoaded(ForumDocument(categories = listOf(ForumCategory(1,"Fixture category",canCreate=true))),1)
+        override suspend fun local() = ForumLocalState()
+        override suspend fun save(topic: ForumTopic, saved: Boolean) = ForumLocalState()
+        override suspend fun position(position: ForumPosition) = Unit
+        override suspend fun image(url: String) = byteArrayOf()
+        override suspend fun clear() = Unit
+    }
+    private val repo = Repo()
+    private val vm = ForumViewModel(repo)
+    private val store = ViewModelStore().apply { put("audit",vm) }
+    @After fun cleanup() { compose.runOnUiThread { store.clear() } }
+    private fun show(restorer: StateRestorationTester? = null) {
+        val content: @androidx.compose.runtime.Composable () -> Unit = { UitTheme(dark=true,dynamic=false) { ForumScreen(vm) } }
+        if (restorer == null) compose.setContent(content) else restorer.setContent(content)
+        compose.runOnIdle { vm.login("audit-fixture","not-a-credential","") }
+    }
+    private fun draft() = compose.onNodeWithTag("forum-composer-raw").fetchSemanticsNode().config[SemanticsProperties.EditableText].text
+    @Test fun reproductionComposerDraftDisappearsAfterStateRestoration() {
+        val restorer = StateRestorationTester(compose)
+        show(restorer)
+        compose.runOnIdle { vm.compose(create=true) }
+        compose.onNodeWithTag("forum-composer-raw").performTextInput("Unsaved diagnostic draft")
+        assertEquals("Unsaved diagnostic draft",draft())
+        restorer.emulateSavedInstanceStateRestore()
+        assertEquals("",draft())
+        assertEquals(0,repo.commands)
+    }
+    @Test fun reproductionComposerDismissalDiscardsDraftWithoutRecovery() {
+        show()
+        compose.runOnIdle { vm.compose(create=true) }
+        compose.onNodeWithTag("forum-composer-raw").performTextInput("Unsaved diagnostic draft")
+        compose.onNodeWithText("Cancel").performClick()
+        compose.runOnIdle { vm.compose(create=true) }
+        assertEquals("",draft())
+        assertEquals(0,repo.commands)
+    }
+    @Test fun reproductionOlderChatPageIsDiscardedAtFiveHundredMessages() {
+        show()
+        val channel = ForumChannel(3,"Fixture",true)
+        compose.runOnIdle { vm.member(ForumMemberTab.CHAT,channel=channel) }
+        repeat(10) { compose.runOnIdle { vm.member(ForumMemberTab.CHAT,append=true,channel=channel) } }
+        compose.runOnIdle {
+            val page=vm.uiState.value.memberPage
+            assertEquals(500,page.messages.size)
+            assertEquals(101L,page.messages.minOf { it.id })
+            assertEquals(600L,page.messages.maxOf { it.id })
+            assertFalse(page.more)
+            assertEquals(0,repo.commands)
+        }
+    }
+}

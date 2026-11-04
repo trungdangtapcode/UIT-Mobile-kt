@@ -186,3 +186,13 @@ Use 28dp connector gutters, native neighbor buttons, labeled incoming/outgoing
 propositions and a horizontally scrollable concept index. Keep an equivalent
 relationship list and source-copy dialogs. Definitions use bodyLarge; labels use
 existing title styles. All controls keep TechnicalShapes and native touch targets.
+
+Forum: the topic title remains the main focus. Keep public discovery controls
+inside the single phone column: a native sort menu, a second equal-width period
+menu for Top, and a separate searchable Tags tab. Controls use TechnicalShapes,
+8dp spacing and 48dp touch targets. A selected tag has a visible clear action.
+Do not present guest filters as account features. Post bodies use semantic inline
+styles and nested blocks; concealed spoilers stay out of accessibility semantics.
+Images open on a quiet fullscreen canvas with explicit zoom/fit/close controls.
+Revision dialogs retain Changes/Before/After, source and close actions. Forum
+review screenshots use actual production UIT responses with capture provenance.

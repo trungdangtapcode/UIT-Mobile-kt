@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.android.inject
 import vn.edu.uit.mobile.academic.*
 import vn.edu.uit.mobile.auth.*
@@ -33,11 +34,14 @@ import vn.edu.uit.mobile.authui.*
 import vn.edu.uit.mobile.common.*
 import vn.edu.uit.mobile.courses.*
 import vn.edu.uit.mobile.dashboard.*
+import vn.edu.uit.mobile.data.LocalReadingRepository
 import vn.edu.uit.mobile.data.OfflineDownloadWorker
+import vn.edu.uit.mobile.data.StudyPrivateStorage
 import vn.edu.uit.mobile.data.createFreeTimeBlockStorage
 import vn.edu.uit.mobile.data.createOfflineCourseSourceLoader
 import vn.edu.uit.mobile.data.createOfflineDownloadStorage
 import vn.edu.uit.mobile.data.createOfflineTutorCodeLoader
+import vn.edu.uit.mobile.data.createReadingDocumentLoader
 import vn.edu.uit.mobile.data.createStudyAiRepository
 import vn.edu.uit.mobile.data.observeDownloadWifi
 import vn.edu.uit.mobile.designsystem.*
@@ -53,6 +57,7 @@ class MainActivity : ComponentActivity() {
     private val workloadRepository: WorkloadRepository by inject()
     private val revisionRepository: RevisionRepository by inject()
     private val practiceRepository: PracticeRepository by inject()
+    private val readingRepository: ReadingRepository by lazy { getKoin().getOrNull<ReadingRepository>() ?: LocalReadingRepository(StudyPrivateStorage(this, "reading", "uit.reading.v1"), accounts) }
     private val studyRepository: StudyAiRepository by lazy { createStudyAiRepository(this, accounts) }
 
     override fun attachBaseContext(newBase: Context) {
@@ -86,6 +91,7 @@ class MainActivity : ComponentActivity() {
                 val study = ownedViewModel { StudyViewModel(studyRepository, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this))) }
                 val practice = ownedViewModel { PracticeViewModel(studyRepository, practiceRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this))) }
                 val tutor = ownedViewModel { CodeTutorViewModel(studyRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this)), createOfflineTutorCodeLoader(createOfflineDownloadStorage(this))) }
+                val reading = ownedViewModel { CourseReadingViewModel(readingRepository, accounts, repository, createOfflineDownloadStorage(this), createReadingDocumentLoader(createOfflineDownloadStorage(this)), nativeReadingPdfFactory(cacheDir)) }
                 val inbox = ownedViewModel { InboxViewModel(repository) }
                 val academic = ownedViewModel { AcademicViewModel(repository) }
                 val auth = ownedViewModel { AccountsViewModel(accounts) }
@@ -108,7 +114,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, practice, tutor, inbox, academic, studentProfile, widgetRoute, {
+                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, practice, tutor, reading, inbox, academic, studentProfile, widgetRoute, {
                     showWidgets = false
                     widgetRoute = null
                     setIntent(
@@ -175,6 +181,7 @@ private fun UitShell(
     study: StudyViewModel,
     practice: PracticeViewModel,
     tutor: CodeTutorViewModel,
+    reading: CourseReadingViewModel,
     inbox: InboxViewModel,
     academic: AcademicViewModel,
     studentProfile: StudentProfileViewModel,
@@ -182,6 +189,7 @@ private fun UitShell(
     onWidgetRouteConsumed: () -> Unit,
     accounts: @Composable ((vn.edu.uit.mobile.model.Account) -> Unit) -> Unit
 ) {
+    val readingState by reading.uiState.collectAsStateWithLifecycle()
     var selected by rememberSaveable { mutableIntStateOf(0) }
     var returnToSearch by rememberSaveable { mutableStateOf(false) }
     var showSearch by rememberSaveable { mutableStateOf(false) }
@@ -193,15 +201,18 @@ private fun UitShell(
     var showProfile by rememberSaveable { mutableStateOf(false) }
     var profileAccountId by rememberSaveable { mutableStateOf<String?>(null) }
     fun openProfile(account: vn.edu.uit.mobile.model.Account? = null) {
-        showBookmarks = false
-        returnToBookmarks = false
-        returnToSearch = false
-        search.close()
-        showSearch = false
-        showAccounts = false
-        showProfile = true
-        profileAccountId = account?.id
-        studentProfile.onIntent(StudentProfileIntent.Open(account?.id))
+        val navigate = {
+            showBookmarks = false
+            returnToBookmarks = false
+            returnToSearch = false
+            search.close()
+            showSearch = false
+            showAccounts = false
+            showProfile = true
+            profileAccountId = account?.id
+            studentProfile.onIntent(StudentProfileIntent.Open(account?.id))
+        }
+        if (reading.uiState.value.open) reading.leave(navigate) else navigate()
     }
     fun closeProfile() {
         showProfile = false
@@ -211,6 +222,7 @@ private fun UitShell(
     LaunchedEffect(Unit) { if (showProfile) studentProfile.onIntent(StudentProfileIntent.Open(profileAccountId)) }
     LaunchedEffect(widgetRoute) {
         val route = widgetRoute ?: return@LaunchedEffect
+        reading.preempt()
         showBookmarks = false
         returnToBookmarks = false
         returnToSearch = false
@@ -236,27 +248,35 @@ private fun UitShell(
     val snapshot by repository.snapshot.collectAsStateWithLifecycle(vn.edu.uit.mobile.model.PortalSnapshot())
     val now = kotlinx.datetime.Clock.System.now().epochSeconds
     WorkspaceFrame(
-        selected, {
-            selected = it
-            showBookmarks = false
-            returnToBookmarks = false
-            returnToSearch = false
-            search.close()
-            showSearch = false
-            closeProfile()
+        selected, { destination ->
+            val navigate = {
+                selected = destination
+                showBookmarks = false
+                returnToBookmarks = false
+                returnToSearch = false
+                search.close()
+                showSearch = false
+                closeProfile()
+            }
+            if (reading.uiState.value.open) reading.leave(navigate) else navigate()
         }, { openProfile() }, snapshot.profile.fullName,
         connected = snapshot.updatedAt > 0, syncing = sync.syncing, lastSync = snapshot.updatedAt,
         deadlineCount = snapshot.events.count { it.deadline && it.needsAction && it.start in now..(now + 7 * 86400) },
         errorMessage = sync.error?.text(),
         onSearch = {
-            showBookmarks = false
-            returnToBookmarks = false
-            returnToSearch = false
-            closeProfile()
-            showSearch = true
+            val navigate = {
+                showBookmarks = false
+                returnToBookmarks = false
+                returnToSearch = false
+                closeProfile()
+                showSearch = true
+            }
+            if (reading.uiState.value.open) reading.leave(navigate) else navigate()
         }
     ) {
-        if (showBookmarks) {
+        if (readingState.open) {
+            CourseReadingScreen(reading)
+        } else if (showBookmarks) {
             // Retain filters and list position while source detail replaces the collection.
             bookmarkScreenState.SaveableStateProvider("saved-items") {
                 BookmarksScreen(bookmarks, {
@@ -304,7 +324,8 @@ private fun UitShell(
                         )
                 } else {
                     null
-                }
+                },
+                onOpenPdf = reading::open
             )
         } else if (showProfile) {
             StudentProfileScreen(studentProfile, onBack = { closeProfile() }, onManageAccounts = { showAccounts = true })
@@ -340,7 +361,9 @@ private fun UitShell(
                         returnToBookmarks = false
                     },
                     practice = practice,
-                    tutor = tutor
+                    tutor = tutor,
+                    onReading = { reading.library() },
+                    onOpenPdf = reading::open
                 )
                 3 -> InboxScreen(inbox)
                 else -> AcademicScreen(academic, accountContent)

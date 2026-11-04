@@ -39,7 +39,7 @@ import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.courses.R
 import vn.edu.uit.mobile.model.*
 
-@Composable fun CoursesScreen(viewModel: CoursesViewModel, study: StudyViewModel? = null, onReturnToSearch: (() -> Unit)? = null, downloads: OfflineDownloadsViewModel? = null, bookmarks: BookmarksViewModel? = null, onBookmarks: (() -> Unit)? = null, practice: PracticeViewModel? = null, tutor: CodeTutorViewModel? = null) {
+@Composable fun CoursesScreen(viewModel: CoursesViewModel, study: StudyViewModel? = null, onReturnToSearch: (() -> Unit)? = null, downloads: OfflineDownloadsViewModel? = null, bookmarks: BookmarksViewModel? = null, onBookmarks: (() -> Unit)? = null, practice: PracticeViewModel? = null, tutor: CodeTutorViewModel? = null, onReading: (() -> Unit)? = null, onOpenPdf: ((Course, CourseFile) -> Unit)? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showTutor by rememberSaveable { mutableStateOf(tutor?.uiState?.value?.open == true) }
     LaunchedEffect(showTutor, tutor) { if (showTutor && tutor != null && !tutor.uiState.value.open) tutor.open() }
@@ -64,7 +64,7 @@ import vn.edu.uit.mobile.model.*
     val bookmarkState = bookmarks?.uiState?.collectAsStateWithLifecycle()?.value
     var showDownloads by rememberSaveable { mutableStateOf(false) }
     if (showDownloads && downloads != null) {
-        OfflineDownloadsScreen(downloads) { showDownloads = false }
+        OfflineDownloadsScreen(downloads, { showDownloads = false }, onOpenPdf)
         return
     }
     val studyState = study?.uiState?.collectAsStateWithLifecycle()?.value
@@ -85,15 +85,7 @@ import vn.edu.uit.mobile.model.*
             when (effect) {
                 is CoursesEffect.Message -> snack.showSnackbar(effect.text)
                 is CoursesEffect.OpenFile -> {
-                    val file = java.io.File(effect.path)
-                    val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.files", file)
-                    val mime = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension.lowercase()) ?: "application/octet-stream"
-                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).setDataAndType(uri, mime).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    try {
-                        context.startActivity(intent)
-                    } catch (e: android.content.ActivityNotFoundException) {
-                        snack.showSnackbar(context.getString(R.string.courses_file_saved_error))
-                    }
+                    if (!openSavedCourseFile(context, effect.path, effect.course, effect.file, onOpenPdf)) snack.showSnackbar(context.getString(R.string.courses_file_saved_error))
                 }
             }
         }
@@ -143,6 +135,7 @@ import vn.edu.uit.mobile.model.*
                 bookmarkBusy = bookmarkState?.busy == true,
                 onBookmarkCourse = bookmarks?.let { it::toggleCourse },
                 onDownloads = if (downloads == null) null else ({ showDownloads = true }),
+                onReading = onReading,
                 onTutor = tutor?.let { model ->
                     {
                         model.open(state.selected, state.sections, state.assignments)
@@ -225,12 +218,12 @@ import vn.edu.uit.mobile.model.*
 }
 
 @Composable
-fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, onPickFile: (Assignment) -> Unit = {}, onReply: (Discussion) -> Unit = {}, onStudy: ((Assignment?) -> Unit)? = null, onDownloads: (() -> Unit)? = null, onBookmarks: (() -> Unit)? = null, onBookmarkDiscussion: ((Course, Discussion) -> Unit)? = null, savedBookmarkIds: Set<String> = emptySet(), bookmarkBusy: Boolean = false, onBookmarkCourse: ((Course) -> Unit)? = null, onPractice: (() -> Unit)? = null, onTutor: (() -> Unit)? = null) {
+fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, onPickFile: (Assignment) -> Unit = {}, onReply: (Discussion) -> Unit = {}, onStudy: ((Assignment?) -> Unit)? = null, onDownloads: (() -> Unit)? = null, onBookmarks: (() -> Unit)? = null, onBookmarkDiscussion: ((Course, Discussion) -> Unit)? = null, savedBookmarkIds: Set<String> = emptySet(), bookmarkBusy: Boolean = false, onBookmarkCourse: ((Course) -> Unit)? = null, onPractice: (() -> Unit)? = null, onTutor: (() -> Unit)? = null, onReading: (() -> Unit)? = null) {
     val course = state.selected
-    if (course == null) CourseLibrary(state, onIntent, onDownloads, onBookmarks, onBookmarkCourse, savedBookmarkIds, bookmarkBusy, onPractice, onTutor) else CourseWorkspace(state, course, onIntent, onPickFile, onReply, onStudy, onBookmarkDiscussion, savedBookmarkIds, bookmarkBusy, onPractice, onTutor)
+    if (course == null) CourseLibrary(state, onIntent, onDownloads, onBookmarks, onBookmarkCourse, savedBookmarkIds, bookmarkBusy, onPractice, onTutor, onReading) else CourseWorkspace(state, course, onIntent, onPickFile, onReply, onStudy, onBookmarkDiscussion, savedBookmarkIds, bookmarkBusy, onPractice, onTutor, onReading)
 }
 
-@Composable private fun CourseLibrary(state: CoursesState, onIntent: (CoursesIntent) -> Unit, onDownloads: (() -> Unit)?, onBookmarks: (() -> Unit)?, onBookmarkCourse: ((Course) -> Unit)?, savedBookmarkIds: Set<String>, bookmarkBusy: Boolean, onPractice: (() -> Unit)?, onTutor: (() -> Unit)?) {
+@Composable private fun CourseLibrary(state: CoursesState, onIntent: (CoursesIntent) -> Unit, onDownloads: (() -> Unit)?, onBookmarks: (() -> Unit)?, onBookmarkCourse: ((Course) -> Unit)?, savedBookmarkIds: Set<String>, bookmarkBusy: Boolean, onPractice: (() -> Unit)?, onTutor: (() -> Unit)?, onReading: (() -> Unit)?) {
     val courses = state.snapshot.courses.filter { (state.filter == "all" || it.classification == state.filter || state.filter == "hidden" && it.hidden) && "${it.shortname} ${it.fullname}".contains(state.query, true) }
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -239,6 +232,7 @@ fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, 
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item { PageHeading(stringResource(R.string.courses_title), stringResource(R.string.courses_subtitle)) }
+            if (onReading != null) item { OutlinedButton(onReading, shape = TechnicalShapes.Control) { Text(stringResource(R.string.rd_title)) } }
             if (onTutor != null) item { OutlinedButton(onTutor, shape = TechnicalShapes.Control) { Text(stringResource(R.string.ct_entry)) } }
             if (onPractice != null) item { OutlinedButton(onPractice, shape = TechnicalShapes.Control) { Text(stringResource(R.string.pp_saved_entry)) } }
             if (onDownloads != null) item { OutlinedButton(onDownloads, shape = TechnicalShapes.Control) { Text(stringResource(R.string.courses_offline)) } }
@@ -267,7 +261,7 @@ fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, 
     }
 }
 
-@Composable private fun CourseWorkspace(state: CoursesState, course: Course, onIntent: (CoursesIntent) -> Unit, onPickFile: (Assignment) -> Unit, onReply: (Discussion) -> Unit, onStudy: ((Assignment?) -> Unit)?, onBookmarkDiscussion: ((Course, Discussion) -> Unit)?, savedBookmarkIds: Set<String>, bookmarkBusy: Boolean, onPractice: (() -> Unit)?, onTutor: (() -> Unit)?) {
+@Composable private fun CourseWorkspace(state: CoursesState, course: Course, onIntent: (CoursesIntent) -> Unit, onPickFile: (Assignment) -> Unit, onReply: (Discussion) -> Unit, onStudy: ((Assignment?) -> Unit)?, onBookmarkDiscussion: ((Course, Discussion) -> Unit)?, savedBookmarkIds: Set<String>, bookmarkBusy: Boolean, onPractice: (() -> Unit)?, onTutor: (() -> Unit)?, onReading: (() -> Unit)?) {
     var collapsed by rememberSaveable(course.accountId, course.id) { mutableStateOf(listOf<Long>()) }
     var peopleQuery by rememberSaveable(course.accountId, course.id) { mutableStateOf("") }
     val accent = WorkspaceColors.course(course.id)
@@ -305,6 +299,7 @@ fun CoursesContent(state: CoursesState, onIntent: (CoursesIntent) -> Unit = {}, 
                 if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 8.dp).height(3.dp))
             }
             state.error?.let { error -> item { InlineNotice(error.text(), true) } }
+            if (onReading != null) item { OutlinedButton(onReading, shape = TechnicalShapes.Control) { Text(stringResource(R.string.rd_title)) } }
             if (onTutor != null) item { OutlinedButton(onTutor, enabled = !state.loading, shape = TechnicalShapes.Control, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.ct_entry)) } }
             if (onPractice != null) item { OutlinedButton(onPractice, enabled = !state.loading, shape = TechnicalShapes.Control, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.pp_entry)) } }
             if (onStudy != null) {

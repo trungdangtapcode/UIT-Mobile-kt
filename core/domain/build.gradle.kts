@@ -13,3 +13,12 @@ tasks.register<JavaExec>("exportWorkloadFigureData") {
     mainClass.set("vn.edu.uit.mobile.domain.WorkloadFigureData")
     args(rootProject.layout.projectDirectory.dir("docs/figures/workload").asFile.absolutePath)
 }
+
+tasks.register<JavaExec>("exportReadingFixture") {
+    group = "documentation"
+    description = "Export the authored three-page PDF fixture for reading evidence."
+    dependsOn(tasks.named("testClasses"))
+    classpath = project.extensions.getByType<SourceSetContainer>()["test"].runtimeClasspath
+    mainClass.set("vn.edu.uit.mobile.domain.ReadingFixtureData")
+    args(rootProject.layout.projectDirectory.dir("docs/design/fixtures").asFile.absolutePath)
+}

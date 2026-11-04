@@ -23,12 +23,17 @@ import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.courses.R
 import vn.edu.uit.mobile.model.*
 
-@Composable fun OfflineDownloadsScreen(viewModel: OfflineDownloadsViewModel, onBack: () -> Unit) {
+@Composable fun OfflineDownloadsScreen(viewModel: OfflineDownloadsViewModel, onBack: () -> Unit, onOpenPdf: ((Course, CourseFile) -> Unit)? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snack = remember { SnackbarHostState() }
     DisposableEffect(viewModel) { onDispose { viewModel.dismissOpenRequests() } }
-    LaunchedEffect(viewModel) { viewModel.files.collect { if (viewModel.canOpen(it) && !openSavedCourseFile(context, it.path)) snack.showSnackbar("Install an app that can open this saved format.") } }
+    LaunchedEffect(viewModel) {
+        viewModel.files.collect { event ->
+            val spec = viewModel.uiState.value.items.firstOrNull { it.id == event.id }?.spec
+            if (viewModel.canOpen(event) && !openSavedCourseFile(context, event.path, spec?.course, spec?.file, onOpenPdf)) snack.showSnackbar(context.getString(R.string.srch_file_error))
+        }
+    }
     Box {
         OfflineDownloadsContent(state, {
             viewModel.dismissOpenRequests()

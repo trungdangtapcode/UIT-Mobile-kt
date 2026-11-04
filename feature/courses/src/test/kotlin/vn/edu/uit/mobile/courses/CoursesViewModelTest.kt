@@ -1,6 +1,8 @@
 package vn.edu.uit.mobile.courses
 
+import androidx.lifecycle.ViewModelStore
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.test.*
 import org.junit.*
 import org.junit.Assert.*
@@ -58,6 +60,43 @@ class CoursesViewModelTest {
         runCurrent()
         assertEquals(two, vm.uiState.value.selected)
         assertEquals("Second", vm.uiState.value.sections.single().name)
+    }
+
+    @Test fun nativeReaderEffectsKeepExactCourseMetadataAndRejectAnObsoleteDownload() = runTest(dispatcher) {
+        val course = Course(1, "owner", "IT003", "First")
+        val other = course.copy(id = 2, shortname = "IT004", fullname = "Second")
+        val file = CourseFile("Lecture.pdf", "https://example.invalid/lecture.pdf")
+        val pending = CompletableDeferred<Unit>()
+        val repository = object : FakePortalRepository() {
+            override suspend fun download(course: Course, file: CourseFile): AppResult<DownloadedFile, AppError> {
+                pending.await()
+                return AppResult.Success(DownloadedFile("/synthetic/lecture.pdf", "synthetic"))
+            }
+        }
+        val vm = CoursesViewModel(repository)
+        val models = ViewModelStore().apply { put("courses", vm) }
+        val events = mutableListOf<CoursesEffect>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiEffect.collect { events += it } }
+        try {
+            runCurrent()
+            vm.onIntent(CoursesIntent.Select(course))
+            runCurrent()
+            vm.onIntent(CoursesIntent.Download(file))
+            runCurrent()
+            vm.onIntent(CoursesIntent.Select(other))
+            runCurrent()
+            pending.complete(Unit)
+            runCurrent()
+            assertTrue(events.none { it is CoursesEffect.OpenFile })
+            vm.onIntent(CoursesIntent.Download(file))
+            runCurrent()
+            val event = events.filterIsInstance<CoursesEffect.OpenFile>().single()
+            assertEquals(other, event.course)
+            assertEquals(file, event.file)
+        } finally {
+            models.clear()
+            runCurrent()
+        }
     }
 
     @Test fun unconfirmedSubmissionNeverCallsRepository() = runTest(dispatcher) {

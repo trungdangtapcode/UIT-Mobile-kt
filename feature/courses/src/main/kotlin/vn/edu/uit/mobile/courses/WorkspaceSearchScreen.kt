@@ -23,13 +23,13 @@ import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.courses.R
 import vn.edu.uit.mobile.model.*
 
-@Composable fun WorkspaceSearchScreen(viewModel: WorkspaceSearchViewModel, onClose: () -> Unit, onCourse: (Course) -> Unit, bookmarks: BookmarksViewModel? = null, onBookmarks: (() -> Unit)? = null, onReturnToBookmarks: (() -> Unit)? = null) {
+@Composable fun WorkspaceSearchScreen(viewModel: WorkspaceSearchViewModel, onClose: () -> Unit, onCourse: (Course) -> Unit, bookmarks: BookmarksViewModel? = null, onBookmarks: (() -> Unit)? = null, onReturnToBookmarks: (() -> Unit)? = null, onOpenPdf: ((Course, CourseFile) -> Unit)? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val bookmarkState = bookmarks?.uiState?.collectAsStateWithLifecycle()?.value
     val context = LocalContext.current
     val snack = remember { SnackbarHostState() }
     val fileError = stringResource(R.string.srch_file_error)
-    LaunchedEffect(viewModel) { viewModel.files.collect { if (viewModel.canOpen(it) && !openSavedCourseFile(context, it.path)) snack.showSnackbar(fileError) } }
+    LaunchedEffect(viewModel) { viewModel.files.collect { if (viewModel.canOpen(it) && !openSavedCourseFile(context, it.path, it.course, it.file, onOpenPdf)) snack.showSnackbar(fileError) } }
     Box {
         WorkspaceSearchContent(state, {
             if (onReturnToBookmarks != null) {

@@ -215,3 +215,10 @@ Generated edits stay preview-only. Direct personal-key and optional gateway mode
 share the existing AI connection. See [usage and limits](docs/CODE-TUTOR.md),
 [phone/provider evidence](docs/CODE-TUTOR-EVALUATION.md) and the
 [stacked PR order](docs/STACKED-PRS.md).
+
+## Course PDF reading
+
+Read verified course PDFs in the app, resume the saved page/zoom, bookmark pages
+and keep page-linked pin notes. Export reading data as a separate JSON file; the
+original PDF stays unchanged. See [usage, privacy and limits](docs/COURSE-READING.md)
+and [phone/native verification](docs/COURSE-READING-EVIDENCE.md).

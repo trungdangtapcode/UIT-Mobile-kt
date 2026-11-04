@@ -1,11 +1,6 @@
 package vn.edu.uit.mobile.authui
 
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.pdf.PdfRenderer
-import android.os.ParcelFileDescriptor
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -27,6 +22,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -41,6 +37,7 @@ import kotlin.math.min
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import vn.edu.uit.mobile.common.AppError
+import vn.edu.uit.mobile.designsystem.NativePdfDocument
 import vn.edu.uit.mobile.designsystem.TechnicalShapes
 import vn.edu.uit.mobile.feature.auth.R
 
@@ -54,41 +51,21 @@ private data class DecodedScan(val image: ImageBitmap?, val pageCount: Int = 1)
 
 internal fun isPdfScan(bytes: ByteArray): Boolean = bytes.size >= 5 && bytes.copyOfRange(0, 5).toString(Charsets.US_ASCII) == "%PDF-"
 
-internal fun decodePdfScanPage(bytes: ByteArray, pageIndex: Int): Pair<ImageBitmap, Int>? = runCatching {
-    val temp = File.createTempFile("uit-scan-", ".pdf")
-    val descriptor = try {
-        temp.writeBytes(bytes)
-        ParcelFileDescriptor.open(temp, ParcelFileDescriptor.MODE_READ_ONLY)
-    } finally {
-        temp.delete()
-    }
-    descriptor.use { pfd ->
-        PdfRenderer(pfd).use { renderer ->
-            val total = renderer.pageCount
-            if (total <= 0) return@runCatching null
-            val safeIndex = pageIndex.coerceIn(0, total - 1)
-            renderer.openPage(safeIndex).use { page ->
-                if (page.width <= 0 || page.height <= 0) return@runCatching null
-                val scale = min(2f, min(4096f / page.width, 4096f / page.height)).coerceAtLeast(1f)
-                val width = (page.width * scale).toInt().coerceIn(1, 4096)
-                val height = (page.height * scale).toInt().coerceIn(1, 4096)
-                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                Canvas(bitmap).drawColor(Color.WHITE)
-                page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                bitmap.asImageBitmap() to total
-            }
-        }
+internal fun decodePdfScanPage(bytes: ByteArray, pageIndex: Int, cacheDirectory: File): Pair<ImageBitmap, Int>? = runCatching {
+    NativePdfDocument(bytes, cacheDirectory).use { document ->
+        document.render(pageIndex.coerceIn(0, document.pageCount - 1) + 1).asImageBitmap() to document.pageCount
     }
 }.getOrNull()
 
 @Composable fun ProfileScanContent(scan: ProfileScanState, onClose: () -> Unit = {}, onRetry: () -> Unit = {}) {
+    val cacheDirectory = LocalContext.current.cacheDir
     var pageIndex by remember(scan.bytes) { mutableIntStateOf(0) }
     val decoded by produceState<DecodedScan?>(null, scan.bytes, pageIndex) {
         value = null
         val bytes = scan.bytes ?: return@produceState
         value = withContext(Dispatchers.Default) {
             if (isPdfScan(bytes)) {
-                val rendered = decodePdfScanPage(bytes, pageIndex)
+                val rendered = decodePdfScanPage(bytes, pageIndex, cacheDirectory)
                 DecodedScan(rendered?.first, rendered?.second ?: 1)
             } else {
                 DecodedScan(

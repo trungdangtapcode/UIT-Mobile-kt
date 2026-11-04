@@ -39,7 +39,7 @@ sealed interface CoursesIntent {
 }
 sealed interface CoursesEffect {
     data class Message(val text: String) : CoursesEffect
-    data class OpenFile(val path: String) : CoursesEffect
+    data class OpenFile(val path: String, val course: Course? = null, val file: CourseFile? = null) : CoursesEffect
 }
 class CoursesViewModel(private val repository: PortalRepository) : BaseMviViewModel<CoursesState, CoursesIntent, CoursesEffect>(CoursesState()) {
     private var selection: Job? = null
@@ -123,8 +123,11 @@ class CoursesViewModel(private val repository: PortalRepository) : BaseMviViewMo
                 when (intent) {
                     is CoursesIntent.Reply -> result(repository.reply(course, intent.postId, intent.message)) { effects.send(CoursesEffect.Message("Reply sent")) }
                     is CoursesIntent.Download -> result(repository.download(course, intent.file)) {
-                        effects.send(CoursesEffect.Message("Saved ${intent.file.name}"))
-                        effects.send(CoursesEffect.OpenFile(it.path))
+                        currentCoroutineContext().ensureActive()
+                        if (state.value.selected?.let { selected -> selected.accountId == course.accountId && selected.id == course.id } == true) {
+                            effects.send(CoursesEffect.Message("Saved ${intent.file.name}"))
+                            effects.send(CoursesEffect.OpenFile(it.path, course, intent.file))
+                        }
                     }
                     is CoursesIntent.Inspect -> result(repository.inspectH5p(course, intent.file)) { state.value = state.value.copy(h5p = it) }
                     is CoursesIntent.Submit -> {

@@ -53,13 +53,39 @@ appearance choices remain unchanged.
 | Data states | [Sign-in](previews/dashboard-connect-phone.png) · [Canceled class](previews/dashboard-canceled-phone.png) · [Empty day](previews/dashboard-empty-day-phone.png) · [Overdue work](previews/dashboard-overdue-phone.png) |
 
 These are the actual Compose components rendered with Robolectric native graphics
-and Roborazzi. Names, grades, courses and messages are synthetic test fixtures;
-production screens read repository data. No credentials are needed to render them.
+and Roborazzi. Unless a section identifies live sources (as the Forum gallery
+does), names, grades, courses and messages are synthetic test fixtures;
+production screens read repository data. Each section states its evidence scope.
 Screenshots and passing tests do not constitute visual approval.
 
 Widget images inflate and draw the actual Android RemoteViews, with a 16dp outer
 gutter representing their placement on a phone. They are host-side renders, not
 screenshots of an installed launcher. The widget pin chooser uses actual Compose.
+
+## UIT Forum
+
+The gallery below uses **real responses from https://forum.uit.edu.vn**, loaded
+by the production anonymous client, parser, repository, ViewModel and Compose UI.
+These are 390 × 844 dp Vietnamese phone renders on Robolectric, not screenshots
+from an installed APK. No authored topic or response is substituted.
+
+| Actual UIT content | Phone render |
+| --- | --- |
+| Current public topics | [Latest](previews/forum-real-latest.png) |
+| Public category hierarchy | [Categories](previews/forum-real-categories.png) |
+| Official 2026–2027 gift announcement | [Topic](previews/forum-real-announcement.png) · [Body](previews/forum-real-announcement-body.png) |
+
+[Capture provenance and SHA-256 hashes](previews/forum-real-provenance.json)
+identify the sources and capture time. The announcement is available at
+[UIT Forum topic 164929](https://forum.uit.edu.vn/t/164929).
+The former fixture screenshots have been removed; behavior tests no longer
+export Forum screenshots. Missing/error/local states have automated coverage,
+not fabricated screenshots in this gallery.
+
+See [Forum behavior and reproduction](../FORUM.md),
+[research](../research/UIT-FORUM-READER.md) and [design](UIT-FORUM.md).
+The app's Forum client is anonymous; these images do not establish app SSO,
+Android Keystore behavior or device networking.
 
 ## Render on a rootless server
 

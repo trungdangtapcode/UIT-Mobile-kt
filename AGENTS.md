@@ -26,6 +26,51 @@ For UI changes, render the actual Compose phone screens, inspect the images and
 run the relevant checks. A passing test suite does not establish visual approval.
 See `docs/DEBUGGING.md` for rootless SSH development and preview limitations.
 
+## UIT Forum: web parity is the target
+
+The user requires the full UIT Forum student experience in the native phone app.
+The anonymous reader is an initial increment, not the completed Forum feature.
+Do not silently reduce this target to feeds, text, a few screenshots or browser
+links. Follow [the parity research and acceptance matrix](docs/research/UIT-FORUM-PARITY.md).
+
+- Research the actual UIT mobile website, current response contracts and
+  applicable upstream Discourse behavior before implementing a Forum capability.
+  Record the observed server version, date, account mode and source. Distinguish
+  UIT-observed behavior, upstream documentation and unverified assumptions.
+- Inventory the entire flow, including content fidelity, navigation, permissions,
+  loading/errors, edits/deletions, reconnects, accessibility and account changes.
+  Maintain the parity matrix as implementation evolves. Do not call a row complete
+  until its acceptance evidence exists; unknown or deferred work stays visible.
+- Discover capabilities from UIT settings and per-resource permissions. Do not
+  assume that a bundled plugin is enabled, an enabled feature is permitted for
+  every account/category, or UIT login uses standard DiscourseConnect. Never
+  hardcode observed topic counts, tag lists, reactions or account capabilities.
+- Preserve source meaning: inline formatting, nested content, quotes/reply
+  targets, spoilers, attachments, image originals, revisions and plugin blocks.
+  Silently flattening/dropping content is a fidelity bug. An explicit browser
+  fallback is temporary coverage, not native parity or permission to reduce scope.
+- Published Forum screenshots must render actual UIT responses through the app's
+  production path. No authored posts, fabricated accounts, synthetic screenshot
+  galleries or substituted success data. Fixtures remain valid for automated
+  edge-case tests, but those tests must not export Forum review screenshots.
+- Attach source routes, capture time and runtime to real-data evidence. Compare
+  the same content/state against the mobile website. Distinguish host rendering,
+  emulator/device execution, live networking and authenticated verification.
+  Inspect captures before publishing; credentials, cookies, private content and
+  personal support details stay out of the public repository and PR.
+- Research and testing on the owner's real university account remain read-only,
+  apart from already-authorized necessary login. Do not post, edit, delete, like,
+  react, vote, flag, send messages, change settings, grant API keys or mark items
+  read for verification. Inspect automatic tracking/draft/notification writes;
+  GET is not a guarantee of no side effects. Use a dedicated test environment
+  or separately authorized test account for mutation acceptance tests.
+- Implement account-bound storage, credentials, permission checks and mutation
+  contracts separately from the anonymous guest reader. Never forward university
+  cookies to arbitrary media hosts or weaken TLS to achieve apparent parity.
+- Every Forum PR must identify covered matrix rows, remaining gaps and verification
+  limits. Keep work on feature/stacked branches. Do not claim "100%", close the
+  full-parity scope or merge solely because a happy path or fixture test passes.
+
 Use the [commit message contract](docs/COMMIT-CONTRACT.md) for all commits. Enable
 the local hooks with `sh scripts/install-git-hooks.sh` after cloning. Never stage
 local SDK settings, credentials, signing material or generated build outputs.

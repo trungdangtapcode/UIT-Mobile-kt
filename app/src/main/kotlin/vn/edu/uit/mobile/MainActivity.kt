@@ -38,6 +38,7 @@ import vn.edu.uit.mobile.data.LocalKnowledgeRepository
 import vn.edu.uit.mobile.data.LocalReadingRepository
 import vn.edu.uit.mobile.data.OfflineDownloadWorker
 import vn.edu.uit.mobile.data.StudyPrivateStorage
+import vn.edu.uit.mobile.data.createForumRepository
 import vn.edu.uit.mobile.data.createFreeTimeBlockStorage
 import vn.edu.uit.mobile.data.createKnowledgeSourceLoader
 import vn.edu.uit.mobile.data.createOfflineCourseSourceLoader
@@ -48,6 +49,7 @@ import vn.edu.uit.mobile.data.createStudyAiRepository
 import vn.edu.uit.mobile.data.observeDownloadWifi
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
+import vn.edu.uit.mobile.forum.*
 import vn.edu.uit.mobile.schedule.*
 import vn.edu.uit.mobile.widgets.*
 
@@ -60,6 +62,7 @@ class MainActivity : ComponentActivity() {
     private val revisionRepository: RevisionRepository by inject()
     private val practiceRepository: PracticeRepository by inject()
     private val knowledgeRepository: KnowledgeRepository by lazy { getKoin().getOrNull<KnowledgeRepository>() ?: LocalKnowledgeRepository(StudyPrivateStorage(this, "knowledge", "uit.knowledge.v1"), accounts) }
+    private val forumRepository: ForumRepository by lazy { getKoin().getOrNull<ForumRepository>() ?: createForumRepository(this) }
     private val readingRepository: ReadingRepository by lazy { getKoin().getOrNull<ReadingRepository>() ?: LocalReadingRepository(StudyPrivateStorage(this, "reading", "uit.reading.v1"), accounts) }
     private val studyRepository: StudyAiRepository by lazy { createStudyAiRepository(this, accounts) }
 
@@ -96,6 +99,7 @@ class MainActivity : ComponentActivity() {
                 val tutor = ownedViewModel { CodeTutorViewModel(studyRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this)), createOfflineTutorCodeLoader(createOfflineDownloadStorage(this))) }
                 val knowledge = ownedViewModel { KnowledgeViewModel(studyRepository, knowledgeRepository, accounts, repository, createKnowledgeSourceLoader(createOfflineDownloadStorage(this))) }
                 val reading = ownedViewModel { CourseReadingViewModel(readingRepository, accounts, repository, createOfflineDownloadStorage(this), createReadingDocumentLoader(createOfflineDownloadStorage(this)), nativeReadingPdfFactory(cacheDir)) }
+                val forum = ownedViewModel { ForumViewModel(forumRepository) }
                 val inbox = ownedViewModel { InboxViewModel(repository) }
                 val academic = ownedViewModel { AcademicViewModel(repository) }
                 val auth = ownedViewModel { AccountsViewModel(accounts) }
@@ -118,7 +122,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, practice, tutor, knowledge, reading, inbox, academic, studentProfile, widgetRoute, {
+                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, practice, tutor, knowledge, reading, forum, inbox, academic, studentProfile, widgetRoute, {
                     showWidgets = false
                     widgetRoute = null
                     setIntent(
@@ -187,6 +191,7 @@ private fun UitShell(
     tutor: CodeTutorViewModel,
     knowledge: KnowledgeViewModel,
     reading: CourseReadingViewModel,
+    forum: ForumViewModel,
     inbox: InboxViewModel,
     academic: AcademicViewModel,
     studentProfile: StudentProfileViewModel,
@@ -194,6 +199,7 @@ private fun UitShell(
     onWidgetRouteConsumed: () -> Unit,
     accounts: @Composable ((vn.edu.uit.mobile.model.Account) -> Unit) -> Unit
 ) {
+    val forumState by forum.uiState.collectAsStateWithLifecycle()
     val readingState by reading.uiState.collectAsStateWithLifecycle()
     var selected by rememberSaveable { mutableIntStateOf(0) }
     var returnToSearch by rememberSaveable { mutableStateOf(false) }
@@ -213,6 +219,7 @@ private fun UitShell(
             search.close()
             showSearch = false
             showAccounts = false
+            forum.close()
             showProfile = true
             profileAccountId = account?.id
             studentProfile.onIntent(StudentProfileIntent.Open(account?.id))
@@ -227,6 +234,7 @@ private fun UitShell(
     LaunchedEffect(Unit) { if (showProfile) studentProfile.onIntent(StudentProfileIntent.Open(profileAccountId)) }
     LaunchedEffect(widgetRoute) {
         val route = widgetRoute ?: return@LaunchedEffect
+        forum.close()
         reading.preempt()
         showBookmarks = false
         returnToBookmarks = false
@@ -255,6 +263,7 @@ private fun UitShell(
     WorkspaceFrame(
         selected, { destination ->
             val navigate = {
+                forum.close()
                 selected = destination
                 showBookmarks = false
                 returnToBookmarks = false
@@ -274,6 +283,7 @@ private fun UitShell(
                 returnToBookmarks = false
                 returnToSearch = false
                 closeProfile()
+                forum.close()
                 showSearch = true
             }
             if (reading.uiState.value.open) reading.leave(navigate) else navigate()
@@ -281,6 +291,8 @@ private fun UitShell(
     ) {
         if (readingState.open) {
             CourseReadingScreen(reading)
+        } else if (forumState.open) {
+            ForumScreen(forum)
         } else if (showBookmarks) {
             // Retain filters and list position while source detail replaces the collection.
             bookmarkScreenState.SaveableStateProvider("saved-items") {
@@ -371,7 +383,7 @@ private fun UitShell(
                     onReading = { reading.library() },
                     onOpenPdf = reading::open
                 )
-                3 -> InboxScreen(inbox)
+                3 -> InboxScreen(inbox, onForum = { forum.open() })
                 else -> AcademicScreen(academic, accountContent)
             }
         }

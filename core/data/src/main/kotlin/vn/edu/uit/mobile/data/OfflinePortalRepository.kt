@@ -426,6 +426,7 @@ class UitGraph(context: Context) {
     val revision: RevisionRepository = LocalRevisionRepository(revisionStorage, accounts)
     val practice: PracticeRepository = LocalPracticeRepository(practiceStorage, accounts)
     val knowledge: KnowledgeRepository = LocalKnowledgeRepository(knowledgeStorage, accounts)
+    val forum: ForumRepository = createForumRepository(app)
     val reading: ReadingRepository = LocalReadingRepository(readingStorage, accounts)
     val studyAi: StudyAiRepository = ConnectedStudyAiRepository(studyStorage, accounts)
     val portal: PortalRepository = OfflinePortalRepository(vault, store, File(app.filesDir, "materials"))

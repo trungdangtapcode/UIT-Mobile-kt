@@ -38,8 +38,8 @@ tasks.named("check") { dependsOn(verifyArchitecture, ktlintCheck, detektCheck) }
 tasks.named("check") { dependsOn(verifyStudyGateway) }
 
 tasks.named("check") {
-    dependsOn(":core:common:test", ":core:domain:test", ":core:network:common:test", ":core:network:moodle:test", ":core:network:daa:test")
+    dependsOn(":core:common:test", ":core:domain:test", ":core:network:common:test", ":core:network:moodle:test", ":core:network:daa:test", ":core:network:forum:test")
     if (!providers.gradleProperty("headless").isPresent) {
-        dependsOn(":core:auth:testDebugUnitTest", ":core:database:testDebugUnitTest", ":core:data:testDebugUnitTest", ":feature:auth:testDebugUnitTest", ":feature:courses:testDebugUnitTest", ":feature:academic:testDebugUnitTest", ":app:lintDebug")
+        dependsOn(":core:auth:testDebugUnitTest", ":core:database:testDebugUnitTest", ":core:data:testDebugUnitTest", ":feature:auth:testDebugUnitTest", ":feature:courses:testDebugUnitTest", ":feature:academic:testDebugUnitTest", ":feature:forum:testDebugUnitTest", ":app:lintDebug")
     }
 }

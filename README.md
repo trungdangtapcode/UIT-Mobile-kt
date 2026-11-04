@@ -38,6 +38,12 @@ Five bottom destinations share a single-column phone layout: daily timetable and
 submissions, Day/Week/Month scheduling, course materials, deadlines/messages and
 academic records. Conversations open as a separate phone view with Back navigation.
 
+**UIT Forum** opens from Inbox as a dedicated anonymous native reader. Browse
+public categories, search to a matched reply, navigate long topics and retain
+local saves and reading positions with bounded offline cache. It is separate
+from Moodle discussions and does not use university sessions. See
+[Forum behavior, reading algorithm and limits](docs/FORUM.md).
+
 Two home screen widgets show the next class or today's remaining classes and the
 closest deadline from saved data. Add them through **Account icon → Settings →
 Home screen widgets**, or the launcher's widget picker. See [home screen widgets](docs/HOME-WIDGETS.md)

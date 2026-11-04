@@ -1,0 +1,36 @@
+{
+    "checked_at": "2026-11-02T17:51:51.212139566Z",
+    "mode": "anonymous-public-get-only",
+    "credentials_used": false,
+    "raw_content_retained": false,
+    "requests": [
+        "categories",
+        "latest:null:0",
+        "latest:null:1",
+        "category:59",
+        "latest:59:0",
+        "search:1:uit",
+        "topic:139895:1",
+        "posts:139895:376361,376435",
+        "topic:139895:3727"
+    ],
+    "http_responses": 10,
+    "site_categories": 38,
+    "latest_topics": 30,
+    "second_page_topics": 30,
+    "category_topics": 30,
+    "search_hits": 50,
+    "search_has_more": true,
+    "topic_stream_ids": 7455,
+    "initial_posts": 20,
+    "batch_posts": 2,
+    "jump_target_number": 3727,
+    "jump_first_number": 3722,
+    "jump_last_number": 3741,
+    "native_block_types": [
+        "CODE",
+        "IMAGE",
+        "QUOTE",
+        "TEXT"
+    ]
+}

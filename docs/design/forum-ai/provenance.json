@@ -1,0 +1,34 @@
+{
+  "source": "https://forum.uit.edu.vn/t/163707",
+  "sourcePosts": [
+    {
+      "postId": 449865,
+      "number": 1
+    },
+    {
+      "postId": 453258,
+      "number": 16
+    }
+  ],
+  "sourceCapture": "Anonymous production source adapter; the entry replays the captured actual topic JSON through ForumParser.",
+  "modelCaptureAt": "2026-11-04T16:26:20.884580247Z",
+  "runtime": "Robolectric API 35 / native Compose host rendering, not a physical phone or emulator.",
+  "renderedAtUtc": "2026-11-04T16:34:40.410742+00:00",
+  "replay": "Production AssistantCodec/Repository restored real provider output. No key or university session is present in the render process. Historical messages remain readable with AI setup visible.",
+  "privacy": "Only the public topic heading and selected staff announcement text appear; later student/team-support posts are not shown.",
+  "review": "All 12 captures inspected; source timestamps use GMT+07, dialogs remain bounded, no overlapping controls found at reviewed widths.",
+  "hashes": {
+    "forum-digest-chat-360.png": "a51b105c0d2202b98346fdf5bd905dea34270444032fb80f792d71fb65da3b5d",
+    "forum-digest-chat-390-light.png": "3d7c8668e56e33aa8aad1016921038166b01ee95b31fcafd90eb1a32b2ebf912",
+    "forum-digest-chat-390.png": "3b98604d2e1aeb0cbcc83d781e75fa2471424f88f194b514f011f3d99dd4e4a5",
+    "forum-digest-chat-412-large-text.png": "9f2af799e139d42a67fe14298a7e569f233f7cb0ae581bc084bef57c2661f23b",
+    "forum-digest-entry-390.png": "fe495dc4907ff84323826f56091e0814dd3a7d954126dae2c8e700226184fcce",
+    "forum-digest-evidence-390.png": "d32b7c946f1588790927855a7f373c48061dd6cfd9c8388a1abd676dbb3c5b4b",
+    "forum-digest-followup-360.png": "52aeb51b6d692e0eaf4a8cbb8d054c6bb7ad781dc80e48e98fe2b81b8766e8ff",
+    "forum-digest-followup-390-light.png": "4e94a9725f35bae5315e75a3351a8aa8a507316ce586c32726e4cd837a033451",
+    "forum-digest-followup-390.png": "4b1587d821138500d0f19be7fcc8b0feb1b6357bc168eff58fc3895ff2b0972c",
+    "forum-digest-followup-412-large-text.png": "56d3e4b95c4ebbe6e4f7cc60eea49bfd723449484ff38a2965d1ac851d78a196",
+    "forum-digest-range-390.png": "969741491857656231406bf485bb1f2a96dde642a5b08e3154ccbc6ad8f2782f",
+    "forum-digest-sources-390.png": "421fe1a18b9179c9be067e4d02181c7210d9592cba58fe5a2122d2290d5768e1"
+  }
+}

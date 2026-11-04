@@ -14,12 +14,18 @@ data class AssistantUiState(
     val busy: Boolean = false,
     val progress: AssistantProgress? = null,
     val problem: AssistantProblem? = null,
-    val notices: AnnouncementInbox = AnnouncementInbox()
+    val notices: AnnouncementInbox = AnnouncementInbox(),
+    val forumChecks: Map<String, AssistantForumCheck> = emptyMap(),
+    val checkingForum: Boolean = false,
+    val preparingContext: Boolean = false
 )
 class AssistantViewModel(private val repository: AssistantRepository, private val study: StudyAiRepository, private val announcements: AnnouncementRepository) : ViewModel() {
     private val mutable = MutableStateFlow(AssistantUiState())
     val state = mutable.asStateFlow()
     private var request: Job? = null
+    private var sourceCheck: Job? = null
+    private var contextWork: Job? = null
+    private var contextSerial = 0L
     init {
         viewModelScope.launch { repository.library.collect { library -> mutable.update { it.copy(library = library) } } }
         viewModelScope.launch { announcements.state.collect { notices -> mutable.update { it.copy(notices = notices) } } }
@@ -42,12 +48,58 @@ class AssistantViewModel(private val repository: AssistantRepository, private va
     }
     fun select(id: String?) {
         stop()
-        mutable.update { it.copy(selected = id, problem = null) }
+        sourceCheck?.cancel()
+        mutable.update { it.copy(selected = id, problem = null, checkingForum = false, forumChecks = emptyMap()) }
     }
-    fun create(name: String, scope: AssistantScope) = action { select(repository.create(name, scope)) }
+    fun create(name: String, scope: AssistantScope) = prepareWorkspace(name, scope)
+    fun createForForum(scope: AssistantForumScope) = prepareWorkspace(null, AssistantScope(emptySet(), forum = scope))
+    private fun prepareWorkspace(name: String?, scope: AssistantScope) {
+        stop()
+        val token = contextSerial
+        mutable.update { it.copy(selected = null, preparingContext = scope.forum != null, problem = null) }
+        contextWork = viewModelScope.launch {
+            try {
+                val coverage = scope.forum?.let { repository.inspectForum(it) }
+                currentCoroutineContext().ensureActive()
+                if (token != contextSerial) return@launch
+                val id = repository.create(name ?: requireNotNull(coverage).title.take(80), scope)
+                currentCoroutineContext().ensureActive()
+                if (token == contextSerial) mutable.update { it.copy(selected = id, forumChecks = emptyMap()) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                if (token == contextSerial) mutable.update { it.copy(problem = AssistantProblem.ACTION) }
+            } finally {
+                if (token == contextSerial) mutable.update { it.copy(preparingContext = false) }
+            }
+        }
+    }
+    fun deleteTurn(turnId: String) = action {
+        val id = state.value.selected ?: return@action
+        sourceCheck?.cancel()
+        repository.deleteTurn(id, turnId)
+        mutable.update { it.copy(checkingForum = false, forumChecks = it.forumChecks - turnId) }
+    }
+    fun recheckForum(turnId: String) {
+        val id = state.value.selected ?: return
+        if (state.value.busy || state.value.checkingForum) return
+        mutable.update { it.copy(checkingForum = true) }
+        sourceCheck = viewModelScope.launch {
+            try {
+                val check = repository.recheckForum(id, turnId)
+                if (state.value.selected == id && state.value.library.workspaces.any { it.id == id }) mutable.update { it.copy(forumChecks = it.forumChecks + (turnId to check)) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                if (state.value.selected == id) mutable.update { it.copy(problem = AssistantProblem.ACTION) }
+            } finally {
+                if (state.value.selected == id) mutable.update { it.copy(checkingForum = false) }
+            }
+        }
+    }
     fun createFor(url: String) = action {
         val item = announcements.state.value.items.first { it.url == url }
-        select(repository.create(item.title.take(80), AssistantScope(setOf(item.source), setOf(url))))
+        prepareWorkspace(item.title.take(80), AssistantScope(setOf(item.source), setOf(url)))
     }
     fun rename(id: String, name: String) = action { repository.rename(id, name) }
     fun delete(id: String) {
@@ -105,6 +157,12 @@ class AssistantViewModel(private val repository: AssistantRepository, private va
     fun stop() {
         request?.cancel()
         request = null
+        contextSerial++
+        contextWork?.cancel()
+        contextWork = null
+        sourceCheck?.cancel()
+        sourceCheck = null
+        mutable.update { it.copy(preparingContext = false, checkingForum = false) }
     }
     fun checklist(workspace: String, turn: String, items: List<AssistantChecklistItem>) = action { repository.checklist(workspace, turn, items) }
 }

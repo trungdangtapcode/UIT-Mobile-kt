@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 CONTRACT = json.loads(Path(__file__).with_name("assistant_contract.json").read_text())
+TOOL_NAMES = {item["name"] for item in CONTRACT["tools"]}
 
 
 def request(data):
@@ -25,7 +26,7 @@ def request(data):
                 if not all(isinstance(part, dict) and part.get("type") == "output_text" and isinstance(part.get("text"), str) for part in content):
                     raise ValueError("Only text message parts are accepted")
         elif kind == "function_call":
-            if item.get("name") not in {"search_announcements", "read_announcement"}:
+            if item.get("name") not in TOOL_NAMES:
                 raise ValueError("Unknown assistant tool")
         elif kind not in {"function_call_output", "reasoning"}:
             raise ValueError("Unknown input type")
@@ -52,7 +53,7 @@ def result(data):
     for item in output:
         if item.get("type") not in {"reasoning", "function_call", "message"}:
             raise ValueError("Invalid output type")
-        if item.get("type") == "function_call" and item.get("name") not in {"search_announcements", "read_announcement"}:
+        if item.get("type") == "function_call" and item.get("name") not in TOOL_NAMES:
             raise ValueError("Unknown assistant tool")
         if any(part.get("type") == "refusal" for part in item.get("content", [])):
             raise ValueError("Refused assistant output")

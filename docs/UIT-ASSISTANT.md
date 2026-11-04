@@ -1,8 +1,9 @@
-# UIT Assistant: architecture and initial delivery
+# UIT Assistant: architecture and delivery
 
 Date: 2026-11-04. Stacked on #81 (`feat/official-announcements`).
 Related work: #46, #47 and #55. The [broader proposal](research/UIT-ASSISTANT.md)
-remains a phased design; this delivery implements public-announcement workspaces.
+remains a phased design. The initial delivery implements public-announcement
+workspaces; the [Forum digest increment](FORUM-AI.md) adds selected public topics.
 
 ## Delivered scope
 
@@ -16,8 +17,10 @@ checklists. Creating a workspace or editing configuration never calls a model.
 The first connectors are the existing public announcement adapters: Portal UIT,
 CTSV, OEP, Youth, the research office and Information Systems faculty. The assistant
 uses sources enabled by the announcement reader and selected for that workspace.
-This release does not connect private academic records, course files, Forum posts
-or private messages. These remain subsequent phases, not hidden tools in this build.
+A workspace may also attach an explicitly selected public Forum topic/post window,
+independently or alongside notices. Private academic records, course files and
+private messages remain outside this assistant. See [Forum context](FORUM-AI.md)
+for selection, freshness and the anonymous transport boundary.
 No code-execution sandbox, Codex process, CLI, MCP server or hosted backend is
 required for the delivered runtime. The model itself runs through the configured
 API provider. Direct mode uses a personal key entered at runtime; the existing
@@ -59,6 +62,8 @@ flowchart TD
     HTTP --> GW[Optional HTTPS gateway]
     GW --> DIRECT
     LOOP --> TOOLS[Read-only evidence tools]
+    TOOLS --> FORUM[Anonymous Forum context source]
+    FORUM --> FP[Existing Forum parser / anonymous transport]
     TOOLS --> AR[AnnouncementRepository]
     AR --> CACHE[Public announcement cache]
     AR --> UIT[Verified public UIT adapters]
@@ -90,7 +95,8 @@ account-owned contract, indexes, cleanup and permission checks.
 Each turn retains the question, status, verified facts/references, exact source
 paragraph snapshots, source versions, source dates, retrieval times, completed tool
 names/counts and any explicitly saved checklist. It does not retain API keys,
-university cookies, provider reasoning, raw provider transcripts or debug traces.
+university cookies, provider reasoning, raw provider transcripts or debug traces. Persistence format 2 adds Forum scope,
+post metadata and coverage while decoding existing format 1 notice workspaces.
 
 The dedicated encrypted `assistant_workspaces` store uses existing Keystore AES-GCM
 storage. Writes publish new state only after persistence succeeds. Unreadable
@@ -117,12 +123,13 @@ The initial context includes the current Vietnam timestamp and cache coverage.
 Historical answers are labelled as conversation context, not current evidence.
 Every factual answer must reference evidence read during **this request**.
 
-Only two fixed tools are available:
+Three fixed tools are available; each enforces the workspace scope:
 
 | Tool | Inputs | Result |
 | --- | --- | --- |
 | `search_announcements` | A query of at most 200 characters; empty lists recent notices | Up to ten cached metadata matches, opaque source IDs and source coverage/freshness |
 | `read_announcement` | An ID discovered by search in this request | Allowed versioned text paragraphs, original URL, publication/retrieval metadata and partial/offline flags |
+| `read_forum_topic` | Empty object; topic and post-count scope are selected by the student | Bounded public post paragraphs, authors, revision metadata and explicit partial coverage |
 
 Search normalizes Vietnamese diacritics, case and punctuation. It counts distinct
 query tokens present in the title/excerpt, ranks by descending matches, then by
@@ -182,7 +189,7 @@ them requires re-running storage, protocol and phone acceptance tests.
 | Scope / pinned articles | Selected enabled source set / at most 8 URLs; the article entry attaches one |
 | Recent completed history sent | 3 turns, at most 4,000 characters of answer prose each |
 | Model steps / tool calls | 6 / 8 per question |
-| Evidence / paragraphs per article | 6 articles / 64 paragraphs |
+| Evidence / paragraphs per source item | 6 announcements plus at most 40 Forum posts / 64 paragraphs |
 | Passage / all extracted text | 1,800 characters / 32,000 characters |
 | Serialized input | 110,000 UTF-8 bytes |
 | Request timeout / overall runtime | Existing 60-second transport / 180 seconds |
@@ -195,11 +202,13 @@ no hidden unlimited retry. A single question may incur multiple model calls.
 
 ## Phone navigation and actions
 
-Enter from Today, the announcement list or **Ask about this article**. Keep the
+Enter from Today, the announcement list, **Ask about this article**, or
+**Summarize / ask AI** in a Forum topic. Keep the
 existing five bottom destinations. A workspace opens into one vertical chat with
 a bottom composer and visible context controls. Back returns to the workspace
 list; citation inspection opens a scrollable source sheet and the original action
-opens the native announcement reader, with a route back to the assistant.
+opens the native source reader, with a route back to the assistant. Forum sources
+use an isolated public citation mode even when a member session exists.
 
 Provider configuration is shared with the existing course AI feature. Credentials
 stay only in dialog memory until saved and are never saveable Compose state.

@@ -6,7 +6,7 @@ import kotlinx.serialization.json.*
 import vn.edu.uit.mobile.domain.*
 
 /** Read-only facade: it never exposes the wider repositories' mutation methods to the model. */
-internal class AssistantEvidenceTools(private val repository: AnnouncementRepository, private val scope: AssistantScope) {
+internal class AssistantEvidenceTools(private val repository: AnnouncementRepository, private val scope: AssistantScope, private val otherChars: () -> Int = { 0 }) {
     private val discovered = linkedMapOf<String, String>()
     val evidence = linkedMapOf<String, AssistantEvidence>()
     private var totalChars = 0
@@ -54,7 +54,7 @@ internal class AssistantEvidenceTools(private val repository: AnnouncementReposi
                                 buildJsonObject {
                                     put("source_id", id)
                                     put("title", item.title)
-                                    put("source", item.source.name)
+                                    put("source", requireNotNull(item.source).name)
                                     put("date", item.publishedDate)
                                     put("excerpt", item.excerpt.take(350))
                                 }
@@ -71,7 +71,7 @@ internal class AssistantEvidenceTools(private val repository: AnnouncementReposi
                 require(repository.state.value.items.any { it.url == url && allowed(it) }) { "Source no longer allowed" }
                 val existing = evidence[id]
                 if (existing != null) return encode(existing) to existing.paragraphs.size
-                require(evidence.size < AssistantRules.EVIDENCE)
+                require(evidence.size < AssistantRules.ANNOUNCEMENTS)
                 val loaded = repository.open(url)
                 require(allowed(loaded.item)) { "Source scope changed" }
                 val doc = Ksoup.parseBodyFragment(loaded.item.bodyHtml)
@@ -81,7 +81,7 @@ internal class AssistantEvidenceTools(private val repository: AnnouncementReposi
                 doc.select("br").forEach { it.after("\n") }
                 doc.select("p,li,tr,h1,h2,h3,h4,blockquote,pre").forEach { it.after("\n") }
                 val text = doc.wholeText().lines().map(AssistantRules::normalize).filter { it.isNotBlank() }
-                var remaining = 32000 - totalChars
+                var remaining = 32000 - totalChars - otherChars()
                 require(remaining >= 8) { "Evidence budget reached" }
                 val paragraphs = buildList {
                     for (passage in text.flatMap { it.chunked(AssistantRules.MAX_PASSAGE) }.take(AssistantRules.MAX_PARAGRAPHS)) {
@@ -104,7 +104,7 @@ internal class AssistantEvidenceTools(private val repository: AnnouncementReposi
     private fun encode(item: AssistantEvidence) = buildJsonObject {
         put("id", item.id)
         put("title", item.title)
-        put("source", item.source.name)
+        put("source", requireNotNull(item.source).name)
         put("url", item.url)
         put("publicationDate", item.publishedDate)
         put("fetchedAt", item.fetchedAt)

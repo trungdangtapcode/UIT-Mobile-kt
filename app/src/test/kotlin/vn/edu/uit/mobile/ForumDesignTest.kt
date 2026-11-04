@@ -5,6 +5,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import org.junit.*
+import org.junit.Assert.*
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -143,5 +144,20 @@ class ForumDesignTest {
 
     @Test fun rateLimit390() {
         show(state().copy(error = ForumFailure.RATE_LIMIT))
+    }
+
+    @Test fun aiEntryRequiresAnExplicitBoundedPostWindow() {
+        var scope: AssistantForumScope? = null
+        val initial = ForumState(open = true, topic = ForumFixtures.topic, stream = listOf(1), posts = listOf(ForumPost(1, ForumFixtures.topic.id, 1, "author", "", emptyList())))
+        compose.setContent { UitTheme { WorkspaceFrame(3, {}, {}, "", false, false, 0) { ForumContent(initial, onAssistant = { scope = it }) } } }
+        compose.onNodeWithTag("forum-reader").performScrollToNode(hasTestTag("forum-ai-entry"))
+        compose.onNodeWithTag("forum-ai-entry").performClick()
+        compose.onNodeWithTag("forum-ai-count").performTextReplacement("41")
+        compose.onNodeWithText("Open in UIT Assistant").assertIsNotEnabled()
+        assertNull(scope)
+        compose.onNodeWithTag("forum-ai-count").performTextReplacement("2")
+        compose.onNodeWithText("Open in UIT Assistant").performClick()
+        assertEquals(2, scope?.limit)
+        assertEquals(ForumFixtures.topic.id, scope?.topicId)
     }
 }

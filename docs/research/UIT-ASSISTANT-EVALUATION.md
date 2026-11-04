@@ -145,3 +145,10 @@ completion frame and exclusion of drafts from persisted answers. The new BCU
 summary distinguishes non-required registration explicitly; broader semantic
 accuracy remains an open review gate. Physical-device execution is still unverified.
 The Python gateway remains buffered; these streaming results apply to Direct mode.
+
+## Selected public Forum increment
+
+The subsequent #51 connector has a separate [evaluation record](FORUM-AI-EVALUATION.md)
+covering real public UIT text, actual `gpt-6-luna` SSE, hostile synthetic sources,
+phone renders and the limits of exact-quote validation. This does not retroactively
+change the initial announcement-only scope or evidence above.

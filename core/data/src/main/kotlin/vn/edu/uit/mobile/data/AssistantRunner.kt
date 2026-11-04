@@ -4,13 +4,13 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
 import vn.edu.uit.mobile.domain.*
 
-internal data class AssistantRunResult(val facts: List<AssistantFact>, val evidence: List<AssistantEvidence>, val events: List<AssistantToolEvent>, val model: String, val coverage: String)
+internal data class AssistantRunResult(val facts: List<AssistantFact>, val evidence: List<AssistantEvidence>, val events: List<AssistantToolEvent>, val model: String, val coverage: String, val forumCoverage: AssistantForumCoverage?)
 
 /** Bounded client-owned Responses loop. Provider output never executes as code or arbitrary HTTP. */
-internal class AssistantRunner(private val model: AssistantModel, private val announcements: AnnouncementRepository) {
+internal class AssistantRunner(private val model: AssistantModel, private val announcements: AnnouncementRepository, private val forum: AssistantForumSource) {
     suspend fun run(workspace: AssistantWorkspace, question: String, language: String, guard: suspend () -> Unit, progress: (AssistantProgress) -> Unit): AssistantRunResult = withTimeout(180000) {
         announcements.initialize()
-        val tools = AssistantEvidenceTools(announcements, workspace.scope)
+        val tools = AssistantContextTools(announcements, workspace.scope, forum)
         val input = mutableListOf<JsonElement>()
         input += buildJsonObject {
             put("role", "user")
@@ -48,12 +48,14 @@ internal class AssistantRunner(private val model: AssistantModel, private val an
             val output = AssistantProtocol.output(data)
             val functionCalls = output.filter { it.jsonObject["type"]?.jsonPrimitive?.content == "function_call" }
             if (functionCalls.isEmpty()) {
+                var candidate: List<AssistantFact>? = null
                 try {
                     val facts = AssistantProtocol.facts(OpenAiStudyProtocol.directPayload(data).toString())
-                    AssistantRules.verify(facts, tools.evidence.values.toList())
+                    candidate = facts
+                    AssistantRules.verify(facts, tools.evidence)
                     require(facts.none { it.kind == AssistantFactKind.FACT } || tools.evidence.isNotEmpty())
-                    require(tools.evidence.values.all { announcements.state.value.sources.getValue(it.source).enabled })
-                    return@withTimeout AssistantRunResult(facts, tools.evidence.values.toList(), events, data.getValue("model").jsonPrimitive.content.take(100), tools.coverage())
+                    require(tools.sourcesEnabled())
+                    return@withTimeout AssistantRunResult(facts, tools.evidence, events, data.getValue("model").jsonPrimitive.content.take(100), tools.coverage(), tools.forumCoverage)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Exception) {
@@ -62,7 +64,7 @@ internal class AssistantRunner(private val model: AssistantModel, private val an
                     input.addAll(output)
                     input += buildJsonObject {
                         put("role", "user")
-                        put("content", "Your answer failed evidence validation. Use at most twelve sections and at most four references per section. Read allowed evidence if needed; copy exact quotes and zero-based paragraph IDs. Otherwise return UNKNOWN without unsupported factual claims.")
+                        put("content", AssistantProtocol.repairHint(candidate, tools.evidence))
                     }
                 }
             } else {
@@ -73,7 +75,7 @@ internal class AssistantRunner(private val model: AssistantModel, private val an
                     val id = call.getValue("call_id").jsonPrimitive.content
                     require(id.length in 1..160 && seenCalls.add(id))
                     val name = call.getValue("name").jsonPrimitive.content
-                    require(name in setOf("search_announcements", "read_announcement")) { "Unsupported tool" }
+                    require(name in AssistantProtocol.toolNames) { "Unsupported tool" }
                     val arguments = call.getValue("arguments").jsonPrimitive.content
                     require(arguments.length <= 1000)
                     calls++

@@ -45,7 +45,7 @@ class AssistantProtocolTest {
                 assertEquals("text/event-stream", request.headers[HttpHeaders.Accept])
                 assertEquals("required", body.getValue("tool_choice").jsonPrimitive.content)
                 assertFalse(body.getValue("parallel_tool_calls").jsonPrimitive.boolean)
-                assertEquals(setOf("search_announcements", "read_announcement"), body.getValue("tools").jsonArray.map { it.jsonObject.getValue("name").jsonPrimitive.content }.toSet())
+                assertEquals(setOf("search_announcements", "read_announcement", "read_forum_topic"), body.getValue("tools").jsonArray.map { it.jsonObject.getValue("name").jsonPrimitive.content }.toSet())
                 assertTrue(body.getValue("text").jsonObject.getValue("format").jsonObject.getValue("strict").jsonPrimitive.boolean)
                 respond(assistantSseComplete(assistantOutput(assistantCall("call", "search_announcements", "{\"query\":\"\"}"))), headers = headersOf(HttpHeaders.ContentType, "text/event-stream"))
             }

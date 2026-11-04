@@ -103,6 +103,14 @@ The [Forum AI gallery](FORUM-AI.md) shows actual UIT topic context and real
 [provenance](forum-ai/provenance.json) and [evaluation limits](../research/FORUM-AI-EVALUATION.md).
 These are production Compose replays on the host, without a university session.
 
+## Selected course passage retrieval
+
+The [course retrieval gallery](COURSE-RETRIEVAL.md) renders actual NT409 notebook
+text and production BM25/semantic/hybrid result captures in the existing phone
+search flow. It includes 360/390/412dp, light/dark, 130% text, explicit file selection
+and verified cell/line source inspection. [Evaluation and limitations](../research/COURSE-RETRIEVAL-EVALUATION.md)
+distinguish real API calls, local ablation, synthetic tests and host rendering.
+
 ## Render on a rootless server
 
 An Android SDK and JDK are required; an emulator, KVM and root are not:

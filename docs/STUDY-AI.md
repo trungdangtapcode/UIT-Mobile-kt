@@ -191,3 +191,12 @@ complete by this branch.
 References: [Responses API](https://developers.openai.com/api/docs/guides/migrate-to-responses),
 [structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
 [API data controls](https://developers.openai.com/api/docs/guides/your-data).
+
+## Selected passage retrieval
+
+The [course passage search](COURSE-RETRIEVAL.md) adds bounded local BM25 and optional
+Direct embedding/semantic/RRF modes over explicitly selected verified downloads.
+Embedding configuration is separate from the generation/chat model. It returns
+inspectable excerpts and does not silently attach course data to general chat.
+The [research and actual evaluation](research/COURSE-RETRIEVAL-EVALUATION.md) record
+model access, ranking failures, usage, latency and the single-notebook limitation.

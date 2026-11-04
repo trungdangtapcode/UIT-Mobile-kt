@@ -41,7 +41,8 @@ data class CourseReadingState(
     val otherVersions: Int = 0,
     val session: Long = 0,
     val draft: ReadingNoteDraft? = null,
-    val ready: Boolean = false
+    val ready: Boolean = false,
+    val expectedVersion: String? = null
 ) {
     val editable get() = record != null && !archived && !loading && !saving && !pendingSave && image != null
     val currentNotes get() = record?.notes.orEmpty().filter { it.page == position.page }.sortedWith(compareBy({ it.createdAt }, { it.id }))
@@ -148,10 +149,12 @@ class CourseReadingViewModel(
         document?.close()
         document = null
     }
-    fun open(course: Course, file: CourseFile) {
+    fun open(course: Course, file: CourseFile) = open(course, file, null)
+    fun openExpected(course: Course, file: CourseFile, version: String) = open(course, file, version)
+    private fun open(course: Course, file: CourseFile, expectedVersion: String?) {
         clear(true)
         val token = epoch
-        state.value = state.value.copy(candidate = ReadingCandidate(course, file), loading = true)
+        state.value = state.value.copy(candidate = ReadingCandidate(course, file), loading = true, expectedVersion = expectedVersion)
         operation = viewModelScope.launch {
             var opened: ReadingPdf? = null
             try {
@@ -159,6 +162,7 @@ class CourseReadingViewModel(
                 val captured = loader.load(course, file)
                 currentCoroutineContext().ensureActive()
                 check(captured.identity.accountId == course.accountId && captured.identity.documentId == offlineDownloadId(course, file))
+                check(expectedVersion == null || captured.identity.version == expectedVersion) { "The source version changed before PDF navigation" }
                 try {
                     withContext(io) { opened = factory.open(captured.bytes) }
                 } catch (e: CancellationException) {
@@ -202,7 +206,7 @@ class CourseReadingViewModel(
             savePosition()
             return
         }
-        current.candidate?.let { open(it.course, it.file) } ?: refresh()
+        current.candidate?.let { open(it.course, it.file, current.expectedVersion) } ?: refresh()
     }
     fun review(record: ReadingRecord) {
         if (record.identity.accountId !in ownerIds || state.value.collections.none { c -> c.records.any { it == record } }) return
@@ -455,7 +459,7 @@ class CourseReadingViewModel(
     }
     fun reopen() {
         val candidate = state.value.candidate
-        if (candidate != null) open(candidate.course, candidate.file) else library()
+        if (candidate != null) open(candidate.course, candidate.file, state.value.expectedVersion) else library()
     }
     fun exportFailed() {
         state.value = state.value.copy(problem = ReadingProblem.EXPORT)

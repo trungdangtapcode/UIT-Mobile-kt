@@ -28,6 +28,7 @@ interface StudyStorage {
     fun write(key: String, value: String)
     fun remove(key: String)
     fun removeAccount(accountId: String)
+    fun clear(): Unit = error("Storage reset is unavailable")
 }
 
 fun createStudyAiRepository(context: Context, accounts: AccountRepository): StudyAiRepository = ConnectedStudyAiRepository(StudyPrivateStorage(context), accounts)
@@ -59,6 +60,10 @@ class StudyPrivateStorage(context: Context, preferenceName: String = "study_ai",
 
     @Synchronized override fun remove(key: String) {
         check(prefs.edit().remove(key).commit()) { "Unable to clear study settings." }
+    }
+
+    @Synchronized override fun clear() {
+        check(prefs.edit().clear().commit()) { "Unable to reset local storage." }
     }
 
     @Synchronized override fun removeAccount(accountId: String) {
@@ -167,6 +172,49 @@ class ConnectedStudyAiRepository(
         TutorRules.request(request)
         require(course != null || request.sources.isEmpty()) { "Choose a course before adding course context." }
         exchange(course, TutorProtocol.payload(request)) { data, direct -> TutorProtocol.result(data, direct, request).also { TutorRules.result(it, request) } }
+    }
+    override suspend fun embed(course: Course, texts: List<String>, config: PassageEmbeddingConfig): PassageEmbeddingBatch = withContext(Dispatchers.IO) {
+        config.validate()
+        require(texts.size in 1..PassageRules.BATCH && texts.all { it.isNotBlank() && it.length <= 3000 && it.toByteArray(Charsets.UTF_8).size <= 8000 } && texts.sumOf { it.toByteArray(Charsets.UTF_8).size } <= 64000)
+        requireAccount(course)
+        val expected = this@ConnectedStudyAiRepository.config() ?: error("Configure a personal AI connection")
+        require(mode(expected) == StudyConnectionMode.DIRECT) { "This gateway does not support embeddings; local BM25 remains available" }
+        val payload = buildJsonObject {
+            put("model", config.model)
+            put("dimensions", config.dimensions)
+            put("encoding_format", "float")
+            put("input", JsonArray(texts.map(::JsonPrimitive)))
+        }
+        client.preparePost("https://api.openai.com/v1/embeddings") {
+            header("Authorization", "Bearer ${expected.getValue("token").jsonPrimitive.content}")
+            header("Content-Type", "application/json")
+            setBody(payload.toString())
+        }.execute { response ->
+            val channel = response.bodyAsChannel()
+            try {
+                check(this@ConnectedStudyAiRepository.config() == expected) { "AI connection changed" }
+                require(response.status.value == 200) { "Embedding service unavailable (HTTP ${response.status.value})" }
+                val bytes = ByteArrayOutputStream()
+                val buffer = ByteArray(8192)
+                while (true) {
+                    val count = channel.readAvailable(buffer, 0, buffer.size)
+                    if (count < 0) break
+                    require(bytes.size() + count <= 2 * 1024 * 1024)
+                    bytes.write(buffer, 0, count)
+                }
+                val root = Json.parseToJsonElement(bytes.toString("UTF-8")).jsonObject
+                require(root.getValue("model").jsonPrimitive.content == config.model)
+                val data = root.getValue("data").jsonArray.map { it.jsonObject }.sortedBy { it.getValue("index").jsonPrimitive.int }
+                require(data.size == texts.size && data.map { it.getValue("index").jsonPrimitive.int } == texts.indices.toList())
+                val vectors = data.map { value -> PassageRules.normalize(value.getValue("embedding").jsonArray.map { it.jsonPrimitive.float }, config.dimensions) }
+                val tokens = root.getValue("usage").jsonObject.getValue("total_tokens").jsonPrimitive.long.also { require(it in 0..300000) }
+                requireAccount(course)
+                check(this@ConnectedStudyAiRepository.config() == expected) { "AI connection changed" }
+                PassageEmbeddingBatch(vectors, tokens, config.model, response.headers["x-request-id"].orEmpty().take(200))
+            } finally {
+                channel.cancel(null)
+            }
+        }
     }
     internal fun assistantModel(): AssistantModel {
         val expected = config() ?: error("Configure an AI connection")

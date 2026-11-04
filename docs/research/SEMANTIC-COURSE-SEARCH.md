@@ -8,6 +8,31 @@ No university account, private document, API key, paid inference or model downlo
 was used. No corresponding semantic-search PR was found in the repository's PR
 listing during this audit; #52 was unassigned. Recheck ownership before implementation.
 
+## November 5 implementation increment
+
+This document retains the November 2 proposal and its original audit claims below.
+The subsequent [measured research](COURSE-RETRIEVAL.md),
+[implementation](../COURSE-RETRIEVAL.md) and
+[evaluation](COURSE-RETRIEVAL-EVALUATION.md) add bounded local BM25 and an experimental
+opt-in Direct cloud adapter, with actual source/model results. This supersedes the
+statement that no corresponding app feature exists; it does not retroactively
+change the original research's no-account/no-provider methodology.
+
+| Original scope | Current evidence / remaining work |
+| --- | --- |
+| Versioned text/notebook passages and lexical baseline | Implemented with exact source offsets/cell/lines, account isolation, current-byte validation and local fallback |
+| Optional Direct cloud embedding adapter | Implemented and measured on one actual NT409 notebook; semantic mode remains explicit and experimental |
+| Source-version navigation | Text/cell inspection verifies the expected bytes. Native PDF opening carries the expected hash and rejects replacement before rendering, including retry |
+| PDF page-aware source navigation | **Open**: only partial extracted-text/document location is available; no physical page is invented |
+| Packaged local embedder / Android model parity | **Open**: no model artifact is downloaded or shipped |
+| Independent multi-course, unanswerable-query and physical-phone evaluation | **Open**: current judgments are implementer-authored; host renders and timings are not device gates |
+
+Keep #52 open for its remaining source-navigation and evaluation scope. This is a
+reviewable increment of stages 1/2 and the optional cloud portion of stage 4, not
+completion of every original release gate or a sign-off on production semantic
+quality. BM25 stays the no-provider default. Cloud experimental parameters and
+limits are documented explicitly rather than presented as fitted UIT constants.
+
 ## Recommendation
 
 Build passage search over explicitly selected, verified offline course documents.

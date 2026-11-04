@@ -58,15 +58,17 @@ are saved locally. Verified offline documents include basic PDF text and noteboo
 source extraction, with format/size limits. See
 [Study AI setup and limits](docs/STUDY-AI.md).
 
-[Semantic course search research (#52)](docs/research/SEMANTIC-COURSE-SEARCH.md)
-proposes versioned passage indexing, local lexical/embedding retrieval, source
-navigation and bilingual/device evaluation gates for the next search feature.
+[Course passage search (#52)](docs/COURSE-RETRIEVAL.md) adds local BM25 over selected
+verified downloads, exact cell/line source inspection and experimental opt-in
+Direct semantic/RRF modes. See [measured research](docs/research/COURSE-RETRIEVAL.md)
+and [the original remaining gates](docs/research/SEMANTIC-COURSE-SEARCH.md#november-5-implementation-increment).
+Issue #52 remains open for page-aware PDF navigation and broader evaluation.
 
 [UIT Assistant](docs/UIT-ASSISTANT.md) adds encrypted local workspaces, multi-turn
 questions over selected official notices, read-only search/read tools, inspectable
 citations and editable local checklists. It uses the existing direct/gateway AI
-connection. Personal academic context, course documents and Forum context remain
-later phases in the [broader design](docs/research/UIT-ASSISTANT.md). See the
+connection. Selected public [Forum context](docs/FORUM-AI.md) is available. Personal academic
+context and course documents in general chat remain later phases in the [broader design](docs/research/UIT-ASSISTANT.md). See the
 [evaluation record](docs/research/UIT-ASSISTANT-EVALUATION.md) for live verification
 and provider-access limits.
 
@@ -193,7 +195,8 @@ phone. See [behavior and limits](docs/FREE-TIME-FINDER.md).
 ## Workspace search
 
 The toolbar searches saved course, material, assignment and notice metadata locally.
-See [search scope and account isolation](docs/UNIFIED-SEARCH.md).
+See [search scope and account isolation](docs/UNIFIED-SEARCH.md) and
+[explicitly selected file-body retrieval](docs/COURSE-RETRIEVAL.md).
 
 ## Offline course packs
 

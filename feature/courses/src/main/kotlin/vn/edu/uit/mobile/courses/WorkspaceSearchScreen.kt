@@ -23,7 +23,12 @@ import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.courses.R
 import vn.edu.uit.mobile.model.*
 
-@Composable fun WorkspaceSearchScreen(viewModel: WorkspaceSearchViewModel, onClose: () -> Unit, onCourse: (Course) -> Unit, bookmarks: BookmarksViewModel? = null, onBookmarks: (() -> Unit)? = null, onReturnToBookmarks: (() -> Unit)? = null, onOpenPdf: ((Course, CourseFile) -> Unit)? = null) {
+@Composable fun WorkspaceSearchScreen(viewModel: WorkspaceSearchViewModel, onClose: () -> Unit, onCourse: (Course) -> Unit, bookmarks: BookmarksViewModel? = null, onBookmarks: (() -> Unit)? = null, onReturnToBookmarks: (() -> Unit)? = null, onOpenPdf: ((Course, CourseFile) -> Unit)? = null, passages: PassageSearchViewModel? = null, onOpenPassagePdf: ((Course, CourseFile, String) -> Unit)? = null) {
+    var passageOpen by rememberSaveable { mutableStateOf(false) }
+    if (passageOpen && passages != null) {
+        PassageSearchScreen(passages, { passageOpen = false }, onOpenPassagePdf)
+        return
+    }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val bookmarkState = bookmarks?.uiState?.collectAsStateWithLifecycle()?.value
     val context = LocalContext.current
@@ -39,12 +44,12 @@ import vn.edu.uit.mobile.model.*
             } else {
                 onClose()
             }
-        }, viewModel::query, viewModel::open, viewModel::download, onCourse, bookmarkState?.savedIds.orEmpty(), bookmarks?.let { it::toggleHit }, bookmarkState?.busy == true, onBookmarks, bookmarkState?.problem, onReturnToBookmarks != null)
+        }, viewModel::query, viewModel::open, viewModel::download, onCourse, bookmarkState?.savedIds.orEmpty(), bookmarks?.let { it::toggleHit }, bookmarkState?.busy == true, onBookmarks, bookmarkState?.problem, onReturnToBookmarks != null, if (passages != null) ({ passageOpen = true }) else null)
         SnackbarHost(snack)
     }
 }
 
-@Composable fun WorkspaceSearchContent(state: WorkspaceSearchState, onBack: () -> Unit = {}, onQuery: (String) -> Unit = {}, onOpen: (String) -> Unit = {}, onDownload: (CourseFile) -> Unit = {}, onCourse: ((Course) -> Unit)? = null, savedBookmarkIds: Set<String> = emptySet(), onBookmark: ((String) -> Unit)? = null, bookmarkBusy: Boolean = false, onBookmarks: (() -> Unit)? = null, bookmarkProblem: BookmarkProblem? = null, fromBookmarks: Boolean = false) {
+@Composable fun WorkspaceSearchContent(state: WorkspaceSearchState, onBack: () -> Unit = {}, onQuery: (String) -> Unit = {}, onOpen: (String) -> Unit = {}, onDownload: (CourseFile) -> Unit = {}, onCourse: ((Course) -> Unit)? = null, savedBookmarkIds: Set<String> = emptySet(), onBookmark: ((String) -> Unit)? = null, bookmarkBusy: Boolean = false, onBookmarks: (() -> Unit)? = null, bookmarkProblem: BookmarkProblem? = null, fromBookmarks: Boolean = false, onPassages: (() -> Unit)? = null) {
     val selected = state.hits.firstOrNull { it.key == state.selected }
     var filter by rememberSaveable { mutableStateOf<WorkspaceSearchKind?>(null) }
     val results = remember(state.hits, state.query) { SearchWorkspaceUseCase()(state.hits, state.query) }
@@ -67,6 +72,7 @@ import vn.edu.uit.mobile.model.*
                     )
                 )
             }
+            if (selected == null && onPassages != null) TextButton(onPassages, shape = TechnicalShapes.Control, modifier = Modifier.testTag("workspace-passage-entry")) { Text(stringResource(R.string.ps_entry)) }
             if (selected == null && onBookmarks != null) TextButton(onBookmarks, shape = TechnicalShapes.Control) { Text(stringResource(R.string.bm_title)) }
             bookmarkProblem?.let { InlineNotice(bookmarkProblemText(it), true) }
             PageHeading(if (selected == null) stringResource(R.string.srch_page_title) else selected.title, if (selected == null) stringResource(R.string.srch_page_subtitle) else selected.context)

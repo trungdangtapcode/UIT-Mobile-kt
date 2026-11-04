@@ -99,19 +99,24 @@ internal fun extractOfflineDocumentText(fileName: String, bytes: ByteArray): Str
     return raw.replace(Regex("[\\s\\p{Z}\\u0000-\\u001f]+"), " ").trim().take(12000).trim().takeIf { it.isNotBlank() }
 }
 
-internal fun extractPdfText(bytes: ByteArray): String {
+internal fun extractPdfText(bytes: ByteArray, maxCharacters: Int = 24000): String {
     val ascii = bytes.toString(Charsets.ISO_8859_1)
     val streamRegex = Regex("stream(?:\\r\\n|\\n|\\r)([\\s\\S]*?)(?:\\r\\n|\\n|\\r)?endstream")
     val chunks = mutableListOf<String>()
-    for (match in streamRegex.findAll(ascii)) {
+    var total = 0
+    for (match in streamRegex.findAll(ascii).take(64)) {
         val body = match.groupValues[1].toByteArray(Charsets.ISO_8859_1)
         val decoded = inflatePdfStream(body, false) ?: inflatePdfStream(body, true) ?: body.toString(Charsets.ISO_8859_1)
-        extractPdfTextOperators(decoded).takeIf { it.isNotBlank() }?.let(chunks::add)
+        extractPdfTextOperators(decoded).take(maxOf(0, maxCharacters - total)).takeIf { it.isNotBlank() }?.let {
+            chunks.add(it)
+            total += it.length
+        }
+        if (total >= maxCharacters) break
     }
     if (chunks.isEmpty()) {
         extractPdfTextOperators(ascii).takeIf { it.isNotBlank() }?.let(chunks::add)
     }
-    return chunks.joinToString(" ")
+    return chunks.joinToString(" ").take(maxCharacters)
 }
 
 private fun inflatePdfStream(input: ByteArray, nowrap: Boolean): String? = runCatching {

@@ -40,7 +40,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     // Compose rendering uses the debug-only host Activity supplied by ui-test-manifest.
-    if (name.contains("Release")) exclude("**/AssistantDesignTest.class", "**/AssistantLiveDesignTest.class", "**/ForumDigestLiveDesignTest.class", "**/AnnouncementsDesignTest.class", "**/AnnouncementsLiveDesignTest.class", "**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class", "**/ForumAccountDesignTest.class", "**/ForumAccountLiveTest.class")
+    if (name.contains("Release")) exclude("**/AssistantDesignTest.class", "**/AssistantLiveDesignTest.class", "**/ForumDigestLiveDesignTest.class", "**/PassageSearchDesignTest.class", "**/PassageRetrievalLiveDesignTest.class", "**/AnnouncementsDesignTest.class", "**/AnnouncementsLiveDesignTest.class", "**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class", "**/ForumAccountDesignTest.class", "**/ForumAccountLiveTest.class")
     val accountLive = providers.gradleProperty("forumAccountLive").getOrElse("false").toBoolean()
     systemProperty("uit.forum.account.live", accountLive.toString())
     systemProperty("uit.forum.account.dir", layout.buildDirectory.dir("outputs/forum-account-private").get().asFile.absolutePath)
@@ -73,4 +73,13 @@ tasks.withType<Test>().configureEach {
     systemProperty("uit.assistant.capture.output", layout.buildDirectory.dir("outputs/assistant-live").get().asFile.absolutePath)
     outputs.upToDateWhen { !preview }
     outputs.doNotCacheIf("Assistant public-source render evidence is explicitly requested") { preview }
+}
+
+tasks.withType<Test>().configureEach {
+    val preview = providers.gradleProperty("retrievalPreview").getOrElse("false").toBoolean()
+    systemProperty("uit.retrieval.preview", preview.toString())
+    systemProperty("uit.retrieval.input", rootProject.layout.projectDirectory.dir("core/data/build/outputs/retrieval-live").asFile.absolutePath)
+    systemProperty("uit.retrieval.output", layout.buildDirectory.dir("outputs/retrieval-live").get().asFile.absolutePath)
+    outputs.upToDateWhen { !preview }
+    outputs.doNotCacheIf("Retrieval phone review must replay actual source/results") { preview }
 }

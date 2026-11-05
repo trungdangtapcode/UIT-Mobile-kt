@@ -45,6 +45,38 @@ web interaction parity remain open; this increment does not close issue #39.
 
 ## Review and evidence limits
 
+### ICPC post #17 table follow-up
+
+At the owner's request, the public [team announcement table](https://forum.uit.edu.vn/t/163707/17)
+was read again and rendered through the same production path. All **44 normalized
+plain-text cells match the live mobile website**: 22 rows including the header,
+two columns. This includes 20 named teams and the source's final placeholder row.
+The actual names/team identifiers are from this public official announcement;
+no private session, student ID list, credentials or account capture is included.
+
+| Capture | 360dp | 390dp |
+| --- | --- | --- |
+| Table at its left edge | [Start](forum-reading-ux/reading-icpc-table-360.png) | [Start](forum-reading-ux/reading-icpc-table-390.png) |
+| Horizontally scrolled | [Full team column](forum-reading-ux/reading-icpc-table-right-360.png) | [Full team column](forum-reading-ux/reading-icpc-table-right-390.png) |
+| Vertically scrolled to the last team | [Bottom](forum-reading-ux/reading-icpc-table-bottom-360.png) | [Bottom](forum-reading-ux/reading-icpc-table-bottom-390.png) |
+| Actual mobile website | — | [Same source table](forum-reading-ux/web-icpc-table-390.png) |
+
+Data is present and both scroll directions work in these two focused live host
+tests, but **table presentation is not web-equivalent**. Native cells use fixed
+200dp widths, so the team column is partly outside the initial viewport and needs
+a horizontal swipe. Web widths follow content. Native column headings also lack
+the website's bold distinction and visible row rules. F11 remains partial.
+These captures document the existing preview behavior; no production UI or APK
+was changed for this follow-up. The first attempt to reveal the bottom cell used
+the nearest horizontal scroll parent and failed; targeting the reader's vertical
+scroll explicitly passed. The final two tests verified horizontal scrolling and
+reaching the last named team, without university write requests.
+
+[Table-specific provenance, UTC times and hashes](forum-reading-ux/table-provenance.json)
+records all seven inspected captures, public routes and the matching cell hash.
+
+### Initial reading review
+
 All 11 native captures and both web comparisons were inspected before publication.
 The title wraps, the five destinations remain reachable, and the post toolbar fits
 at 360dp and with larger text. Long URLs wrap; source code/tables retain horizontal

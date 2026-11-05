@@ -1,0 +1,117 @@
+{
+  "source": "https://forum.uit.edu.vn/t/163707/17",
+  "purpose": "Owner-requested table evidence on PR #86; public official team announcement, no authenticated session",
+  "native": [
+    {
+      "capturedAt": "2026-11-05T10:40:30.586723477Z",
+      "topicId": 163707,
+      "postNumber": 17,
+      "postId": 453673,
+      "runtime": "Live anonymous production Kotlin transport/repository/ViewModel/Compose, Robolectric API 35; no physical phone",
+      "rowsIncludingHeader": 22,
+      "columns": 2,
+      "normalizedCellsSha256": "3efb91f9d9661db0c6f73d49a0376981f0906844ff4c721470c4d4bcef3d2d59",
+      "horizontalScrollExercised": true,
+      "bottomRowReached": true,
+      "writes": 0,
+      "requests": [
+        "/t/163707/17.json",
+        "/c/33/show.json",
+        "/c/9/show.json"
+      ]
+    },
+    {
+      "capturedAt": "2026-11-05T10:40:32.918842531Z",
+      "topicId": 163707,
+      "postNumber": 17,
+      "postId": 453673,
+      "runtime": "Live anonymous production Kotlin transport/repository/ViewModel/Compose, Robolectric API 35; no physical phone",
+      "rowsIncludingHeader": 22,
+      "columns": 2,
+      "normalizedCellsSha256": "3efb91f9d9661db0c6f73d49a0376981f0906844ff4c721470c4d4bcef3d2d59",
+      "horizontalScrollExercised": true,
+      "bottomRowReached": true,
+      "writes": 0,
+      "requests": [
+        "/t/163707/17.json",
+        "/c/33/show.json",
+        "/c/9/show.json"
+      ]
+    }
+  ],
+  "web": {
+    "capturedAt": "2026-11-05T10:39:03.957934+00:00",
+    "source": "https://forum.uit.edu.vn/t/163707/17",
+    "runtime": "Chromium mobile 390x844; anonymous; non-read requests, service workers and WebSockets blocked",
+    "generator": "Discourse 2026.10.0-latest - https://github.com/discourse/discourse version b81bee142d364526b432788251986871952b5ddb",
+    "rowsIncludingHeader": 22,
+    "columnsByRow": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    "normalizedCellsSha256": "3efb91f9d9661db0c6f73d49a0376981f0906844ff4c721470c4d4bcef3d2d59",
+    "blockedWritePaths": [
+      "/message-bus/<client>/poll",
+      "/srv/pv"
+    ],
+    "universityAccountUsed": false,
+    "writes": 0
+  },
+  "contentComparison": "All 44 normalized plain-text cell values match; 22 rows including header and 2 columns. This does not imply styling equivalence.",
+  "knownDifferences": [
+    "Native columns use fixed 200dp width and require horizontal scrolling on phones; web allocates widths based on content",
+    "Native header is not distinguished in bold as in the website",
+    "Native row rules are not visibly delineated like the website"
+  ],
+  "images": [
+    {
+      "file": "reading-icpc-table-360.png",
+      "sha256": "a78b64e9d9076883151dfbaca12a96ccc69bf08f5c2731bad57abfb1e8b3698b"
+    },
+    {
+      "file": "reading-icpc-table-390.png",
+      "sha256": "9c48c7f40744364d938c5954e576d58b2c2f52ccfea01d938fe82fd70116c464"
+    },
+    {
+      "file": "reading-icpc-table-bottom-360.png",
+      "sha256": "84b9762937adb99620626c2bd8513f6b742448a84b31fcb17f97c07b90cf6f37"
+    },
+    {
+      "file": "reading-icpc-table-bottom-390.png",
+      "sha256": "5c00a28c7135d7c6ae25f878cac833a7c367bfa8c8b1c7b827e690649c6888f3"
+    },
+    {
+      "file": "reading-icpc-table-right-360.png",
+      "sha256": "1ac3dcc476b67436304a02ee2821cac2de0425c171cbfd16a97c0f1d5b0319cf"
+    },
+    {
+      "file": "reading-icpc-table-right-390.png",
+      "sha256": "9ad71cd082ad169ef0ad26cf12bddf77fe9f25362b0c12beb0c89ed5228a5a2e"
+    },
+    {
+      "file": "web-icpc-table-390.png",
+      "sha256": "50a79f03cbe81e0aeb9b91bafba9efd5959f8a2edea87bcbcdecaf71dab716d6"
+    }
+  ],
+  "verification": "Two focused opt-in live public host tests passed; not installed-device screenshots. Production app code and preview APK unchanged."
+}

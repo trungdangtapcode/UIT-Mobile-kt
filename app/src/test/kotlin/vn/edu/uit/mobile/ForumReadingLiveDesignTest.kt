@@ -3,6 +3,8 @@ package vn.edu.uit.mobile
 import android.app.Application
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.lifecycle.ViewModelStore
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureScreenRoboImage
@@ -47,7 +49,7 @@ class ForumReadingLiveDesignTest {
         }
         override fun removeAccount(accountId: String) = error("No account mutation")
     }
-    private fun phone(width: Int, large: Boolean = false, light: Boolean = false, media: Boolean = false) {
+    private fun phone(width: Int, large: Boolean = false, light: Boolean = false, media: Boolean = false, table: Boolean = false) {
         Assume.assumeTrue(java.lang.Boolean.getBoolean("uit.forum.live"))
         val output = File(requireNotNull(System.getProperty("uit.forum.live.dir"))).apply { mkdirs() }
         val images = AtomicInteger()
@@ -94,12 +96,55 @@ class ForumReadingLiveDesignTest {
         try {
             if (large) RuntimeEnvironment.setFontScale(1.3f)
             compose.setContent { UitTheme(dark = !light, dynamic = false) { WorkspaceFrame(3, {}, {}, "", false, false, 0) { ForumScreen(vm) } } }
-            compose.runOnIdle { vm.topic(topicId) }
+            compose.runOnIdle { vm.topic(topicId, if (table) 17 else 1) }
             settled()
             val initial = vm.uiState.value
             assertEquals(topicId, initial.topic?.id)
-            capture("reading-${if (media) "announcement" else "icpc"}-$suffix")
-            if (!media) {
+            if (table) {
+                val post = initial.posts.single { it.number == 17 }
+                val block = post.blocks.single { it.kind == ForumBlockKind.TABLE }
+                assertTrue(block.rows.size > 1)
+                assertEquals(block.rows.size, block.cells.size)
+                assertTrue(block.rows.all { it.size == 2 })
+                val header = block.rows.first().first()
+                compose.onNodeWithTag("forum-reader").performScrollToNode(hasText(header))
+                compose.onNodeWithText(header).performScrollTo().assertIsDisplayed()
+                val reader = compose.onNodeWithTag("forum-reader")
+                val headerTop = compose.onNodeWithText(header).getUnclippedBoundsInRoot().top.value
+                val readerTop = reader.getUnclippedBoundsInRoot().top.value
+                reader.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, headerTop - readerTop - 8f) }
+                capture("reading-icpc-table-$suffix")
+                val tableNode = compose.onNode(
+                    SemanticsMatcher.keyIsDefined(SemanticsProperties.HorizontalScrollAxisRange)
+                        .and(hasAnyDescendant(hasText(header)))
+                )
+                tableNode.performSemanticsAction(SemanticsActions.ScrollBy) { it(10000f, 0f) }
+                capture("reading-icpc-table-right-$suffix")
+                tableNode.performSemanticsAction(SemanticsActions.ScrollBy) { it(-10000f, 0f) }
+                val lastTeam = block.rows.drop(1).last { it[1].any(Char::isLetter) }[1]
+                compose.waitForIdle()
+                val lastBottom = compose.onNodeWithText(lastTeam).getUnclippedBoundsInRoot().bottom.value
+                val readerBottom = reader.getUnclippedBoundsInRoot().bottom.value
+                reader.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, lastBottom - readerBottom + 80f) }
+                compose.onNodeWithText(lastTeam).assertIsDisplayed()
+                capture("reading-icpc-table-bottom-$suffix")
+                val normalized = block.rows.joinToString("\u001e") { it.joinToString("\u001f") { cell -> cell.replace(Regex("\\s+"), " ").trim() } }
+                File(output, "reading-report-table-$suffix.json").writeText(buildJsonObject {
+                    put("capturedAt", java.time.Instant.now().toString())
+                    put("topicId", topicId)
+                    put("postNumber", post.number)
+                    put("postId", post.id)
+                    put("runtime", "Live anonymous production Kotlin transport/repository/ViewModel/Compose, Robolectric API 35; no physical phone")
+                    put("rowsIncludingHeader", block.rows.size)
+                    put("columns", 2)
+                    put("normalizedCellsSha256", java.security.MessageDigest.getInstance("SHA-256").digest(normalized.toByteArray()).joinToString("") { "%02x".format(it) })
+                    put("horizontalScrollExercised", true)
+                    put("bottomRowReached", true)
+                    put("writes", 0)
+                    put("requests", JsonArray(synchronized(requests) { requests.toList() }.map(::JsonPrimitive)))
+                }.toString())
+            } else if (!media) {
+                capture("reading-icpc-$suffix")
                 val post = initial.posts.first()
                 compose.onNodeWithTag("forum-reader").performScrollToNode(hasTestTag("forum-actions-${post.id}"))
                 compose.onNodeWithTag("forum-actions-${post.id}").performScrollTo()
@@ -107,6 +152,7 @@ class ForumReadingLiveDesignTest {
                 compose.onNodeWithTag("forum-like-${post.id}").assertIsEnabled()
                 compose.onNodeWithTag("forum-reply-${post.id}").assertIsEnabled()
             } else {
+                capture("reading-announcement-$suffix")
                 compose.onNodeWithTag("forum-reader").performScrollToNode(hasTestTag("forum-image-preview"))
                 compose.onAllNodesWithTag("forum-image-preview").onFirst().performScrollTo()
                 compose.waitUntil(30000) {
@@ -125,7 +171,7 @@ class ForumReadingLiveDesignTest {
                 }
                 capture("reading-image-viewer-390")
             }
-            File(output, "reading-report-$suffix-${if (media) "media" else "icpc"}.json").writeText(
+            if (!table) File(output, "reading-report-$suffix-${if (media) "media" else "icpc"}.json").writeText(
                 buildJsonObject {
                     put("capturedAt", java.time.Instant.now().toString())
                     put("topicId", topicId)
@@ -158,4 +204,10 @@ class ForumReadingLiveDesignTest {
     @Test fun icpc390Light() = phone(390, light = true)
 
     @Test fun announcementImage390() = phone(390, media = true)
+
+    @Test fun icpcTable390() = phone(390, table = true)
+
+    @Test
+    @Config(qualifiers = "vi-rVN-w360dp-h800dp-mdpi")
+    fun icpcTable360() = phone(360, table = true)
 }

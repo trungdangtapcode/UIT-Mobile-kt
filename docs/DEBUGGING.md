@@ -5,6 +5,10 @@ Android Studio, ADB/WebUSB, device streaming, official Android CLI and experimen
 CLI hot reload for the Windows + SSH setup. The commands here describe the verified
 build/deployment tools, not a configured live-update service.
 
+Use [the CI budget policy](CI.md) for GitHub Actions. Develop and verify locally;
+only ready PRs targeting `main` and deliberate manual runs allocate CI runners.
+Merging a tested PR does not trigger a second run on `main`.
+
 ## Current capabilities
 
 The project supports **building a debug APK, installing the app, reading logs,

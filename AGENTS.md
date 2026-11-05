@@ -74,3 +74,18 @@ links. Follow [the parity research and acceptance matrix](docs/research/UIT-FORU
 Use the [commit message contract](docs/COMMIT-CONTRACT.md) for all commits. Enable
 the local hooks with `sh scripts/install-git-hooks.sh` after cloning. Never stage
 local SDK settings, credentials, signing material or generated build outputs.
+
+## CI budget discipline
+
+The owner has a limited Actions compute allowance. Run the relevant build, lint
+and tests locally before pushing. Group reviewed changes into a push rather than
+using Actions to discover routine formatting or test failures. Do not dispatch
+or rerun CI unless a concrete validation need justifies the cost.
+
+Android CI is scoped to ready PRs targeting `main` and explicit manual runs.
+Keep development PRs in draft and stacked PRs based on their dependency branch.
+When preparing a stack for integration, validate locally first, then retarget
+and mark ready only the PR being merged next. Main pushes do not need another
+automatic verification run. Do not re-enable broad push/PR triggers or weaken
+branch protection to save time. See [the CI policy](docs/CI.md) for triggers,
+manual execution, cancellation, artifacts and required-check limitations.

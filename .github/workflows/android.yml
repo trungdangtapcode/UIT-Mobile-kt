@@ -1,14 +1,24 @@
 name: Android
 on:
-  push:
-    branches: [main]
   pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   workflow_dispatch:
+    inputs:
+      upload_apk:
+        description: Upload the debug APK after verification
+        type: boolean
+        default: false
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   verify:
+    if: github.event_name == 'workflow_dispatch' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - run: python3 scripts/check-repo-hygiene.py
@@ -24,12 +34,15 @@ jobs:
       - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - run: ./gradlew :app:assembleDebug check
       - uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_apk
         with:
           name: uit-mobile-debug
           path: app/build/outputs/apk/debug/*.apk
+          retention-days: 3
   sign-in-smoke:
+    if: github.event_name == 'workflow_dispatch' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -65,9 +78,10 @@ jobs:
           disable-animations: true
           script: sh scripts/run-native-smoke.sh
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: failure()
         with:
           name: sign-in-smoke-results
+          retention-days: 3
           path: |
             app/build/reports/androidTests/
             app/build/outputs/androidTest-results/

@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-11-05T22:08:16.276Z",
+  "unitTests": {
+    "passed": 12,
+    "failed": 0,
+    "command": "npm test"
+  },
+  "browser": {
+    "emptyFormRendered": true,
+    "widths": [
+      390,
+      900
+    ],
+    "horizontalOverflow": false,
+    "browserAuthorizationUrlGenerated": true,
+    "actualDeviceCodeIssued": true,
+    "deviceCodeOmittedFromReport": true,
+    "actualSubscriberAuthenticated": false,
+    "inferencePerformed": false,
+    "consoleErrors": []
+  },
+  "publicDiscovery": {
+    "phase": "checked",
+    "status": 200,
+    "issuerMatches": true,
+    "grants": [
+      "authorization_code",
+      "refresh_token"
+    ],
+    "deviceEndpointPublished": false,
+    "checkedAt": "2026-11-05T22:07:31.400Z"
+  },
+  "realDeviceCodePreflight": {
+    "actualCodexAppServer": true,
+    "deviceCodeIssued": true,
+    "cancelledBeforeAccountApproval": true,
+    "isolatedProfileRemoved": true
+  },
+  "actualSubscriberTokenReceived": false,
+  "actualInferencePerformed": false,
+  "universityAccountUsed": false,
+  "githubActionsDispatched": false
+}

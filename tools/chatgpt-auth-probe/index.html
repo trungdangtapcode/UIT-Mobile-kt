@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>UIT Mobile · ChatGPT Auth Probe</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" type="module"></script>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">UIT Mobile / local test</p>
+    <h1>Test ChatGPT sign-in</h1>
+    <p>Compare browser PKCE and device code. Sign in on OpenAI's page yourself. This page never asks for a password or displays an access token.</p>
+  </header>
+  <p class="notice">No AI generation is sent. Optional model checks are read-only. Authentication may create an app connection in your ChatGPT account.</p>
+  <p id="connection" role="status">Connecting to the local test server…</p>
+  <section aria-labelledby="browser-title">
+    <p class="eyebrow">Method 1 / SIWC</p>
+    <h2 id="browser-title">Continue with ChatGPT</h2>
+    <p>Register this test app with OpenAI, authorize ChatGPT plan use and return through the loopback callback.</p>
+    <button id="start-browser">Continue with ChatGPT</button>
+    <a id="browser-link" target="_blank" rel="noopener noreferrer" hidden>Open the current sign-in attempt</a>
+    <p class="hint">Finish in the new tab, then return here. To use another account, clear the comparison first.</p>
+    <div id="browser-result" class="result" aria-live="polite"></div>
+    <button id="check-browser" class="secondary" disabled>Check API access · read-only</button>
+  </section>
+  <section aria-labelledby="device-title">
+    <p class="eyebrow">Method 2 / Codex compatibility test</p>
+    <h2 id="device-title">Sign in with device code</h2>
+    <p>Use the official Codex device flow in an isolated temporary profile. It does not register a new SIWC client for UIT Mobile. We check the result instead of assuming it grants SIWC access.</p>
+    <button id="start-device">Get a device code</button>
+    <div id="device-approval" hidden>
+      <p>Enter this code on OpenAI's verification page:</p>
+      <div class="code-row"><code id="device-code"></code><button id="copy-code" class="secondary">Copy code</button></div>
+      <a id="device-link" target="_blank" rel="noopener noreferrer">Open OpenAI verification</a>
+    </div>
+    <div id="device-result" class="result" aria-live="polite"></div>
+    <button id="check-device" class="secondary" disabled>Check both model catalogs · read-only</button>
+  </section>
+  <section aria-labelledby="evidence-title">
+    <h2 id="evidence-title">Evidence</h2>
+    <p id="identity-comparison">Complete both methods to compare verified subjects.</p>
+    <p>A token, permission and accepted catalog are separate checks. This tool does not prove completed model inference.</p>
+    <details><summary>Public OpenAI discovery</summary><pre id="discovery">Not checked yet.</pre></details>
+    <div class="actions">
+      <button id="report" class="secondary">Download safe report</button>
+      <button id="reset" class="secondary">Clear local test &amp; switch account</button>
+    </div>
+    <p class="hint">Clearing removes local test credentials. Existing app grants may remain in ChatGPT settings. The server stops automatically after one hour.</p>
+  </section>
+  <p id="error" role="alert" hidden></p>
+  <footer>Local diagnostic tool · English interface · No university account access</footer>
+</main>
+</body>
+</html>

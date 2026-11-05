@@ -3,13 +3,13 @@
   "result": "passed",
   "moduleResults": {
     "core/data/build/test-results/testDebugUnitTest": {
-      "tests": 222,
+      "tests": 223,
       "skipped": 7,
       "failures": 0,
       "errors": 0
     },
     "core/data/build/test-results/testReleaseUnitTest": {
-      "tests": 222,
+      "tests": 223,
       "skipped": 7,
       "failures": 0,
       "errors": 0
@@ -82,11 +82,12 @@
   "universityAccountUsedForThisFeature": false,
   "apk": {
     "name": "UIT-Mobile-chatgpt-preview.apk",
-    "sha256": "5d382605b5fa96efc0a35275f77a8bc67050e5d90b8d0462ec44a2e3f28d9e3d",
-    "bytes": 26472207,
+    "sha256": "613142574f9cc5739c8cf59c8b067bda27d339f73f3ea91a6e43fde1b1500477",
+    "bytes": 26472204,
     "configuredApiKeyPresent": false,
     "testOAuthCredentialPresent": false,
     "version": "0.1.7-chatgpt-preview.1",
     "package": "vn.edu.uit.mobile.preview"
-  }
+  },
+  "additionalRegression": "Null and uit tool namespaces retrieve evidence and preserve original local history; passed"
 }

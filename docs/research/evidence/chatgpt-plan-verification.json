@@ -1,0 +1,92 @@
+{
+  "localCommand": "./gradlew check :app:compileDebugAndroidTestKotlin :app:assembleDebug -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.1",
+  "result": "passed",
+  "moduleResults": {
+    "core/data/build/test-results/testDebugUnitTest": {
+      "tests": 222,
+      "skipped": 7,
+      "failures": 0,
+      "errors": 0
+    },
+    "core/data/build/test-results/testReleaseUnitTest": {
+      "tests": 222,
+      "skipped": 7,
+      "failures": 0,
+      "errors": 0
+    },
+    "app/build/test-results/testDebugUnitTest": {
+      "tests": 364,
+      "skipped": 33,
+      "failures": 0,
+      "errors": 0
+    },
+    "app/build/test-results/testReleaseUnitTest": {
+      "tests": 126,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    "feature/courses/build/test-results/testDebugUnitTest": {
+      "tests": 15,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    "core/domain/build/test-results/test": {
+      "tests": 120,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    }
+  },
+  "focusedCases": {
+    "vn.edu.uit.mobile.data.ChatGptPlanProtocolTest": {
+      "tests": 6,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    "vn.edu.uit.mobile.data.ChatGptSessionTest": {
+      "tests": 13,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    "vn.edu.uit.mobile.ChatGptDesignTest": {
+      "tests": 8,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    }
+  },
+  "publicDiscovery": {
+    "capturedAt": "2026-11-05T18:25:39.391363+00:00",
+    "source": "https://auth.openai.com/.well-known/openid-configuration",
+    "httpStatus": 200,
+    "observation": "Public discovery metadata only; no authorization, account, tokens or inference used",
+    "metadata": {
+      "issuer": "https://auth.openai.com",
+      "authorization_endpoint": "https://auth.openai.com/api/accounts/authorize",
+      "token_endpoint": "https://auth.openai.com/api/accounts/oauth/token",
+      "jwks_uri": "https://auth.openai.com/.well-known/jwks.json",
+      "revocation_endpoint": "https://auth.openai.com/api/accounts/oauth/revoke",
+      "id_token_signing_alg_values_supported": [
+        "RS256"
+      ]
+    }
+  },
+  "actualSubscriberSignIn": false,
+  "actualPlanInference": false,
+  "physicalAndroidAcceptance": "pending",
+  "controlledNetwork": "MockEngine official endpoints plus actual localhost callback sockets; not subscriber inference",
+  "universityAccountUsedForThisFeature": false,
+  "apk": {
+    "name": "UIT-Mobile-chatgpt-preview.apk",
+    "sha256": "5d382605b5fa96efc0a35275f77a8bc67050e5d90b8d0462ec44a2e3f28d9e3d",
+    "bytes": 26472207,
+    "configuredApiKeyPresent": false,
+    "testOAuthCredentialPresent": false,
+    "version": "0.1.7-chatgpt-preview.1",
+    "package": "vn.edu.uit.mobile.preview"
+  }
+}

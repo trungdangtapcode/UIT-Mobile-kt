@@ -12,6 +12,8 @@ Main panels have three 8dp cuts and a larger 28dp physical bottom-right cut.
 See [course-search file readiness and update reviews](COURSE-SEARCH-UPDATES.md) for the latest actual-material phone gallery.
 See [Forum mobile reading](FORUM-READING-UX.md) for the latest actual-UIT topic,
 inline-image and post-control gallery, with preview APK and verification limits.
+See [ChatGPT account sign-in](CHATGPT-SIGN-IN.md) for the new empty connection
+forms at phone sizes, in English/Vietnamese, and their authentication test limits.
 
 ## Phone sizes
 

@@ -237,6 +237,16 @@ TechnicalShapes and native touch targets. Source scope is public-only in the ini
 release; configuration and Send remain explicit. Preserve Back to workspace and
 native original-source navigation. Credentials stay outside saveable form state.
 
+AI connections: offer ChatGPT account first for an unconfigured form, retaining
+the existing saved Direct/Gateway mode. The ChatGPT path leads with a recognizable
+Continue with ChatGPT action and short permission/usage copy, with no API-key
+field. Use the shared scrollable cut-corner settings dialog and native controls.
+After authorization, show distinct saved accounts, account-provided model names
+and explicit activation. First-use confirmation waits until connection work ends.
+Using ChatGPT plan and Manage usage stay near generation controls. Quota errors
+link to management instead of inventing a remaining balance or reset time. The
+current empty-form phone evidence is `docs/design/CHATGPT-SIGN-IN.md`.
+
 Course-search updates: Search leads with the query and a compact readiness summary.
 Files & updates is a separate single-column phone view, not a desktop index panel.
 Use file rows with wrapping names, format metadata, textual readiness and native

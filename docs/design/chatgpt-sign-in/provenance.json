@@ -1,0 +1,32 @@
+{
+  "runtime": "Production Compose connection dialog on Robolectric API 35, native graphics; not installed-phone screenshots",
+  "state": "Empty ChatGPT connection forms only; controlled no-network connector. No subscriber signed in or connected-account screenshot published.",
+  "capturedOn": "2026-11-06 JST",
+  "images": [
+    {
+      "file": "chatgpt-sign-in-360.png",
+      "sha256": "d286a350cd0dcfd19753314baca58c00f49ef7930c1e9db1ed440771155b793b"
+    },
+    {
+      "file": "chatgpt-sign-in-390-light.png",
+      "sha256": "2c7b093b94cd9ebcbdb8e751e940f43444237ea7d9b4729f4f04b07762d4b270"
+    },
+    {
+      "file": "chatgpt-sign-in-390-vi.png",
+      "sha256": "6ebfa6d5f5c5e925da08522b5a0047f6ca302e2935a3a3aa487ebbd290ab209b"
+    },
+    {
+      "file": "chatgpt-sign-in-390.png",
+      "sha256": "2db4ad5284a210abca1dfa0430dbbd2c51590773e8a5064082ef79e42cd8b628"
+    },
+    {
+      "file": "chatgpt-sign-in-412-large.png",
+      "sha256": "fff0fb251e8819f27c26b8c614590331236022f51018479b34b014f8f8fffcef"
+    }
+  ],
+  "limitations": [
+    "No actual ChatGPT browser consent or plan inference",
+    "No physical Itel acceptance",
+    "Connected/permission/usage/error behavior covered with isolated test fixtures without exporting those states"
+  ]
+}

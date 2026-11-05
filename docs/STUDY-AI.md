@@ -21,7 +21,17 @@ is not treated as an empty document. Long source text stays visible for inspecti
 must be shortened into an explicit excerpt before sending. Select at most five
 sources, 12,000 characters each and 36,000 characters in total.
 
-## Direct OpenAI: default, no backend to host
+## ChatGPT account: sign in without an API key
+
+The connection dialog now offers **ChatGPT account → Continue with ChatGPT**
+first for an unconfigured installation. Eligible subscribers can authorize plan
+usage in the browser, choose an account-provided model and explicitly activate
+that connection. Existing Direct/Gateway configurations are preserved. See
+[the OAuth flow, storage, protocol changes and verification limits](CHATGPT-PLAN.md).
+This option uses its own per-user authorization; it does not read Codex credentials
+or import ChatGPT conversations. Embeddings still require Direct API mode.
+
+## Direct OpenAI: personal key, no backend to host
 
 Open **AI connection settings → Direct OpenAI**, enter your own OpenAI API key
 and an available model ID supporting Responses and strict structured outputs,
@@ -36,7 +46,7 @@ not prevent a compromised device from accessing credentials while the app runs.
 Configure API project usage controls separately. The model ID is explicit because
 project access varies; no automatic request is sent when saving configuration.
 
-Both connection modes use the same selected-source limits, evidence validation,
+All connection modes use the same selected-source limits, evidence validation,
 request timeout and explicit Send action. Direct mode also sets `store: false`,
 uses strict structured outputs, rejects refusals/incomplete output, and provides
 no tools or university credentials to the model. Selected processing uses your
@@ -50,7 +60,8 @@ that server. Existing saved gateway settings are recognized and preserved.
 Switching the form's mode clears its credential field, and saving replaces the
 active connection atomically. A failed direct request never falls back to a gateway
 or forwards its personal API key there. Clearing a connection resets the setup to
-unconfigured Direct OpenAI while preserving local checklists.
+an unconfigured connection while preserving local checklists. The connection form
+offers ChatGPT first when nothing is configured.
 
 ### Run the development gateway
 
@@ -159,10 +170,11 @@ that silently repeat a potentially billable provider call.
 
 Direct mode uses the personal API key entered on the phone. The optional gateway
 reads **OPENAI_API_KEY** from its server process. Existing
-Codex credentials are not read or copied. OpenAI documents an alternative
-[Sign in with ChatGPT flow for open-source clients](https://developers.openai.com/siwc/quickstart),
-which requires the application's own registration, scopes and user authorization.
-That OAuth integration is a separate follow-up and is not implemented here.
+Codex credentials are not read or copied. The implemented
+[ChatGPT account option](CHATGPT-PLAN.md) dynamically registers this app's own
+client and requests the user's authorization through the official open-source flow.
+Subscriber/physical-device acceptance remains separate from controlled protocol
+tests; no API-key test is presented as proof of ChatGPT plan access.
 
 ## Verification and limits
 

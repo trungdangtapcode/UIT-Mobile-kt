@@ -6,7 +6,7 @@ android {
     if (providers.gradleProperty("previewInstall").orNull == "true") {
         defaultConfig {
             applicationId = "vn.edu.uit.mobile.preview"
-            versionName = "0.1.7-search-preview"
+            versionName = providers.gradleProperty("previewVersion").getOrElse("0.1.7-search-preview")
             manifestPlaceholders["appLabel"] = "UIT Mobile Preview"
         }
     } else {
@@ -30,6 +30,8 @@ dependencies {
     testImplementation(libs.ktor.okhttp)
     androidTestImplementation(project(":core:network:forum"))
     androidTestImplementation(libs.ktor.core)
+    androidTestImplementation(libs.ktor.okhttp)
+    androidTestImplementation(libs.serialization)
     androidTestImplementation(libs.ktor.mock)
     testImplementation(libs.junit4)
     testImplementation(testFixtures(project(":core:domain")))
@@ -49,7 +51,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     // Compose rendering uses the debug-only host Activity supplied by ui-test-manifest.
-    if (name.contains("Release")) exclude("**/AssistantDesignTest.class", "**/AssistantLiveDesignTest.class", "**/ForumDigestLiveDesignTest.class", "**/PassageSearchDesignTest.class", "**/PassageRetrievalLiveDesignTest.class", "**/AnnouncementsDesignTest.class", "**/AnnouncementsLiveDesignTest.class", "**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class", "**/ForumAccountDesignTest.class", "**/ForumAccountLiveTest.class")
+    if (name.contains("Release")) exclude("**/ForumReadingUxDesignTest.class", "**/ForumReadingLiveDesignTest.class", "**/AssistantDesignTest.class", "**/AssistantLiveDesignTest.class", "**/ForumDigestLiveDesignTest.class", "**/PassageSearchDesignTest.class", "**/PassageRetrievalLiveDesignTest.class", "**/AnnouncementsDesignTest.class", "**/AnnouncementsLiveDesignTest.class", "**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class", "**/ForumAccountDesignTest.class", "**/ForumAccountLiveTest.class")
     val accountLive = providers.gradleProperty("forumAccountLive").getOrElse("false").toBoolean()
     systemProperty("uit.forum.account.live", accountLive.toString())
     systemProperty("uit.forum.account.dir", layout.buildDirectory.dir("outputs/forum-account-private").get().asFile.absolutePath)

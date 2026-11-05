@@ -140,8 +140,8 @@ class ForumLiveDesignTest {
                 capture("forum-real-announcement")
                 compose.onNodeWithTag("forum-reader").performScrollToIndex(1)
                 capture("forum-real-announcement-body")
-                compose.onNodeWithTag("forum-reader").performScrollToNode(hasText("Tải ảnh"))
-                compose.onAllNodesWithText("Tải ảnh").onFirst().performClick()
+                compose.onNodeWithTag("forum-reader").performScrollToNode(hasTestTag("forum-image-preview"))
+                compose.onAllNodesWithTag("forum-image-preview").onFirst().performScrollTo()
                 compose.waitUntil(30000) {
                     org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
                     compose.onAllNodesWithTag("forum-image-open").fetchSemanticsNodes().isNotEmpty()

@@ -109,7 +109,7 @@ class AnonymousForumClient(
                     }
                     429 -> throw ForumException(ForumFailure.RATE_LIMIT, response.headers[HttpHeaders.RetryAfter]?.toLongOrNull()?.coerceIn(1, 86400))
                     401, 403, 404, 410 -> throw ForumException(ForumFailure.UNAVAILABLE)
-                    in 500..599 -> throw ForumException(ForumFailure.NETWORK)
+                    in 500..599 -> throw ForumException(ForumFailure.NETWORK, networkIssue = ForumNetworkIssue.SERVER)
                     else -> throw ForumException(ForumFailure.INVALID)
                 }
                 val type = response.contentType()?.withoutParameters()?.toString()
@@ -132,8 +132,8 @@ class AnonymousForumClient(
             throw e
         } catch (e: IllegalArgumentException) {
             throw ForumException(ForumFailure.INVALID)
-        } catch (_: Exception) {
-            throw ForumException(ForumFailure.NETWORK)
+        } catch (e: Exception) {
+            throw ForumException(ForumFailure.NETWORK, networkIssue = forumNetworkIssue(e))
         }
     }
 }

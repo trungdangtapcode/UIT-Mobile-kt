@@ -31,7 +31,7 @@
   <string name="f_cached">Offline copy · retrieved %1$s</string>
   <string name="f_retrieved">Retrieved %1$s</string>
   <string name="f_retry">Retry</string>
-  <string name="f_network">Cannot reach the public Forum. Try again when connected.</string>
+  <string name="f_network">Could not load this Forum request. Retry or check the original page.</string>
   <string name="f_rate">Forum is limiting requests. Wait before retrying.</string>
   <string name="f_wait">Retry after %1$d seconds.</string>
   <string name="f_unavailable">This content is private, removed or unavailable to an anonymous reader.</string>
@@ -181,4 +181,21 @@
     <string name="f_ai_count">Maximum posts</string>
     <string name="f_ai_open">Open in UIT Assistant</string>
     <string name="f_public_ai_source">Public citation · anonymous reading</string>
+  <string name="f_topic_actions">Topic actions</string>
+  <string name="f_post_actions">Post actions</string>
+  <string name="f_copy_post">Copy post link</string>
+  <string name="f_copy_topic">Copy topic link</string>
+  <string name="f_position">Post #%1$d</string>
+  <string name="f_opening_topic">Open discussion</string>
+  <string name="f_loading_topic">Loading this discussion…</string>
+  <string name="f_reply_unavailable">Replies are not available for this account in this topic.</string>
+  <string name="f_error_details">Error details</string>
+  <string name="f_copy_diagnostic">Copy diagnostic details</string>
+  <string name="f_issue_dns">The Forum hostname could not be resolved.</string>
+  <string name="f_issue_tls">The secure TLS handshake failed. Certificate checks remain enabled.</string>
+  <string name="f_issue_timeout">The Forum request timed out.</string>
+  <string name="f_issue_connect">A connection to the Forum server could not be established.</string>
+  <string name="f_issue_io">The connection was interrupted while transferring data.</string>
+  <string name="f_issue_server">The Forum returned a server error.</string>
+  <string name="f_issue_unknown">No more specific connection category was recorded. The source can be checked in a browser.</string>
 </resources>

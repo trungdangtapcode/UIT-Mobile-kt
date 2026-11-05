@@ -79,8 +79,8 @@ class ForumNativeTest {
             assertEquals(901L, restored.saved.single().id)
             assertEquals(1, restored.positions.single().postNumber)
             assertFalse(context.getSharedPreferences(name, Context.MODE_PRIVATE).all.values.any { it.toString().contains(ForumFixtures.TITLE) || it.toString().contains("lab_helper") })
-            assertEquals(0, imageCalls.get())
-            compose.onNodeWithText("Load image").performScrollTo().performClick()
+            compose.onNodeWithTag("forum-reader").performScrollToNode(hasTestTag("forum-image-preview"))
+            compose.onAllNodesWithTag("forum-image-preview").onFirst().performScrollTo()
             compose.waitUntil(15000) { compose.onAllNodesWithContentDescription("Authored lab diagram").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithContentDescription("Authored lab diagram").performScrollTo().assertIsDisplayed()
             assertEquals(1, imageCalls.get())

@@ -13,10 +13,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -33,7 +35,12 @@ import vn.edu.uit.mobile.feature.forum.R
 
 @Composable fun ForumScreen(viewModel: ForumViewModel, onAssistant: (AssistantForumScope) -> Unit = {}, onReturn: (() -> Unit)? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val actions = ForumAccountActions(viewModel::account, { viewModel.compose(create = true) }, { viewModel.compose(it) }, viewModel::edit, viewModel::submit, viewModel::resumeDraft)
+    val actions = ForumAccountActions({
+        val topic = state.topic
+        if (state.user == null && topic != null) viewModel.accountForTopic(topic.id, state.anchorNumber) else viewModel.account()
+    }, { viewModel.compose(create = true) }, { viewModel.compose(it) }, viewModel::edit, viewModel::submit, viewModel::resumeDraft, { number ->
+        state.topic?.let { viewModel.accountForTopic(it.id, number) } ?: viewModel.account()
+    })
     var link by remember { mutableStateOf<String?>(null) }
     var clear by remember { mutableStateOf(false) }
     fun back() {
@@ -153,29 +160,14 @@ import vn.edu.uit.mobile.feature.forum.R
             }
         }
         if (state.publicCitation) Text(stringResource(R.string.f_public_ai_source), style = MaterialTheme.typography.labelSmall)
-        if (state.user != null && !state.publicCitation) Text(state.user.username, style = MaterialTheme.typography.labelSmall)
+        if (state.topic == null && state.user != null && !state.publicCitation) Text(state.user.username, style = MaterialTheme.typography.labelSmall)
         if (accountActions != null && state.user?.canCreateTopic == true && state.topic == null && !state.memberVisible) TextButton(onClick = accountActions.create, enabled = !state.commandBusy) { Text(stringResource(R.string.f_new_topic)) }
         if (accountActions != null && state.user != null && state.draft != null) TextButton(onClick = accountActions.draft, enabled = !state.commandBusy) { Text(stringResource(R.string.f_resume_draft)) }
         if (state.accountError != null && !state.loginVisible && !state.memberVisible && state.composer == null) ForumAccountError(state)
         if (state.commandBusy || state.accountBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
         if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth().testTag("forum-loading"))
-        state.error?.let { error ->
-            Surface(shape = TechnicalShapes.Control, color = MaterialTheme.colorScheme.errorContainer) {
-                Column(Modifier.padding(12.dp)) {
-                    Text(stringResource(errorLabel(error)), style = MaterialTheme.typography.bodyMedium)
-                    var now by remember { mutableLongStateOf(System.currentTimeMillis() / 1000) }
-                    LaunchedEffect(state.retryAt) {
-                        while (now < state.retryAt) {
-                            delay(1000)
-                            now = System.currentTimeMillis() / 1000
-                        }
-                    }
-                    if (state.retryAt > now) Text(stringResource(R.string.f_wait, state.retryAt - now))
-                    TextButton(onClick = onRetry, enabled = !state.loading && now >= state.retryAt) { Text(stringResource(R.string.f_retry)) }
-                }
-            }
-        }
-        if (state.fetchedAt > 0) Text(stringResource(if (state.offline) R.string.f_cached else R.string.f_retrieved, date(state.fetchedAt)), style = MaterialTheme.typography.labelSmall, color = if (state.offline) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant)
+        if (state.error != null && (state.topic == null || state.posts.isNotEmpty())) ForumReadFailure(state, onRetry)
+        if (state.offline && state.fetchedAt > 0) Text(stringResource(R.string.f_cached, date(state.fetchedAt)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary)
         val topic = state.topic
         if (topic != null) {
             ForumReader(state, onTopic, onSave, onWindow, onPosition, onLink, imageLoader, onBrowser, onHistory, accountActions, onAssistant)
@@ -277,6 +269,23 @@ import vn.edu.uit.mobile.feature.forum.R
 
 @Composable private fun ColumnScope.ForumReader(state: ForumState, onTopic: (Long, Int, Int) -> Unit, onSave: (ForumTopic) -> Unit, onWindow: (Boolean) -> Unit, onPosition: (ForumPost, Int) -> Unit, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, onBrowser: (String) -> Unit, onHistory: (ForumPost) -> Unit, accountActions: ForumAccountActions?, onAssistant: (AssistantForumScope) -> Unit) {
     val topic = state.topic ?: return
+    if (state.posts.isEmpty()) {
+        Column(Modifier.weight(1f).fillMaxWidth().testTag("forum-topic-empty"), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(topic.title.ifBlank { stringResource(R.string.f_opening_topic) }, style = MaterialTheme.typography.headlineSmall)
+            if (state.loading) {
+                Text(stringResource(R.string.f_loading_topic), style = MaterialTheme.typography.bodyMedium)
+            } else if (state.error != null) {
+                ForumReadFailure(state, { onTopic(topic.id, state.anchorNumber, 0) })
+            } else {
+                Text(stringResource(R.string.f_no_posts), style = MaterialTheme.typography.bodyMedium)
+            }
+            TextButton(onClick = { onBrowser(topic.url) }, shape = TechnicalShapes.Control) { Text(stringResource(R.string.f_browser)) }
+        }
+        return
+    }
+    val clipboard = LocalClipboardManager.current
+    var navigation by rememberSaveable(topic.id) { mutableStateOf(false) }
+    var menu by remember { mutableStateOf(false) }
     val list = rememberLazyListState()
     val density = LocalDensity.current
     var appliedJump by rememberSaveable { mutableStateOf("") }
@@ -301,16 +310,63 @@ import vn.edu.uit.mobile.feature.forum.R
             state.posts.getOrNull(index - 1)?.let { onPosition(it, with(density) { offset.toDp().value.toInt() }) }
         }
     }
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        OutlinedTextField(number, { number = it.filter(Char::isDigit).take(7) }, Modifier.weight(1f).testTag("forum-jump"), label = { Text(stringResource(R.string.f_number)) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), shape = TechnicalShapes.Control)
-        TextButton(onClick = { number.toIntOrNull()?.takeIf { it > 0 }?.let { onTopic(topic.id, it, 0) } }, enabled = !state.loading && (number.toIntOrNull() ?: 0) > 0) { Text(stringResource(R.string.f_go)) }
+    val visible = state.posts.getOrNull((list.firstVisibleItemIndex - 1).coerceAtLeast(0))?.number ?: state.anchorNumber
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        TextButton({ navigation = true }, Modifier.weight(1f).testTag("forum-position"), shape = TechnicalShapes.Control) {
+            Icon(Icons.Outlined.FormatListNumbered, null, Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.f_position, visible))
+            Icon(Icons.Outlined.ExpandMore, null, Modifier.size(18.dp))
+        }
         IconButton(onClick = { onSave(topic) }, enabled = !state.publicCitation) {
             val saved = state.local.saved.any { it.id == topic.id }
             Icon(if (saved) Icons.Outlined.BookmarkAdded else Icons.Outlined.BookmarkBorder, stringResource(if (saved) R.string.f_unsave else R.string.f_save))
         }
+        Box {
+            IconButton({ menu = true }, Modifier.testTag("forum-topic-menu")) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.f_topic_actions)) }
+            DropdownMenu(menu, { menu = false }) {
+                DropdownMenuItem(text = { Text(stringResource(R.string.f_copy_topic)) }, onClick = {
+                    clipboard.setText(AnnotatedString(topic.url))
+                    menu = false
+                })
+                DropdownMenuItem(text = { Text(stringResource(R.string.f_browser)) }, onClick = {
+                    menu = false
+                    onBrowser(topic.url)
+                })
+                DropdownMenuItem(text = { Text(stringResource(R.string.f_ai_digest)) }, onClick = {
+                    menu = false
+                    digest = true
+                }, enabled = !state.loading && !state.commandBusy && !state.accountBusy, modifier = Modifier.testTag("forum-ai-entry"))
+                val resume = position?.postNumber ?: state.remoteReadNumber
+                if (resume != null) {
+                    DropdownMenuItem(text = { Text(stringResource(R.string.f_resume, resume)) }, onClick = {
+                        menu = false
+                        onTopic(topic.id, resume, position?.offsetDp ?: 0)
+                    }, enabled = !state.loading)
+                }
+                if (state.fetchedAt > 0) DropdownMenuItem(text = { Text(stringResource(R.string.f_retrieved, date(state.fetchedAt)), style = MaterialTheme.typography.bodySmall) }, onClick = {}, enabled = false)
+            }
+        }
     }
-    if (position != null) TextButton(onClick = { onTopic(topic.id, position.postNumber, position.offsetDp) }, enabled = !state.loading) { Text(stringResource(R.string.f_resume, position.postNumber)) }
-    if (position == null) state.remoteReadNumber?.let { remote -> TextButton(onClick = { onTopic(topic.id, remote, 0) }, enabled = !state.loading) { Text(stringResource(R.string.f_resume_server, remote)) } }
+    if (navigation) {
+        Dialog({ navigation = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+            Surface(Modifier.padding(16.dp).fillMaxWidth().widthIn(max = 480.dp), shape = TechnicalShapes.Dialog) {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(stringResource(R.string.f_jump), style = MaterialTheme.typography.titleLarge)
+                    OutlinedTextField(number, { number = it.filter(Char::isDigit).take(7) }, Modifier.fillMaxWidth().testTag("forum-jump"), label = { Text(stringResource(R.string.f_number)) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), shape = TechnicalShapes.Field)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        TextButton({ navigation = false }) { Text(stringResource(R.string.f_cancel)) }
+                        TextButton({
+                            number.toIntOrNull()?.takeIf { it > 0 }?.let {
+                                navigation = false
+                                onTopic(topic.id, it, 0)
+                            }
+                        }, enabled = !state.loading && (number.toIntOrNull() ?: 0) > 0) { Text(stringResource(R.string.f_go)) }
+                    }
+                }
+            }
+        }
+    }
     LazyColumn(Modifier.weight(1f).testTag("forum-reader"), state = list, contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item(key = "heading") {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -318,15 +374,9 @@ import vn.edu.uit.mobile.feature.forum.R
                 state.categories.firstOrNull { it.id == topic.categoryId }?.let { Text(it.name, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium) }
                 if (topic.tags.isNotEmpty()) Text(topic.tags.joinToString(" · "), style = MaterialTheme.typography.labelSmall)
                 if (topic.closed) Text(stringResource(R.string.f_closed), style = MaterialTheme.typography.labelMedium)
-                Text(stringResource(R.string.f_window, if (state.end == 0) 0 else state.start + 1, state.end, state.stream.size, state.posts.size), style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.f_posts, topic.posts), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (state.unavailable > 0) Text(stringResource(R.string.f_missing, state.unavailable), style = MaterialTheme.typography.bodySmall)
                 if (state.posts.isNotEmpty() && state.posts.none { it.number == state.anchorNumber }) Text(stringResource(R.string.f_jump_missing), style = MaterialTheme.typography.bodySmall)
-                OutlinedButton(onClick = { digest = true }, enabled = !state.loading && !state.commandBusy && !state.accountBusy, shape = TechnicalShapes.Control, modifier = Modifier.testTag("forum-ai-entry")) {
-                    Icon(Icons.Outlined.AutoAwesome, null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.f_ai_digest))
-                }
-                TextButton(onClick = { onBrowser(topic.url) }) { Text(stringResource(R.string.f_browser)) }
                 if (state.start > 0) OutlinedButton(onClick = { onWindow(false) }, enabled = !state.loading, shape = TechnicalShapes.Control) { Text(stringResource(R.string.f_previous)) }
             }
         }
@@ -362,7 +412,7 @@ import vn.edu.uit.mobile.feature.forum.R
                         }
                     }
                 }
-                if (accountActions != null && state.user != null) ForumPostActions(state, post, accountActions, onLink, imageLoader)
+                ForumPostActions(state, post, accountActions, onBrowser)
             }
         }
         if (state.posts.isEmpty() && !state.loading) item { Text(stringResource(R.string.f_no_posts)) }
@@ -422,4 +472,43 @@ private fun ForumAiRangeDialog(topic: ForumTopic, anchor: Int, dismiss: () -> Un
             }
         }
     }
+}
+
+@Composable private fun ForumReadFailure(state: ForumState, retry: () -> Unit) {
+    val error = state.error ?: return
+    val clipboard = LocalClipboardManager.current
+    var detail by remember(error, state.networkIssue) { mutableStateOf(false) }
+    var now by remember { mutableLongStateOf(System.currentTimeMillis() / 1000) }
+    LaunchedEffect(state.retryAt) {
+        while (now < state.retryAt) {
+            delay(1000)
+            now = System.currentTimeMillis() / 1000
+        }
+    }
+    Surface(shape = TechnicalShapes.Panel, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(errorLabel(error)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+            if (state.retryAt > now) Text(stringResource(R.string.f_wait, state.retryAt - now), style = MaterialTheme.typography.bodySmall)
+            Row {
+                TextButton(retry, enabled = !state.loading && now >= state.retryAt, modifier = Modifier.testTag("forum-read-retry")) { Text(stringResource(R.string.f_retry)) }
+                TextButton({ detail = !detail }, Modifier.testTag("forum-error-details")) { Text(stringResource(R.string.f_error_details)) }
+            }
+            if (detail) {
+                Text(stringResource(networkIssueLabel(state.networkIssue)), style = MaterialTheme.typography.bodySmall)
+                TextButton({
+                    val diagnostic = "UIT Forum\ntopicId=${state.topic?.id ?: 0}\nanchorPostNumber=${state.anchorNumber}\nfailure=${error.name}\nnetwork=${state.networkIssue?.name ?: "UNRECORDED"}\nmode=${if (state.user == null) "guest" else "member"}\nrecordedAt=${Instant.now()}"
+                    clipboard.setText(AnnotatedString(diagnostic))
+                }) { Text(stringResource(R.string.f_copy_diagnostic)) }
+            }
+        }
+    }
+}
+private fun networkIssueLabel(issue: ForumNetworkIssue?) = when (issue) {
+    ForumNetworkIssue.DNS -> R.string.f_issue_dns
+    ForumNetworkIssue.TLS -> R.string.f_issue_tls
+    ForumNetworkIssue.TIMEOUT -> R.string.f_issue_timeout
+    ForumNetworkIssue.CONNECT -> R.string.f_issue_connect
+    ForumNetworkIssue.SERVER -> R.string.f_issue_server
+    ForumNetworkIssue.IO -> R.string.f_issue_io
+    else -> R.string.f_issue_unknown
 }

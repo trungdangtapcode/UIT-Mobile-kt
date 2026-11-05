@@ -4,13 +4,19 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Reply
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -20,7 +26,7 @@ import vn.edu.uit.mobile.designsystem.TechnicalShapes
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.forum.R
 
-class ForumAccountActions(val account: () -> Unit, val create: () -> Unit, val reply: (Int) -> Unit, val edit: (ForumPost) -> Unit, val submit: (ForumCommand) -> Unit, val draft: () -> Unit = {})
+class ForumAccountActions(val account: () -> Unit, val create: () -> Unit, val reply: (Int) -> Unit, val edit: (ForumPost) -> Unit, val submit: (ForumCommand) -> Unit, val draft: () -> Unit = {}, val signIn: (Int) -> Unit = { account() })
 
 @Composable internal fun forumAccountReady(state: ForumState): Boolean {
     var now by remember { mutableLongStateOf(System.currentTimeMillis() / 1000) }
@@ -180,29 +186,71 @@ class ForumAccountActions(val account: () -> Unit, val create: () -> Unit, val r
     }
 }
 
-@Composable internal fun ForumPostActions(state: ForumState, post: ForumPost, actions: ForumAccountActions, onLink: (String) -> Unit, image: suspend (String) -> ByteArray) {
-    val enabled = forumAccountReady(state) && !state.commandBusy && !state.commandUncertain && !state.accountBusy
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (state.canReply) TextButton(onClick = { actions.reply(post.number) }, enabled = enabled) { Text(stringResource(R.string.f_reply)) }
-        if (post.canEdit) TextButton(onClick = { actions.edit(post) }, enabled = enabled) { Text(stringResource(R.string.f_edit_post)) }
-        TextButton(onClick = { actions.submit(ForumCommand.Bookmark(post.id)) }, enabled = enabled) { Text(stringResource(R.string.f_bookmark_account)) }
-        if (post.canLike) TextButton(onClick = { actions.submit(ForumCommand.Like(post.id, post.liked)) }, enabled = enabled) { Text(stringResource(if (post.liked) R.string.f_unlike else R.string.f_like, post.likeCount)) }
-    }
-    if (state.reactionChoices.isNotEmpty() && (post.canLike || post.reactions.any { it.selected && it.canUndo })) {
-        var expanded by remember(post.id) { mutableStateOf(false) }
+@Composable internal fun ForumPostActions(state: ForumState, post: ForumPost, actions: ForumAccountActions?, onBrowser: (String) -> Unit) {
+    val member = state.user != null
+    val enabled = forumAccountReady(state) && !state.commandBusy && !state.commandUncertain && !state.accountBusy && !state.publicCitation
+    val clipboard = LocalClipboardManager.current
+    val permalink = "${ForumLimits.ORIGIN}/t/${post.topicId}/${post.number}"
+    var expanded by remember(post.id) { mutableStateOf(false) }
+    var reactions by remember(post.id) { mutableStateOf(false) }
+    Row(Modifier.fillMaxWidth().testTag("forum-actions-${post.id}"), verticalAlignment = Alignment.CenterVertically) {
+        TextButton(onClick = {
+            if (member) actions?.submit?.invoke(ForumCommand.Like(post.id, post.liked)) else actions?.signIn?.invoke(post.number)
+        }, enabled = enabled && actions != null && (!member || post.canLike), modifier = Modifier.weight(1f).testTag("forum-like-${post.id}"), shape = TechnicalShapes.Control) {
+            Icon(if (post.liked) Icons.Outlined.Favorite else Icons.Outlined.FavoriteBorder, stringResource(if (post.liked) R.string.f_unlike else R.string.f_like, post.likeCount), Modifier.size(20.dp))
+            if (post.likeCount > 0) {
+                Spacer(Modifier.width(4.dp))
+                Text(post.likeCount.toString(), maxLines = 1)
+            }
+        }
+        IconButton({ clipboard.setText(AnnotatedString(permalink)) }, Modifier.testTag("forum-copy-${post.id}")) { Icon(Icons.Outlined.Link, stringResource(R.string.f_copy_post)) }
         Box {
-            OutlinedButton(onClick = { expanded = true }, enabled = enabled, shape = TechnicalShapes.Control) { Text(stringResource(R.string.f_react)) }
+            IconButton({ expanded = true }, Modifier.testTag("forum-post-menu-${post.id}")) { Icon(Icons.Outlined.MoreHoriz, stringResource(R.string.f_post_actions)) }
             DropdownMenu(expanded, { expanded = false }) {
+                DropdownMenuItem(text = { Text(stringResource(R.string.f_browser)) }, onClick = {
+                    expanded = false
+                    onBrowser(permalink)
+                })
+                if (actions != null && !state.publicCitation) {
+                    DropdownMenuItem(text = { Text(stringResource(R.string.f_bookmark_account)) }, onClick = {
+                        expanded = false
+                        if (member) actions.submit(ForumCommand.Bookmark(post.id)) else actions.signIn(post.number)
+                    }, enabled = enabled)
+                    if (member && post.canEdit) {
+                        DropdownMenuItem(text = { Text(stringResource(R.string.f_edit_post)) }, onClick = {
+                            expanded = false
+                            actions.edit(post)
+                        }, enabled = enabled)
+                    }
+                    if (state.reactionChoices.isNotEmpty() && (!member || post.canLike || post.reactions.any { it.selected && it.canUndo })) {
+                        DropdownMenuItem(text = { Text(stringResource(R.string.f_react)) }, onClick = {
+                            expanded = false
+                            if (member) reactions = true else actions.signIn(post.number)
+                        }, enabled = enabled)
+                    }
+                }
+            }
+            DropdownMenu(reactions, { reactions = false }) {
                 state.reactionChoices.forEach { id ->
                     DropdownMenuItem(text = { Text(id) }, onClick = {
-                        expanded = false
-                        actions.submit(ForumCommand.Reaction(post.id, id))
-                    })
+                        reactions = false
+                        actions?.submit?.invoke(ForumCommand.Reaction(post.id, id))
+                    }, enabled = enabled)
                 }
             }
         }
+        if (actions != null && !state.publicCitation && (!member || state.canReply)) {
+            TextButton({ if (member) actions.reply(post.number) else actions.signIn(post.number) }, enabled = enabled, modifier = Modifier.testTag("forum-reply-${post.id}"), shape = TechnicalShapes.Control) {
+                Icon(Icons.AutoMirrored.Outlined.Reply, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(4.dp))
+                Text(stringResource(R.string.f_reply))
+            }
+        }
     }
-    if (post.reactions.isNotEmpty()) Text(post.reactions.joinToString(" · ") { "${it.id} ${it.count}${if (it.selected) " ✓" else ""}" }, style = MaterialTheme.typography.labelMedium)
+    if (post.reactions.isNotEmpty()) {
+        Text(post.reactions.joinToString(" · ") { "${it.id} ${it.count}${if (it.selected) " ✓" else ""}" }, style = MaterialTheme.typography.labelMedium)
+    }
+    if (member && !state.canReply) Text(stringResource(if (state.topic?.closed == true) R.string.f_closed else R.string.f_reply_unavailable), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable internal fun ForumPollView(poll: ForumPoll, enabled: Boolean, postId: Long, onVote: (List<String>) -> Unit, onRemove: () -> Unit, onLink: (String) -> Unit, image: suspend (String) -> ByteArray, source: String) {

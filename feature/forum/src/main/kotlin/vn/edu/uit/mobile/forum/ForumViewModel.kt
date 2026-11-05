@@ -6,6 +6,8 @@ import java.util.UUID
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import vn.edu.uit.mobile.domain.*
 
 enum class ForumMemberTab { NOTICES, BOOKMARKS, CHAT }
@@ -67,6 +69,7 @@ data class ForumState(
     val offline: Boolean = false,
     val fetchedAt: Long = 0,
     val error: ForumFailure? = null,
+    val networkIssue: ForumNetworkIssue? = null,
     val retryAt: Long = 0,
     val historyPost: ForumPost? = null,
     val history: ForumRevision? = null,
@@ -78,6 +81,24 @@ data class ForumState(
 )
 
 class ForumViewModel(private val repository: ForumRepository, private val clock: () -> Long = { System.currentTimeMillis() / 1000 }) : ViewModel() {
+    private val imageWork = Mutex()
+    private val imageCache = LinkedHashMap<String, ByteArray>(16, .75f, true)
+    private var imageBytes = 0
+
+    @Volatile private var imageGeneration = 0L
+    private var cachedImageScope: Triple<Long, Long?, Boolean>? = null
+    private fun imageScope(): Triple<Long, Long?, Boolean> {
+        val snapshot = state.value
+        return Triple(imageGeneration, snapshot.user?.id, snapshot.publicCitation)
+    }
+    private fun clearImageMemory() {
+        synchronized(imageCache) {
+            imageGeneration++
+            imageCache.clear()
+            imageBytes = 0
+            cachedImageScope = null
+        }
+    }
     private val state = MutableStateFlow(ForumState())
     val uiState = state.asStateFlow()
     private val accountRepository = repository as? ForumAccountRepository
@@ -88,6 +109,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
     private var draftSerial = 0L
     private var accountSerial = 0L
     private var resumed = false
+    private var loginTarget: ForumTarget? = null
     private var historyWork: Job? = null
     private var historySerial = 0L
     private var work: Job? = null
@@ -101,6 +123,8 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
     private var feedStamp: Pair<Long, Boolean> = 0L to false
     private suspend fun read(request: ForumRequest): ForumLoaded = if (state.value.publicCitation) repository.loadPublic(request) else repository.load(request)
     fun openPublicTopic(id: Long, number: Int) {
+        loginTarget = null
+        clearImageMemory()
         accountWork?.cancel()
         commandWork?.cancel()
         draftWork?.cancel()
@@ -143,6 +167,8 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         }
     }
     fun close() {
+        loginTarget = null
+        clearImageMemory()
         closeHistory()
         work?.cancel()
         serial++
@@ -172,6 +198,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         if (denied) retry = { topic(s.topic!!.id, s.anchorNumber) }
         state.value = s.copy(
             error = e.reason,
+            networkIssue = e.networkIssue,
             retryAt = if (e.reason == ForumFailure.RATE_LIMIT) clock() + (e.retryAfterSeconds ?: 30) else s.retryAt,
             posts = if (denied) emptyList() else s.posts,
             stream = if (denied) emptyList() else s.stream,
@@ -185,7 +212,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         work?.cancel()
         val token = ++serial
         retry = action
-        state.value = state.value.copy(loading = true, error = null, retryAt = 0)
+        state.value = state.value.copy(loading = true, error = null, networkIssue = null, retryAt = 0)
         work = viewModelScope.launch {
             try {
                 block(token)
@@ -305,7 +332,11 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         closeHistory()
         flushPosition()
         val same = state.value.topic?.id == id
-        if (!same) state.value = state.value.copy(topic = ForumTopic(id, "", 0, 0, ""), posts = emptyList(), stream = emptyList(), unavailable = 0)
+        if (!same) {
+            val previous = state.value
+            val known = previous.topics.firstOrNull { it.id == id } ?: previous.hits.firstOrNull { it.topic.id == id }?.topic ?: previous.local.saved.firstOrNull { it.id == id }
+            state.value = previous.copy(topic = known ?: ForumTopic(id, "", 0, 0, ""), posts = emptyList(), stream = emptyList(), start = 0, end = 0, unavailable = 0, fetchedAt = 0, offline = false, anchorNumber = number, anchorOffsetDp = offsetDp, canReply = false, reactionChoices = emptyList(), remoteReadNumber = null)
+        }
         launch({ topic(id, number, offsetDp) }) { token ->
             val result = read(ForumRequest.Topic(id, number))
             if (serial != token) return@launch
@@ -453,6 +484,7 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         }
     }
     private fun resetAccountUi() {
+        clearImageMemory()
         closeHistory()
         work?.cancel()
         positionWork?.cancel()
@@ -473,6 +505,10 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
         state.value = state.value.copy(loginVisible = state.value.user == null, memberVisible = state.value.user != null, accountError = null)
         if (state.value.user != null) member(ForumMemberTab.NOTICES)
     }
+    fun accountForTopic(id: Long, number: Int) {
+        if (state.value.user == null && !state.value.publicCitation) loginTarget = ForumTarget(id, number)
+        account()
+    }
     fun login(username: String, password: String, code: String) {
         val repo = accountRepository ?: return
         if (state.value.accountBusy || state.value.accountRetryAt > clock()) return
@@ -487,7 +523,9 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
                 val draft = repo.draft()
                 if (token != accountSerial) return@launch
                 state.value = state.value.copy(user = user, draft = draft, loginVisible = false)
-                latest(null)
+                val target = loginTarget
+                loginTarget = null
+                if (target != null) topic(target.topicId, target.postNumber) else latest(null)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: ForumException) {
@@ -508,7 +546,9 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
             try {
                 repo.disconnect()
                 state.value = state.value.copy(accountBusy = false)
-                latest(null)
+                val target = loginTarget
+                loginTarget = null
+                if (target != null) topic(target.topicId, target.postNumber) else latest(null)
             } catch (e: ForumException) {
                 state.value = state.value.copy(accountBusy = false, loginVisible = true, accountError = e.reason)
             }
@@ -725,10 +765,40 @@ class ForumViewModel(private val repository: ForumRepository, private val clock:
             }
         }
     }
-    suspend fun image(url: String): ByteArray = try {
-        if (state.value.publicCitation) repository.imagePublic(url) else repository.image(url)
-    } catch (e: ForumException) {
-        if (e.reason == ForumFailure.AUTHENTICATION) withContext(Dispatchers.Main) { failure(e) }
-        throw e
+    suspend fun image(url: String): ByteArray {
+        val expected = imageScope()
+        return imageWork.withLock {
+            currentCoroutineContext().ensureActive()
+            if (expected != imageScope()) throw CancellationException("Forum image scope changed")
+            val saved = synchronized(imageCache) {
+                if (cachedImageScope != expected) {
+                    imageCache.clear()
+                    imageBytes = 0
+                    cachedImageScope = expected
+                }
+                imageCache[url]
+            }
+            if (saved != null) return@withLock saved
+            val bytes = try {
+                if (expected.third) repository.imagePublic(url) else repository.image(url)
+            } catch (e: ForumException) {
+                if (e.reason == ForumFailure.AUTHENTICATION) withContext(Dispatchers.Main) { failure(e) }
+                throw e
+            }
+            currentCoroutineContext().ensureActive()
+            if (expected != imageScope()) throw CancellationException("Forum image scope changed")
+            require(bytes.size <= 3 * 1024 * 1024)
+            synchronized(imageCache) {
+                if (expected != imageScope()) throw CancellationException("Forum image scope changed")
+                imageCache.put(url, bytes)?.let { imageBytes -= it.size }
+                imageBytes += bytes.size
+                while (imageBytes > 8 * 1024 * 1024 || imageCache.size > 12) {
+                    val entry = imageCache.entries.iterator()
+                    imageBytes -= entry.next().value.size
+                    entry.remove()
+                }
+            }
+            bytes
+        }
     }
 }

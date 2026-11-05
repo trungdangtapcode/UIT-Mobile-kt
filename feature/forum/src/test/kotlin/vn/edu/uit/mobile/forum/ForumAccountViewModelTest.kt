@@ -309,4 +309,17 @@ class ForumAccountViewModelTest {
         runCurrent()
         assertEquals(0, repo.commands)
     }
+
+    @Test fun explicitGuestInteractionReturnsToTheTopicAfterLoginWithoutSubmittingAnything() = runTest(dispatcher) {
+        val repo = Repo()
+        val vm = ForumViewModel(repo)
+        vm.accountForTopic(9, 20)
+        assertTrue(vm.uiState.value.loginVisible)
+        vm.login("member", "fixture-password", "")
+        advanceUntilIdle()
+        assertEquals(9L, vm.uiState.value.topic!!.id)
+        assertEquals(20, vm.uiState.value.anchorNumber)
+        assertEquals(0, repo.commands)
+        assertNull(vm.uiState.value.composer)
+    }
 }

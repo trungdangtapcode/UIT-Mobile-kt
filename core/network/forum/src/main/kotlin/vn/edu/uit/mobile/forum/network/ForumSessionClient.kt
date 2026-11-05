@@ -185,7 +185,7 @@ class ForumSessionClient internal constructor(private val origin: String, privat
                 if (status == 403) throw ForumException(ForumFailure.FORBIDDEN)
                 if (status == 409) throw ForumException(ForumFailure.CONFLICT)
                 if (status == 404 || status == 410) throw ForumException(ForumFailure.UNAVAILABLE)
-                if (status >= 500) throw ForumException(if (writing) ForumFailure.UNCERTAIN else ForumFailure.NETWORK)
+                if (status >= 500) throw ForumException(if (writing) ForumFailure.UNCERTAIN else ForumFailure.NETWORK, networkIssue = ForumNetworkIssue.SERVER)
                 val limit = if (image) 3 * 1024 * 1024 else 4 * 1024 * 1024
                 require((response.contentLength() ?: 0) <= limit)
                 val body = ByteArrayOutputStream()
@@ -225,8 +225,8 @@ class ForumSessionClient internal constructor(private val origin: String, privat
             throw e
         } catch (_: IllegalArgumentException) {
             throw ForumException(if (writing) ForumFailure.UNCERTAIN else ForumFailure.INVALID)
-        } catch (_: Exception) {
-            throw ForumException(if (writing) ForumFailure.UNCERTAIN else ForumFailure.NETWORK)
+        } catch (e: Exception) {
+            throw ForumException(if (writing) ForumFailure.UNCERTAIN else ForumFailure.NETWORK, networkIssue = forumNetworkIssue(e))
         }
     }
     private fun route(request: ForumRequest): Pair<String, List<Pair<String, String>>> = when (request) {

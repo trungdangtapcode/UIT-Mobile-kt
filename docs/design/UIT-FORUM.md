@@ -4,6 +4,8 @@ This direction covers the reader and its native account increment. Full student-
 parity remains the target; use the [parity matrix](../research/UIT-FORUM-PARITY.md)
 to design the missing workflows and verify actual UIT behavior before expanding
 the interface. A browser handoff does not complete a native parity requirement.
+The [November 5 reading gallery](FORUM-READING-UX.md) supersedes older reader
+captures for inline media, topic navigation and post-control placement.
 
 The reader serves a student looking for a campus answer, following a long support
 thread, or returning to a saved post. It is a dedicated workspace reached from
@@ -17,7 +19,8 @@ parent relationships. Search opens the matched reply rather than the first post.
 Saved topics are explicitly local; they do not subscribe or bookmark on Discourse.
 
 The reader emphasizes the topic title, original author, date and post number.
-A compact navigation strip exposes jump, resume, previous and next windows.
+A compact position button opens jump navigation; resume and secondary topic
+actions live in overflow. Bounded windows retain their previous/next navigation.
 Reading position belongs to the device. Missing replies do not collapse the
 stream into a fictional continuous post-number sequence. Cached content shows
 its retrieval time and offline state. A saved reference does not promise a full
@@ -28,7 +31,8 @@ Use the existing navy surfaces, UIT blue, Plex typography and TechnicalShapes
 with quiet rules and spacing, rather than nested dashboard panels. Controls use
 native Material 3. Keep 16dp phone gutters and 4dp spacing increments; long code
 and tables scroll horizontally. Quotes, fenced code, tables, collapsed details,
-links and explicitly loaded images have distinct native treatments. Unsupported
+links and inline upload images have distinct native treatments. Safe previews
+load when visible and open their original viewer on tap. Unsupported
 interactive embeds offer the source page. External links require an explicit
 browser handoff showing the destination. No WebView executes forum content.
 
@@ -56,8 +60,8 @@ explicit button; errors and uncertain submission outcomes retain entered text.
 
 Chat separates channel history from an opened thread. The selected thread is
 visible above its messages and the send action retains that thread ID. Every
-message uses the semantic Forum renderer, including nested content and explicit
-media loading. No background typing/read events are emitted. Realtime updates,
+message uses the semantic Forum renderer, including nested content and visible
+inline upload previews. No background typing/read events are emitted. Realtime updates,
 new conversations/threads and message management remain open parity work.
 
 [Account behavior and evidence](../FORUM-ACCOUNTS.md) documents the actual UIT

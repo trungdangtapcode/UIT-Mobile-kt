@@ -110,7 +110,7 @@ class ForumDigestLiveDesignTest {
         val initial = ForumState(open = true, publicCitation = true, topic = topic, stream = document.stream, posts = document.posts, end = document.posts.size)
         compose.setContent { UitTheme(dark = true, dynamic = false) { WorkspaceFrame(3, {}, {}, "", false, false, 0) { ForumContent(initial) } } }
         capture("forum-digest-entry-390")
-        compose.onNodeWithTag("forum-reader").performScrollToNode(hasTestTag("forum-ai-entry"))
+        compose.onNodeWithTag("forum-topic-menu").performClick()
         compose.onNodeWithTag("forum-ai-entry").performClick()
         compose.onNodeWithTag("forum-ai-count").performTextReplacement("2")
         capture("forum-digest-range-390")

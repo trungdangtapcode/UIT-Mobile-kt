@@ -20,6 +20,10 @@ Download the [preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/rel
 095af05e831831134fda0d8d51eaa6102ab7da1ef4a8efbd701c13f683553158
 ```
 
+## Storage and file explorer access
+
+Read [storage, disk usage, file access and cleanup](COURSE-SEARCH-STORAGE.md) for the exact private paths, measured notebook/index sizes, deletion behavior and backup limits. Ordinary phone file explorers cannot browse this internal storage. The guide includes read-only Windows ADB commands for this debuggable preview; Android Studio and root access are not required.
+
 ## Try the main workflow
 
 1. Open the toolbar Search action, then **Search inside downloaded materials**.

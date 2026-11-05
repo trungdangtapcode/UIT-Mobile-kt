@@ -188,3 +188,7 @@ Android. The existing GitHub emulator job runs these tests and collects
 `reading-native-page.png`, `reading-native-restored.png` and `reading-export.json`
 with the native test reports. These contain synthetic material only. See the
 [reading evidence](COURSE-READING-EVIDENCE.md) for the exact boundaries.
+
+## Inspect course-search storage without Android Studio
+
+The [storage and cleanup guide](COURSE-SEARCH-STORAGE.md#inspect-the-debug-preview-from-windows-without-android-studio) provides read-only Windows `adb shell run-as` commands for listing private download/index paths and sizes. The preview APK is debuggable; ordinary phone file explorers cannot browse its internal storage. No root access is required for the authorized debug workflow, but a physical ADB connection is still required. The encrypted index remains ciphertext when inspected as a file.

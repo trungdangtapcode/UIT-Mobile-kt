@@ -1,17 +1,20 @@
 # Course passage search
 
-Enter from the existing workspace search using **Search inside downloaded
-materials**. Select one linked Moodle course, open the document selector, explicitly
-choose up to eight verified downloads from the first 200 cached catalog entries and build a local index. Select no files by
-default. Other account/course content is not included. Keyword search needs no AI
-connection and remains available offline.
+Enter from workspace search using **Search inside downloaded materials**. Select
+one linked Moodle course and open **Files & updates**. A previously prepared scope
+is selected when its downloads remain available; a first-time scope starts empty.
+Choose up to eight verified downloads from the first 200 cached catalog entries,
+check saved files, review the update, then explicitly confirm. Other account/course
+content is excluded. Keyword preparation/search needs no AI connection.
 
-Experimental optional semantic indexing has a separate checkbox and explicit **Build and send
-selected text** action. It discloses the selected transfer and API usage. It uses
-the existing personal Direct OpenAI connection but a distinct embedding model.
-Typing, changing modes, selecting files or opening the screen makes no paid call.
-Press Search to send a semantic/hybrid query. Read original excerpts without
-requiring an AI-generated answer.
+Optional **Search by meaning** uses the existing personal Direct OpenAI connection
+and a separate embedding model. The review discloses reusable vectors, new unique
+text and API usage before the **Update & send new text** action. Typing, changing
+modes, selecting files, opening the screen and checking saved files make no paid
+call. Semantic/hybrid queries are submitted only when Search is pressed.
+
+See [storage and cleanup](COURSE-SEARCH-STORAGE.md) for private file locations,
+file-explorer access, measured disk usage and what uninstall removes.
 
 ```mermaid
 flowchart TD

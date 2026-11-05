@@ -7,6 +7,11 @@
     <string name="cg_waiting">Complete the connection in your browser, then return here. No AI request is sent during sign-in.</string>
     <string name="cg_cancel">Cancel connection</string>
     <string name="cg_connected">ChatGPT plan access connected</string>
+    <string name="cg_models_pending">You are signed in. Load the available models, then choose one to enable sending.</string>
+    <string name="cg_loading_models">Loading models for this ChatGPT account…</string>
+    <string name="cg_models_timeout">Loading models timed out. Refresh the list; you do not need to sign out.</string>
+    <string name="cg_response">The service response could not be read. Refresh the model list or copy diagnostics for troubleshooting. Your sign-in is retained.</string>
+    <string name="cg_service_unavailable">The service could not complete this operation. Try again or copy diagnostics for troubleshooting.</string>
     <string name="cg_plan_disabled">Signed in, but permission to use your ChatGPT plan is not enabled.</string>
     <string name="cg_enable">Enable ChatGPT plan usage</string>
     <string name="cg_use">Use this ChatGPT account</string>

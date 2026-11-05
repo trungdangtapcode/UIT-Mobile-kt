@@ -1,5 +1,6 @@
 package vn.edu.uit.mobile.data
 
+import java.io.IOException
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
 import org.junit.Assert.*
@@ -7,6 +8,124 @@ import org.junit.Test
 import vn.edu.uit.mobile.domain.*
 
 class ChatGptSessionTest {
+    @Test fun largeCatalogMetadataDoesNotPreventExplicitModelActivation() = runBlocking {
+        ChatGptTestSupport().use { f ->
+            f.modelBody = """{"models":[{"slug":"fixture-model","display_name":"Fixture model","visibility":"list","capability_description":"${"x".repeat(400000)}"}]}"""
+            val session = f.session()
+            f.connect(session)
+            assertNull(session.state.value.problem)
+            assertEquals("fixture-model", session.state.value.models.single().id)
+            assertEquals(session.state.value.selected, session.selected("fixture-model").first)
+            assertFalse(f.storage.read("chatgpt_accounts")!!.contains("capability_description"))
+            assertEquals(0, f.requests.count { it.endsWith("/responses") })
+        }
+    }
+
+    @Test fun oversizedCatalogPreservesSignInAndRecoversWithoutAnotherBrowserConsent() = runBlocking {
+        ChatGptTestSupport().use { f ->
+            f.modelBody = """{"models":[],"extra":"${"x".repeat(ChatGptModelCatalog.MAX_BYTES)}"}"""
+            f.storage.write("connection", "existing-connection")
+            val session = f.session()
+            f.connect(session)
+            val diagnostic = session.state.value.diagnostic!!
+            assertEquals(ChatGptProblem.RESPONSE, session.state.value.problem)
+            assertEquals("response_too_large", diagnostic.code)
+            assertEquals("models", diagnostic.operation)
+            assertEquals(200, diagnostic.status)
+            assertEquals("fixture-model-request", diagnostic.requestId)
+            assertTrue(diagnostic.responseBytes!! > ChatGptModelCatalog.MAX_BYTES)
+            assertTrue(session.state.value.accounts.single().signedIn)
+            assertEquals("existing-connection", f.storage.read("connection"))
+            assertFalse(session.state.value.loadingModels)
+            session.acknowledgeWelcome()
+            session.initialize()
+            assertEquals(diagnostic, session.state.value.diagnostic)
+            f.modelBody = """{"models":[{"slug":"recovered-model","visibility":"list"}]}"""
+            session.reloadModels()
+            assertNull(session.state.value.problem)
+            assertNull(session.state.value.diagnostic)
+            assertEquals("recovered-model", session.state.value.models.single().id)
+            assertEquals(1, f.authorizationQueries.size)
+        }
+    }
+
+    @Test fun malformedCatalogReportsResponseShapeInsteadOfBlamingTheNetwork() = runBlocking {
+        ChatGptTestSupport().use { f ->
+            f.modelBody = "<html>fixture response, not a model catalog</html>"
+            val session = f.session()
+            f.connect(session)
+            assertEquals(ChatGptProblem.RESPONSE, session.state.value.problem)
+            assertEquals("invalid_json", session.state.value.diagnostic?.code)
+            assertEquals("fixture-model-request", session.state.value.diagnostic?.requestId)
+            assertEquals("models", session.state.value.diagnostic?.operation)
+            f.modelBody = """{"data":[{"id":"fixture-api-model"}]}"""
+            session.reloadModels()
+            assertEquals(ChatGptProblem.RESPONSE, session.state.value.problem)
+            assertEquals("unexpected_model_catalog", session.state.value.diagnostic?.code)
+            assertEquals("api-model-list", session.state.value.diagnostic?.bodyShape)
+            assertTrue(session.state.value.accounts.single().signedIn)
+            assertTrue(session.state.value.models.isEmpty())
+        }
+    }
+
+    @Test fun unavailableAndDeniedCatalogsRetainSafeHttpDiagnostics() = runBlocking {
+        ChatGptTestSupport().use { f ->
+            f.modelStatus = 403
+            f.modelBody = """{"error":{"code":"access_denied","message":"fixture-private-message"}}"""
+            val session = f.session()
+            f.connect(session)
+            assertEquals(ChatGptProblem.ACCESS, session.state.value.problem)
+            assertEquals("access_denied", session.state.value.diagnostic?.code)
+            assertEquals(403, session.state.value.diagnostic?.status)
+            assertEquals("models", session.state.value.diagnostic?.operation)
+            assertFalse(session.state.value.diagnostic.toString().contains("fixture-private-message"))
+            assertTrue(session.state.value.accounts.single().signedIn)
+            f.modelStatus = 503
+            session.reloadModels()
+            assertEquals(ChatGptProblem.UNAVAILABLE, session.state.value.problem)
+            assertEquals(503, session.state.value.diagnostic?.status)
+        }
+    }
+
+    @Test fun catalogIoFailureCanBeDiagnosedWithoutLeakingTheExceptionMessage() = runBlocking {
+        ChatGptTestSupport().use { f ->
+            f.beforeModels = { throw IOException("fixture-sensitive-message") }
+            val session = f.session()
+            f.connect(session)
+            assertEquals(ChatGptProblem.NETWORK, session.state.value.problem)
+            assertEquals("network_io", session.state.value.diagnostic?.code)
+            assertEquals(0, session.state.value.diagnostic?.status)
+            assertEquals("models", session.state.value.diagnostic?.operation)
+            assertFalse(session.state.value.diagnostic.toString().contains("fixture-sensitive-message"))
+            assertTrue(session.state.value.accounts.single().signedIn)
+            for ((error, code) in listOf(
+                java.net.UnknownHostException("fixture-sensitive-host") to "dns_failure",
+                javax.net.ssl.SSLException("fixture-sensitive-certificate") to "tls_failure",
+                java.net.SocketTimeoutException("fixture-sensitive-timeout") to "network_timeout"
+            )) {
+                f.beforeModels = { throw error }
+                session.reloadModels()
+                assertEquals(code, session.state.value.diagnostic?.code)
+                assertFalse(session.state.value.diagnostic.toString().contains("fixture-sensitive"))
+            }
+        }
+    }
+
+    @Test fun malformedEntriesAreSkippedAndAnEmptyVisibleCatalogHasItsOwnRecovery() = runBlocking {
+        ChatGptTestSupport().use { f ->
+            f.modelBody = """{"models":[null,{"visibility":"list","slug":{}},{"visibility":"list","slug":"usable-model","display_name":null},{"visibility":"hide","slug":"hidden"}]}"""
+            val session = f.session()
+            f.connect(session)
+            assertEquals(listOf(ChatGptModel("usable-model", "usable-model")), session.state.value.models)
+            assertNull(session.state.value.problem)
+            f.modelBody = """{"models":[]}"""
+            session.reloadModels()
+            assertEquals(ChatGptProblem.NO_MODELS, session.state.value.problem)
+            assertEquals("no_visible_models", session.state.value.diagnostic?.code)
+            assertTrue(session.state.value.models.isEmpty())
+        }
+    }
+
     @Test fun cancelledRevocationStillClearsLocalAccessAndRetainsTheUnconfirmedWarning() = runBlocking {
         ChatGptTestSupport().use { f ->
             val session = f.session()

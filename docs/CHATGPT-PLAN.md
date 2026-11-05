@@ -90,6 +90,14 @@ start it again if Android recreates that screen. Existing saved registrations
 remain separate from that in-memory attempt. At most ten registrations and one
 hundred displayed models per registration are retained.
 
+The model catalog has a separate **4 MiB decoded-response limit**. Token and JWKS
+documents retain the smaller 256 KiB limit. Catalogs can include lengthy unused
+capability descriptions; they must not be rejected merely for exceeding the token
+document limit. Only the selected account's visible model IDs and display names
+are persisted, capped at one hundred entries. Unknown metadata is discarded.
+Malformed entries are skipped when usable visible entries remain. A successful
+empty catalog clears cached picker choices; network failures retain the cache.
+
 ## AI requests and boundaries
 
 ChatGPT requests use the official Responses endpoint with OAuth bearer credentials.
@@ -110,10 +118,21 @@ Embeddings remain available only through Direct API mode. ChatGPT plan access
 does not grant the embeddings endpoint. Offline BM25 stays available without an
 AI connection; no new document vectors are generated with a ChatGPT token.
 
-Connection diagnostics retain safe status/code/request-ID/body-shape metadata
+Connection diagnostics retain safe operation/status/code/request-ID/body-shape metadata
 when provided, without raw error messages, content, identities or credentials.
 Copying diagnostics is explicit. Authentication/model/request errors are shown
 as account, quota, unsupported-capability or connection recovery states.
+Successful HTTP responses that exceed the bound or contain unreadable JSON report
+response errors, rather than network errors. Catalog-schema errors identify the
+response shape without exposing the body. DNS, TLS and socket failures use fixed
+diagnostic codes; status `0` means no HTTP status was captured. Byte counts measure bytes read,
+not the complete remote size when reading was stopped at the limit.
+
+The phone UI distinguishes browser authorization from model loading. A saved plan
+grant alone does not enable Send. The pending model step, error and diagnostic-copy
+action appear before secondary account controls. Welcome is deferred until models
+are available; acknowledging it does not erase an existing diagnostic. Retrying
+catalog loading reuses the saved registration and sends no inference.
 
 ## Verification status
 
@@ -129,6 +148,23 @@ Physical Android browser callback, subscriber eligibility, actual model access
 and a real plan-backed request require owner acceptance in the preview. No access
 or refresh token should be pasted into chat. No university account mutation is
 needed for that acceptance. GitHub CI is not dispatched as a development loop.
+
+### Owner report and catalog recovery
+
+On 2026-11-06, the owner reported that the first preview retained a signed-in
+account and displayed plan permission, but offered no models and kept Send
+disabled. The supplied phone images show this failed state. No HTTP trace or
+response body from that device was available, so its exact cause is unconfirmed.
+Those private account screenshots are not republished in the repository.
+
+An independent regression reproduced a defect in the previous 256 KiB reader:
+a controlled 400,000-character capability field prevented an otherwise valid
+model catalog from loading. The follow-up separates catalog and token limits,
+adds typed response diagnostics and tests retry without another consent flow.
+This reproduced defect is a plausible explanation, not proof of the owner's
+specific failure. Preview 2 needs an owner retest; if it still fails, its copied
+diagnostics can distinguish HTTP access errors, malformed catalogs, size limits
+and transport failures without sharing OAuth credentials.
 
 ## Official references
 

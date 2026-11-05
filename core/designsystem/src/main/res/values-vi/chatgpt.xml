@@ -7,6 +7,11 @@
     <string name="cg_waiting">Hoàn tất kết nối trên trình duyệt rồi quay lại đây. Đăng nhập không gửi yêu cầu AI.</string>
     <string name="cg_cancel">Hủy kết nối</string>
     <string name="cg_connected">Đã kết nối quyền dùng gói ChatGPT</string>
+    <string name="cg_models_pending">Bạn đã đăng nhập. Tải danh sách mô hình rồi chọn một mô hình để bật gửi tin nhắn.</string>
+    <string name="cg_loading_models">Đang tải mô hình cho tài khoản ChatGPT này…</string>
+    <string name="cg_models_timeout">Tải mô hình đã hết thời gian chờ. Hãy tải lại danh sách; không cần đăng xuất.</string>
+    <string name="cg_response">Không đọc được phản hồi từ dịch vụ. Tải lại danh sách mô hình hoặc sao chép chẩn đoán để kiểm tra. Phiên đăng nhập được giữ lại.</string>
+    <string name="cg_service_unavailable">Dịch vụ chưa hoàn tất được thao tác này. Thử lại hoặc sao chép chẩn đoán để kiểm tra.</string>
     <string name="cg_plan_disabled">Đã đăng nhập nhưng chưa bật quyền dùng gói ChatGPT.</string>
     <string name="cg_enable">Bật quyền dùng gói ChatGPT</string>
     <string name="cg_use">Dùng tài khoản ChatGPT này</string>

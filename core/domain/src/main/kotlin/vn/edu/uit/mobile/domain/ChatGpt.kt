@@ -4,8 +4,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 data class ChatGptAccount(val id: String, val label: String, val signedIn: Boolean, val planEnabled: Boolean)
 data class ChatGptModel(val id: String, val name: String)
-enum class ChatGptProblem { CANCELLED, TIMEOUT, NETWORK, VALIDATION, ACCESS, NO_MODELS, REAUTH, QUOTA, UNSUPPORTED, UNAVAILABLE, REVOCATION }
-data class ChatGptDiagnostic(val status: Int, val code: String = "", val requestId: String = "", val bodyShape: String = "")
+enum class ChatGptProblem { CANCELLED, TIMEOUT, NETWORK, VALIDATION, ACCESS, NO_MODELS, REAUTH, QUOTA, UNSUPPORTED, UNAVAILABLE, REVOCATION, RESPONSE }
+data class ChatGptDiagnostic(val status: Int, val code: String = "", val requestId: String = "", val bodyShape: String = "", val operation: String = "", val responseBytes: Int? = null)
 data class ChatGptState(
     val accounts: List<ChatGptAccount> = emptyList(),
     val selected: String? = null,
@@ -13,7 +13,8 @@ data class ChatGptState(
     val busy: Boolean = false,
     val problem: ChatGptProblem? = null,
     val welcome: Boolean = false,
-    val diagnostic: ChatGptDiagnostic? = null
+    val diagnostic: ChatGptDiagnostic? = null,
+    val loadingModels: Boolean = false
 )
 
 /** Public UI state never contains OAuth codes, tokens, nonce or PKCE material. */

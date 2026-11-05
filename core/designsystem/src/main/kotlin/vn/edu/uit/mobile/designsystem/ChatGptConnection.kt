@@ -39,7 +39,6 @@ val LocalChatGptConnector = staticCompositionLocalOf<ChatGptConnector?> { null }
     val state by connector.state.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val clipboard = LocalClipboardManager.current
     var work by remember { mutableStateOf<Job?>(null) }
     var localError by remember { mutableStateOf(false) }
     var model by remember(state.selected, state.models) { mutableStateOf(state.models.firstOrNull()?.id.orEmpty()) }
@@ -84,9 +83,10 @@ val LocalChatGptConnector = staticCompositionLocalOf<ChatGptConnector?> { null }
                 Text(account.label, Modifier.weight(1f))
             }
         }
+        ChatGptConnectionProblem(state, localError)
         if (state.busy) {
             LinearProgressIndicator(Modifier.fillMaxWidth())
-            Text(stringResource(R.string.cg_waiting), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(if (state.loadingModels) R.string.cg_loading_models else R.string.cg_waiting), style = MaterialTheme.typography.bodySmall)
             TextButton({
                 connector.cancelSignIn()
                 work?.cancel()
@@ -98,6 +98,7 @@ val LocalChatGptConnector = staticCompositionLocalOf<ChatGptConnector?> { null }
             Button({ signIn(selected.id, true) }, enabled = enabled, shape = TechnicalShapes.Control) { Text(stringResource(R.string.cg_enable)) }
         } else {
             Text(stringResource(R.string.cg_connected), style = MaterialTheme.typography.titleSmall)
+            if (state.models.isEmpty()) Text(stringResource(R.string.cg_models_pending), style = MaterialTheme.typography.bodyMedium)
             if (state.models.isNotEmpty()) {
                 Box {
                     OutlinedButton({ modelMenu = true }, Modifier.fillMaxWidth().testTag("chatgpt-model"), enabled = enabled, shape = TechnicalShapes.Field) { Text(state.models.firstOrNull { it.id == model }?.name.orEmpty()) }
@@ -112,35 +113,16 @@ val LocalChatGptConnector = staticCompositionLocalOf<ChatGptConnector?> { null }
                 }
                 Button({ onUseModel(model) }, Modifier.fillMaxWidth().testTag("chatgpt-use"), enabled = enabled && model.isNotEmpty(), shape = TechnicalShapes.Control) { Text(stringResource(R.string.cg_use)) }
             }
-            TextButton({ action { connector.reloadModels() } }, enabled = enabled) { Text(stringResource(R.string.cg_refresh_models)) }
+            TextButton({ action { connector.reloadModels() } }, Modifier.testTag("chatgpt-reload-models"), enabled = enabled) { Text(stringResource(R.string.cg_refresh_models)) }
         }
         if (state.accounts.isNotEmpty() && !state.busy) {
             TextButton({ signIn() }, enabled = enabled) { Text(stringResource(R.string.cg_add_account)) }
             if (selected?.signedIn == true) TextButton({ action { connector.signOut() } }, enabled = enabled) { Text(stringResource(R.string.cg_sign_out)) }
         }
-        val problem = state.problem
-        if (problem != null || localError) {
-            val message = when (problem) {
-                ChatGptProblem.CANCELLED -> R.string.cg_cancelled
-                ChatGptProblem.TIMEOUT -> R.string.cg_timeout
-                ChatGptProblem.VALIDATION -> R.string.cg_validation
-                ChatGptProblem.ACCESS -> R.string.cg_access
-                ChatGptProblem.REAUTH -> R.string.cg_reauth
-                ChatGptProblem.QUOTA -> R.string.cg_quota
-                ChatGptProblem.NO_MODELS -> R.string.cg_no_models
-                ChatGptProblem.REVOCATION -> R.string.cg_revocation
-                ChatGptProblem.UNSUPPORTED -> R.string.cg_unsupported
-                else -> R.string.cg_network
-            }
-            Text(stringResource(message), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-        }
         TextButton({ context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://chatgpt.com/settings/usage"))) }, Modifier.testTag("chatgpt-usage")) { Text(stringResource(R.string.cg_usage)) }
-        state.diagnostic?.let { details ->
-            TextButton({ clipboard.setText(AnnotatedString("ChatGPT connection\nstatus=${details.status}\ncode=${details.code}\nrequestId=${details.requestId}\nbodyShape=${details.bodyShape}")) }) { Text(stringResource(R.string.cg_copy_details)) }
-        }
         Text(stringResource(R.string.cg_privacy), style = MaterialTheme.typography.bodySmall)
     }
-    if (state.welcome && selected?.planEnabled == true && !state.busy) {
+    if (state.welcome && selected?.planEnabled == true && !state.busy && state.models.isNotEmpty()) {
         AlertDialog(
             onDismissRequest = { action { connector.acknowledgeWelcome() } },
             shape = TechnicalShapes.Dialog,
@@ -148,5 +130,30 @@ val LocalChatGptConnector = staticCompositionLocalOf<ChatGptConnector?> { null }
             text = { Text(stringResource(R.string.cg_welcome_body)) },
             confirmButton = { TextButton({ action { connector.acknowledgeWelcome() } }) { Text(stringResource(R.string.cg_got_it)) } }
         )
+    }
+}
+
+@Composable private fun ChatGptConnectionProblem(state: ChatGptState, localError: Boolean) {
+    val clipboard = LocalClipboardManager.current
+    val problem = state.problem
+    if (problem != null || localError) {
+        val message = when (problem) {
+            ChatGptProblem.CANCELLED -> R.string.cg_cancelled
+            ChatGptProblem.TIMEOUT -> if (state.diagnostic?.operation == "models") R.string.cg_models_timeout else R.string.cg_timeout
+            ChatGptProblem.VALIDATION -> R.string.cg_validation
+            ChatGptProblem.ACCESS -> R.string.cg_access
+            ChatGptProblem.REAUTH -> R.string.cg_reauth
+            ChatGptProblem.QUOTA -> R.string.cg_quota
+            ChatGptProblem.NO_MODELS -> R.string.cg_no_models
+            ChatGptProblem.REVOCATION -> R.string.cg_revocation
+            ChatGptProblem.UNSUPPORTED -> R.string.cg_unsupported
+            ChatGptProblem.RESPONSE -> R.string.cg_response
+            ChatGptProblem.UNAVAILABLE -> R.string.cg_service_unavailable
+            else -> R.string.cg_network
+        }
+        Text(stringResource(message), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+    }
+    state.diagnostic?.let { details ->
+        TextButton({ clipboard.setText(AnnotatedString("ChatGPT connection\noperation=${details.operation}\nstatus=${details.status}\ncode=${details.code}\nrequestId=${details.requestId}\nbodyShape=${details.bodyShape}\nresponseBytes=${details.responseBytes ?: "unknown"}")) }, Modifier.testTag("chatgpt-copy-diagnostics")) { Text(stringResource(R.string.cg_copy_details)) }
     }
 }

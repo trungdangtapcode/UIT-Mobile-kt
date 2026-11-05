@@ -1,9 +1,9 @@
 # ChatGPT account preview: owner acceptance
 
-[Download the preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/download/v0.1.7-chatgpt-preview.1/UIT-Mobile-chatgpt-preview.apk)
-from the [prerelease](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.7-chatgpt-preview.1).
+[Download the preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/download/v0.1.7-chatgpt-preview.2/UIT-Mobile-chatgpt-preview.apk)
+from the [prerelease](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.7-chatgpt-preview.2).
 The release includes `SHA256SUMS`. Launcher: **UIT Mobile Preview**; application ID:
-`vn.edu.uit.mobile.preview`; version: `0.1.7-chatgpt-preview.1`.
+`vn.edu.uit.mobile.preview`; version: `0.1.7-chatgpt-preview.2`.
 
 This is a debug preview installed separately from the normal app. It updates the
 earlier Forum/search preview using the same package and signing certificate;
@@ -43,6 +43,16 @@ used later, leaves the phone only after an explicit selection and Send action.
 
 ## Recovery and lifecycle checks
 
+- If the account is already listed but no model picker is shown, update this
+  preview in place and tap Refresh available models. Keep the saved registration;
+  signing out is unnecessary for a catalog-size or response-format failure.
+  Choose a model and Use this ChatGPT account only after the list loads. The Send
+  control stays disabled until an AI connection is explicitly activated.
+- If refresh still fails, use Copy connection diagnostics near the account row.
+  Share that text when reporting the problem. It contains the operation, HTTP
+  status (`0` means no HTTP status was captured), safe error code, request ID, response-shape
+  category and, when available, the number of bytes read. It contains no account
+  identity, browser URL, OAuth token, exception text or selected source material.
 - Cancel browser consent, close the settings form, or exceed the three-minute
   timeout. The previous connection should remain usable and no AI call should
   have been sent. An unfinished attempt needs a fresh sign-in after process death
@@ -58,9 +68,6 @@ used later, leaves the phone only after an explicit selection and Send action.
   link. The registered app entry in ChatGPT may remain after session revocation.
 - A quota/permission/service failure must not retry paid inference automatically
   or switch to another connection. Model availability comes from the service.
-- If the connection has safe HTTP diagnostics, Copy connection diagnostics shares
-  only status, error code, request ID and body-shape category. It excludes the
-  identity, credentials, URLs, messages and selected content.
 
 Local BM25 search works without this connection. ChatGPT authorization is not an
 embeddings API credential; semantic embedding generation still uses Direct API.
@@ -78,5 +85,5 @@ Build locally without GitHub Actions:
 
 ```sh
 ./gradlew :app:assembleDebug \
-  -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.1
+  -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.2
 ```

@@ -1,21 +1,21 @@
 {
-  "localCommand": "./gradlew check :app:compileDebugAndroidTestKotlin :app:assembleDebug -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.1",
+  "localCommand": "./gradlew check :app:compileDebugAndroidTestKotlin :app:assembleDebug -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.2 -PrecordUi=true",
   "result": "passed",
   "moduleResults": {
     "core/data/build/test-results/testDebugUnitTest": {
-      "tests": 223,
+      "tests": 229,
       "skipped": 7,
       "failures": 0,
       "errors": 0
     },
     "core/data/build/test-results/testReleaseUnitTest": {
-      "tests": 223,
+      "tests": 229,
       "skipped": 7,
       "failures": 0,
       "errors": 0
     },
     "app/build/test-results/testDebugUnitTest": {
-      "tests": 364,
+      "tests": 367,
       "skipped": 33,
       "failures": 0,
       "errors": 0
@@ -47,13 +47,13 @@
       "errors": 0
     },
     "vn.edu.uit.mobile.data.ChatGptSessionTest": {
-      "tests": 13,
+      "tests": 19,
       "skipped": 0,
       "failures": 0,
       "errors": 0
     },
     "vn.edu.uit.mobile.ChatGptDesignTest": {
-      "tests": 8,
+      "tests": 11,
       "skipped": 0,
       "failures": 0,
       "errors": 0
@@ -75,19 +75,35 @@
       ]
     }
   },
-  "actualSubscriberSignIn": false,
   "actualPlanInference": false,
-  "physicalAndroidAcceptance": "pending",
+  "physicalAndroidAcceptance": "Owner reported retained sign-in and failed model loading in preview 1; preview 2 awaiting owner retest",
   "controlledNetwork": "MockEngine official endpoints plus actual localhost callback sockets; not subscriber inference",
   "universityAccountUsedForThisFeature": false,
   "apk": {
     "name": "UIT-Mobile-chatgpt-preview.apk",
-    "sha256": "613142574f9cc5739c8cf59c8b067bda27d339f73f3ea91a6e43fde1b1500477",
-    "bytes": 26472204,
+    "sha256": "af9d4c51376160edb085b9bc553cc5fec62f915f192dbd720cebd98ade6d44cd",
+    "bytes": 26026057,
     "configuredApiKeyPresent": false,
     "testOAuthCredentialPresent": false,
-    "version": "0.1.7-chatgpt-preview.1",
+    "version": "0.1.7-chatgpt-preview.2",
     "package": "vn.edu.uit.mobile.preview"
   },
-  "additionalRegression": "Null and uit tool namespaces retrieve evidence and preserve original local history; passed"
+  "additionalRegression": "Null and uit tool namespaces retrieve evidence and preserve original local history; passed",
+  "developerSubscriberSignIn": false,
+  "ownerDeviceReport": {
+    "date": "2026-11-06",
+    "observed": "Saved account and displayed plan permission, no model choices, sending disabled",
+    "exactCause": "Unconfirmed; no device HTTP response or trace available",
+    "privateScreenshotsPublished": false
+  },
+  "catalogRecovery": {
+    "modelCatalogMaxBytes": 4194304,
+    "tokenAndJwksMaxBytes": 262144,
+    "largeCapabilityFieldCharacters": 400000,
+    "retryWithoutNewConsent": "passed",
+    "malformedResponseDiagnostics": "passed",
+    "httpAndTransportDiagnostics": "passed",
+    "pendingAndRecoveryUi": "passed",
+    "actualDeviceRecovery": "pending"
+  }
 }

@@ -15,6 +15,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.*
 import vn.edu.uit.mobile.courses.StudyConnectionDialog
+import vn.edu.uit.mobile.dashboard.AssistantContent
+import vn.edu.uit.mobile.dashboard.AssistantUiState
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
 
@@ -28,6 +30,7 @@ class ChatGptDesignTest {
     private class Connector(initial: ChatGptState = ChatGptState()) : ChatGptConnector {
         override val state = MutableStateFlow(initial)
         var signIns = 0
+        var modelReloads = 0
         override suspend fun initialize() = Unit
         override suspend fun signIn(openBrowser: suspend (String) -> Unit, accountId: String?, enablePlan: Boolean) {
             signIns++
@@ -36,7 +39,9 @@ class ChatGptDesignTest {
         override suspend fun selectAccount(id: String) {
             state.value = state.value.copy(selected = id)
         }
-        override suspend fun reloadModels() = Unit
+        override suspend fun reloadModels() {
+            modelReloads++
+        }
         override suspend fun signOut() {
             state.value = ChatGptState()
         }
@@ -123,11 +128,86 @@ class ChatGptDesignTest {
     }
 
     @Test fun welcomeWaitsUntilTheConnectionOperationCompletes() {
-        val connector = Connector(ChatGptState(listOf(ChatGptAccount("test", "UI fixture account", true, true)), "test", busy = true, welcome = true))
+        val connector = Connector(ChatGptState(listOf(ChatGptAccount("test", "UI fixture account", true, true)), "test", listOf(ChatGptModel("test-model", "Test model")), busy = true, welcome = true))
         compose.setContent { CompositionLocalProvider(LocalChatGptConnector provides connector) { UitTheme { ChatGptConnectionPanel({}) } } }
         compose.onNodeWithText("Got it").assertDoesNotExist()
         compose.runOnIdle { connector.state.value = connector.state.value.copy(busy = false) }
         compose.onNodeWithText("Got it").assertIsDisplayed().performClick()
         compose.waitUntil { !connector.state.value.welcome }
+    }
+
+    @Test fun catalogFailureRetainsTheAccountAndExposesRetryBeforeExplicitActivation() {
+        val connector = Connector(
+            ChatGptState(
+                listOf(ChatGptAccount("test", "Saved ChatGPT account", true, true)),
+                "test",
+                problem = ChatGptProblem.RESPONSE,
+                welcome = true,
+                diagnostic = ChatGptDiagnostic(200, "response_too_large", operation = "models")
+            )
+        )
+        var saves = 0
+        compose.setContent {
+            CompositionLocalProvider(LocalChatGptConnector provides connector) {
+                UitTheme {
+                    StudyConnectionDialog(StudyConnection(), {}, { _, _, _, _ -> saves++ }, {})
+                }
+            }
+        }
+        compose.onNodeWithText("Got it").assertDoesNotExist()
+        compose.onNodeWithTag("chatgpt-use").assertDoesNotExist()
+        compose.onNodeWithTag("chatgpt-continue").assertDoesNotExist()
+        compose.onNodeWithTag("chatgpt-copy-diagnostics").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("chatgpt-reload-models").performScrollTo().assertIsDisplayed()
+        if (java.lang.Boolean.getBoolean("roborazzi.test.record")) {
+            // Private inspection only: a controlled recovery fixture, never published as subscriber evidence.
+            val output = File(System.getProperty("java.io.tmpdir"), "uit-chatgpt-catalog-recovery.png")
+            captureScreenRoboImage(output.absolutePath)
+        }
+        compose.onNodeWithTag("chatgpt-reload-models").performClick()
+        compose.waitUntil { connector.modelReloads == 1 }
+        assertEquals(0, connector.signIns)
+        assertEquals(0, saves)
+        compose.runOnIdle {
+            connector.state.value = connector.state.value.copy(models = listOf(ChatGptModel("recovered-model", "Recovered model")), problem = null, diagnostic = null)
+        }
+        compose.onNodeWithText("Got it").performClick()
+        compose.onNodeWithTag("chatgpt-use").performScrollTo().performClick()
+        assertEquals(1, saves)
+    }
+
+    @Test fun modelLoadingDoesNotAskTheUserToCompleteBrowserConsentAgain() {
+        val connector = Connector(ChatGptState(listOf(ChatGptAccount("test", "Saved ChatGPT account", true, true)), "test", busy = true, loadingModels = true))
+        compose.setContent { CompositionLocalProvider(LocalChatGptConnector provides connector) { UitTheme { ChatGptConnectionPanel({}) } } }
+        compose.onNodeWithText("Loading models for this ChatGPT account…").assertIsDisplayed()
+        compose.onNodeWithText("Complete the connection in your browser, then return here. No AI request is sent during sign-in.").assertDoesNotExist()
+        compose.onNodeWithTag("chatgpt-use").assertDoesNotExist()
+    }
+
+    @Test fun assistantConnectionDialogKeepsCatalogDiagnosticsAndRetryReachableOnAPhone() {
+        val connector = Connector(
+            ChatGptState(
+                listOf(ChatGptAccount("test", "Saved ChatGPT account", true, true)),
+                "test",
+                problem = ChatGptProblem.RESPONSE,
+                diagnostic = ChatGptDiagnostic(200, "response_too_large", operation = "models")
+            )
+        )
+        compose.setContent {
+            CompositionLocalProvider(LocalChatGptConnector provides connector) {
+                UitTheme(dark = true, dynamic = false) {
+                    WorkspaceFrame(0, {}, {}, "", false, false, 0) { AssistantContent(AssistantUiState()) }
+                }
+            }
+        }
+        compose.onNodeWithContentDescription("AI connection").performClick()
+        compose.onNodeWithTag("chatgpt-copy-diagnostics").performScrollTo().assertIsDisplayed()
+        if (java.lang.Boolean.getBoolean("roborazzi.test.record")) {
+            // Local controlled-state inspection, not an authenticated subscriber capture.
+            captureScreenRoboImage(File(System.getProperty("java.io.tmpdir"), "uit-chatgpt-assistant-recovery.png").absolutePath)
+        }
+        compose.onNodeWithTag("chatgpt-reload-models").performScrollTo().performClick()
+        compose.waitUntil { connector.modelReloads == 1 }
+        compose.onNodeWithTag("chatgpt-use").assertDoesNotExist()
     }
 }

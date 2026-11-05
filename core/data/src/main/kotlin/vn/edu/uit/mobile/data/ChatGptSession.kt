@@ -1,12 +1,14 @@
 package vn.edu.uit.mobile.data
 
 import io.ktor.client.*
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.readAvailable
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -180,8 +182,9 @@ internal class ChatGptSession(
     }
     override suspend fun acknowledgeWelcome() = withContext(Dispatchers.IO) {
         mutex.withLock {
+            val previous = state.value
             records().firstOrNull { text(it, "id") == state.value.selected }?.let { save(JsonObject(it + mapOf("welcome" to JsonPrimitive(false), "welcome_seen" to JsonPrimitive(true)))) }
-            publish()
+            publish(previous.problem, previous.busy, previous.diagnostic)
         }
     }
     internal class Lease(val account: String, val session: String, val token: String)
@@ -227,17 +230,13 @@ internal class ChatGptSession(
     internal fun connected(id: String): Boolean = id !in signingOut && records().any { text(it, "id") == id && text(it, "access_token").isNotEmpty() && allowed(it) }
     override suspend fun reloadModels() = withContext(Dispatchers.IO) {
         try {
-            mutable.update { it.copy(busy = true, problem = null) }
+            mutable.update { it.copy(busy = true, loadingModels = true, problem = null, diagnostic = null) }
             val id = state.value.selected ?: throw ChatGptException(ChatGptProblem.REAUTH)
             val lease = lease(id)
-            val result = getJson("${ChatGptOAuth.RESOURCE}/models", lease.token)
-            val entries = result.getValue("models").jsonArray.filter { it.jsonObject["visibility"]?.jsonPrimitive?.content == "list" }.take(100).map {
-                val value = it.jsonObject
-                ChatGptModel(value.getValue("slug").jsonPrimitive.content.also { slug -> require(slug.length in 1..100 && slug.all { c -> c.code in 33..126 }) }, value.getValue("display_name").jsonPrimitive.content.take(120))
-            }.distinctBy { it.id }
-            if (entries.isEmpty()) throw ChatGptException(ChatGptProblem.NO_MODELS)
+            val result = getJson("${ChatGptOAuth.RESOURCE}/models", lease.token, "models", ChatGptModelCatalog.MAX_BYTES)
+            val entries = ChatGptModelCatalog.parse(result)
             mutex.withLock {
-                check(current(lease))
+                if (state.value.selected != id || !current(lease)) return@withContext
                 val record = records().single { text(it, "id") == id }
                 save(
                     JsonObject(
@@ -253,16 +252,20 @@ internal class ChatGptSession(
                             )
                     )
                 )
-                publish()
+                if (entries.isEmpty()) {
+                    publish(ChatGptProblem.NO_MODELS, diagnostic = ChatGptDiagnostic(200, "no_visible_models", bodyShape = "models-array", operation = "models"))
+                } else {
+                    publish()
+                }
             }
         } catch (e: CancellationException) {
             throw e
         } catch (e: ChatGptException) {
             report(e)
         } catch (_: Exception) {
-            mutable.update { it.copy(problem = ChatGptProblem.NETWORK, busy = false) }
+            report(ChatGptException(ChatGptProblem.UNAVAILABLE, ChatGptDiagnostic(0, "model_load_failed", operation = "models")))
         } finally {
-            mutable.update { it.copy(busy = false) }
+            mutable.update { it.copy(busy = false, loadingModels = false) }
         }
     }
     private fun withoutTokens(record: JsonObject): JsonObject = JsonObject(record - setOf("access_token", "refresh_token", "id_token", "session", "models", "scope"))
@@ -315,7 +318,7 @@ internal class ChatGptSession(
     private suspend fun token(values: Map<String, String>): JsonObject = client.preparePost(ChatGptOAuth.TOKEN) {
         setBody(FormDataContent(Parameters.build { values.forEach { (k, v) -> append(k, v) } }))
     }.execute { response ->
-        val result = if (response.status.value == 200) boundedJson(response) else errorBody(response)
+        val result = if (response.status.value == 200) boundedJson(response, operation = "token") else errorBody(response)
         if (response.status.value != 200) {
             val code = result["error"]?.let { if (it is JsonPrimitive) it.content else it.jsonObject["code"]?.jsonPrimitive?.content }.orEmpty()
             throw ChatGptException(
@@ -331,10 +334,26 @@ internal class ChatGptSession(
         }
         result
     }
-    private suspend fun getJson(url: String, bearer: String? = null): JsonObject = client.prepareGet(url) { bearer?.let { header(HttpHeaders.Authorization, "Bearer $it") } }.execute { response ->
-        if (response.status.value != 200) throw failure(response)
-        val result = boundedJson(response)
-        result
+    private suspend fun getJson(url: String, bearer: String? = null, operation: String = "identity_keys", maxBytes: Int = 262144): JsonObject = try {
+        client.prepareGet(url) { bearer?.let { header(HttpHeaders.Authorization, "Bearer $it") } }.execute { response ->
+            if (response.status.value != 200) {
+                val error = failure(response)
+                throw ChatGptException(error.problem, error.diagnostic?.copy(operation = operation))
+            }
+            boundedJson(response, maxBytes, operation)
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: HttpRequestTimeoutException) {
+        throw ChatGptException(ChatGptProblem.TIMEOUT, ChatGptDiagnostic(0, "request_timeout", operation = operation))
+    } catch (e: IOException) {
+        val code = when (e) {
+            is java.net.UnknownHostException -> "dns_failure"
+            is javax.net.ssl.SSLException -> "tls_failure"
+            is java.net.SocketTimeoutException -> "network_timeout"
+            else -> "network_io"
+        }
+        throw ChatGptException(ChatGptProblem.NETWORK, ChatGptDiagnostic(0, code, operation = operation))
     }
     internal companion object {
         private suspend fun errorBody(response: HttpResponse): JsonObject = try {
@@ -366,18 +385,26 @@ internal class ChatGptSession(
                 else -> ChatGptProblem.UNAVAILABLE
             }
         }
-        suspend fun boundedJson(response: HttpResponse): JsonObject {
+        suspend fun boundedJson(response: HttpResponse, maxBytes: Int = 262144, operation: String = "response"): JsonObject {
             val stream = response.bodyAsChannel()
+            val out = ByteArrayOutputStream()
+            fun invalid(code: String, size: Int) = ChatGptException(
+                ChatGptProblem.RESPONSE,
+                ChatGptDiagnostic(response.status.value, code, response.headers["x-request-id"].orEmpty().takeIf { it.matches(Regex("[a-zA-Z0-9._-]{0,160}")) }.orEmpty(), "unreadable-json", operation, size)
+            )
             try {
-                val out = ByteArrayOutputStream()
                 val buffer = ByteArray(4096)
                 while (true) {
                     val count = stream.readAvailable(buffer, 0, buffer.size)
                     if (count < 0) break
-                    require(out.size() + count <= 262144)
+                    if (out.size() + count > maxBytes) throw invalid("response_too_large", out.size() + count)
                     out.write(buffer, 0, count)
                 }
-                return Json.parseToJsonElement(out.toString("UTF-8")).jsonObject
+                return try {
+                    Json.parseToJsonElement(out.toString("UTF-8")).jsonObject
+                } catch (_: IllegalArgumentException) {
+                    throw invalid("invalid_json", out.size())
+                }
             } finally {
                 stream.cancel(null)
             }

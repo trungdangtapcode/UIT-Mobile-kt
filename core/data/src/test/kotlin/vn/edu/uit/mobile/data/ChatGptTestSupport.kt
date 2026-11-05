@@ -43,6 +43,8 @@ internal class ChatGptTestSupport : AutoCloseable {
     var beforeRevoke: (suspend () -> Unit)? = null
     var modelCalls = 0
     var modelStatus = 200
+    var modelBody = """{"models":[{"slug":"fixture-model","display_name":"Fixture model","visibility":"list"},{"slug":"hidden","display_name":"Hidden","visibility":"hide"}]}"""
+    var beforeModels: (suspend () -> Unit)? = null
     val requests = mutableListOf<String>()
     val authorizationQueries = mutableListOf<Map<String, String>>()
     var response: String? = null
@@ -74,7 +76,8 @@ internal class ChatGptTestSupport : AutoCloseable {
                 }
                 "api.openai.com/v1/models" -> {
                     modelCalls++
-                    respond("""{"models":[{"slug":"fixture-model","display_name":"Fixture model","visibility":"list"},{"slug":"hidden","display_name":"Hidden","visibility":"hide"}]}""", HttpStatusCode.fromValue(modelStatus))
+                    beforeModels?.invoke()
+                    respond(modelBody, HttpStatusCode.fromValue(modelStatus), headers = headersOf(HttpHeaders.ContentType to listOf("application/json"), "x-request-id" to listOf("fixture-model-request")))
                 }
                 "auth.openai.com/api/accounts/oauth/revoke" -> {
                     beforeRevoke?.invoke()

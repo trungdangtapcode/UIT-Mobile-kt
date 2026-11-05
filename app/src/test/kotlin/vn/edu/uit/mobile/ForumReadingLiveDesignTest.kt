@@ -1,10 +1,10 @@
 package vn.edu.uit.mobile
 
 import android.app.Application
-import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.lifecycle.ViewModelStore
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureScreenRoboImage
@@ -129,20 +129,22 @@ class ForumReadingLiveDesignTest {
                 compose.onNodeWithText(lastTeam).assertIsDisplayed()
                 capture("reading-icpc-table-bottom-$suffix")
                 val normalized = block.rows.joinToString("\u001e") { it.joinToString("\u001f") { cell -> cell.replace(Regex("\\s+"), " ").trim() } }
-                File(output, "reading-report-table-$suffix.json").writeText(buildJsonObject {
-                    put("capturedAt", java.time.Instant.now().toString())
-                    put("topicId", topicId)
-                    put("postNumber", post.number)
-                    put("postId", post.id)
-                    put("runtime", "Live anonymous production Kotlin transport/repository/ViewModel/Compose, Robolectric API 35; no physical phone")
-                    put("rowsIncludingHeader", block.rows.size)
-                    put("columns", 2)
-                    put("normalizedCellsSha256", java.security.MessageDigest.getInstance("SHA-256").digest(normalized.toByteArray()).joinToString("") { "%02x".format(it) })
-                    put("horizontalScrollExercised", true)
-                    put("bottomRowReached", true)
-                    put("writes", 0)
-                    put("requests", JsonArray(synchronized(requests) { requests.toList() }.map(::JsonPrimitive)))
-                }.toString())
+                File(output, "reading-report-table-$suffix.json").writeText(
+                    buildJsonObject {
+                        put("capturedAt", java.time.Instant.now().toString())
+                        put("topicId", topicId)
+                        put("postNumber", post.number)
+                        put("postId", post.id)
+                        put("runtime", "Live anonymous production Kotlin transport/repository/ViewModel/Compose, Robolectric API 35; no physical phone")
+                        put("rowsIncludingHeader", block.rows.size)
+                        put("columns", 2)
+                        put("normalizedCellsSha256", java.security.MessageDigest.getInstance("SHA-256").digest(normalized.toByteArray()).joinToString("") { "%02x".format(it) })
+                        put("horizontalScrollExercised", true)
+                        put("bottomRowReached", true)
+                        put("writes", 0)
+                        put("requests", JsonArray(synchronized(requests) { requests.toList() }.map(::JsonPrimitive)))
+                    }.toString()
+                )
             } else if (!media) {
                 capture("reading-icpc-$suffix")
                 val post = initial.posts.first()
@@ -171,17 +173,19 @@ class ForumReadingLiveDesignTest {
                 }
                 capture("reading-image-viewer-390")
             }
-            if (!table) File(output, "reading-report-$suffix-${if (media) "media" else "icpc"}.json").writeText(
-                buildJsonObject {
-                    put("capturedAt", java.time.Instant.now().toString())
-                    put("topicId", topicId)
-                    put("runtime", "Live anonymous production Kotlin transport/repository/ViewModel/Compose, Robolectric API 35; no physical phone")
-                    put("postNumbers", JsonArray(initial.posts.map { JsonPrimitive(it.number) }))
-                    put("imageGets", images.get())
-                    put("writes", 0)
-                    put("requests", JsonArray(synchronized(requests) { requests.toList() }.map(::JsonPrimitive)))
-                }.toString()
-            )
+            if (!table) {
+                File(output, "reading-report-$suffix-${if (media) "media" else "icpc"}.json").writeText(
+                    buildJsonObject {
+                        put("capturedAt", java.time.Instant.now().toString())
+                        put("topicId", topicId)
+                        put("runtime", "Live anonymous production Kotlin transport/repository/ViewModel/Compose, Robolectric API 35; no physical phone")
+                        put("postNumbers", JsonArray(initial.posts.map { JsonPrimitive(it.number) }))
+                        put("imageGets", images.get())
+                        put("writes", 0)
+                        put("requests", JsonArray(synchronized(requests) { requests.toList() }.map(::JsonPrimitive)))
+                    }.toString()
+                )
+            }
         } finally {
             compose.runOnIdle {
                 vm.close()

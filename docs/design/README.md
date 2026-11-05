@@ -9,6 +9,8 @@ a subtle campus photograph and the requested asymmetric cut-corner frames.
 Main panels have three 8dp cuts and a larger 28dp physical bottom-right cut.
 [Asset provenance](ASSETS.md) and [frame geometry](CUT-CORNERS.md) are documented separately.
 
+See [course-search file readiness and update reviews](COURSE-SEARCH-UPDATES.md) for the latest actual-material phone gallery.
+
 ## Phone sizes
 
 | Compact phone · 360 × 800dp | Main phone · 390 × 844dp | Larger phone · 412 × 915dp |

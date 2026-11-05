@@ -38,8 +38,30 @@ data class PassageIndex(
     val vectors: List<List<Float>> = emptyList(),
     val embeddingTokens: Long = 0,
     val semanticFailed: Boolean = false,
-    val limited: Boolean = false
+    val limited: Boolean = false,
+    val update: PassageUpdateReceipt? = null
 )
+
+/** Local-byte verification only: never a claim about the current Moodle server version. */
+enum class PassageFileStatus { NEW, CHANGED, KEYWORDS_READY, SMART_READY, UNAVAILABLE }
+data class PassageFileCheck(val spec: OfflineDownloadSpec, val status: PassageFileStatus, val passages: Int, val reusable: Int, val partial: Boolean)
+data class PassageUpdateReceipt(val reused: Int, val embedded: Int, val requests: Int, val removed: Int)
+data class PassageUpdatePlan(
+    val owner: String,
+    val courseId: Long,
+    val fingerprint: String,
+    val checkedAt: Long,
+    val config: PassageConfig,
+    val embedding: PassageEmbeddingConfig?,
+    val files: List<PassageFileCheck>,
+    val removed: Int,
+    val passages: Int,
+    val reused: Int,
+    val transfers: Int,
+    val characters: Int
+) {
+    val canUpdate: Boolean get() = passages > 0 && files.none { it.status == PassageFileStatus.UNAVAILABLE }
+}
 data class PassageLibrary(val indexes: List<PassageIndex> = emptyList(), val storageFailed: Boolean = false)
 data class PassageCandidate(val spec: OfflineDownloadSpec, val downloaded: Boolean)
 enum class PassageSearchMode { BM25, SEMANTIC, HYBRID }
@@ -51,6 +73,8 @@ interface PassageSearchRepository {
     suspend fun initialize()
     suspend fun candidates(course: Course): List<PassageCandidate>
     suspend fun build(course: Course, ids: Set<String>, config: PassageConfig, embedding: PassageEmbeddingConfig?, progress: (Int, Int) -> Unit = { _, _ -> })
+    suspend fun check(course: Course, ids: Set<String>, config: PassageConfig, embedding: PassageEmbeddingConfig?): PassageUpdatePlan = error("Local checks are not supported")
+    suspend fun update(course: Course, plan: PassageUpdatePlan, progress: (Int, Int) -> Unit = { _, _ -> }): Unit = error("Reviewed updates are not supported")
     suspend fun search(course: Course, query: String, mode: PassageSearchMode): PassageSearchResult
     suspend fun inspect(course: Course, hit: PassageHit): PassageInspection
     suspend fun clear(owner: String)

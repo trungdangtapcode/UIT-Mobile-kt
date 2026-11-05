@@ -15,8 +15,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -37,7 +35,7 @@ import vn.edu.uit.mobile.model.*
     PassageSearchContent(state, {
         vm.close()
         onClose()
-    }, vm::select, vm::toggle, vm::query, vm::mode, vm::build, vm::search, vm::inspect, vm::dismissInspection, vm::clear, vm::stop, vm::refresh, vm::configure, vm::disconnect, onOpenPdf, onReset = vm::reset)
+    }, vm::select, vm::toggle, vm::query, vm::mode, vm::search, vm::inspect, vm::dismissInspection, vm::clear, vm::stop, vm::refresh, vm::configure, vm::disconnect, onOpenPdf, onReset = vm::reset, onCheck = vm::check, onUpdate = vm::update, onDismissPlan = vm::dismissPlan)
 }
 
 @Composable fun PassageSearchContent(
@@ -47,7 +45,6 @@ import vn.edu.uit.mobile.model.*
     onToggle: (String) -> Unit = {},
     onQuery: (String) -> Unit = {},
     onMode: (PassageSearchMode) -> Unit = {},
-    onBuild: (PassageConfig, PassageEmbeddingConfig?) -> Unit = { _, _ -> },
     onSearch: () -> Unit = {},
     onInspect: (PassageHit) -> Unit = {},
     onDismissInspection: () -> Unit = {},
@@ -57,22 +54,22 @@ import vn.edu.uit.mobile.model.*
     onConfigure: (StudyConnectionMode, String, String, String) -> Unit = { _, _, _, _ -> },
     onDisconnect: () -> Unit = {},
     onOpenPdf: ((Course, CourseFile, String) -> Unit)? = null,
-    onReset: () -> Unit = {}
+    onReset: () -> Unit = {},
+    onCheck: (PassageConfig, PassageEmbeddingConfig?) -> Unit = { _, _ -> },
+    onUpdate: () -> Unit = {},
+    onDismissPlan: () -> Unit = {}
 ) {
     BackHandler(onBack = onClose)
     var manage by rememberSaveable(state.course?.id, state.course?.accountId) { mutableStateOf(false) }
     var connection by remember { mutableStateOf(false) }
-    var deletion by remember { mutableStateOf(false) }
     var reset by remember { mutableStateOf(false) }
     val busy = state.work != null
     val index = state.index
-    val scroll = rememberLazyListState()
-    LaunchedEffect(state.result) {
-        state.result?.let { result ->
-            val before = 4 + (if (state.problem != null || state.library.storageFailed) 1 else 0) + (if (busy) 1 else 0) + (if (result.actual != result.requested) 1 else 0) + (if (result.invalidated > 0) 1 else 0)
-            scroll.animateScrollToItem(if (index != null) before else 2 + (if (state.problem != null || state.library.storageFailed) 1 else 0) + (if (busy) 1 else 0))
-        }
+    if (manage && state.course != null) {
+        PassageDocumentsScreen(state, { manage = false }, onToggle, onCheck, onUpdate, onDismissPlan, onStop, onRefresh, onClear, onConfigure, onDisconnect)
+        return
     }
+    val scroll = rememberLazyListState()
     LazyColumn(Modifier.fillMaxSize().testTag("passage-search"), state = scroll, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -142,12 +139,10 @@ import vn.edu.uit.mobile.model.*
                 item {
                     Surface(shape = TechnicalShapes.Panel, color = MaterialTheme.colorScheme.surfaceContainerLow) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(stringResource(R.string.ps_coverage, index.documents.size, index.passages.size), style = MaterialTheme.typography.labelLarge)
-                            Text(stringResource(R.string.ps_local), style = MaterialTheme.typography.bodySmall)
-                            if (index.vectors.isNotEmpty()) Text(stringResource(R.string.ps_embedding_info, index.embedding?.model.orEmpty(), index.embedding?.dimensions ?: 0, index.embeddingTokens), style = MaterialTheme.typography.bodySmall)
-                            if (index.limited || index.documents.any { it.partial }) Text(stringResource(R.string.ps_partial), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
+                            Text(stringResource(R.string.ps_search_ready, index.documents.size), style = MaterialTheme.typography.titleSmall)
+                            Text(stringResource(if (index.vectors.isNotEmpty()) R.string.ps_ready_smart_help else R.string.ps_ready_local_help), style = MaterialTheme.typography.bodySmall)
+                            TextButton({ manage = true }, enabled = !busy) { Text(stringResource(R.string.ps_check_status)) }
                             if (index.semanticFailed) InlineNotice(stringResource(R.string.ps_embedding_failed))
-                            TextButton({ deletion = true }, enabled = !busy) { Text(stringResource(R.string.ps_delete)) }
                         }
                     }
                 }
@@ -174,20 +169,6 @@ import vn.edu.uit.mobile.model.*
                 }
             }
         }
-    }
-    if (manage) {
-        PassageManageDialog(state, onToggle, { manage = false }, { config, embedding ->
-            manage = false
-            onBuild(config, embedding)
-        }, onRefresh)
-    }
-    if (deletion) {
-        AlertDialog(onDismissRequest = { deletion = false }, shape = TechnicalShapes.Dialog, title = { Text(stringResource(R.string.ps_delete)) }, text = { Text(stringResource(R.string.ps_delete_help)) }, confirmButton = {
-            TextButton({
-                deletion = false
-                onClear()
-            }) { Text(stringResource(R.string.ps_delete)) }
-        }, dismissButton = { TextButton({ deletion = false }) { Text(stringResource(R.string.ps_cancel)) } })
     }
     if (reset) {
         AlertDialog(onDismissRequest = { reset = false }, shape = TechnicalShapes.Dialog, title = { Text(stringResource(R.string.ps_reset)) }, text = { Text(stringResource(R.string.ps_reset_help)) }, confirmButton = {
@@ -237,64 +218,7 @@ import vn.edu.uit.mobile.model.*
     }
 }
 
-@Composable private fun PassageManageDialog(state: PassageSearchState, onToggle: (String) -> Unit, onDismiss: () -> Unit, onBuild: (PassageConfig, PassageEmbeddingConfig?) -> Unit, onRefresh: () -> Unit) {
-    val initial = state.index?.config ?: PassageConfig()
-    var semantic by remember { mutableStateOf(false) }
-    var advanced by remember { mutableStateOf(false) }
-    var size by remember { mutableStateOf(initial.characters.toString()) }
-    var overlap by remember { mutableStateOf(initial.overlap.toString()) }
-    var k1 by remember { mutableStateOf(initial.k1.toString()) }
-    var b by remember { mutableStateOf(initial.b.toString()) }
-    var candidates by remember { mutableStateOf(initial.candidates.toString()) }
-    var fusion by remember { mutableStateOf(initial.fusionK.toString()) }
-    var model by remember { mutableStateOf(state.index?.embedding?.model ?: PassageEmbeddingConfig().model) }
-    var dimensions by remember { mutableStateOf((state.index?.embedding?.dimensions ?: 512).toString()) }
-    val config = runCatching { PassageConfig(size.toInt(), overlap.toInt(), k1.toDouble(), b.toDouble(), candidates.toInt(), fusion.toInt()).also { it.validate() } }.getOrNull()
-    val embedding = runCatching { PassageEmbeddingConfig(model, dimensions.toInt()).also { it.validate() } }.getOrNull()
-    PassageDialog(onDismiss, footer = {
-        Button({ onBuild(requireNotNull(config), if (semantic) requireNotNull(embedding) else null) }, Modifier.fillMaxWidth().testTag("passage-build"), enabled = config != null && state.selected.isNotEmpty() && (!semantic || embedding != null && state.connection.configured && state.connection.mode == StudyConnectionMode.DIRECT), shape = TechnicalShapes.Control) { Text(stringResource(if (semantic) R.string.ps_build_remote else R.string.ps_build_local)) }
-        TextButton(onDismiss) { Text(stringResource(R.string.ps_cancel)) }
-    }) {
-        Text(stringResource(R.string.ps_documents), style = MaterialTheme.typography.titleLarge)
-        Text(stringResource(R.string.ps_selection_help, PassageRules.DOCUMENTS, PassageRules.CATALOG), style = MaterialTheme.typography.bodyMedium)
-        Text(stringResource(R.string.ps_selected, state.selected.size), style = MaterialTheme.typography.labelLarge)
-        state.candidates.forEach { candidate ->
-            Row {
-                Checkbox(candidate.spec.id in state.selected, { onToggle(candidate.spec.id) }, enabled = candidate.downloaded && (candidate.spec.id in state.selected || state.selected.size < PassageRules.DOCUMENTS), modifier = Modifier.testTag("passage-source-${candidate.spec.id}").semantics { contentDescription = candidate.spec.file.name })
-                Column(Modifier.weight(1f).padding(top = 8.dp)) {
-                    Text(candidate.spec.file.name, style = MaterialTheme.typography.bodyMedium)
-                    Text(if (candidate.downloaded) candidate.spec.sectionName else stringResource(R.string.ps_download_first), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        }
-        if (state.candidates.isEmpty()) Text(stringResource(R.string.ps_no_documents))
-        TextButton({
-            onDismiss()
-            onRefresh()
-        }) { Text(stringResource(R.string.ps_refresh)) }
-        val semanticLabel = stringResource(R.string.ps_enable_semantic)
-        Row {
-            Checkbox(semantic, { semantic = it }, Modifier.testTag("passage-enable-semantic").semantics { contentDescription = semanticLabel })
-            Text(stringResource(R.string.ps_enable_semantic), Modifier.padding(top = 12.dp).weight(1f))
-        }
-        if (semantic) {
-            Text(stringResource(R.string.ps_transfer, PassageRules.PASSAGES), color = MaterialTheme.colorScheme.tertiary)
-            if (!state.connection.configured || state.connection.mode != StudyConnectionMode.DIRECT) Text(stringResource(R.string.ps_direct_required), color = MaterialTheme.colorScheme.error)
-        }
-        TextButton({ advanced = !advanced }) { Text(stringResource(R.string.ps_advanced)) }
-        if (advanced) {
-            Text(stringResource(R.string.ps_parameters_help), style = MaterialTheme.typography.bodySmall)
-            listOf(Triple(R.string.ps_chunk, size, { v: String -> size = v }), Triple(R.string.ps_overlap, overlap, { v: String -> overlap = v }), Triple(R.string.ps_k1, k1, { v: String -> k1 = v }), Triple(R.string.ps_b, b, { v: String -> b = v }), Triple(R.string.ps_candidates, candidates, { v: String -> candidates = v }), Triple(R.string.ps_rrf, fusion, { v: String -> fusion = v })).forEach { (label, value, change) -> OutlinedTextField(value, { change(it.take(10)) }, label = { Text(stringResource(label)) }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = TechnicalShapes.Field) }
-            if (semantic) {
-                OutlinedTextField(model, { model = it.take(100) }, label = { Text(stringResource(R.string.ps_embedding_model)) }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = TechnicalShapes.Field)
-                OutlinedTextField(dimensions, { dimensions = it.take(4) }, label = { Text(stringResource(R.string.ps_dimensions)) }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = TechnicalShapes.Field)
-            }
-        }
-        if (config == null || semantic && embedding == null) Text(stringResource(R.string.ps_invalid_parameters), color = MaterialTheme.colorScheme.error)
-    }
-}
-
-@Composable private fun PassageDialog(onDismiss: () -> Unit, footer: @Composable ColumnScope.() -> Unit = {}, body: @Composable ColumnScope.() -> Unit) {
+@Composable internal fun PassageDialog(onDismiss: () -> Unit, footer: @Composable ColumnScope.() -> Unit = {}, body: @Composable ColumnScope.() -> Unit) {
     Dialog(onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.padding(16.dp).widthIn(max = 480.dp).fillMaxWidth().heightIn(max = 680.dp), shape = TechnicalShapes.Dialog, color = MaterialTheme.colorScheme.surfaceContainer) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

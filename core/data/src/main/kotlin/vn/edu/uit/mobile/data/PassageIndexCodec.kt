@@ -13,7 +13,7 @@ internal object PassageIndexCodec {
     private fun JsonObject.i(k: String) = getValue(k).jsonPrimitive.int
     private fun JsonObject.b(k: String) = getValue(k).jsonPrimitive.boolean
     fun encode(index: PassageIndex): String = buildJsonObject {
-        put("version", 1)
+        put("version", 2)
         put("extractor", PassageRules.EXTRACTOR)
         put("owner", index.owner)
         put("course", index.courseId)
@@ -81,11 +81,22 @@ internal object PassageIndexCodec {
         put("tokens", index.embeddingTokens)
         put("semanticFailed", index.semanticFailed)
         put("limited", index.limited)
+        index.update?.let { receipt ->
+            put(
+                "update",
+                buildJsonObject {
+                    put("reused", receipt.reused)
+                    put("embedded", receipt.embedded)
+                    put("requests", receipt.requests)
+                    put("removed", receipt.removed)
+                }
+            )
+        }
     }.toString().also { require(it.length <= 5 * 1024 * 1024) }
     fun decode(raw: String, owner: String): PassageIndex {
         require(raw.length <= 5 * 1024 * 1024)
         val o = Json.parseToJsonElement(raw).jsonObject
-        require(o.i("version") == 1 && o.s("extractor") == PassageRules.EXTRACTOR && o.s("owner") == owner && o.n("course") > 0)
+        require(o.i("version") in 1..2 && o.s("extractor") == PassageRules.EXTRACTOR && o.s("owner") == owner && o.n("course") > 0)
         val c = o.getValue("config").jsonObject
         val config = PassageConfig(c.i("characters"), c.i("overlap"), c.getValue("k1").jsonPrimitive.double, c.getValue("b").jsonPrimitive.double, c.i("candidates"), c.i("fusionK")).also { it.validate() }
         val docs = o.getValue("documents").jsonArray.also { require(it.size in 1..PassageRules.DOCUMENTS) }.map { value ->
@@ -112,6 +123,14 @@ internal object PassageIndexCodec {
             val buffer = ByteBuffer.wrap(bytes)
             PassageRules.normalize(List(dimensions) { buffer.float }, dimensions)
         }
-        return PassageIndex(owner, o.n("course"), o.s("revision").also { require(it.length in 1..80) }, o.n("at"), config, docs, passages, embedding, vectors, o.n("tokens").also { require(it >= 0) }, o.b("semanticFailed"), o.b("limited"))
+        return PassageIndex(
+            owner, o.n("course"), o.s("revision").also { require(it.length in 1..80) }, o.n("at"), config, docs, passages, embedding, vectors, o.n("tokens").also { require(it >= 0) }, o.b("semanticFailed"), o.b("limited"),
+            (o["update"] as? JsonObject)?.let { r ->
+                PassageUpdateReceipt(r.i("reused"), r.i("embedded"), r.i("requests"), r.i("removed")).also {
+                    require(it.reused in 0..PassageRules.PASSAGES && it.embedded in 0..PassageRules.PASSAGES && it.requests in 0..PassageRules.PASSAGES && it.removed in 0..PassageRules.DOCUMENTS)
+                    require(it.reused + it.embedded <= passages.size)
+                }
+            }
+        )
     }
 }

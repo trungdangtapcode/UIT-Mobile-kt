@@ -225,3 +225,15 @@ bounded scrollable dialog. Context, checklist review and connection forms reuse
 TechnicalShapes and native touch targets. Source scope is public-only in the initial
 release; configuration and Send remain explicit. Preserve Back to workspace and
 native original-source navigation. Credentials stay outside saveable form state.
+
+Course-search updates: Search leads with the query and a compact readiness summary.
+Files & updates is a separate single-column phone view, not a desktop index panel.
+Use file rows with wrapping names, format metadata, textual readiness and native
+selection controls. Keep a fixed check/review action area below the scrolling list.
+The current local-check timestamp and previous saved update are separate. A bounded
+review dialog discloses reused vectors, new unique text/characters and whether an
+AI request is required; its explicit confirmation footer stays reachable. Put model,
+dimensions, chunk parameters and the saved receipt in Search details. A local file
+check never gets a Moodle-synced badge. Follow the same TechnicalShapes, Plex type,
+16dp gutters, 4dp spacing grid and five-tab shell. References and evidence are in
+`docs/design/COURSE-SEARCH-UPDATES.md`.

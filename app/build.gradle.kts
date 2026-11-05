@@ -3,6 +3,15 @@ android {
     namespace = "vn.edu.uit.mobile"
     compileSdk = 35
     defaultConfig { applicationId = "vn.edu.uit.mobile"; minSdk = 26; targetSdk = 35; versionCode = 7; versionName = "0.1.6"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
+    if (providers.gradleProperty("previewInstall").orNull == "true") {
+        defaultConfig {
+            applicationId = "vn.edu.uit.mobile.preview"
+            versionName = "0.1.7-search-preview"
+            manifestPlaceholders["appLabel"] = "UIT Mobile Preview"
+        }
+    } else {
+        defaultConfig.manifestPlaceholders["appLabel"] = "@string/brand_name"
+    }
     buildFeatures { compose = true }
     testOptions { unitTests.isIncludeAndroidResources = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }

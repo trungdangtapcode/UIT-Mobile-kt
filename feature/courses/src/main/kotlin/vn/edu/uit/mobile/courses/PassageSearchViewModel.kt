@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.*
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.model.*
 
-enum class PassageWork { CATALOG, BUILD, SEARCH, INSPECT, CONNECTION, DELETE }
+enum class PassageWork { CATALOG, CHECK, BUILD, SEARCH, INSPECT, CONNECTION, DELETE }
 data class PassageSearchState(
     val courses: List<Course> = emptyList(),
     val course: Course? = null,
@@ -22,7 +22,9 @@ data class PassageSearchState(
     val work: PassageWork? = null,
     val problem: PassageWork? = null,
     val completed: Int = 0,
-    val total: Int = 0
+    val total: Int = 0,
+    val plan: PassageUpdatePlan? = null,
+    val stopped: Boolean = false
 ) {
     val index: PassageIndex? get() = library.indexes.firstOrNull { it.owner == course?.accountId && it.courseId == course?.id }
 }
@@ -55,7 +57,7 @@ class PassageSearchViewModel(private val repository: PassageSearchRepository, pr
         epoch++
         job?.cancel()
         job = null
-        mutable.update { it.copy(work = null) }
+        mutable.update { it.copy(work = null, stopped = it.work == PassageWork.BUILD) }
     }
     fun close() {
         stop()
@@ -64,7 +66,7 @@ class PassageSearchViewModel(private val repository: PassageSearchRepository, pr
     private fun operation(work: PassageWork, body: suspend (Long) -> Unit) {
         stop()
         val token = epoch
-        mutable.update { it.copy(work = work, problem = null) }
+        mutable.update { it.copy(work = work, problem = null, stopped = false, completed = 0, total = 0, plan = if (work == PassageWork.CHECK) null else it.plan) }
         job = viewModelScope.launch {
             try {
                 body(token)
@@ -79,22 +81,27 @@ class PassageSearchViewModel(private val repository: PassageSearchRepository, pr
     }
     fun select(course: Course?) {
         stop()
-        mutable.update { it.copy(course = course, mode = PassageSearchMode.BM25, candidates = emptyList(), selected = emptySet(), query = "", result = null, inspection = null, problem = null) }
+        mutable.update { it.copy(course = course, mode = PassageSearchMode.BM25, candidates = emptyList(), selected = emptySet(), query = "", result = null, inspection = null, problem = null, plan = null, stopped = false) }
         if (course != null) {
             operation(PassageWork.CATALOG) { token ->
                 val candidates = repository.candidates(course)
-                if (token == epoch) mutable.update { it.copy(candidates = candidates) }
+                if (token == epoch) mutable.update { it.copy(candidates = candidates, selected = it.index?.documents?.map { d -> d.spec.id }?.filter { id -> candidates.any { c -> c.spec.id == id && c.downloaded } }?.toSet().orEmpty()) }
             }
         }
     }
     fun refresh() {
         val course = state.value.course ?: return
-        select(course)
+        if (state.value.work != null) return
+        operation(PassageWork.CATALOG) { token ->
+            val candidates = repository.candidates(course)
+            if (token == epoch) mutable.update { it.copy(candidates = candidates, selected = it.selected.intersect(candidates.map { c -> c.spec.id }.toSet()), plan = null) }
+        }
     }
     fun toggle(id: String) {
-        if (state.value.work != null || state.value.candidates.none { it.spec.id == id && it.downloaded }) return
+        if (state.value.work != null || state.value.candidates.none { it.spec.id == id && (it.downloaded || id in state.value.selected) }) return
         mutable.update {
             it.copy(
+                plan = null,
                 selected = if (id in it.selected) {
                     it.selected - id
                 } else if (it.selected.size < PassageRules.DOCUMENTS) {
@@ -111,13 +118,34 @@ class PassageSearchViewModel(private val repository: PassageSearchRepository, pr
     fun mode(mode: PassageSearchMode) {
         if (state.value.work == null) mutable.update { it.copy(mode = mode, result = null) }
     }
-    fun build(config: PassageConfig, embedding: PassageEmbeddingConfig?) {
+    fun check(config: PassageConfig, embedding: PassageEmbeddingConfig?) {
         val current = state.value
         val course = current.course ?: return
         if (current.selected.isEmpty() || current.work != null) return
+        operation(PassageWork.CHECK) { token ->
+            val plan = repository.check(course, current.selected, config, embedding)
+            if (token == epoch) mutable.update { it.copy(plan = plan) }
+        }
+    }
+    fun dismissPlan() {
+        mutable.update { it.copy(plan = null) }
+    }
+    fun update() {
+        val current = state.value
+        val course = current.course ?: return
+        val plan = current.plan ?: return
+        if (!plan.canUpdate || current.work != null) return
         operation(PassageWork.BUILD) { token ->
-            repository.build(course, current.selected, config, embedding) { completed, total -> if (token == epoch) mutable.update { it.copy(completed = completed, total = total) } }
-            if (token == epoch) mutable.update { it.copy(result = null, inspection = null) }
+            repository.update(course, plan) { completed, total -> if (token == epoch) mutable.update { it.copy(completed = completed, total = total) } }
+            if (token == epoch) mutable.update { it.copy(result = null, inspection = null, plan = null) }
+            try {
+                val checked = repository.check(course, current.selected, plan.config, plan.embedding)
+                if (token == epoch) mutable.update { it.copy(plan = checked) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                if (token == epoch) mutable.update { it.copy(problem = PassageWork.CHECK) }
+            }
         }
     }
     fun search() {
@@ -145,12 +173,12 @@ class PassageSearchViewModel(private val repository: PassageSearchRepository, pr
         val course = state.value.course ?: return
         operation(PassageWork.DELETE) { token ->
             repository.clear(course.accountId)
-            if (token == epoch) mutable.update { it.copy(result = null, inspection = null) }
+            if (token == epoch) mutable.update { it.copy(result = null, inspection = null, plan = null) }
         }
     }
     fun reset() = operation(PassageWork.DELETE) { token ->
         repository.reset()
-        if (token == epoch) mutable.update { it.copy(result = null, inspection = null) }
+        if (token == epoch) mutable.update { it.copy(result = null, inspection = null, plan = null) }
     }
     fun configure(mode: StudyConnectionMode, endpoint: String, token: String, model: String) = operation(PassageWork.CONNECTION) { generation ->
         if (mode == StudyConnectionMode.DIRECT) ai.configureDirect(token, model) else ai.configure(endpoint, token)

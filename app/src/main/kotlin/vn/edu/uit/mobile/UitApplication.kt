@@ -25,6 +25,7 @@ class UitApplication : Application() {
                     single<RevisionRepository> { get<UitGraph>().revision }
                     single<PracticeRepository> { get<UitGraph>().practice }
                     single<AssistantRepository> { get<UitGraph>().assistant }
+                    single<StudyAiRepository> { get<UitGraph>().studyAi }
                     single<AnnouncementRepository> { get<UitGraph>().announcements }
                     single<ForumRepository> { get<UitGraph>().forum }
                     single<KnowledgeRepository> { get<UitGraph>().knowledge }

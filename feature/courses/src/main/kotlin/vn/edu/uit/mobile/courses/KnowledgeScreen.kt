@@ -155,6 +155,7 @@ import vn.edu.uit.mobile.feature.courses.R
                     }
                     Text(stringResource(R.string.km_send_help), style = MaterialTheme.typography.bodySmall)
                     TextButton({ settings = true }, enabled = !state.busy, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_configure)) }
+                    ChatGptUsage(state.connection)
                     Button(model::generate, enabled = !state.busy && state.loaded && !state.sourceChanged && state.connection.configured && runCatching { KnowledgeRules.request(state.sources.filter { it.id in state.selected }, state.focus, state.language) }.isSuccess, modifier = Modifier.fillMaxWidth().testTag("knowledge-generate"), shape = TechnicalShapes.Control) { Text(stringResource(R.string.km_generate)) }
                     if (state.busy) TextButton(model::cancel, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_cancel_request)) }
                 }

@@ -108,9 +108,10 @@ class StudyDesignTest {
 
     @Test
     @Config(qualifiers = "w360dp-h800dp-mdpi")
-    fun connectionDefaultsToDirectAndSwitchingToGatewayClearsTheEnteredKey() {
+    fun directRemainsAvailableAndSwitchingToGatewayClearsTheEnteredKey() {
         var savedMode: StudyConnectionMode? = null
         compose.setContent { UitTheme(dark = true, dynamic = false) { StudyConnectionDialog(StudyConnection(), {}, { mode, _, _, _ -> savedMode = mode }, {}) } }
+        compose.onNodeWithText("Direct OpenAI", substring = false).performScrollTo().performClick()
         capture("ai-connection-direct-360-phone")
         compose.onNodeWithText("OpenAI model ID").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Your OpenAI API key").performScrollTo().performTextInput("synthetic-personal-openai-key-for-tests")
@@ -136,6 +137,7 @@ class StudyDesignTest {
         var result: Pair<StudyConnectionMode, String>? = null
         RuntimeEnvironment.setFontScale(1.3f)
         compose.setContent { UitTheme(dark = true, dynamic = false) { StudyConnectionDialog(StudyConnection(), {}, { mode, _, _, model -> result = mode to model }, {}) } }
+        compose.onNodeWithText("Direct OpenAI", substring = false).performScrollTo().performClick()
         capture("ai-connection-direct-412-large-text-phone")
         compose.onNodeWithText("OpenAI model ID").performScrollTo().performTextInput("synthetic-model")
         compose.onNodeWithText("Your OpenAI API key").performScrollTo().performTextInput("synthetic-personal-openai-key-for-tests")

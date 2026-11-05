@@ -75,6 +75,7 @@ internal class AssistantRunner(private val model: AssistantModel, private val an
                     val id = call.getValue("call_id").jsonPrimitive.content
                     require(id.length in 1..160 && seenCalls.add(id))
                     val name = call.getValue("name").jsonPrimitive.content
+                    require(call["namespace"]?.jsonPrimitive?.content?.let { it == "uit" } != false) { "Unsupported tool namespace" }
                     require(name in AssistantProtocol.toolNames) { "Unsupported tool" }
                     val arguments = call.getValue("arguments").jsonPrimitive.content
                     require(arguments.length <= 1000)

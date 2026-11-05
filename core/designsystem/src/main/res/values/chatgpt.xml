@@ -1,0 +1,33 @@
+<resources>
+    <string name="cg_mode">ChatGPT account</string>
+    <string name="cg_copy_details">Copy connection diagnostics</string>
+    <string name="cg_continue">Continue with ChatGPT</string>
+    <string name="cg_description">Connect your ChatGPT account to use eligible AI features with your plan. No API key to create or paste.</string>
+    <string name="cg_eligibility">An eligible ChatGPT plan and permission are required. Usage counts toward your plan or app limits.</string>
+    <string name="cg_waiting">Complete the connection in your browser, then return here. No AI request is sent during sign-in.</string>
+    <string name="cg_cancel">Cancel connection</string>
+    <string name="cg_connected">ChatGPT plan access connected</string>
+    <string name="cg_plan_disabled">Signed in, but permission to use your ChatGPT plan is not enabled.</string>
+    <string name="cg_enable">Enable ChatGPT plan usage</string>
+    <string name="cg_use">Use this ChatGPT account</string>
+    <string name="cg_add_account">Add another ChatGPT account</string>
+    <string name="cg_sign_out">Sign out of this ChatGPT account</string>
+    <string name="cg_refresh_models">Refresh available models</string>
+    <string name="cg_usage">Manage ChatGPT usage</string>
+    <string name="cg_using">Using ChatGPT plan</string>
+    <string name="cg_privacy">Only sources you select are sent when you ask. Connecting does not import your ChatGPT conversations or share your university credentials.</string>
+    <string name="cg_welcome">Your ChatGPT plan is connected</string>
+    <string name="cg_welcome_body">After selecting this connection, eligible AI requests use your ChatGPT plan or available credits. You can manage app access and limits in ChatGPT settings.</string>
+    <string name="cg_got_it">Got it</string>
+    <string name="cg_cancelled">Connection cancelled. Your previous AI connection is retained.</string>
+    <string name="cg_timeout">Sign-in timed out. Start again to get a new secure connection.</string>
+    <string name="cg_validation">The sign-in response could not be verified. Start again.</string>
+    <string name="cg_access">This account or workspace has not permitted this operation. Review your ChatGPT connection and plan access.</string>
+    <string name="cg_reauth">Sign in again to renew access to this ChatGPT account.</string>
+    <string name="cg_quota">A ChatGPT plan or app usage limit was reached. Open Manage ChatGPT usage to review it.</string>
+    <string name="cg_no_models">No available models were returned for this account. Refresh or choose another account.</string>
+    <string name="cg_revocation">Signed out locally. Remote session revocation could not be confirmed; disconnect the app in ChatGPT settings.</string>
+    <string name="cg_unsupported">This request is not supported by ChatGPT plan usage.</string>
+    <string name="cg_network">The connection could not complete. Check your network and try again.</string>
+    <string name="cg_unavailable">ChatGPT connection is unavailable in this runtime.</string>
+</resources>

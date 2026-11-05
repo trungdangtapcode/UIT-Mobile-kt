@@ -80,7 +80,13 @@ class PassageSearchViewModelTest {
     }
     private fun create(repo: Repo, owners: Owners = Owners()): PassageSearchViewModel {
         val portal = FakePortalRepository().apply { snapshot.value = PortalSnapshot(courses = listOf(fixture.course)) }
-        val ai = Proxy.newProxyInstance(StudyAiRepository::class.java.classLoader, arrayOf(StudyAiRepository::class.java)) { _, method, _ -> if (method.name == "connection") StudyConnection() else error("No inference or configuration") } as StudyAiRepository
+        val ai = Proxy.newProxyInstance(StudyAiRepository::class.java.classLoader, arrayOf(StudyAiRepository::class.java)) { _, method, _ ->
+            when (method.name) {
+                "connection" -> StudyConnection()
+                "getConnectionChanges" -> kotlinx.coroutines.flow.emptyFlow<StudyConnection>()
+                else -> error("No inference or configuration")
+            }
+        } as StudyAiRepository
         return PassageSearchViewModel(repo, portal.snapshot, owners, ai).also { store.put("vm", it) }
     }
 

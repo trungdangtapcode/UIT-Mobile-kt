@@ -109,6 +109,7 @@ fun CodeTutorContent(state: CodeTutorState, actions: CodeTutorActions = object :
                 }
             }
             item {
+                ChatGptUsage(state.connection)
                 if (!state.connection.configured) Text(stringResource(R.string.ct_unconfigured))
                 TextButton({ settings = true }, enabled = !state.busy, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_configure)) }
                 Button({

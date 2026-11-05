@@ -78,6 +78,7 @@ class CodeTutorViewModel(
     private var sections = emptyList<CourseSection>()
     private var assignments = emptyList<Assignment>()
     init {
+        viewModelScope.launch { ai.connectionChanges.collect { connection -> state.update { it.copy(connection = connection) } } }
         viewModelScope.launch {
             accounts.accounts.collect { owners ->
                 val current = state.value
@@ -220,7 +221,11 @@ class CodeTutorViewModel(
     }
     override fun edit() = input { it.copy(tab = TutorTab.EXPLAIN, session = it.session + 1) }
     override fun configure(mode: StudyConnectionMode, endpoint: String, secret: String, model: String, done: () -> Unit) = launch(TutorProblem.CONNECTION) {
-        if (mode == StudyConnectionMode.DIRECT) ai.configureDirect(secret, model) else ai.configure(endpoint, secret)
+        when (mode) {
+            StudyConnectionMode.DIRECT -> ai.configureDirect(secret, model)
+            StudyConnectionMode.GATEWAY -> ai.configure(endpoint, secret)
+            StudyConnectionMode.CHATGPT -> ai.configureChatGpt(model)
+        }
         val connection = ai.connection()
         currentCoroutineContext().ensureActive()
         state.value = state.value.copy(connection = connection)

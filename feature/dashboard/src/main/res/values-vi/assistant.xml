@@ -60,7 +60,7 @@
     <string name="as_delete_help">Xóa lịch sử cục bộ đã chọn, bản nguồn và checklist? Không thể hoàn tác. Bài viết gốc của UIT không bị thay đổi.</string>
     <string name="as_cancel">Hủy</string>
     <string name="as_enable_source_first">Bật nguồn này trong Thông báo trường trước.</string>
-    <string name="as_connection_help">Dùng chung kết nối AI đã lưu với AI môn học. Chế độ trực tiếp dùng API key cá nhân; Gateway cần bản hỗ trợ trợ lý mới. Lưu cấu hình không gửi yêu cầu tới model.</string>
+    <string name="as_connection_help">Kết nối tài khoản ChatGPT, hoặc chọn API key cá nhân hay gateway. Dùng chung kết nối với AI môn học. Lưu cấu hình không gửi yêu cầu AI.</string>
     <string name="as_direct">OpenAI trực tiếp</string>
     <string name="as_gateway">Gateway HTTPS</string>
     <string name="as_model">Model ID được cấp quyền</string>
@@ -71,7 +71,7 @@
     <string name="as_ask_article">Hỏi về bài này</string>
     <string name="as_entry">Hỏi Trợ lý UIT</string>
     <string name="as_access_error">Dịch vụ AI từ chối khóa hoặc quyền truy cập dự án. Cập nhật kết nối AI trước khi thử lại.</string>
-    <string name="as_quota_error">Dịch vụ AI đã chạm giới hạn sử dụng hoặc đang bận. Kiểm tra tài khoản API và thử lại sau.</string>
+    <string name="as_quota_error">Dịch vụ AI đã chạm giới hạn sử dụng hoặc đang bận. Kiểm tra tài khoản đang kết nối hoặc mức sử dụng ChatGPT trước khi thử lại.</string>
     <string name="as_chat_options">Tùy chọn hội thoại</string>
     <string name="as_chat_context">Thông báo công khai · %1$d nguồn</string>
     <string name="as_chat_welcome">Bạn muốn tìm hiểu điều gì?</string>

@@ -204,6 +204,7 @@ fun AssistantContent(
                     Spacer(Modifier.height(12.dp))
                     Text(stringResource(R.string.as_public_only), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Button({ create = true }, Modifier.fillMaxWidth(), enabled = !state.library.storageFailed && state.library.workspaces.size < AssistantRules.WORKSPACES, shape = TechnicalShapes.Control) { Text(stringResource(R.string.as_create)) }
+                    ChatGptUsage(state.connection)
                     if (!state.connection.configured) TextButton({ settings = true }) { Text(stringResource(R.string.as_setup)) }
                     Text(stringResource(R.string.as_limits, AssistantRules.WORKSPACES, AssistantRules.TURNS), style = MaterialTheme.typography.bodySmall)
                 }
@@ -486,7 +487,7 @@ fun AssistantContent(
 }
 
 @Composable private fun AssistantConnectionDialog(connection: StudyConnection, dismiss: () -> Unit, save: (StudyConnectionMode, String, String, String) -> Unit, disconnect: () -> Unit) {
-    var mode by remember { mutableStateOf(connection.mode) }
+    var mode by remember { mutableStateOf(if (connection.configured) connection.mode else StudyConnectionMode.CHATGPT) }
     var endpoint by remember { mutableStateOf(if (connection.mode == StudyConnectionMode.GATEWAY) connection.endpoint else "") }
     var model by remember { mutableStateOf(connection.model) }
     // Credential stays only in dialog memory and is never saveable state.
@@ -495,26 +496,31 @@ fun AssistantContent(
     AssistantDialog(dismiss) {
         Text(stringResource(R.string.as_connection), style = MaterialTheme.typography.titleLarge)
         Text(stringResource(R.string.as_connection_help))
-        StudyConnectionMode.entries.forEach { option ->
+        listOf(StudyConnectionMode.CHATGPT, StudyConnectionMode.DIRECT, StudyConnectionMode.GATEWAY).forEach { option ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(mode == option, {
                     mode = option
                     secret = ""
                 })
-                Text(stringResource(if (option == StudyConnectionMode.DIRECT) R.string.as_direct else R.string.as_gateway))
+                Text(if (option == StudyConnectionMode.CHATGPT) chatGptLabel() else stringResource(if (option == StudyConnectionMode.DIRECT) R.string.as_direct else R.string.as_gateway))
             }
         }
-        if (mode == StudyConnectionMode.DIRECT) {
-            OutlinedTextField(model, { model = it.take(100) }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.as_model)) }, shape = TechnicalShapes.Field, singleLine = true)
+        if (mode == StudyConnectionMode.CHATGPT) {
+            ChatGptConnectionPanel({ save(StudyConnectionMode.CHATGPT, "", "", it) })
+            TextButton(dismiss) { Text(stringResource(R.string.as_cancel)) }
         } else {
-            OutlinedTextField(endpoint, { endpoint = it.take(2048) }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.as_endpoint)) }, shape = TechnicalShapes.Field, singleLine = true)
+            if (mode == StudyConnectionMode.DIRECT) {
+                OutlinedTextField(model, { model = it.take(100) }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.as_model)) }, shape = TechnicalShapes.Field, singleLine = true)
+            } else {
+                OutlinedTextField(endpoint, { endpoint = it.take(2048) }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.as_endpoint)) }, shape = TechnicalShapes.Field, singleLine = true)
+            }
+            OutlinedTextField(secret, { secret = it.take(1024) }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.as_secret)) }, visualTransformation = PasswordVisualTransformation(), shape = TechnicalShapes.Field, singleLine = true)
+            if (connection.configured) TextButton(disconnect) { Text(stringResource(R.string.as_disconnect)) }
+            DialogActions(dismiss, {
+                save(mode, endpoint.trim(), secret, model.trim())
+                secret = ""
+            }, valid)
         }
-        OutlinedTextField(secret, { secret = it.take(1024) }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.as_secret)) }, visualTransformation = PasswordVisualTransformation(), shape = TechnicalShapes.Field, singleLine = true)
-        if (connection.configured) TextButton(disconnect) { Text(stringResource(R.string.as_disconnect)) }
-        DialogActions(dismiss, {
-            save(mode, endpoint.trim(), secret, model.trim())
-            secret = ""
-        }, valid)
     }
 }
 

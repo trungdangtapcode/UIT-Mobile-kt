@@ -60,7 +60,7 @@
     <string name="as_delete_help">Delete the selected local history, evidence snapshots and checklists? This cannot be undone. Original UIT articles are unaffected.</string>
     <string name="as_cancel">Cancel</string>
     <string name="as_enable_source_first">Enable this feed in University announcements first.</string>
-    <string name="as_connection_help">Uses the same saved AI connection as course AI. Direct mode uses your personal API key; Gateway requires an updated assistant-compatible gateway. Saving configuration does not send a model request.</string>
+    <string name="as_connection_help">Connect your ChatGPT account, or choose a personal API key or gateway. This connection is shared with course AI. Saving does not send a model request.</string>
     <string name="as_direct">Direct OpenAI</string>
     <string name="as_gateway">HTTPS gateway</string>
     <string name="as_model">Available model ID</string>
@@ -71,7 +71,7 @@
     <string name="as_ask_article">Ask about this article</string>
     <string name="as_entry">Ask UIT Assistant</string>
     <string name="as_access_error">The AI service rejected the credential or project access. Update the AI connection before retrying.</string>
-    <string name="as_quota_error">The AI service reached a usage limit or is busy. Check your API account and retry later.</string>
+    <string name="as_quota_error">The AI service reached a usage limit or is busy. Review your connected account or ChatGPT usage settings before retrying.</string>
     <string name="as_chat_options">Chat options</string>
     <string name="as_chat_context">Public notices · %1$d sources</string>
     <string name="as_chat_welcome">What would you like to know?</string>

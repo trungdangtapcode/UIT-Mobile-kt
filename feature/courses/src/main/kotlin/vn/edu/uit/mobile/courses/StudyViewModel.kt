@@ -34,6 +34,7 @@ class StudyViewModel(
     private var operation: Job? = null
     private var epoch = 0
     init {
+        viewModelScope.launch { ai.connectionChanges.collect { connection -> state.update { it.copy(connection = connection) } } }
         viewModelScope.launch {
             portal.snapshot.collect { snapshot ->
                 val course = state.value.course
@@ -95,7 +96,11 @@ class StudyViewModel(
         state.value = state.value.copy(sources = state.value.sources + StudySource(id, title, text), answer = null)
     }
     fun configure(mode: StudyConnectionMode, endpoint: String, secret: String, model: String) = launchOperation {
-        if (mode == StudyConnectionMode.DIRECT) ai.configureDirect(secret, model) else ai.configure(endpoint, secret)
+        when (mode) {
+            StudyConnectionMode.DIRECT -> ai.configureDirect(secret, model)
+            StudyConnectionMode.GATEWAY -> ai.configure(endpoint, secret)
+            StudyConnectionMode.CHATGPT -> ai.configureChatGpt(model)
+        }
         currentCoroutineContext().ensureActive()
         state.value = state.value.copy(connection = ai.connection(), answer = null, message = "Connection saved on this device.")
     }

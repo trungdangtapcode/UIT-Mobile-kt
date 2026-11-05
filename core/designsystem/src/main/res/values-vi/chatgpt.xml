@@ -1,0 +1,33 @@
+<resources>
+    <string name="cg_mode">Tài khoản ChatGPT</string>
+    <string name="cg_copy_details">Sao chép thông tin chẩn đoán</string>
+    <string name="cg_continue">Tiếp tục với ChatGPT</string>
+    <string name="cg_description">Kết nối tài khoản ChatGPT để dùng các tính năng AI phù hợp bằng gói của bạn. Không cần tạo hoặc dán API key.</string>
+    <string name="cg_eligibility">Cần gói ChatGPT đủ điều kiện và quyền được cấp. Mức sử dụng được tính vào hạn mức của gói hoặc ứng dụng.</string>
+    <string name="cg_waiting">Hoàn tất kết nối trên trình duyệt rồi quay lại đây. Đăng nhập không gửi yêu cầu AI.</string>
+    <string name="cg_cancel">Hủy kết nối</string>
+    <string name="cg_connected">Đã kết nối quyền dùng gói ChatGPT</string>
+    <string name="cg_plan_disabled">Đã đăng nhập nhưng chưa bật quyền dùng gói ChatGPT.</string>
+    <string name="cg_enable">Bật quyền dùng gói ChatGPT</string>
+    <string name="cg_use">Dùng tài khoản ChatGPT này</string>
+    <string name="cg_add_account">Thêm tài khoản ChatGPT khác</string>
+    <string name="cg_sign_out">Đăng xuất tài khoản ChatGPT này</string>
+    <string name="cg_refresh_models">Tải lại danh sách mô hình</string>
+    <string name="cg_usage">Quản lý mức sử dụng ChatGPT</string>
+    <string name="cg_using">Đang dùng gói ChatGPT</string>
+    <string name="cg_privacy">Chỉ gửi nguồn bạn chọn khi đặt câu hỏi. Kết nối không nhập lịch sử ChatGPT hoặc chia sẻ thông tin đăng nhập UIT.</string>
+    <string name="cg_welcome">Đã kết nối gói ChatGPT của bạn</string>
+    <string name="cg_welcome_body">Sau khi chọn kết nối này, yêu cầu AI phù hợp sẽ dùng gói ChatGPT hoặc số dư tín dụng của bạn. Bạn có thể quản lý quyền và hạn mức trong cài đặt ChatGPT.</string>
+    <string name="cg_got_it">Đã hiểu</string>
+    <string name="cg_cancelled">Đã hủy kết nối. Kết nối AI trước đó được giữ lại.</string>
+    <string name="cg_timeout">Đăng nhập đã hết thời gian chờ. Bắt đầu lại để tạo kết nối mới.</string>
+    <string name="cg_validation">Không xác minh được phản hồi đăng nhập. Hãy bắt đầu lại.</string>
+    <string name="cg_access">Tài khoản hoặc không gian làm việc chưa cho phép thao tác này. Kiểm tra kết nối và quyền dùng gói ChatGPT.</string>
+    <string name="cg_reauth">Đăng nhập lại để gia hạn quyền truy cập tài khoản ChatGPT này.</string>
+    <string name="cg_quota">Đã chạm hạn mức của gói ChatGPT hoặc ứng dụng. Mở Quản lý mức sử dụng ChatGPT để kiểm tra.</string>
+    <string name="cg_no_models">Tài khoản chưa trả về mô hình khả dụng. Tải lại hoặc chọn tài khoản khác.</string>
+    <string name="cg_revocation">Đã đăng xuất trên máy. Chưa xác nhận được thu hồi phiên từ xa; hãy ngắt ứng dụng trong cài đặt ChatGPT.</string>
+    <string name="cg_unsupported">Yêu cầu này chưa được hỗ trợ khi dùng gói ChatGPT.</string>
+    <string name="cg_network">Chưa hoàn tất được kết nối. Kiểm tra mạng rồi thử lại.</string>
+    <string name="cg_unavailable">Kết nối ChatGPT chưa khả dụng trong môi trường này.</string>
+</resources>

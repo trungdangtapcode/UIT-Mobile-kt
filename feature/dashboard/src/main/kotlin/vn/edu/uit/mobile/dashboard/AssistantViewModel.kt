@@ -27,6 +27,7 @@ class AssistantViewModel(private val repository: AssistantRepository, private va
     private var contextWork: Job? = null
     private var contextSerial = 0L
     init {
+        viewModelScope.launch { study.connectionChanges.collect { connection -> mutable.update { it.copy(connection = connection) } } }
         viewModelScope.launch { repository.library.collect { library -> mutable.update { it.copy(library = library) } } }
         viewModelScope.launch { announcements.state.collect { notices -> mutable.update { it.copy(notices = notices) } } }
         action(AssistantProblem.LOAD) {
@@ -119,7 +120,11 @@ class AssistantViewModel(private val repository: AssistantRepository, private va
     fun refresh() = action { announcements.refresh() }
     fun configure(mode: StudyConnectionMode, endpoint: String, token: String, model: String) = action(AssistantProblem.CONNECTION) {
         stop()
-        if (mode == StudyConnectionMode.DIRECT) study.configureDirect(token, model) else study.configure(endpoint, token)
+        when (mode) {
+            StudyConnectionMode.DIRECT -> study.configureDirect(token, model)
+            StudyConnectionMode.GATEWAY -> study.configure(endpoint, token)
+            StudyConnectionMode.CHATGPT -> study.configureChatGpt(model)
+        }
         mutable.update { it.copy(connection = study.connection(), problem = null) }
     }
     fun disconnect() = action(AssistantProblem.CONNECTION) {
@@ -144,6 +149,8 @@ class AssistantViewModel(private val repository: AssistantRepository, private va
             } catch (e: Exception) {
                 val message = e.message.orEmpty()
                 val problem = when {
+                    e is ChatGptException && e.problem == ChatGptProblem.QUOTA -> AssistantProblem.QUOTA
+                    e is ChatGptException && e.problem in setOf(ChatGptProblem.REAUTH, ChatGptProblem.ACCESS) -> AssistantProblem.ACCESS
                     "API key or project access" in message || "gateway token was rejected" in message -> AssistantProblem.ACCESS
                     "quota or rate limit" in message || "gateway is busy" in message -> AssistantProblem.QUOTA
                     else -> AssistantProblem.GENERATION

@@ -142,7 +142,7 @@ internal object ForumHtml {
                 tag == "img" -> {
                     val src = ForumUrls.safe(e.attr("src")) ?: return emptyList()
                     val lightbox = e.parents().firstOrNull { it.tagName() == "a" && it.hasClass("lightbox") }
-                    listOf(ForumBlock(ForumBlockKind.IMAGE, e.attr("alt").take(300), listOf(ForumLink(e.attr("alt"), src)), original = lightbox?.attr("href")?.let(ForumUrls::safe)))
+                    listOf(ForumBlock(ForumBlockKind.IMAGE, e.attr("alt").take(300), listOf(ForumLink(e.attr("alt"), src)), original = lightbox?.attr("href")?.let(ForumUrls::safe), imageWidth = e.attr("width").toIntOrNull()?.takeIf { it in 1..4096 } ?: 0, imageHeight = e.attr("height").toIntOrNull()?.takeIf { it in 1..4096 } ?: 0))
                 }
                 tag == "blockquote" || (tag == "aside" && e.hasClass("quote")) -> {
                     val copy = e.clone()

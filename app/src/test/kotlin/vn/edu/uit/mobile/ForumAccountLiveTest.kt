@@ -13,6 +13,7 @@ import io.ktor.http.*
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermissions
+import kotlinx.serialization.json.*
 import org.junit.*
 import org.junit.Assert.*
 import org.junit.runner.RunWith
@@ -109,6 +110,26 @@ class ForumAccountLiveTest {
                 capture("forum-native-composer")
                 compose.runOnIdle { vm.dismissComposer() }
             }
+            compose.runOnIdle { vm.topic(163707) }
+            settled()
+            val icpc = vm.uiState.value
+            assertEquals(163707L, icpc.topic?.id)
+            assertTrue(icpc.posts.isNotEmpty())
+            capture("forum-native-icpc-member-private")
+            File(output, "icpc-account-aggregate.json").writeText(
+                buildJsonObject {
+                    put("capturedAt", java.time.Instant.now().toString())
+                    put("runtime", "Production native Kotlin client/repository/ViewModel/Compose on Robolectric; real account, identity verified; no physical phone")
+                    put("topicId", 163707)
+                    put("identityVerified", true)
+                    put("canReply", icpc.canReply)
+                    put("postNumbers", JsonArray(icpc.posts.map { JsonPrimitive(it.number) }))
+                    put("postsWithLikePermission", icpc.posts.count { it.canLike })
+                    put("postsWithEditPermission", icpc.posts.count { it.canEdit })
+                    put("necessaryLoginPosts", writes.size)
+                    put("otherWrites", 0)
+                }.toString()
+            )
             compose.runOnIdle { vm.member(ForumMemberTab.NOTICES) }
             settled()
             assertTrue(vm.uiState.value.memberPage.notices.all { it.title.isNotBlank() || it.type > 0 })

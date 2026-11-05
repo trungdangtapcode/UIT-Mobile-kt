@@ -103,7 +103,9 @@ class ForumDesignTest {
         val doc = ForumParser.parse(request, ForumFixtures.response(request))
         show(state().copy(topic = doc.topic, posts = doc.posts, stream = doc.stream, start = 0, end = 20))
         compose.onNodeWithTag("forum-reader").performScrollToNode(hasText("Prepare your workspace"))
-        compose.onNodeWithText("Load image").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("forum-reader").performScrollToNode(hasTestTag("forum-image-preview"))
+        compose.onAllNodesWithTag("forum-image-preview").onFirst().performScrollTo()
+        compose.onNodeWithText("Load image").assertDoesNotExist()
     }
 
     @Test fun refreshingLocalLibraryKeepsItsDestination() {
@@ -150,7 +152,7 @@ class ForumDesignTest {
         var scope: AssistantForumScope? = null
         val initial = ForumState(open = true, topic = ForumFixtures.topic, stream = listOf(1), posts = listOf(ForumPost(1, ForumFixtures.topic.id, 1, "author", "", emptyList())))
         compose.setContent { UitTheme { WorkspaceFrame(3, {}, {}, "", false, false, 0) { ForumContent(initial, onAssistant = { scope = it }) } } }
-        compose.onNodeWithTag("forum-reader").performScrollToNode(hasTestTag("forum-ai-entry"))
+        compose.onNodeWithTag("forum-topic-menu").performClick()
         compose.onNodeWithTag("forum-ai-entry").performClick()
         compose.onNodeWithTag("forum-ai-count").performTextReplacement("41")
         compose.onNodeWithText("Open in UIT Assistant").assertIsNotEnabled()

@@ -44,7 +44,9 @@ data class ForumBlock(
     val label: String = "",
     val original: String? = null,
     val level: Int = 0,
-    val poll: ForumPoll? = null
+    val poll: ForumPoll? = null,
+    val imageWidth: Int = 0,
+    val imageHeight: Int = 0
 )
 data class ForumPost(val id: Long, val topicId: Long, val number: Int, val author: String, val created: String, val blocks: List<ForumBlock>, val version: Int = 1, val updated: String = "", val canViewHistory: Boolean = false, val replyTo: Int? = null, val canEdit: Boolean = false, val canLike: Boolean = false, val liked: Boolean = false, val likeCount: Int = 0, val reactions: List<ForumReaction> = emptyList(), val polls: List<ForumPoll> = emptyList())
 data class ForumRevision(
@@ -88,7 +90,8 @@ sealed interface ForumRequest {
     data class Posts(val topicId: Long, val ids: List<Long>) : ForumRequest
 }
 enum class ForumFailure { NETWORK, RATE_LIMIT, UNAVAILABLE, INVALID, STORAGE, CAPACITY, AUTHENTICATION, SECOND_FACTOR, FORBIDDEN, REJECTED, CONFLICT, UNCERTAIN }
-class ForumException(val reason: ForumFailure, val retryAfterSeconds: Long? = null, val detail: String = "") : Exception(reason.name)
+enum class ForumNetworkIssue { DNS, TLS, TIMEOUT, CONNECT, IO, SERVER, UNKNOWN }
+class ForumException(val reason: ForumFailure, val retryAfterSeconds: Long? = null, val detail: String = "", val networkIssue: ForumNetworkIssue? = null) : Exception(reason.name)
 data class ForumLoaded(val document: ForumDocument, val fetchedAt: Long, val offline: Boolean = false)
 data class ForumPosition(val topic: ForumTopic, val postId: Long, val postNumber: Int, val offsetDp: Int = 0)
 data class ForumLocalState(val saved: List<ForumTopic> = emptyList(), val positions: List<ForumPosition> = emptyList(), val savedAt: Map<Long, Long> = emptyMap())

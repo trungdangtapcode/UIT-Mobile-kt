@@ -1,0 +1,200 @@
+{
+  "reportedPhone": {
+    "source": "Owner screenshot and follow-up; exact installed app version unknown",
+    "topicId": 163707,
+    "nativeRequestFailed": true,
+    "chromeOpened": true,
+    "specificNetworkCategory": "Not recorded by the reported build"
+  },
+  "publicWeb": {
+    "capturedAt": "2026-11-05T08:22:13.713689+00:00",
+    "runtime": "Chromium mobile 390x844; guest; service workers and WebSockets blocked; only GET/HEAD/OPTIONS permitted",
+    "generator": "Discourse 2026.10.0-latest - https://github.com/discourse/discourse version b81bee142d364526b432788251986871952b5ddb",
+    "route": "/t/164929",
+    "inlineImagesAlreadyLoaded": true,
+    "postControlRoles": [
+      "reaction/login",
+      "copy-post-link"
+    ],
+    "blockedWritePaths": [
+      "/message-bus/<client>/poll",
+      "/srv/pv"
+    ]
+  },
+  "publicKotlinProbe": {
+    "capturedAt": "2026-11-05T08:22:22.326407218Z",
+    "runtime": "Production anonymous Kotlin transport and parser on JVM; no physical phone",
+    "universityAccountUsed": false,
+    "writes": 0,
+    "results": [
+      {
+        "request": "topic:163707:1",
+        "success": true,
+        "responseBytes": 35224,
+        "elapsedMs": 1247,
+        "topicId": 163707,
+        "title": "Thông báo về Kỳ thi OLP Tin học Sinh viên Việt Nam và Kỳ thi ICPC 2026",
+        "streamIds": 5,
+        "posts": 5,
+        "postNumbers": [
+          1,
+          16,
+          17,
+          19,
+          20
+        ],
+        "nativeBlockKinds": [
+          "TEXT",
+          "TABLE",
+          "IMAGE"
+        ]
+      },
+      {
+        "request": "topic:163707:20",
+        "success": true,
+        "responseBytes": 35287,
+        "elapsedMs": 250,
+        "topicId": 163707,
+        "title": "Thông báo về Kỳ thi OLP Tin học Sinh viên Việt Nam và Kỳ thi ICPC 2026",
+        "streamIds": 5,
+        "posts": 5,
+        "postNumbers": [
+          1,
+          16,
+          17,
+          19,
+          20
+        ],
+        "nativeBlockKinds": [
+          "TEXT",
+          "TABLE",
+          "IMAGE"
+        ]
+      },
+      {
+        "request": "topic:164929:1",
+        "success": true,
+        "responseBytes": 38402,
+        "elapsedMs": 262,
+        "topicId": 164929,
+        "title": "Thông báo nhận quà tặng đầu năm học 2026-2027",
+        "streamIds": 12,
+        "posts": 11,
+        "postNumbers": [
+          1,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          10,
+          11,
+          12,
+          13
+        ],
+        "nativeBlockKinds": [
+          "TEXT",
+          "IMAGE"
+        ]
+      }
+    ]
+  },
+  "authenticatedWeb": {
+    "capturedAt": "2026-11-05T08:44:45.808949+00:00",
+    "topicId": 163707,
+    "identityVerified": true,
+    "canReply": true,
+    "postCapabilities": [
+      {
+        "number": 1,
+        "canEdit": false,
+        "canViewHistory": true,
+        "canLike": true
+      },
+      {
+        "number": 16,
+        "canEdit": false,
+        "canViewHistory": true,
+        "canLike": true
+      },
+      {
+        "number": 17,
+        "canEdit": false,
+        "canViewHistory": true,
+        "canLike": true
+      },
+      {
+        "number": 19,
+        "canEdit": false,
+        "canViewHistory": true,
+        "canLike": true
+      },
+      {
+        "number": 20,
+        "canEdit": false,
+        "canViewHistory": true,
+        "canLike": true
+      }
+    ],
+    "necessaryLoginPosts": 1,
+    "otherWrites": 0,
+    "postControlRoles": [
+      "like",
+      "copy-post-link",
+      "overflow",
+      "reply"
+    ]
+  },
+  "authenticatedKotlinHost": {
+    "capturedAt": "2026-11-05T09:14:37.090945131Z",
+    "runtime": "Production native Kotlin client/repository/ViewModel/Compose on Robolectric; real account, identity verified; no physical phone",
+    "topicId": 163707,
+    "identityVerified": true,
+    "canReply": true,
+    "postNumbers": [
+      1,
+      16,
+      17,
+      19,
+      20
+    ],
+    "postsWithLikePermission": 5,
+    "postsWithEditPermission": 0,
+    "necessaryLoginPosts": 1,
+    "otherWrites": 0
+  },
+  "interpretation": "The actual public and member routes are readable in these runtimes. This does not establish the cause of the owners earlier physical-phone request failure. Sparse source post numbers are valid. No post/account-content mutation was performed; necessary login may update session metadata.",
+  "repositoryVerification": {
+    "core/network/forum/build/test-results/test": {
+      "tests": 47,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    "feature/forum/build/test-results/testDebugUnitTest": {
+      "tests": 26,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    "app/build/test-results/testDebugUnitTest": {
+      "tests": 354,
+      "skipped": 31,
+      "failures": 0,
+      "errors": 0
+    },
+    "app/build/test-results/testReleaseUnitTest": {
+      "tests": 126,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    }
+  },
+  "nativeAttempt": {
+    "runtime": "Isolated blank API 30 x86_64 software emulator, no KVM access",
+    "result": "Not accepted: boot property completed but package service unavailable during APK installation",
+    "installedTest": "Compiled only; not executed",
+    "credentialsEntered": false
+  }
+}

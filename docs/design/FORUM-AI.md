@@ -3,6 +3,11 @@
 The student wants to understand a discussion and inspect what each author actually
 said. The selected source window and conversation are the focal content.
 
+Current entry: open a loaded topic's overflow menu, then choose Summarize / ask AI.
+The older entry screenshot below predates the [November 5 reader changes](FORUM-READING-UX.md);
+the chat and source-selection behavior remain applicable. Empty failed topics do
+not expose an AI action.
+
 - Domain: topics, reply targets, author identity, post numbers, edits, chronology,
   unanswered questions, disagreement and retained source versions.
 - Color world: existing UIT blue, navy canvas, white source text, muted source dates

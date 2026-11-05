@@ -197,6 +197,17 @@ Images open on a quiet fullscreen canvas with explicit zoom/fit/close controls.
 Revision dialogs retain Changes/Before/After, source and close actions. Forum
 review screenshots use actual production UIT responses with capture provenance.
 
+Forum reading: safe same-origin upload previews load when visible, with bounded
+source geometry and an explicit retry on failure; tapping opens the original
+viewer. Concealed images wait for expansion. Keep like/copy/overflow and permitted
+reply together below each post, including visible guest entry points to login.
+Login returns to the selected post without replaying a mutation. Use a compact
+position button and topic overflow for secondary actions, including AI. A failed
+topic keeps its known title but clears stale window/freshness fields; an empty
+body has no phantom counters or AI entry. Diagnostics are explicit, typed and
+free of credentials/raw response content. Current evidence:
+`docs/design/FORUM-READING-UX.md`.
+
 University announcements: enter from Today or Inbox without adding a bottom tab.
 Use a date-led, single-column list of cut-corner panels. Full titles lead; source,
 unread/correction state and checked time remain explicit. Search and horizontally

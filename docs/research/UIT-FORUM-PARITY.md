@@ -86,9 +86,9 @@ it is not a complete inventory of every UIT plugin or account role.
 | F03 | New/unread/unseen/read/posted; UIT advertised, authenticated behavior unverified | Partial: server-advertised authenticated lists; guest filtering enforced; live account feed verified | Same account sees consistent lists/counts; research does not reset or mark them read |
 | F04 | Tags and tag combinations; UIT tags observed | Partial: searchable server tag directory and single-tag feeds; multi-tag/category combinations remain | Search a large tag catalog, apply permitted combinations, handle no matches and navigation restoration |
 | F05 | Full search and exact matched replies; UIT observed | Partial: submitted query and post jump | Search scopes/filters/order, pagination, excerpts, Unicode and restricted-result handling match web |
-| F06 | Long topics and timeline; real 7,455-ID stream verified earlier | Partial: numbered jump and bounded windows | Timeline/date navigation, gaps, edits/deletions during loading and stable scroll anchors across refresh |
+| F06 | Long topics and timeline; real 7,455-ID stream verified earlier | Partial: compact numbered jump, bounded windows and stale-window clearing on failed topic switch | Timeline/date navigation, gaps, edits/deletions during loading and stable scroll anchors across refresh |
 | F07 | Reply context/backlinks; fields exposed by UIT and upstream serializer | Partial: reply-parent and attributed quote targets; no inline reply expansion or return anchor | Open parent/child replies, return to the same position and preserve attribution |
-| F08 | Permalinks/share/navigation; mobile web observed | Partial: some topic links route internally | Exact post/slug/fragment targets, Android links/back stack, copy/share, inaccessible and legacy redirects |
+| F08 | Permalinks/share/navigation; mobile web observed | Partial: native topic links, visible guest/member post-link copy and source handoff | Exact post/slug/fragment targets, Android links/back stack, copy/share, inaccessible and legacy redirects |
 | F09 | Topic summary, participants, statistics and suggested topics; upstream documented, UIT coverage incomplete | Partial: title/category/post count | Inventory actual UIT controls; preserve meaningful metadata, suggestions and return navigation |
 
 ### Content and media fidelity
@@ -101,13 +101,13 @@ explain why a generic Markdown converter is not sufficient evidence of fidelity.
 | ID | Web capability and evidence | Current app | Required acceptance evidence |
 | --- | --- | --- | --- |
 | F10 | Inline emphasis/code, paragraph breaks and links; upstream documented | Partial: semantic inline spans and link ranges; broader fidelity/selection cases remain | Preserve ordering and nested spans, link ranges, Unicode, line breaks and selection/copy |
-| F11 | Headings, ordered/nested lists and tables; upstream documented | Partial: nested list and table-cell blocks; complex headers/spans remain | Mixed cell/list content, link/image children, headers, numbering and horizontal scrolling |
+| F11 | Headings, ordered/nested lists and tables; upstream documented; live ICPC table compared November 5 | Partial: nested blocks; all 44 normalized ICPC table cells match and both scroll directions were exercised on host; fixed widths, header emphasis/row rules and complex spans remain | Mixed cell/list content, link/image children, headers, numbering and horizontal scrolling; see [actual table captures and limits](../design/FORUM-READING-UX.md#icpc-post-17-table-follow-up) |
 | F12 | Attributed/nested quotes and reply references; upstream documented | Partial: nested quote content, author/target attribution; context navigation remains | Preserve author, target post and nested content; expand context without losing position |
 | F13 | Details, spoilers and task-like controls; upstream documented, UIT examples still needed | Partial: nested details and concealed spoilers; task controls and broader live examples remain | Keep summaries and nested media; concealed content must remain concealed until requested |
 | F14 | Code language, syntax and copy; upstream documented | Partial: preserved code, language label and copy; no syntax highlighting | Preserve exact whitespace/source, language metadata, long lines and copy behavior |
 | F15 | Emoji, mentions, user cards and flair; UIT fields/upstream documented | Partial: emoji alt text and author string | Custom emoji and mention targets, accessible labels, account-visible profile fields and identity attribution |
-| F16 | Image thumbnails/originals/lightbox; UIT observed | Partial: actual original URL, fullscreen, zoom/pan and accessible controls; gallery/orientation coverage remains | Actual original vs thumbnail mapping, fullscreen, zoom/pan, multiple images, captions, orientation and accessible controls |
-| F17 | Image delivery and lifecycle | Partial: explicit retry and bounded decode; broader delivery/lifecycle/account cases remain | Inspect CDN/short URLs/secure uploads; bounded decode, retry/cancel, memory eviction and account isolation; no arbitrary credential forwarding |
+| F16 | Image thumbnails/originals/lightbox; UIT observed | Partial: viewport-loaded upload previews, actual original URL, tap-to-view, zoom/pan and accessible controls; gallery/orientation coverage remains | Actual original vs thumbnail mapping, fullscreen, zoom/pan, multiple images, captions, orientation and accessible controls |
+| F17 | Image delivery and lifecycle | Partial: explicit retry, bounded decode, 8 MiB/12-entry memory cache and account/public-scope late-result fencing; broader delivery/device lifecycle remains | Inspect CDN/short URLs/secure uploads; bounded decode, retry/cancel, memory eviction and account isolation; no arbitrary credential forwarding |
 | F18 | Animated images/video/audio; upstream documented, UIT examples unverified | Missing animation/playback; browser fallback | Same content with playback controls, lifecycle, captions where available and explicit unavailable states |
 | F19 | Attachments and onebox previews; upstream documented | Partial: extracted links | Names, type/size, authorized download/open, expired access, cancellation and safe rich preview semantics |
 | F20 | Legacy migrated content; BBCode visible in real support posts | Partial: literal tags can remain | Compare the same post on web; preserve content and distinguish upstream migration defects from app defects |
@@ -127,8 +127,8 @@ version number or from another post's successful response.
 | F23 | Edit/delete/restore/wiki and moderation notices; upstream documented | Partial: permitted raw edit and original-text conflict; delete/restore/wiki remain | Server-authorized state, conflicts and tombstones; test writes only in an authorized test environment |
 | F24 | UIT login/session; prior private website login verified | Partial: native CSRF/session login (UIT 204), encrypted cookie restore and live read-only Compose acceptance; installed Android remains | Research actual UIT redirects/CSRF/session contract, expiry, cancellation, logout and re-login on Android |
 | F25 | Per-user app credentials; official User API key mechanism documented, UIT eligibility unverified | Missing | Determine whether UIT allows applicable scopes, groups and callback; no key grant during read-only research |
-| F26 | Account/role/category restrictions; permissions exposed by server | Partial: separate member repository, permissions and expiry handling; private content excluded from guest cache | Distinguish guest vs expired vs forbidden; private content never enters guest cache or another account's UI |
-| F27 | Revoked access, logout and account switching | Partial: local disconnect, generations and private UI purge; remote session revocation/device lifecycle remain | Cancel in-flight requests and purge/partition private text, media, revisions and pending operations; no stale-content flash |
+| F26 | Account/role/category restrictions; permissions exposed by server | Partial: member repository, permission checks, visible guest login entry and return-to-post without mutation replay; private content excluded from guest cache | Distinguish guest vs expired vs forbidden; private content never enters guest cache or another account's UI |
+| F27 | Revoked access, logout and account switching | Partial: local disconnect, generation-fenced image reuse and private UI purge; remote session revocation/device lifecycle remain | Cancel in-flight requests and purge/partition private text, media, revisions and pending operations; no stale-content flash |
 
 The [User API key specification](https://meta.discourse.org/t/user-api-keys-specification/48536)
 describes a user-consented, scoped application credential flow. It is a candidate
@@ -283,6 +283,17 @@ used to prove the mutation contracts.
 These are partial rows. Host-rendered login/account reads and local-server writes
 are different acceptance evidence; neither proves full web parity or installed
 Android behavior. Full remaining gaps stay in the matrix and draft PR #79.
+
+## November 5 mobile reading increment
+
+The [actual-source audit](UIT-FORUM-MOBILE-UX-2026-11-05.md) and
+[reviewed gallery](../design/FORUM-READING-UX.md) cover F06, F08, F16–F17 and
+parts of F26–F27. Upload previews load when visible; guest/member post controls,
+return-to-post login, bounded scoped image reuse and typed connection diagnostics
+are implemented. Actual owner-account reads were guarded against non-login writes.
+Host checks passed; the installed live test compiled only. The owner's Itel
+connection failure still needs device acceptance. No row is certified complete,
+and full-parity issue #39 remains open.
 
 ## Public AI context increment (#51)
 

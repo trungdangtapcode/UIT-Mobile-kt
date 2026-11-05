@@ -41,6 +41,13 @@ accelerated emulator was not available on the server. Rootless access does not
 inherently prevent emulation; an administrator can grant KVM access to enable
 hardware acceleration.
 
+That inventory describes initial setup. On November 5, 2026, the SDK included an
+emulator and an API 30 image, but KVM was still unavailable to this account. An
+isolated software emulator reported boot completion and then failed to install
+the Forum preview because its package service was unavailable. This attempt is
+not a native test pass. See [the Forum preview guide](FORUM-MOBILE-PREVIEW.md)
+for the compiled, opt-in public-source Android test and actual host evidence.
+
 Check the current permissions with:
 
 ```bash

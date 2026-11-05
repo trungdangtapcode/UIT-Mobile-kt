@@ -1,0 +1,180 @@
+{
+  "capturedOn": "2026-11-05",
+  "runtime": "Production Kotlin transport/repository/ViewModel and Compose on Robolectric API 35; host rendering, not installed-device execution",
+  "accountMode": "guest",
+  "sourceTopics": [
+    "https://forum.uit.edu.vn/t/163707",
+    "https://forum.uit.edu.vn/t/164929"
+  ],
+  "serverRevision": "b81bee142d364526b432788251986871952b5ddb",
+  "liveReports": [
+    {
+      "capturedAt": "2026-11-05T09:57:39.495624025Z",
+      "topicId": 163707,
+      "runtime": "Live anonymous production Kotlin transport/repository/ViewModel/Compose, Robolectric API 35; no physical phone",
+      "postNumbers": [
+        1,
+        16,
+        17,
+        19,
+        20
+      ],
+      "imageGets": 0,
+      "writes": 0,
+      "requests": [
+        "/t/163707.json",
+        "/c/33/show.json",
+        "/c/9/show.json"
+      ]
+    },
+    {
+      "capturedAt": "2026-11-05T09:57:41.067420282Z",
+      "topicId": 163707,
+      "runtime": "Live anonymous production Kotlin transport/repository/ViewModel/Compose, Robolectric API 35; no physical phone",
+      "postNumbers": [
+        1,
+        16,
+        17,
+        19,
+        20
+      ],
+      "imageGets": 0,
+      "writes": 0,
+      "requests": [
+        "/t/163707.json",
+        "/c/33/show.json",
+        "/c/9/show.json"
+      ]
+    },
+    {
+      "capturedAt": "2026-11-05T09:57:37.962971022Z",
+      "topicId": 163707,
+      "runtime": "Live anonymous production Kotlin transport/repository/ViewModel/Compose, Robolectric API 35; no physical phone",
+      "postNumbers": [
+        1,
+        16,
+        17,
+        19,
+        20
+      ],
+      "imageGets": 0,
+      "writes": 0,
+      "requests": [
+        "/t/163707.json",
+        "/c/33/show.json",
+        "/c/9/show.json"
+      ]
+    },
+    {
+      "capturedAt": "2026-11-05T09:57:34.675317787Z",
+      "topicId": 164929,
+      "runtime": "Live anonymous production Kotlin transport/repository/ViewModel/Compose, Robolectric API 35; no physical phone",
+      "postNumbers": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        11,
+        12,
+        13
+      ],
+      "imageGets": 2,
+      "writes": 0,
+      "requests": [
+        "/t/164929.json",
+        "/c/43/show.json",
+        "/c/10/show.json",
+        "/uploads/default/optimized/3X/6/b/6bea85169a6dc2687d27e5659be6b00eb5edf9a9_2_517x291.jpeg",
+        "/uploads/default/original/3X/6/b/6bea85169a6dc2687d27e5659be6b00eb5edf9a9.jpeg"
+      ]
+    },
+    {
+      "capturedAt": "2026-11-05T09:57:36.555271794Z",
+      "topicId": 163707,
+      "runtime": "Live anonymous production Kotlin transport/repository/ViewModel/Compose, Robolectric API 35; no physical phone",
+      "postNumbers": [
+        1,
+        16,
+        17,
+        19,
+        20
+      ],
+      "imageGets": 0,
+      "writes": 0,
+      "requests": [
+        "/t/163707.json",
+        "/c/33/show.json",
+        "/c/9/show.json"
+      ]
+    }
+  ],
+  "webComparison": {
+    "runtime": "Chromium mobile 390x844; anonymous; non-read requests, service workers and WebSockets blocked",
+    "capturedAt": "2026-11-05T08:22:13.713689+00:00",
+    "topic": "https://forum.uit.edu.vn/t/164929",
+    "postControls": "Element-only crop; no adjacent student support content"
+  },
+  "images": [
+    {
+      "file": "reading-announcement-390.png",
+      "sha256": "040e9579e2cba1a93c20cce545783d27ef6f0bbe8b09214ecf0f498eb5572747"
+    },
+    {
+      "file": "reading-icpc-360.png",
+      "sha256": "0b8372b4f993ba02942ac0b7d0fad45e6a876ac4d2eaffa9f1502cdccbd191bc"
+    },
+    {
+      "file": "reading-icpc-390-light.png",
+      "sha256": "d19e033b533ff03e6346e690dc58b0eaccf75bb7277a22b33ac342cd6deff202"
+    },
+    {
+      "file": "reading-icpc-390.png",
+      "sha256": "c8a29a81d11fbf634063a06684d5e08dacb6c592431a46b4df9cf143e3fa5f05"
+    },
+    {
+      "file": "reading-icpc-412-large-text.png",
+      "sha256": "48111674840a532c15af896e7f17440446dbb6843e411c25fa30eddb98f07611"
+    },
+    {
+      "file": "reading-icpc-actions-360.png",
+      "sha256": "f9872e0e44ff6010d8c15c24e86935653bb97e5e1cb4fd12b3f9f91f46a97922"
+    },
+    {
+      "file": "reading-icpc-actions-390-light.png",
+      "sha256": "0a6a9a9d44a654ba6a9c4e14111a35d64f1a7855ab16e10c6b455b00fe9486c3"
+    },
+    {
+      "file": "reading-icpc-actions-390.png",
+      "sha256": "908a3508c6ccdb4aab62c79b8278bb072a74790b4d35df56634a3a6dc78dacac"
+    },
+    {
+      "file": "reading-icpc-actions-412-large-text.png",
+      "sha256": "7cb8f42127bf41a9274f3bacaf997b8183c544e35bf807584109f05e3611ba28"
+    },
+    {
+      "file": "reading-image-viewer-390.png",
+      "sha256": "941c25e5ddd4fc1e7b338534add09b61b10fc2903ad7ec8050e8d8136bcb3c28"
+    },
+    {
+      "file": "reading-inline-image-390.png",
+      "sha256": "f148a8dbe334cf1d246e8827d452c3e9fe17cdffd06df951010ae7509a853094"
+    },
+    {
+      "file": "web-image-inline-390.png",
+      "sha256": "c5adf143690618b63ed1784a72c2af18efbbaea9fd9cedc960a6c4601b404654"
+    },
+    {
+      "file": "web-post-controls-only.png",
+      "sha256": "e2c87e70476a92433aae4ce15e43060200af1fb09eb100c041c736f950cd830c"
+    }
+  ],
+  "limitations": [
+    "No physical Itel acceptance",
+    "Installed Android test compiled but not executed; isolated software emulator package service failed",
+    "Private account captures excluded; no authored Forum posts"
+  ]
+}

@@ -26,3 +26,15 @@ tasks.register<JavaExec>("verifyForumMemberLab") {
     val credentials = providers.gradleProperty("forumLabCredentials")
     doFirst { args(credentials.get(), rootProject.layout.projectDirectory.file("docs/research/evidence/uit-forum-native-member-lab.json").asFile.absolutePath) }
 }
+
+
+tasks.register<JavaExec>("researchForumReadingUx") {
+    group = "verification"
+    description = "Manually check public ICPC/media topic reads using production Kotlin transport/parser."
+    dependsOn(tasks.named("testClasses"))
+    classpath = project.extensions.getByType<SourceSetContainer>()["test"].runtimeClasspath
+    mainClass.set("vn.edu.uit.mobile.forum.network.ForumReaderUxResearch")
+    val output = layout.buildDirectory.file("outputs/forum-reading-ux/public-network.json")
+    doFirst { output.get().asFile.parentFile.mkdirs() }
+    args(output.get().asFile.absolutePath)
+}

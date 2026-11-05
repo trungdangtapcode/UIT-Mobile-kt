@@ -16,6 +16,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.findRootCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
@@ -31,9 +34,9 @@ import kotlinx.coroutines.*
 import vn.edu.uit.mobile.core.designsystem.R
 import vn.edu.uit.mobile.domain.*
 
-@Composable fun SemanticArticleBlock(block: ForumBlock, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, source: String, onBrowser: (String) -> Unit, canLoadImage: (String) -> Boolean = { ForumUrls.image(it) != null }, pollContent: (@Composable (ForumPoll) -> Unit)? = null) {
+@Composable fun SemanticArticleBlock(block: ForumBlock, onLink: (String) -> Unit, imageLoader: suspend (String) -> ByteArray, source: String, onBrowser: (String) -> Unit, canLoadImage: (String) -> Boolean = { ForumUrls.image(it) != null }, autoLoadImages: Boolean = false, pollContent: (@Composable (ForumPoll) -> Unit)? = null) {
     @Composable fun children() {
-        block.children.forEach { SemanticArticleBlock(it, onLink, imageLoader, source, onBrowser, canLoadImage, pollContent) }
+        block.children.forEach { SemanticArticleBlock(it, onLink, imageLoader, source, onBrowser, canLoadImage, autoLoadImages, pollContent) }
     }
     when (block.kind) {
         ForumBlockKind.POLL -> block.poll?.let { poll ->
@@ -76,7 +79,7 @@ import vn.edu.uit.mobile.domain.*
             if (block.cells.isNotEmpty()) {
                 block.cells.forEach { row ->
                     Row {
-                        row.forEach { cell -> Column(Modifier.width(200.dp).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { cell.forEach { SemanticArticleBlock(it, onLink, imageLoader, source, onBrowser, canLoadImage, pollContent) } } }
+                        row.forEach { cell -> Column(Modifier.width(200.dp).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { cell.forEach { SemanticArticleBlock(it, onLink, imageLoader, source, onBrowser, canLoadImage, autoLoadImages, pollContent) } } }
                     }
                     HorizontalDivider()
                 }
@@ -84,7 +87,7 @@ import vn.edu.uit.mobile.domain.*
                 block.rows.forEach { row -> Row { row.forEach { Text(it, Modifier.width(200.dp).padding(8.dp)) } } }
             }
         }
-        ForumBlockKind.IMAGE -> ArticleImage(block, imageLoader, onBrowser, canLoadImage)
+        ForumBlockKind.IMAGE -> ArticleImage(block, imageLoader, onBrowser, canLoadImage, autoLoadImages)
         ForumBlockKind.OMITTED -> TextButton(onClick = { onBrowser(source) }) { Text(stringResource(R.string.rich_abbreviated)) }
         ForumBlockKind.UNSUPPORTED -> TextButton(onClick = { onBrowser(source) }) { Text(stringResource(R.string.rich_unsupported)) }
         else -> if (block.children.isNotEmpty()) {
@@ -155,16 +158,26 @@ import vn.edu.uit.mobile.domain.*
     if (block.inline.isEmpty()) block.links.forEach { TextButton(onClick = { onLink(it.url) }) { Text(it.label.ifBlank { it.url }) } }
 }
 
-@Composable private fun ArticleImage(block: ForumBlock, loader: suspend (String) -> ByteArray, onBrowser: (String) -> Unit, canLoadImage: (String) -> Boolean) {
+@Composable private fun ArticleImage(block: ForumBlock, loader: suspend (String) -> ByteArray, onBrowser: (String) -> Unit, canLoadImage: (String) -> Boolean, autoLoad: Boolean) {
     val url = block.links.firstOrNull()?.url ?: return
-    var request by remember(url) { mutableIntStateOf(0) }
+    var request by remember(url, autoLoad) { mutableIntStateOf(0) }
     var bitmap by remember(url) { mutableStateOf<ImageBitmap?>(null) }
     var failed by remember(url) { mutableStateOf(false) }
     var loading by remember(url) { mutableStateOf(false) }
     var full by rememberSaveable(url) { mutableStateOf(false) }
     val supported = canLoadImage(url)
-    LaunchedEffect(url, request) {
-        if (request > 0 && supported) {
+    var visible by remember(url) { mutableStateOf(false) }
+    val position = Modifier.testTag("forum-image-preview").onGloballyPositioned { coordinates ->
+        visible = if (coordinates.isAttached) {
+            val bounds = coordinates.boundsInWindow()
+            bounds.width > 0 && bounds.height > 0 && bounds.overlaps(coordinates.findRootCoordinates().boundsInWindow())
+        } else {
+            false
+        }
+    }
+    val shouldLoad = supported && bitmap == null && !failed && (request > 0 || autoLoad && visible)
+    LaunchedEffect(url, request, shouldLoad) {
+        if (shouldLoad) {
             loading = true
             failed = false
             try {
@@ -178,28 +191,32 @@ import vn.edu.uit.mobile.domain.*
             }
         }
     }
-    bitmap?.let { picture ->
-        Image(picture, block.text, Modifier.fillMaxWidth().heightIn(max = 480.dp), contentScale = ContentScale.Fit)
-        TextButton(onClick = { full = true }, modifier = Modifier.testTag("forum-image-open")) { Text(stringResource(R.string.rich_fullscreen)) }
-    }
-    if (bitmap == null) {
-        OutlinedButton(onClick = { if (supported) request++ else onBrowser(url) }, enabled = !loading, shape = TechnicalShapes.Control) {
-            Text(
-                stringResource(
-                    if (!supported) {
-                        R.string.rich_external_image
-                    } else if (failed) {
-                        R.string.rich_retry
-                    } else {
-                        R.string.rich_image
-                    }
-                )
-            )
+    val openLabel = stringResource(R.string.rich_fullscreen)
+    val picture = bitmap
+    if (picture != null) {
+        Box(position.fillMaxWidth()) {
+            Image(picture, block.text, Modifier.fillMaxWidth().heightIn(max = 480.dp).clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = openLabel) { full = true }.testTag("forum-image-open"), contentScale = ContentScale.Fit)
+        }
+    } else if (supported && (autoLoad || loading || failed)) {
+        val ratio = if (block.imageWidth > 0 && block.imageHeight > 0) (block.imageWidth.toFloat() / block.imageHeight).coerceIn(.4f, 3f) else 1.6f
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val previewHeight = (maxWidth / ratio).coerceIn(96.dp, 480.dp)
+            Box(position.fillMaxWidth().height(previewHeight).background(MaterialTheme.colorScheme.surfaceContainerLow), contentAlignment = Alignment.Center) {
+                if (loading) CircularProgressIndicator(Modifier.size(28.dp).testTag("forum-image-loading"))
+                if (failed) {
+                    TextButton(onClick = {
+                        failed = false
+                        request++
+                    }) { Text(stringResource(R.string.rich_retry)) }
+                }
+            }
         }
     }
-    if (loading) LinearProgressIndicator(Modifier.fillMaxWidth().testTag("forum-image-loading"))
+    if (picture == null && (!supported || !autoLoad && !loading && !failed)) {
+        OutlinedButton(onClick = { if (supported) request++ else onBrowser(url) }, enabled = !loading, shape = TechnicalShapes.Control) { Text(stringResource(if (supported) R.string.rich_image else R.string.rich_external_image)) }
+    }
     if (failed) Text(stringResource(R.string.rich_image_failed), style = MaterialTheme.typography.bodySmall)
-    if (block.text.isNotBlank()) Text(block.text, style = MaterialTheme.typography.labelSmall)
+    if (block.label.isNotBlank()) Text(block.label, style = MaterialTheme.typography.labelSmall)
     if (full) ArticleImageDialog(block, bitmap, loader, onBrowser, canLoadImage) { full = false }
 }
 

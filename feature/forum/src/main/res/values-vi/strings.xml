@@ -31,7 +31,7 @@
   <string name="f_cached">Bản ngoại tuyến · tải lúc %1$s</string>
   <string name="f_retrieved">Tải lúc %1$s</string>
   <string name="f_retry">Thử lại</string>
-  <string name="f_network">Không kết nối được Forum công khai. Hãy thử lại khi có mạng.</string>
+  <string name="f_network">Chưa tải được nội dung Forum. Thử lại hoặc kiểm tra bài gốc.</string>
   <string name="f_rate">Forum đang giới hạn yêu cầu. Vui lòng chờ trước khi thử lại.</string>
   <string name="f_wait">Thử lại sau %1$d giây.</string>
   <string name="f_unavailable">Nội dung riêng tư, đã xóa hoặc không cho phép đọc công khai.</string>
@@ -181,4 +181,21 @@
     <string name="f_ai_count">Số bài tối đa</string>
     <string name="f_ai_open">Mở trong Trợ lý UIT</string>
     <string name="f_public_ai_source">Nguồn trích dẫn công khai · đọc không đăng nhập</string>
+  <string name="f_topic_actions">Thao tác chủ đề</string>
+  <string name="f_post_actions">Thao tác bài viết</string>
+  <string name="f_copy_post">Sao chép link bài viết</string>
+  <string name="f_copy_topic">Sao chép link chủ đề</string>
+  <string name="f_position">Bài #%1$d</string>
+  <string name="f_opening_topic">Mở thảo luận</string>
+  <string name="f_loading_topic">Đang tải thảo luận này…</string>
+  <string name="f_reply_unavailable">Tài khoản này chưa được phép trả lời chủ đề này.</string>
+  <string name="f_error_details">Chi tiết lỗi</string>
+  <string name="f_copy_diagnostic">Sao chép thông tin chẩn đoán</string>
+  <string name="f_issue_dns">Không phân giải được tên miền Forum.</string>
+  <string name="f_issue_tls">Bắt tay TLS không thành công. App vẫn kiểm tra chứng chỉ.</string>
+  <string name="f_issue_timeout">Yêu cầu đến Forum đã hết thời gian chờ.</string>
+  <string name="f_issue_connect">Không thiết lập được kết nối đến máy chủ Forum.</string>
+  <string name="f_issue_io">Kết nối bị gián đoạn khi truyền dữ liệu.</string>
+  <string name="f_issue_server">Forum trả về lỗi máy chủ.</string>
+  <string name="f_issue_unknown">Chưa ghi nhận được loại lỗi kết nối cụ thể hơn. Có thể kiểm tra bài gốc bằng trình duyệt.</string>
 </resources>

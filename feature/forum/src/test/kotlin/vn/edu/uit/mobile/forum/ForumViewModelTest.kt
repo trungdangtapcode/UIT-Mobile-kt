@@ -261,4 +261,79 @@ class ForumViewModelTest {
         runCurrent()
         assertEquals(count + 1, repo.calls.size)
     }
+
+    @Test fun aFailedNewTopicDoesNotReusePreviousWindowOrFreshness() = runTest(dispatcher) {
+        val repo = Repo()
+        val vm = ForumViewModel(repo)
+        vm.open()
+        advanceUntilIdle()
+        vm.topic(1)
+        advanceUntilIdle()
+        assertEquals(20, vm.uiState.value.end)
+        vm.back()
+        repo.failure = ForumFailure.NETWORK
+        vm.topic(1)
+        assertEquals("Topic", vm.uiState.value.topic!!.title)
+        assertEquals(0, vm.uiState.value.start)
+        assertEquals(0, vm.uiState.value.end)
+        assertEquals(0L, vm.uiState.value.fetchedAt)
+        assertFalse(vm.uiState.value.offline)
+        advanceUntilIdle()
+        assertEquals(ForumFailure.NETWORK, vm.uiState.value.error)
+        assertTrue(vm.uiState.value.posts.isEmpty())
+        assertEquals(0, vm.uiState.value.end)
+    }
+
+    @Test fun imageReuseIsBoundedAndAnonymousCitationNeverReusesMemberModeBytes() = runTest(dispatcher) {
+        val base = Repo()
+        var normal = 0
+        var public = 0
+        val repo = object : ForumRepository by base {
+            override suspend fun image(url: String): ByteArray {
+                normal++
+                return ByteArray(3 * 1024 * 1024) { 1 }
+            }
+            override suspend fun imagePublic(url: String): ByteArray {
+                public++
+                return byteArrayOf(2)
+            }
+        }
+        val vm = ForumViewModel(repo)
+        assertEquals(1.toByte(), vm.image("one").first())
+        vm.image("one")
+        assertEquals(1, normal)
+        vm.image("two")
+        vm.image("three")
+        vm.image("one")
+        assertEquals(4, normal)
+        vm.openPublicTopic(1, 1)
+        advanceUntilIdle()
+        assertEquals(2.toByte(), vm.image("one").first())
+        assertEquals(1, public)
+        assertEquals(4, normal)
+    }
+
+    @Test fun anImageCompletingAfterCloseIsNotReturnedOrRetained() = runTest(dispatcher) {
+        val entered = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        var calls = 0
+        val repo = object : ForumRepository by Repo() {
+            override suspend fun image(url: String): ByteArray {
+                calls++
+                if (calls == 1) {
+                    entered.complete(Unit)
+                    withContext(NonCancellable) { release.await() }
+                }
+                return byteArrayOf(1)
+            }
+        }
+        val vm = ForumViewModel(repo)
+        val request = async { runCatching { vm.image("one") } }
+        entered.await()
+        vm.close()
+        release.complete(Unit)
+        assertTrue(request.await().exceptionOrNull() is CancellationException)
+        vm.image("one")
+        assertEquals(2, calls)
+    }
 }

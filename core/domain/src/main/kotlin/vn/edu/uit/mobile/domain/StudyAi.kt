@@ -27,6 +27,7 @@ interface StudyAiRepository {
     suspend fun generatePractice(course: Course, sources: List<StudySource>, options: PracticeOptions): PracticeGeneration = throw StudyAiException("Practice generation is unavailable for this connection.")
     suspend fun knowledge(course: Course, sources: List<StudySource>, focus: String, language: String): KnowledgeGeneration = throw StudyAiException("Knowledge maps are unavailable for this connection.")
     suspend fun tutor(course: Course?, request: TutorRequest): TutorResult = throw StudyAiException("Code tutoring is unavailable for this connection.")
+    suspend fun embed(course: Course, texts: List<String>, config: PassageEmbeddingConfig): PassageEmbeddingBatch = throw StudyAiException("Embeddings are unavailable for this connection.")
     suspend fun tasks(course: Course, assignmentId: Long): List<StudyTask>
     suspend fun saveTasks(course: Course, assignmentId: Long, tasks: List<StudyTask>)
 }

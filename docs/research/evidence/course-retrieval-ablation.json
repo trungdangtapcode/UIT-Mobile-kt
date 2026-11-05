@@ -1,0 +1,117 @@
+{
+  "capturedAt": "2026-11-04T18:02:08.986570030Z",
+  "sourceHash": "a5ddc366250ea69e2f82e1fd933b509cfeb9e82c12abeb2758744a606436fdad",
+  "baselineMetadataAudit": "Body-only and metadata-augmented all-token matching returned identical sets for all sixteen diagnostic queries.",
+  "interpretation": "Descriptive sensitivity sweep, not hyperparameter selection. Defaults were fixed before the original real embedding run. Do not tune on these test labels.",
+  "providerCalls": 0,
+  "configurations": [
+    {
+      "characters": 800,
+      "overlap": 100,
+      "k1": 0.8,
+      "b": 0.25,
+      "passages": 132,
+      "devNdcg5": 0.6911662448453915,
+      "testNdcg5": 0.291675585348243
+    },
+    {
+      "characters": 800,
+      "overlap": 100,
+      "k1": 0.8,
+      "b": 0.75,
+      "passages": 132,
+      "devNdcg5": 0.6612544923622716,
+      "testNdcg5": 0.3716436190837708
+    },
+    {
+      "characters": 800,
+      "overlap": 100,
+      "k1": 1.2,
+      "b": 0.25,
+      "passages": 132,
+      "devNdcg5": 0.7123425287958951,
+      "testNdcg5": 0.291675585348243
+    },
+    {
+      "characters": 800,
+      "overlap": 100,
+      "k1": 1.2,
+      "b": 0.75,
+      "passages": 132,
+      "devNdcg5": 0.6612544923622716,
+      "testNdcg5": 0.3671263030757866
+    },
+    {
+      "characters": 1400,
+      "overlap": 180,
+      "k1": 0.8,
+      "b": 0.25,
+      "passages": 103,
+      "devNdcg5": 0.6289621573321371,
+      "testNdcg5": 0.3400461596453332
+    },
+    {
+      "characters": 1400,
+      "overlap": 180,
+      "k1": 0.8,
+      "b": 0.75,
+      "passages": 103,
+      "devNdcg5": 0.6557668719271073,
+      "testNdcg5": 0.3921749318456486
+    },
+    {
+      "characters": 1400,
+      "overlap": 180,
+      "k1": 1.2,
+      "b": 0.25,
+      "passages": 103,
+      "devNdcg5": 0.6346936358381374,
+      "testNdcg5": 0.30400828027482557
+    },
+    {
+      "characters": 1400,
+      "overlap": 180,
+      "k1": 1.2,
+      "b": 0.75,
+      "passages": 103,
+      "devNdcg5": 0.6735373111578016,
+      "testNdcg5": 0.37441885899696403
+    },
+    {
+      "characters": 2000,
+      "overlap": 250,
+      "k1": 0.8,
+      "b": 0.25,
+      "passages": 96,
+      "devNdcg5": 0.6323607957401409,
+      "testNdcg5": 0.3058298243708877
+    },
+    {
+      "characters": 2000,
+      "overlap": 250,
+      "k1": 0.8,
+      "b": 0.75,
+      "passages": 96,
+      "devNdcg5": 0.6694620472981132,
+      "testNdcg5": 0.3921749318456486
+    },
+    {
+      "characters": 2000,
+      "overlap": 250,
+      "k1": 1.2,
+      "b": 0.25,
+      "passages": 96,
+      "devNdcg5": 0.6323607957401409,
+      "testNdcg5": 0.29678260231408415
+    },
+    {
+      "characters": 2000,
+      "overlap": 250,
+      "k1": 1.2,
+      "b": 0.75,
+      "passages": 96,
+      "devNdcg5": 0.6735373111578016,
+      "testNdcg5": 0.3921749318456486
+    }
+  ]
+}

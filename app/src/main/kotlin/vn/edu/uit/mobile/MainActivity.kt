@@ -95,6 +95,7 @@ class MainActivity : ComponentActivity() {
                 val workload = ownedViewModel { WorkloadViewModel(workloadRepository, accounts, createFreeTimeBlockStorage(this), sync = repository.syncState) }
                 val revision = ownedViewModel { RevisionViewModel(revisionRepository, workload) }
                 val downloads = ownedViewModel { OfflineDownloadsViewModel(repository, accounts, createOfflineDownloadStorage(this), observeDownloadWifi(applicationContext)) { wifiOnly -> OfflineDownloadWorker.enqueue(applicationContext, wifiOnly) } }
+                val passages = ownedViewModel { PassageSearchViewModel(vn.edu.uit.mobile.data.createPassageSearchRepository(this, accounts, repository.snapshot, studyRepository), repository.snapshot, accounts, studyRepository) }
                 val search = ownedViewModel { WorkspaceSearchViewModel(repository, accounts) }
                 val bookmarks = ownedViewModel { BookmarksViewModel(bookmarkRepository, repository, accounts) }
                 val courses = ownedViewModel { CoursesViewModel(repository) }
@@ -128,7 +129,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
-                UitShell(repository, dashboard, schedule, workload, revision, courses, search, downloads, bookmarks, study, practice, tutor, knowledge, reading, forum, inbox, academic, studentProfile, announcements, assistant, announcementRoute, {
+                UitShell(repository, dashboard, schedule, workload, revision, courses, search, passages, downloads, bookmarks, study, practice, tutor, knowledge, reading, forum, inbox, academic, studentProfile, announcements, assistant, announcementRoute, {
                     announcementRoute = null
                     intent.removeExtra(vn.edu.uit.mobile.data.AnnouncementSyncWorker.EXTRA_ANNOUNCEMENT)
                 }, { if (Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS) }, widgetRoute, {
@@ -195,6 +196,7 @@ private fun UitShell(
     revision: RevisionViewModel,
     courses: CoursesViewModel,
     search: WorkspaceSearchViewModel,
+    passages: PassageSearchViewModel,
     downloads: OfflineDownloadsViewModel,
     bookmarks: BookmarksViewModel,
     study: StudyViewModel,
@@ -437,7 +439,9 @@ private fun UitShell(
                 } else {
                     null
                 },
-                onOpenPdf = reading::open
+                onOpenPdf = reading::open,
+                passages = passages,
+                onOpenPassagePdf = reading::openExpected
             )
         } else if (showProfile) {
             StudentProfileScreen(studentProfile, onBack = { closeProfile() }, onManageAccounts = { showAccounts = true })

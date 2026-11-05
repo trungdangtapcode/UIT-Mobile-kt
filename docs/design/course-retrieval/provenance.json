@@ -1,0 +1,25 @@
+{
+  "source": "https://courses.uit.edu.vn/pluginfile.php/95720/mod_folder/content/0/Lab01-student.ipynb",
+  "sourceAcquired": "Owner-authorized read-only capture, 2026-11-02",
+  "sourceHash": "a5ddc366250ea69e2f82e1fd933b509cfeb9e82c12abeb2758744a606436fdad",
+  "realProviderCapturedAt": "2026-11-04T17:42:58.262321229Z",
+  "runtime": "Robolectric API 35 / native Compose host rendering, not a phone/emulator session",
+  "replay": "Actual production extraction, index and ranking results. The index is restored through the production repository/codec; source inspection revalidates the captured local file through the production loader. No key or university session is present.",
+  "displayIdentity": "Course/file names and source text come from the actual captured material. The local owner is anonymized and section context identifies the capture rather than claiming a live course session.",
+  "privacy": "No student profile, notebook output/metadata, credentials, raw full notebook or raw vector matrix is published.",
+  "review": "All 11 captures inspected at 360/390/412dp, dark/light and 130% text. Source inspection has a fixed Close action, no duplicate passage block, and exact cell/line metadata. Markdown/LaTeX remains literal source text; no mathematical typesetting claim.",
+  "renderedAtUtc": "2026-11-04T18:25:24.281556+00:00",
+  "hashes": {
+    "retrieval-code-390.png": "45c392235e066b48a56434cfe75f1159c48cfd69a550d8a5ba13f1c9c9d519cc",
+    "retrieval-results-360.png": "79b27a6c6ecd22f54bbe1e55d64fd7be84417d46b4aabfc9db0b063a178b2214",
+    "retrieval-results-390-light.png": "987487dd2cb09d8b1bafc94fb05bed9cead35d010fb72a05fc43ba2c5696ec68",
+    "retrieval-results-390.png": "3ca31b00589fb82836280b3af759539cd9c745b9945f6cf5fa7f144961a00494",
+    "retrieval-results-412-large-text.png": "d859ab8bc1954e962637e172a467e42010f4a687259b087d08d196e18656ce98",
+    "retrieval-scope-360.png": "fc1b9be28bbb7045f5e258a526c608b381a8f496034218ec2a2acb1c0e2d883f",
+    "retrieval-scope-390-light.png": "5dc23bf9c0eb900597875a4affff6ffd723a5f21e8d1aee9f8a697fa2d33dcf5",
+    "retrieval-scope-390.png": "3aeab7f1b7ec4edd4f4d3dd62610a4945f7d4921881adfbba47e5dc0f99c1869",
+    "retrieval-scope-412-large-text.png": "c2d18146ccca84d03f2a76b2c9cb74108b729478138ac042563e14a06e64c652",
+    "retrieval-selection-390.png": "1a197eaa1fa680eb9eb1d81e71ada6ecac61bcf342152d34b751205751e0cc67",
+    "retrieval-source-390.png": "032690ffedb708cf851a2759c967073ed649e63ca65ce32c56668c6629e877fa"
+  }
+}

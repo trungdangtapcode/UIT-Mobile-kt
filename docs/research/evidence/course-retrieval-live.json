@@ -1,0 +1,1512 @@
+{
+  "capturedAt": "2026-11-04T17:42:58.262321229Z",
+  "sourceHash": "a5ddc366250ea69e2f82e1fd933b509cfeb9e82c12abeb2758744a606436fdad",
+  "source": "https://courses.uit.edu.vn/pluginfile.php/95720/mod_folder/content/0/Lab01-student.ipynb",
+  "course": "NT409.R11",
+  "filename": "Lab01-student.ipynb",
+  "sourceAcquired": "Previously owner-authorized read-only UIT capture, 2026-11-02; no new university request or session",
+  "runtime": "Production Kotlin extraction/repository/embedding transport on host JVM; not Android device latency",
+  "owner": "Anonymized local owner; not a university login",
+  "uniqueDocuments": 1,
+  "duplicateCaptureExcluded": true,
+  "passages": 103,
+  "buildMilliseconds": 3473,
+  "buildTokens": 18180,
+  "model": "text-embedding-3-large",
+  "dimensions": 512,
+  "providerCalls": [
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 16,
+      "inputCharacters": 13894,
+      "tokens": 3543,
+      "requestId": "req_808e07a4124d4d89ba7627f746bce31f",
+      "milliseconds": 1286
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 16,
+      "inputCharacters": 10633,
+      "tokens": 2714,
+      "requestId": "req_ec15f7d7621a4a61a08a3202e3b6aa99",
+      "milliseconds": 768
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 16,
+      "inputCharacters": 8291,
+      "tokens": 2302,
+      "requestId": "req_6e36da056343406aa465a523d62a244a",
+      "milliseconds": 255
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 16,
+      "inputCharacters": 7395,
+      "tokens": 2229,
+      "requestId": "req_336530fb764f40aabc60dba845b2abc5",
+      "milliseconds": 222
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 16,
+      "inputCharacters": 13952,
+      "tokens": 3795,
+      "requestId": "req_f6c8e2870a2241a48e8a7865bba97ec6",
+      "milliseconds": 283
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 16,
+      "inputCharacters": 8364,
+      "tokens": 2176,
+      "requestId": "req_2f552ea640f54d6ba6eaa37adcac2e70",
+      "milliseconds": 262
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 7,
+      "inputCharacters": 5293,
+      "tokens": 1421,
+      "requestId": "req_f646479a472845a2a145f9b48f8a2639",
+      "milliseconds": 200
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 41,
+      "tokens": 11,
+      "requestId": "req_8dd0b3e016c84875bfbc4edb233f23f2",
+      "milliseconds": 150
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 11,
+      "tokens": 3,
+      "requestId": "req_367ef273c34f4da4bd7cfcad396f3e49",
+      "milliseconds": 123
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 56,
+      "tokens": 10,
+      "requestId": "req_f84b3482218b4e80a145e7b91f0e7d35",
+      "milliseconds": 124
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 66,
+      "tokens": 9,
+      "requestId": "req_04e8f893bb984b76be871bab7d56e156",
+      "milliseconds": 145
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 47,
+      "tokens": 10,
+      "requestId": "req_3ac173ad017e4fdb9a867b203b9d3c91",
+      "milliseconds": 126
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 49,
+      "tokens": 9,
+      "requestId": "req_645181a5cb314a63a052e64e5d486e3b",
+      "milliseconds": 147
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 18,
+      "tokens": 4,
+      "requestId": "req_42c9eb2d210f4195886cdb0b44f5d288",
+      "milliseconds": 135
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 40,
+      "tokens": 8,
+      "requestId": "req_fd74729b56bb44778094822b092c9ed6",
+      "milliseconds": 147
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 53,
+      "tokens": 27,
+      "requestId": "req_0a438eee56504cb78049ea41ee1d047a",
+      "milliseconds": 131
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 62,
+      "tokens": 27,
+      "requestId": "req_78e99958c22d471aa0ee68e246db44da",
+      "milliseconds": 131
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 85,
+      "tokens": 17,
+      "requestId": "req_ac1056a569294e1189f240e620505ca5",
+      "milliseconds": 152
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 19,
+      "tokens": 2,
+      "requestId": "req_8b1f0a6f82844ff7af738f517300c4f6",
+      "milliseconds": 160
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 51,
+      "tokens": 24,
+      "requestId": "req_6970fc1cd7ce4bf9b4bc18e1e1cfe73d",
+      "milliseconds": 128
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 44,
+      "tokens": 19,
+      "requestId": "req_ab2e2d36a7c2493581d8c5a44b542403",
+      "milliseconds": 121
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 74,
+      "tokens": 13,
+      "requestId": "req_86f8b4475c624086b0d7b1cc189baa86",
+      "milliseconds": 132
+    },
+    {
+      "model": "text-embedding-3-large",
+      "dimensions": 512,
+      "inputCount": 1,
+      "inputCharacters": 51,
+      "tokens": 26,
+      "requestId": "req_c841715e918d4937bead6016eb588303",
+      "milliseconds": 147
+    }
+  ],
+  "queries": [
+    {
+      "id": "bit-order",
+      "split": "dev",
+      "query": "Qiskit bitstrings qubit zero on the right",
+      "judgments": {
+        "14": 3,
+        "51": 3,
+        "49": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [],
+          "recall5": 0.0,
+          "ndcg5": 0.0,
+          "mrr10": 0.0,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            14,
+            10,
+            16,
+            12,
+            28,
+            20,
+            51,
+            27,
+            52,
+            17
+          ],
+          "recall5": 0.3333333333333333,
+          "ndcg5": 0.5874203951744315,
+          "mrr10": 1.0,
+          "milliseconds": 136
+        },
+        "semantic": {
+          "cells": [
+            50,
+            14,
+            51,
+            49,
+            1,
+            36,
+            57,
+            75,
+            17,
+            65
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.7004723733197302,
+          "mrr10": 0.5,
+          "milliseconds": 181
+        },
+        "hybrid": {
+          "cells": [
+            14,
+            51,
+            16,
+            17,
+            1,
+            27,
+            52,
+            75,
+            53,
+            57
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.9580414003446834,
+          "mrr10": 1.0,
+          "milliseconds": 33
+        }
+      }
+    },
+    {
+      "id": "identifier-estimator",
+      "split": "dev",
+      "query": "estimate_p1",
+      "judgments": {
+        "43": 3,
+        "42": 2,
+        "44": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [
+            46,
+            43,
+            44
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.5234343216411389,
+          "mrr10": 0.5,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            44,
+            43,
+            46,
+            42,
+            45,
+            32,
+            86,
+            88,
+            33
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.7142221296584441,
+          "mrr10": 1.0,
+          "milliseconds": 7
+        },
+        "semantic": {
+          "cells": [
+            44,
+            42,
+            45,
+            46,
+            32,
+            43,
+            31,
+            40,
+            86,
+            53
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.30797978964710215,
+          "mrr10": 1.0,
+          "milliseconds": 136
+        },
+        "hybrid": {
+          "cells": [
+            44,
+            42,
+            46,
+            43,
+            45,
+            32,
+            86,
+            33,
+            31,
+            40
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.6289425859831146,
+          "mrr10": 1.0,
+          "milliseconds": 16
+        }
+      }
+    },
+    {
+      "id": "sampling-cost",
+      "split": "dev",
+      "query": "ten times smaller error needs a hundred times more shots",
+      "judgments": {
+        "42": 3,
+        "45": 2,
+        "47": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [
+            42
+          ],
+          "recall5": 0.3333333333333333,
+          "ndcg5": 0.7452525342261977,
+          "mrr10": 1.0,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            42,
+            67,
+            87,
+            47,
+            82,
+            44,
+            45,
+            21,
+            20,
+            13
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.7911043622741996,
+          "mrr10": 1.0,
+          "milliseconds": 7
+        },
+        "semantic": {
+          "cells": [
+            47,
+            42,
+            46,
+            45,
+            32,
+            87,
+            84,
+            20,
+            21,
+            34
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.7142221296584441,
+          "mrr10": 1.0,
+          "milliseconds": 145
+        },
+        "hybrid": {
+          "cells": [
+            42,
+            47,
+            87,
+            45,
+            46,
+            20,
+            21,
+            82,
+            89,
+            75
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.9499797323370374,
+          "mrr10": 1.0,
+          "milliseconds": 19
+        }
+      }
+    },
+    {
+      "id": "compiler-stages",
+      "split": "dev",
+      "query": "compile abstract circuits into device instructions and route gates",
+      "judgments": {
+        "73": 3,
+        "69": 2,
+        "67": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [],
+          "recall5": 0.0,
+          "ndcg5": 0.0,
+          "mrr10": 0.0,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            2,
+            67,
+            63,
+            82,
+            69,
+            12,
+            80,
+            16,
+            77,
+            91
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.19073015752286027,
+          "mrr10": 0.5,
+          "milliseconds": 9
+        },
+        "semantic": {
+          "cells": [
+            73,
+            67,
+            69,
+            12,
+            62,
+            65,
+            74,
+            72,
+            80,
+            70
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.9721212198129315,
+          "mrr10": 1.0,
+          "milliseconds": 156
+        },
+        "hybrid": {
+          "cells": [
+            67,
+            69,
+            73,
+            80,
+            12,
+            65,
+            62,
+            82,
+            16,
+            2
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.680606056760201,
+          "mrr10": 1.0,
+          "milliseconds": 7
+        }
+      }
+    },
+    {
+      "id": "native-gates",
+      "split": "dev",
+      "query": "FakeKingston native instruction set rz sx cx cz",
+      "judgments": {
+        "65": 3,
+        "63": 2,
+        "67": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [],
+          "recall5": 0.0,
+          "ndcg5": 0.0,
+          "mrr10": 0.0,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            64,
+            65,
+            67,
+            63,
+            68,
+            80,
+            73,
+            66,
+            9,
+            72
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.6609898057851442,
+          "mrr10": 0.5,
+          "milliseconds": 7
+        },
+        "semantic": {
+          "cells": [
+            64,
+            67,
+            63,
+            65,
+            75,
+            80,
+            68,
+            87,
+            14,
+            57
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.5478314819227461,
+          "mrr10": 0.5,
+          "milliseconds": 133
+        },
+        "hybrid": {
+          "cells": [
+            64,
+            67,
+            65,
+            63,
+            68,
+            80,
+            75,
+            73,
+            9,
+            87
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.5773534652239385,
+          "mrr10": 0.5,
+          "milliseconds": 5
+        }
+      }
+    },
+    {
+      "id": "optimization",
+      "split": "dev",
+      "query": "star GHZ circuit optimization levels SWAP routing",
+      "judgments": {
+        "75": 3,
+        "77": 2,
+        "76": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [],
+          "recall5": 0.0,
+          "ndcg5": 0.0,
+          "mrr10": 0.0,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            75,
+            79,
+            77,
+            76,
+            73,
+            87,
+            69,
+            88,
+            78,
+            80
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.9508013338940992,
+          "mrr10": 1.0,
+          "milliseconds": 10
+        },
+        "semantic": {
+          "cells": [
+            75,
+            73,
+            77,
+            87,
+            80,
+            12,
+            65,
+            67,
+            69,
+            1
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.9049495058460973,
+          "mrr10": 1.0,
+          "milliseconds": 160
+        },
+        "hybrid": {
+          "cells": [
+            75,
+            77,
+            73,
+            87,
+            79,
+            80,
+            69,
+            76,
+            88,
+            78
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.9467676761267002,
+          "mrr10": 1.0,
+          "milliseconds": 12
+        }
+      }
+    },
+    {
+      "id": "identifier-x-basis",
+      "split": "dev",
+      "query": "measure_in_x_basis",
+      "judgments": {
+        "38": 3,
+        "37": 2,
+        "39": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [
+            38,
+            37,
+            39
+          ],
+          "recall5": 1.0,
+          "ndcg5": 1.0,
+          "mrr10": 1.0,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            39,
+            37,
+            38,
+            35,
+            57,
+            40,
+            29,
+            3,
+            36,
+            91
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.680606056760201,
+          "mrr10": 1.0,
+          "milliseconds": 13
+        },
+        "semantic": {
+          "cells": [
+            37,
+            39,
+            38,
+            65,
+            66,
+            29,
+            36,
+            50,
+            88,
+            16
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.7591919243197321,
+          "mrr10": 1.0,
+          "milliseconds": 151
+        },
+        "hybrid": {
+          "cells": [
+            37,
+            39,
+            38,
+            29,
+            65,
+            36,
+            35,
+            40,
+            50,
+            66
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.7591919243197321,
+          "mrr10": 1.0,
+          "milliseconds": 18
+        }
+      }
+    },
+    {
+      "id": "installation",
+      "split": "dev",
+      "query": "Qiskit install environment conda version",
+      "judgments": {
+        "4": 3,
+        "6": 2,
+        "7": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [],
+          "recall5": 0.0,
+          "ndcg5": 0.0,
+          "mrr10": 0.0,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            4,
+            7,
+            5,
+            14,
+            3,
+            91,
+            12,
+            1,
+            62,
+            9
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.8124242481930319,
+          "mrr10": 1.0,
+          "milliseconds": 5
+        },
+        "semantic": {
+          "cells": [
+            4,
+            5,
+            7,
+            12,
+            1,
+            91,
+            14,
+            2,
+            6,
+            3
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.7984848580994977,
+          "mrr10": 1.0,
+          "milliseconds": 153
+        },
+        "hybrid": {
+          "cells": [
+            4,
+            7,
+            5,
+            12,
+            91,
+            1,
+            14,
+            3,
+            2,
+            9
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.8124242481930319,
+          "mrr10": 1.0,
+          "milliseconds": 7
+        }
+      }
+    },
+    {
+      "id": "sampling-vietnamese",
+      "split": "test",
+      "query": "Vì sao tăng số lần đo gấp 100 mới giảm sai số 10 lần?",
+      "judgments": {
+        "42": 3,
+        "47": 2,
+        "91": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [],
+          "recall5": 0.0,
+          "ndcg5": 0.0,
+          "mrr10": 0.0,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            47,
+            50,
+            46,
+            51,
+            86,
+            60,
+            75,
+            56,
+            67,
+            63
+          ],
+          "recall5": 0.3333333333333333,
+          "ndcg5": 0.319393943239799,
+          "mrr10": 1.0,
+          "milliseconds": 5
+        },
+        "semantic": {
+          "cells": [
+            47,
+            45,
+            42,
+            46,
+            34,
+            87,
+            75,
+            3,
+            86,
+            82
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.692020210352898,
+          "mrr10": 1.0,
+          "milliseconds": 140
+        },
+        "hybrid": {
+          "cells": [
+            47,
+            46,
+            86,
+            75,
+            42,
+            89,
+            84,
+            50,
+            79,
+            56
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.6076969782038599,
+          "mrr10": 1.0,
+          "milliseconds": 7
+        }
+      }
+    },
+    {
+      "id": "hidden-phase-vietnamese",
+      "split": "test",
+      "query": "Hai mạch cho cùng histogram nhưng trạng thái khác nhau vì sao?",
+      "judgments": {
+        "35": 3,
+        "34": 2,
+        "37": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [],
+          "recall5": 0.0,
+          "ndcg5": 0.0,
+          "mrr10": 0.0,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            21,
+            83,
+            36,
+            35,
+            52,
+            39,
+            9,
+            3
+          ],
+          "recall5": 0.3333333333333333,
+          "ndcg5": 0.32096279633601243,
+          "mrr10": 0.25,
+          "milliseconds": 5
+        },
+        "semantic": {
+          "cells": [
+            35,
+            34,
+            40,
+            60,
+            45,
+            54,
+            42,
+            25,
+            21,
+            36
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.9467676761267002,
+          "mrr10": 1.0,
+          "milliseconds": 145
+        },
+        "hybrid": {
+          "cells": [
+            35,
+            21,
+            36,
+            83,
+            52,
+            39,
+            34,
+            40,
+            60,
+            45
+          ],
+          "recall5": 0.3333333333333333,
+          "ndcg5": 0.7452525342261977,
+          "mrr10": 1.0,
+          "milliseconds": 7
+        }
+      }
+    },
+    {
+      "id": "routing-paraphrase",
+      "split": "test",
+      "query": "The processor cannot connect every pair of qubits. How does the compiler handle this?",
+      "judgments": {
+        "73": 3,
+        "67": 2,
+        "75": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [],
+          "recall5": 0.0,
+          "ndcg5": 0.0,
+          "mrr10": 0.0,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            67,
+            72,
+            68,
+            89,
+            62,
+            3,
+            16,
+            80,
+            63,
+            64
+          ],
+          "recall5": 0.3333333333333333,
+          "ndcg5": 0.319393943239799,
+          "mrr10": 1.0,
+          "milliseconds": 5
+        },
+        "semantic": {
+          "cells": [
+            67,
+            73,
+            62,
+            80,
+            75,
+            65,
+            91,
+            12,
+            87,
+            3
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.8307820888596468,
+          "mrr10": 1.0,
+          "milliseconds": 159
+        },
+        "hybrid": {
+          "cells": [
+            67,
+            62,
+            72,
+            80,
+            3,
+            73,
+            91,
+            89,
+            75,
+            68
+          ],
+          "recall5": 0.3333333333333333,
+          "ndcg5": 0.319393943239799,
+          "mrr10": 1.0,
+          "milliseconds": 6
+        }
+      }
+    },
+    {
+      "id": "identifier-success",
+      "split": "test",
+      "query": "success_probability",
+      "judgments": {
+        "85": 3,
+        "84": 2,
+        "86": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [
+            88,
+            86,
+            85
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.43979798107993306,
+          "mrr10": 0.5,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            86,
+            85,
+            88,
+            84,
+            89,
+            87,
+            91,
+            32,
+            31,
+            3
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.7142221296584441,
+          "mrr10": 1.0,
+          "milliseconds": 4
+        },
+        "semantic": {
+          "cells": [
+            84,
+            86,
+            32,
+            85,
+            31,
+            21,
+            43,
+            42,
+            33,
+            44
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.7075284535426456,
+          "mrr10": 1.0,
+          "milliseconds": 167
+        },
+        "hybrid": {
+          "cells": [
+            86,
+            84,
+            85,
+            32,
+            31,
+            87,
+            33,
+            53,
+            89,
+            30
+          ],
+          "recall5": 1.0,
+          "ndcg5": 0.680606056760201,
+          "mrr10": 1.0,
+          "milliseconds": 6
+        }
+      }
+    },
+    {
+      "id": "noisy-bell-vietnamese",
+      "split": "test",
+      "query": "Vì sao Bell state có kết quả 01 và 10 khi có nhiễu?",
+      "judgments": {
+        "84": 3,
+        "82": 2,
+        "89": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [],
+          "recall5": 0.0,
+          "ndcg5": 0.0,
+          "mrr10": 0.0,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            56,
+            84,
+            51,
+            57,
+            86,
+            59,
+            89,
+            14,
+            85,
+            55
+          ],
+          "recall5": 0.3333333333333333,
+          "ndcg5": 0.47020199776783905,
+          "mrr10": 0.5,
+          "milliseconds": 8
+        },
+        "semantic": {
+          "cells": [
+            89,
+            84,
+            49,
+            51,
+            3,
+            54,
+            52,
+            60,
+            83,
+            57
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.5766666455144387,
+          "mrr10": 1.0,
+          "milliseconds": 136
+        },
+        "hybrid": {
+          "cells": [
+            84,
+            51,
+            89,
+            57,
+            49,
+            52,
+            59,
+            83,
+            75,
+            86
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.7984848580994977,
+          "mrr10": 1.0,
+          "milliseconds": 5
+        }
+      }
+    },
+    {
+      "id": "mixed-bit-order",
+      "split": "test",
+      "query": "QuantumCircuit thứ tự bit qubit 0 ở bên phải",
+      "judgments": {
+        "14": 3,
+        "51": 3,
+        "49": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [],
+          "recall5": 0.0,
+          "ndcg5": 0.0,
+          "mrr10": 0.0,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            50,
+            52,
+            68,
+            24,
+            29,
+            16,
+            88,
+            76,
+            28,
+            23
+          ],
+          "recall5": 0.0,
+          "ndcg5": 0.0,
+          "mrr10": 0.0,
+          "milliseconds": 8
+        },
+        "semantic": {
+          "cells": [
+            50,
+            51,
+            16,
+            49,
+            1,
+            17,
+            75,
+            73,
+            27,
+            30
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.40676217573251444,
+          "mrr10": 0.5,
+          "milliseconds": 132
+        },
+        "hybrid": {
+          "cells": [
+            50,
+            16,
+            28,
+            49,
+            52,
+            17,
+            23,
+            27,
+            1,
+            75
+          ],
+          "recall5": 0.3333333333333333,
+          "ndcg5": 0.03614117056226236,
+          "mrr10": 0.25,
+          "milliseconds": 11
+        }
+      }
+    },
+    {
+      "id": "sampling-paraphrase",
+      "split": "test",
+      "query": "Which primitive returns sample counts instead of revealing the amplitudes?",
+      "judgments": {
+        "20": 3,
+        "18": 2,
+        "25": 2
+      },
+      "methods": {
+        "token-and": {
+          "cells": [],
+          "recall5": 0.0,
+          "ndcg5": 0.0,
+          "mrr10": 0.0,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            25,
+            20,
+            22,
+            91,
+            10,
+            12,
+            59,
+            52,
+            43,
+            36
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.7136205775898136,
+          "mrr10": 1.0,
+          "milliseconds": 9
+        },
+        "semantic": {
+          "cells": [
+            25,
+            20,
+            42,
+            34,
+            15,
+            91,
+            43,
+            21,
+            83,
+            35
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.7136205775898136,
+          "mrr10": 1.0,
+          "milliseconds": 147
+        },
+        "hybrid": {
+          "cells": [
+            25,
+            20,
+            91,
+            43,
+            22,
+            83,
+            10,
+            50,
+            44,
+            35
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.7136205775898136,
+          "mrr10": 1.0,
+          "milliseconds": 16
+        }
+      }
+    },
+    {
+      "id": "entanglement-vietnamese",
+      "split": "test",
+      "query": "So sánh trạng thái vướng víu và hai đồng xu độc lập",
+      "judgments": {
+        "54": 3,
+        "51": 2,
+        "52": 1
+      },
+      "methods": {
+        "token-and": {
+          "cells": [],
+          "recall5": 0.0,
+          "ndcg5": 0.0,
+          "mrr10": 0.0,
+          "milliseconds": 0
+        },
+        "bm25": {
+          "cells": [
+            42,
+            63,
+            22,
+            51,
+            18,
+            75,
+            67,
+            37,
+            4,
+            69
+          ],
+          "recall5": 0.3333333333333333,
+          "ndcg5": 0.13755548414400534,
+          "mrr10": 0.25,
+          "milliseconds": 8
+        },
+        "semantic": {
+          "cells": [
+            60,
+            54,
+            51,
+            36,
+            3,
+            35,
+            52,
+            49,
+            39,
+            62
+          ],
+          "recall5": 0.6666666666666666,
+          "ndcg5": 0.6298989693877386,
+          "mrr10": 0.5,
+          "milliseconds": 158
+        },
+        "hybrid": {
+          "cells": [
+            51,
+            60,
+            18,
+            75,
+            37,
+            27,
+            42,
+            63,
+            54,
+            22
+          ],
+          "recall5": 0.3333333333333333,
+          "ndcg5": 0.319393943239799,
+          "mrr10": 1.0,
+          "milliseconds": 11
+        }
+      }
+    }
+  ],
+  "labelDefinition": "Implementer-authored graded cell judgments fixed before the embedding run; not independently reviewed.",
+  "latencyCaveat": "Semantic includes one fresh query embedding; subsequent hybrid reuses that exact query vector to avoid duplicate paid evaluation calls. BM25 includes local source verification. Cells are deduplicated before ranking metrics.",
+  "accessFailures": {
+    "model": "text-embedding-3-small",
+    "status": 403,
+    "code": "model_not_found",
+    "rejectedEmbeddingRequests": 3,
+    "modelListReads": 1,
+    "providerUsage": "No usage returned for rejected requests; not counted as successful embeddings."
+  },
+  "privacy": {
+    "universitySessionUsed": false,
+    "newUniversityRequests": 0,
+    "universityMutations": 0,
+    "source": "Previously authorized course source capture; source URL query stripped and owner aliased.",
+    "rawVectorsPublished": false,
+    "fullRawMaterialPublished": false
+  },
+  "metricsDefinition": {
+    "unit": "Unique source cells, deduplicated in returned ranking before metrics; not whole files.",
+    "relevance": "Implementer-assigned grades 1..3; no independent reviewer.",
+    "recall5": "Relevant source cells found in first five divided by labelled relevant source cells.",
+    "ndcg5": "DCG gain 2^grade-1 with log2(rank+1) discount, normalized by ideal top-five graded order.",
+    "mrr10": "Reciprocal first relevant cell rank within first ten."
+  },
+  "summary": {
+    "dev": {
+      "token-and": {
+        "recall5": 0.25,
+        "ndcg5": 0.2835858569834171,
+        "mrr10": 0.3125,
+        "milliseconds": 0
+      },
+      "bm25": {
+        "recall5": 0.7916666666666666,
+        "ndcg5": 0.6735373111578015,
+        "mrr10": 0.875,
+        "milliseconds": 24.25
+      },
+      "semantic": {
+        "recall5": 0.875,
+        "ndcg5": 0.7131566603282852,
+        "mrr10": 0.875,
+        "milliseconds": 151.875
+      },
+      "hybrid": {
+        "recall5": 0.875,
+        "ndcg5": 0.7891633861610549,
+        "mrr10": 0.9375,
+        "milliseconds": 14.625
+      }
+    },
+    "test": {
+      "token-and": {
+        "recall5": 0.08333333333333333,
+        "ndcg5": 0.05497474763499163,
+        "mrr10": 0.0625,
+        "milliseconds": 0
+      },
+      "bm25": {
+        "recall5": 0.41666666666666663,
+        "ndcg5": 0.3744188589969641,
+        "mrr10": 0.625,
+        "milliseconds": 6.5
+      },
+      "semantic": {
+        "recall5": 0.75,
+        "ndcg5": 0.6880058496382995,
+        "mrr10": 0.875,
+        "milliseconds": 148
+      },
+      "hybrid": {
+        "recall5": 0.5416666666666666,
+        "ndcg5": 0.5275737577401788,
+        "mrr10": 0.90625,
+        "milliseconds": 8.625
+      }
+    },
+    "all": {
+      "token-and": {
+        "recall5": 0.16666666666666666,
+        "ndcg5": 0.16928030230920435,
+        "mrr10": 0.1875,
+        "milliseconds": 0
+      },
+      "bm25": {
+        "recall5": 0.6041666666666666,
+        "ndcg5": 0.5239780850773827,
+        "mrr10": 0.75,
+        "milliseconds": 15.375
+      },
+      "semantic": {
+        "recall5": 0.8125,
+        "ndcg5": 0.7005812549832923,
+        "mrr10": 0.875,
+        "milliseconds": 149.9375
+      },
+      "hybrid": {
+        "recall5": 0.7083333333333333,
+        "ndcg5": 0.6583685719506168,
+        "mrr10": 0.921875,
+        "milliseconds": 11.625
+      }
+    }
+  }
+}

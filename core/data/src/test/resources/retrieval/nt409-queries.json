@@ -1,0 +1,166 @@
+{
+  "source": "Owner-authorized captured UIT Moodle NT409.R11 Lab01-student.ipynb; one unique notebook, not a representative benchmark.",
+  "labels": "Implementer-authored graded cell judgments fixed before the embedding run; not independently reviewed.",
+  "queries": [
+    {
+      "id": "bit-order",
+      "split": "dev",
+      "text": "Qiskit bitstrings qubit zero on the right",
+      "cells": {
+        "14": 3,
+        "51": 3,
+        "49": 1
+      }
+    },
+    {
+      "id": "identifier-estimator",
+      "split": "dev",
+      "text": "estimate_p1",
+      "cells": {
+        "43": 3,
+        "42": 2,
+        "44": 1
+      }
+    },
+    {
+      "id": "sampling-cost",
+      "split": "dev",
+      "text": "ten times smaller error needs a hundred times more shots",
+      "cells": {
+        "42": 3,
+        "45": 2,
+        "47": 1
+      }
+    },
+    {
+      "id": "compiler-stages",
+      "split": "dev",
+      "text": "compile abstract circuits into device instructions and route gates",
+      "cells": {
+        "73": 3,
+        "69": 2,
+        "67": 1
+      }
+    },
+    {
+      "id": "native-gates",
+      "split": "dev",
+      "text": "FakeKingston native instruction set rz sx cx cz",
+      "cells": {
+        "65": 3,
+        "63": 2,
+        "67": 1
+      }
+    },
+    {
+      "id": "optimization",
+      "split": "dev",
+      "text": "star GHZ circuit optimization levels SWAP routing",
+      "cells": {
+        "75": 3,
+        "77": 2,
+        "76": 1
+      }
+    },
+    {
+      "id": "identifier-x-basis",
+      "split": "dev",
+      "text": "measure_in_x_basis",
+      "cells": {
+        "38": 3,
+        "37": 2,
+        "39": 1
+      }
+    },
+    {
+      "id": "installation",
+      "split": "dev",
+      "text": "Qiskit install environment conda version",
+      "cells": {
+        "4": 3,
+        "6": 2,
+        "7": 1
+      }
+    },
+    {
+      "id": "sampling-vietnamese",
+      "split": "test",
+      "text": "Vì sao tăng số lần đo gấp 100 mới giảm sai số 10 lần?",
+      "cells": {
+        "42": 3,
+        "47": 2,
+        "91": 1
+      }
+    },
+    {
+      "id": "hidden-phase-vietnamese",
+      "split": "test",
+      "text": "Hai mạch cho cùng histogram nhưng trạng thái khác nhau vì sao?",
+      "cells": {
+        "35": 3,
+        "34": 2,
+        "37": 1
+      }
+    },
+    {
+      "id": "routing-paraphrase",
+      "split": "test",
+      "text": "The processor cannot connect every pair of qubits. How does the compiler handle this?",
+      "cells": {
+        "73": 3,
+        "67": 2,
+        "75": 1
+      }
+    },
+    {
+      "id": "identifier-success",
+      "split": "test",
+      "text": "success_probability",
+      "cells": {
+        "85": 3,
+        "84": 2,
+        "86": 1
+      }
+    },
+    {
+      "id": "noisy-bell-vietnamese",
+      "split": "test",
+      "text": "Vì sao Bell state có kết quả 01 và 10 khi có nhiễu?",
+      "cells": {
+        "84": 3,
+        "82": 2,
+        "89": 1
+      }
+    },
+    {
+      "id": "mixed-bit-order",
+      "split": "test",
+      "text": "QuantumCircuit thứ tự bit qubit 0 ở bên phải",
+      "cells": {
+        "14": 3,
+        "51": 3,
+        "49": 1
+      }
+    },
+    {
+      "id": "sampling-paraphrase",
+      "split": "test",
+      "text": "Which primitive returns sample counts instead of revealing the amplitudes?",
+      "cells": {
+        "20": 3,
+        "18": 2,
+        "25": 2
+      }
+    },
+    {
+      "id": "entanglement-vietnamese",
+      "split": "test",
+      "text": "So sánh trạng thái vướng víu và hai đồng xu độc lập",
+      "cells": {
+        "54": 3,
+        "51": 2,
+        "52": 1
+      }
+    }
+  ]
+}

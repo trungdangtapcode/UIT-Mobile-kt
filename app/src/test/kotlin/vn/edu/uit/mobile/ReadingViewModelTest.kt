@@ -52,6 +52,20 @@ class ReadingViewModelTest {
         assertNotNull(vm.uiState.value.record)
     }
 
+    @Test fun passageNavigationRejectsAReplacementBeforeRenderingAndRetryPreservesTheExpectedVersion() = checkModel {
+        vm.openExpected(h.course, h.file, "b".repeat(64))
+        runCurrent()
+        assertEquals(ReadingProblem.FILE, vm.uiState.value.problem)
+        assertEquals(0, h.opened)
+        vm.retry()
+        runCurrent()
+        assertEquals(ReadingProblem.FILE, vm.uiState.value.problem)
+        assertEquals(0, h.opened)
+        vm.openExpected(h.course, h.file, ReadingFixtures.identity.version)
+        runCurrent()
+        assertNotNull(vm.uiState.value.image)
+    }
+
     @Test fun libraryAndOpeningReadOnlyLocalDataNeverInvokeUniversityTransport() = checkModel {
         vm.library()
         runCurrent()

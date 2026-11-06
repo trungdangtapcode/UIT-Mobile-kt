@@ -96,8 +96,13 @@ AUTH_PROBE_PORT=8878 AUTH_PROBE_CODEX=/home/your-user/.local/bin/codex npm start
 
 ## Compare the methods
 
-- Browser: Continue with ChatGPT, complete the authorization in the new tab,
-  close the generic callback tab and inspect the original page. Retry uses the
+- Browser: Continue with ChatGPT first prepares a valid authorization URL, then
+  opens OpenAI directly. No blank placeholder tab is created or closed. If the
+  browser blocks automatic opening, use the visible Open OpenAI sign-in link.
+  Complete authorization in the new tab, close the generic callback tab and
+  inspect the original page. Controls remain disabled until the local launch
+  capability is accepted. Errors appear above the methods and receive focus.
+  Retry uses the
   same issued client ID during the current comparison. A new attempt has fresh
   state, nonce and S256 PKCE. The listener rejects duplicate/expired callbacks.
 - Device: Get a device code, open the official verification link, enter the code
@@ -161,6 +166,24 @@ key remains for the next start; otherwise its temporary directory is removed. No
 ```sh
 npm test
 ```
+
+The optional browser regression requires a separately installed Puppeteer module
+and Chromium (not needed to use the auth page):
+
+```sh
+AUTH_PROBE_PUPPETEER_MODULE=/path/to/puppeteer/lib/puppeteer/puppeteer.js \
+PUPPETEER_EXECUTABLE_PATH=/path/to/chrome npm run test:browser
+```
+
+It checks stale links, switching to a new launch fragment in an existing tab,
+rejected requests without blank popups, visible errors, actual provider-tab
+navigation and an ordinary-link fallback when popup blocking is simulated.
+The token callback portion uses a signed fixture and is explicitly separate from
+real subscriber acceptance. The test returns focus to the original tab as a user
+would after authorization. Published connected-account evidence is not generated.
+
+A page already open during a script update should be reloaded. Subsequently,
+changing its launch fragment is handled without retaining the previous local key.
 
 Tests use signed fixture credentials and an isolated child-process RPC fixture.
 They cover PKCE, callback replay/state checks, nonce/audience/issuer/signature/time,

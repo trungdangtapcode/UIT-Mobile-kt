@@ -61,5 +61,38 @@
       "accountAuthenticated": false
     },
     "githubActionsDispatched": false
+  },
+  "popupFollowUp": {
+    "reproducedBeforeFix": {
+      "controlledStaleLink": true,
+      "blankPlaceholderOpened": true,
+      "errorBelowViewport": true,
+      "diagnostic": "open_private_launch_url"
+    },
+    "fixes": [
+      "Validate local connection before enabling auth controls",
+      "Prepare provider URL before opening a tab",
+      "Keep ordinary link fallback",
+      "Visible focused errors",
+      "Handle launch fragment changes in an existing tab"
+    ],
+    "browserRegression": {
+      "invalidLinkDisabled": true,
+      "rejectedStartOpensNoPopup": true,
+      "rejectedStartErrorVisible": true,
+      "realPopupNavigation": true,
+      "controlledCallbackReturnsVerifiedResult": true,
+      "blockedPopupManualLinkWorks": true,
+      "actualSubscriberAuthenticated": false,
+      "providerLoginCompleted": false,
+      "inferencePerformed": false,
+      "fixtureCallbackUsed": true,
+      "pageErrors": []
+    },
+    "nodeTests": {
+      "passed": 15,
+      "failed": 0
+    },
+    "githubActionsDispatched": false
   }
 }

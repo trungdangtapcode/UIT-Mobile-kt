@@ -1,7 +1,12 @@
 const $ = id => document.getElementById(id);
-const fragment = location.hash.slice(1);
-if (fragment) { sessionStorage.setItem('uit-auth-probe-control', fragment); history.replaceState(null, '', location.pathname); }
-const key = sessionStorage.getItem('uit-auth-probe-control') || '';
+let key;
+function readLaunchKey() {
+  const fragment = location.hash.slice(1);
+  if (fragment) { sessionStorage.setItem('uit-auth-probe-control', fragment); history.replaceState(null, '', location.pathname); }
+  key = sessionStorage.getItem('uit-auth-probe-control') || '';
+}
+readLaunchKey();
+let connected = false, browserStarting = false;
 async function api(path, post = false) {
   const response = await fetch(`/api/${path}`, { method: post ? 'POST' : 'GET', cache: 'no-store',
     headers: { 'X-Probe-Key': key, ...(post ? { 'Content-Type': 'application/json' } : {}) }, ...(post ? { body: '{}' } : {}) });
@@ -9,7 +14,15 @@ async function api(path, post = false) {
   if (!response.ok) throw new Error(result.code || 'local_request_failed');
   return result;
 }
-function failure(error) { $('error').hidden = false; $('error').textContent = `Test could not complete: ${error.message}. Your existing app and Codex profiles are unchanged.`; }
+function failure(error) {
+  const detail = error.message === 'open_private_launch_url'
+    ? 'Open the current full private launch URL, including its fragment, then try again.'
+    : error.message === 'invalid_origin' || error.message === 'same_origin_post_required'
+      ? 'Open the test through its 127.0.0.1 launch URL and SSH tunnel, then reload.'
+      : 'Check the local server and retry. The existing app and normal Codex profiles are unchanged.';
+  $('error').hidden = false; $('error').textContent = `Could not complete this action (${error.message}). ${detail}`;
+  $('error').scrollIntoView({ block: 'center' }); $('error').focus({ preventScroll: true });
+}
 function row(dl, label, value) { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = label; dd.textContent = value; dl.append(dt, dd); }
 function renderResult(id, state, method) {
   const root = $(id); root.replaceChildren(); const dl = document.createElement('dl');
@@ -32,30 +45,43 @@ function renderResult(id, state, method) {
 async function refresh() {
   try {
     const state = await api('state');
+    connected = true;
     $('connection').textContent = 'Connected to your local test server. Tokens stay out of the browser.';
     renderResult('browser-result', state.browser, 'browser'); renderResult('device-result', state.device, 'device');
     $('check-browser').disabled = !state.browser.tokenReceived || state.browser.checkingModels;
     $('check-device').disabled = !state.device.tokenReceived || state.device.checkingModels;
+    $('start-browser').disabled = browserStarting;
     $('start-device').disabled = state.device.phase !== 'idle';
+    $('reset').disabled = false; $('report').disabled = false;
     $('device-approval').hidden = !state.device.userCode;
     $('device-code').textContent = state.device.userCode || '';
     if (state.device.verificationUrl) $('device-link').href = state.device.verificationUrl;
     $('discovery').textContent = JSON.stringify(state.discovery, null, 2);
     $('identity-comparison').textContent = state.verifiedSubjectsMatch === null ? 'Complete both methods to compare verified subjects.' : `Verified token subjects match: ${state.verifiedSubjectsMatch ? 'yes' : 'no'}. Client registrations remain separate.`;
   } catch (error) {
+    connected = false;
+    for (const id of ['start-browser', 'start-device', 'check-browser', 'check-device', 'report', 'reset']) $(id).disabled = true;
     $('connection').textContent = error.message === 'open_private_launch_url'
       ? 'This launch link is missing or belongs to an older test server. Open the current full private launch URL, including its fragment.'
       : 'Local server unavailable. Check your SSH tunnel and user service.';
   }
 }
 $('start-browser').onclick = async () => {
-  const popup = window.open('about:blank', '_blank'); if (popup) popup.opener = null;
+  if (!connected || browserStarting) return;
+  browserStarting = true; $('start-browser').disabled = true;
+  $('browser-link').hidden = true; $('browser-link').removeAttribute('href');
+  $('browser-action').textContent = 'Preparing your OpenAI sign-in link…';
   try {
     $('error').hidden = true; const result = await api('start/browser', true);
-    $('browser-link').href = result.authorizationUrl; $('browser-link').hidden = false;
-    if (popup) popup.location = result.authorizationUrl;
+    const url = new URL(result.authorizationUrl);
+    if (url.origin !== 'https://auth.openai.com' || url.pathname !== '/api/accounts/authorize') throw new Error('invalid_authorization_url');
+    $('browser-link').href = url.href; $('browser-link').hidden = false;
+    $('browser-action').textContent = 'Your sign-in link is ready. If no tab opens, select Open OpenAI sign-in above.';
+    // Open only a prepared provider URL. Never create or close a blank placeholder tab.
+    try { window.open(url.href, '_blank', 'noopener,noreferrer'); } catch { /* The ordinary link remains available when popups are blocked. */ }
     await refresh();
-  } catch (error) { popup?.close(); failure(error); }
+  } catch (error) { $('browser-action').textContent = 'No sign-in link was created.'; failure(error); }
+  finally { browserStarting = false; $('start-browser').disabled = !connected; }
 };
 $('start-device').onclick = async () => {
   $('start-device').disabled = true; $('error').hidden = true;
@@ -78,5 +104,6 @@ $('report').onclick = async () => {
     const a = document.createElement('a'); a.href = url; a.download = 'chatgpt-auth-probe-report.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   } catch (error) { failure(error); }
 };
+window.addEventListener('hashchange', () => { readLaunchKey(); $('error').hidden = true; void refresh(); });
 await refresh();
 setInterval(refresh, 2000);

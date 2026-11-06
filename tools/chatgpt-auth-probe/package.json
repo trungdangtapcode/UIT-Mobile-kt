@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "engines": { "node": ">=22" },
-  "scripts": { "start": "node server.mjs", "test": "node --test test/*.test.mjs" },
+  "scripts": { "start": "node server.mjs", "test": "node --test test/*.test.mjs", "test:browser": "node test/browser.mjs" },
   "dependencies": { "jose": "6.2.15" }
 }

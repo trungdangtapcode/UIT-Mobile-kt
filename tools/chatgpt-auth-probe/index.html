@@ -16,12 +16,14 @@
   </header>
   <p class="notice">No AI generation is sent. Optional model checks are read-only. Authentication may create an app connection in your ChatGPT account.</p>
   <p id="connection" role="status">Connecting to the local test server…</p>
+  <p id="error" role="alert" tabindex="-1" hidden></p>
   <section aria-labelledby="browser-title">
     <p class="eyebrow">Method 1 / SIWC</p>
     <h2 id="browser-title">Continue with ChatGPT</h2>
     <p>Register this test app with OpenAI, authorize ChatGPT plan use and return through the loopback callback.</p>
-    <button id="start-browser">Continue with ChatGPT</button>
-    <a id="browser-link" target="_blank" rel="noopener noreferrer" hidden>Open the current sign-in attempt</a>
+    <button id="start-browser" disabled>Continue with ChatGPT</button>
+    <a id="browser-link" target="_blank" rel="noopener noreferrer" hidden>Open OpenAI sign-in</a>
+    <p id="browser-action" class="hint" role="status"></p>
     <p class="hint">Finish in the new tab, then return here. To use another account, clear the comparison first.</p>
     <div id="browser-result" class="result" aria-live="polite"></div>
     <button id="check-browser" class="secondary" disabled>Check API access · read-only</button>
@@ -30,7 +32,7 @@
     <p class="eyebrow">Method 2 / Codex compatibility test</p>
     <h2 id="device-title">Sign in with device code</h2>
     <p>Use the official Codex device flow in an isolated temporary profile. It does not register a new SIWC client for UIT Mobile. We check the result instead of assuming it grants SIWC access.</p>
-    <button id="start-device">Get a device code</button>
+    <button id="start-device" disabled>Get a device code</button>
     <div id="device-approval" hidden>
       <p>Enter this code on OpenAI's verification page:</p>
       <div class="code-row"><code id="device-code"></code><button id="copy-code" class="secondary">Copy code</button></div>
@@ -45,12 +47,11 @@
     <p>A token, permission and accepted catalog are separate checks. This tool does not prove completed model inference.</p>
     <details><summary>Public OpenAI discovery</summary><pre id="discovery">Not checked yet.</pre></details>
     <div class="actions">
-      <button id="report" class="secondary">Download safe report</button>
-      <button id="reset" class="secondary">Clear local test &amp; switch account</button>
+      <button id="report" class="secondary" disabled>Download safe report</button>
+      <button id="reset" class="secondary" disabled>Clear local test &amp; switch account</button>
     </div>
     <p class="hint">Clearing removes local test credentials. Existing app grants may remain in ChatGPT settings. Stop the local server or user service when finished.</p>
   </section>
-  <p id="error" role="alert" hidden></p>
   <footer>Local diagnostic tool · English interface · No university account access</footer>
 </main>
 </body>

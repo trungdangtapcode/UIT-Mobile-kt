@@ -67,6 +67,7 @@ class AssistantForumViewModelTest {
         val study = Proxy.newProxyInstance(StudyAiRepository::class.java.classLoader, arrayOf(StudyAiRepository::class.java)) { _, method, _ ->
             when (method.name) {
                 "connection" -> StudyConnection(configured = true)
+                "getConnectionChanges" -> kotlinx.coroutines.flow.emptyFlow<StudyConnection>()
                 else -> error("No inference or configuration allowed ${method.name}")
             }
         } as StudyAiRepository

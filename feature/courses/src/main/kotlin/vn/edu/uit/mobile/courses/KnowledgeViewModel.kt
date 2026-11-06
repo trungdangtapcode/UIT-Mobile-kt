@@ -46,6 +46,7 @@ class KnowledgeViewModel(private val ai: StudyAiRepository, private val library:
     private var pending: Pair<KnowledgeRecord?, KnowledgeRecord>? = null
     private var sourceStamp = ""
     init {
+        viewModelScope.launch { ai.connectionChanges.collect { connection -> state.update { it.copy(connection = connection) } } }
         viewModelScope.launch {
             combine(accounts.accounts, portal.snapshot) { a, s -> a to s }.collect { (a, s) ->
                 owners = a.map { it.id }.toSet()
@@ -168,7 +169,11 @@ class KnowledgeViewModel(private val ai: StudyAiRepository, private val library:
         state.value = state.value.copy(sources = (state.value.sources + StudySource("excerpt:${UUID.randomUUID()}", title, text)).takeLast(60))
     }
     fun configure(mode: StudyConnectionMode, endpoint: String, secret: String, model: String, done: () -> Unit) = run(KnowledgeProblem.SAVE) {
-        if (mode == StudyConnectionMode.DIRECT) ai.configureDirect(secret, model) else ai.configure(endpoint, secret)
+        when (mode) {
+            StudyConnectionMode.DIRECT -> ai.configureDirect(secret, model)
+            StudyConnectionMode.GATEWAY -> ai.configure(endpoint, secret)
+            StudyConnectionMode.CHATGPT -> ai.configureChatGpt(model)
+        }
         currentCoroutineContext().ensureActive()
         state.value = state.value.copy(connection = ai.connection())
         done()

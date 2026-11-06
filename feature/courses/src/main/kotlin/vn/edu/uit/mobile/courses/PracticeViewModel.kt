@@ -50,6 +50,7 @@ class PracticeViewModel(private val ai: StudyAiRepository, private val library: 
     private var metadata = ""
     private var knownCollections = emptyList<PracticeCollection>()
     init {
+        viewModelScope.launch { ai.connectionChanges.collect { connection -> state.update { it.copy(connection = connection) } } }
         viewModelScope.launch {
             accounts.accounts.collect { owners ->
                 val old = state.value
@@ -211,7 +212,11 @@ class PracticeViewModel(private val ai: StudyAiRepository, private val library: 
         done()
     }
     override fun configure(mode: StudyConnectionMode, endpoint: String, secret: String, model: String, done: () -> Unit) = launch(PracticeProblem.SAVE) {
-        if (mode == StudyConnectionMode.DIRECT)ai.configureDirect(secret, model)else ai.configure(endpoint, secret)
+        when (mode) {
+            StudyConnectionMode.DIRECT -> ai.configureDirect(secret, model)
+            StudyConnectionMode.GATEWAY -> ai.configure(endpoint, secret)
+            StudyConnectionMode.CHATGPT -> ai.configureChatGpt(model)
+        }
         currentCoroutineContext().ensureActive()
         state.value = state.value.copy(connection = ai.connection())
         done()

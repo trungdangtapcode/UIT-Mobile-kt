@@ -45,7 +45,6 @@ import vn.edu.uit.mobile.data.createOfflineCourseSourceLoader
 import vn.edu.uit.mobile.data.createOfflineDownloadStorage
 import vn.edu.uit.mobile.data.createOfflineTutorCodeLoader
 import vn.edu.uit.mobile.data.createReadingDocumentLoader
-import vn.edu.uit.mobile.data.createStudyAiRepository
 import vn.edu.uit.mobile.data.observeDownloadWifi
 import vn.edu.uit.mobile.designsystem.*
 import vn.edu.uit.mobile.domain.*
@@ -67,7 +66,7 @@ class MainActivity : ComponentActivity() {
     private val knowledgeRepository: KnowledgeRepository by lazy { getKoin().getOrNull<KnowledgeRepository>() ?: LocalKnowledgeRepository(StudyPrivateStorage(this, "knowledge", "uit.knowledge.v1"), accounts) }
     private val forumRepository: ForumRepository by lazy { getKoin().getOrNull<ForumRepository>() ?: createForumRepository(this) }
     private val readingRepository: ReadingRepository by lazy { getKoin().getOrNull<ReadingRepository>() ?: LocalReadingRepository(StudyPrivateStorage(this, "reading", "uit.reading.v1"), accounts) }
-    private val studyRepository: StudyAiRepository by lazy { createStudyAiRepository(this, accounts) }
+    private val studyRepository: StudyAiRepository by lazy { getKoin().getOrNull<StudyAiRepository>() ?: vn.edu.uit.mobile.data.UitGraph.get(this).studyAi }
 
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(newBase.withAppLanguage(LanguagePreference.read(newBase)))
@@ -84,88 +83,91 @@ class MainActivity : ComponentActivity() {
             var dynamic by rememberSaveable { mutableStateOf(preferences.getBoolean("dynamic", true)) }
             var showWidgets by rememberSaveable { mutableStateOf(false) }
             val language = LanguagePreference.read(this)
-            UitTheme(dark, dynamic) {
-                SideEffect {
-                    val bars = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
-                    bars.isAppearanceLightStatusBars = !dark
-                    bars.isAppearanceLightNavigationBars = !dark
-                }
-                val dashboard = ownedViewModel { DashboardViewModel(repository) }
-                val schedule = ownedViewModel { ScheduleViewModel(repository, accounts, createFreeTimeBlockStorage(this)) }
-                val workload = ownedViewModel { WorkloadViewModel(workloadRepository, accounts, createFreeTimeBlockStorage(this), sync = repository.syncState) }
-                val revision = ownedViewModel { RevisionViewModel(revisionRepository, workload) }
-                val downloads = ownedViewModel { OfflineDownloadsViewModel(repository, accounts, createOfflineDownloadStorage(this), observeDownloadWifi(applicationContext)) { wifiOnly -> OfflineDownloadWorker.enqueue(applicationContext, wifiOnly) } }
-                val passages = ownedViewModel { PassageSearchViewModel(vn.edu.uit.mobile.data.createPassageSearchRepository(this, accounts, repository.snapshot, studyRepository), repository.snapshot, accounts, studyRepository) }
-                val search = ownedViewModel { WorkspaceSearchViewModel(repository, accounts) }
-                val bookmarks = ownedViewModel { BookmarksViewModel(bookmarkRepository, repository, accounts) }
-                val courses = ownedViewModel { CoursesViewModel(repository) }
-                val study = ownedViewModel { StudyViewModel(studyRepository, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this))) }
-                val practice = ownedViewModel { PracticeViewModel(studyRepository, practiceRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this))) }
-                val tutor = ownedViewModel { CodeTutorViewModel(studyRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this)), createOfflineTutorCodeLoader(createOfflineDownloadStorage(this))) }
-                val knowledge = ownedViewModel { KnowledgeViewModel(studyRepository, knowledgeRepository, accounts, repository, createKnowledgeSourceLoader(createOfflineDownloadStorage(this))) }
-                val reading = ownedViewModel { CourseReadingViewModel(readingRepository, accounts, repository, createOfflineDownloadStorage(this), createReadingDocumentLoader(createOfflineDownloadStorage(this)), nativeReadingPdfFactory(cacheDir)) }
-                val assistant = ownedViewModel { AssistantViewModel(assistantRepository, studyRepository, announcementRepository) }
-                val announcements = ownedViewModel { AnnouncementsViewModel(announcementRepository) }
-                val forum = ownedViewModel { ForumViewModel(forumRepository) }
-                val inbox = ownedViewModel { InboxViewModel(repository) }
-                val academic = ownedViewModel { AcademicViewModel(repository) }
-                val auth = ownedViewModel { AccountsViewModel(accounts) }
-                val studentProfile = ownedViewModel { StudentProfileViewModel(repository, accounts) }
-                val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
-                val accountState by auth.uiState.collectAsStateWithLifecycle()
-                LaunchedEffect(accountState.accounts) { if (accountState.accounts.isNotEmpty()) repository.refresh() }
-                val login: (String) -> Unit = { base ->
-                    UnifiedSsoLoginController(this).launch(base, onResult = { sessions ->
-                        lifecycleScope.launch {
-                            try {
-                                accounts.saveSessions(sessions)
-                                repository.refresh()
-                                if (Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            } catch (e: kotlinx.coroutines.CancellationException) {
-                                throw e
-                            } catch (e: Exception) {
-                                Toast.makeText(this@MainActivity, "Unable to save the session. Please try again.", Toast.LENGTH_LONG).show()
+            CompositionLocalProvider(LocalChatGptConnector provides studyRepository.chatGpt) {
+                UitTheme(dark, dynamic) {
+                    SideEffect {
+                        val bars = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+                        bars.isAppearanceLightStatusBars = !dark
+                        bars.isAppearanceLightNavigationBars = !dark
+                    }
+                    val dashboard = ownedViewModel { DashboardViewModel(repository) }
+                    val schedule = ownedViewModel { ScheduleViewModel(repository, accounts, createFreeTimeBlockStorage(this)) }
+                    val workload = ownedViewModel { WorkloadViewModel(workloadRepository, accounts, createFreeTimeBlockStorage(this), sync = repository.syncState) }
+                    val revision = ownedViewModel { RevisionViewModel(revisionRepository, workload) }
+                    val downloads = ownedViewModel { OfflineDownloadsViewModel(repository, accounts, createOfflineDownloadStorage(this), observeDownloadWifi(applicationContext)) { wifiOnly -> OfflineDownloadWorker.enqueue(applicationContext, wifiOnly) } }
+                    val passages = ownedViewModel { PassageSearchViewModel(vn.edu.uit.mobile.data.createPassageSearchRepository(this, accounts, repository.snapshot, studyRepository), repository.snapshot, accounts, studyRepository) }
+                    val search = ownedViewModel { WorkspaceSearchViewModel(repository, accounts) }
+                    val bookmarks = ownedViewModel { BookmarksViewModel(bookmarkRepository, repository, accounts) }
+                    val courses = ownedViewModel { CoursesViewModel(repository) }
+                    val study = ownedViewModel { StudyViewModel(studyRepository, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this))) }
+                    val practice = ownedViewModel { PracticeViewModel(studyRepository, practiceRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this))) }
+                    val tutor = ownedViewModel { CodeTutorViewModel(studyRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this)), createOfflineTutorCodeLoader(createOfflineDownloadStorage(this))) }
+                    val knowledge = ownedViewModel { KnowledgeViewModel(studyRepository, knowledgeRepository, accounts, repository, createKnowledgeSourceLoader(createOfflineDownloadStorage(this))) }
+                    val reading = ownedViewModel { CourseReadingViewModel(readingRepository, accounts, repository, createOfflineDownloadStorage(this), createReadingDocumentLoader(createOfflineDownloadStorage(this)), nativeReadingPdfFactory(cacheDir)) }
+                    val assistant = ownedViewModel { AssistantViewModel(assistantRepository, studyRepository, announcementRepository) }
+                    val announcements = ownedViewModel { AnnouncementsViewModel(announcementRepository) }
+                    val forum = ownedViewModel { ForumViewModel(forumRepository) }
+                    val inbox = ownedViewModel { InboxViewModel(repository) }
+                    val academic = ownedViewModel { AcademicViewModel(repository) }
+                    val auth = ownedViewModel { AccountsViewModel(accounts) }
+                    val studentProfile = ownedViewModel { StudentProfileViewModel(repository, accounts) }
+                    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+                    val accountState by auth.uiState.collectAsStateWithLifecycle()
+                    LaunchedEffect(accountState.accounts) { if (accountState.accounts.isNotEmpty()) repository.refresh() }
+                    val login: (String) -> Unit = { base ->
+                        UnifiedSsoLoginController(this).launch(base, onResult = { sessions ->
+                            lifecycleScope.launch {
+                                try {
+                                    accounts.saveSessions(sessions)
+                                    repository.refresh()
+                                    if (Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                } catch (e: kotlinx.coroutines.CancellationException) {
+                                    throw e
+                                } catch (e: Exception) {
+                                    Toast.makeText(this@MainActivity, "Unable to save the session. Please try again.", Toast.LENGTH_LONG).show()
+                                }
                             }
-                        }
-                    }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
+                        }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
+                    }
+                    UitShell(repository, dashboard, schedule, workload, revision, courses, search, passages, downloads, bookmarks, study, practice, tutor, knowledge, reading, forum, inbox, academic, studentProfile, announcements, assistant, announcementRoute, {
+                        announcementRoute = null
+                        intent.removeExtra(vn.edu.uit.mobile.data.AnnouncementSyncWorker.EXTRA_ANNOUNCEMENT)
+                    }, { if (Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS) }, widgetRoute, {
+                        showWidgets = false
+                        widgetRoute = null
+                        setIntent(
+                            Intent(intent).apply {
+                                data = null
+                                action = Intent.ACTION_MAIN
+                            }
+                        )
+                    }) { onProfile ->
+                        AccountsScreen(
+                            auth, login, dark, dynamic, {
+                                dark = it
+                                preferences.edit().putBoolean("dark", it).apply()
+                                WidgetRuntime.requestRender(this)
+                            }, {
+                                dynamic = it
+                                preferences.edit().putBoolean("dynamic", it).apply()
+                                WidgetRuntime.requestRender(this)
+                            }, onProfile = onProfile, onWidgets = { showWidgets = true },
+                            language = language,
+                            onLanguage = {
+                                LanguagePreference.write(this, it)
+                                WidgetRuntime.requestRender(this)
+                                recreate()
+                            }
+                        )
+                    }
+                    if (showWidgets) HomeWidgetsDialog { showWidgets = false }
                 }
-                UitShell(repository, dashboard, schedule, workload, revision, courses, search, passages, downloads, bookmarks, study, practice, tutor, knowledge, reading, forum, inbox, academic, studentProfile, announcements, assistant, announcementRoute, {
-                    announcementRoute = null
-                    intent.removeExtra(vn.edu.uit.mobile.data.AnnouncementSyncWorker.EXTRA_ANNOUNCEMENT)
-                }, { if (Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS) }, widgetRoute, {
-                    showWidgets = false
-                    widgetRoute = null
-                    setIntent(
-                        Intent(intent).apply {
-                            data = null
-                            action = Intent.ACTION_MAIN
-                        }
-                    )
-                }) { onProfile ->
-                    AccountsScreen(
-                        auth, login, dark, dynamic, {
-                            dark = it
-                            preferences.edit().putBoolean("dark", it).apply()
-                            WidgetRuntime.requestRender(this)
-                        }, {
-                            dynamic = it
-                            preferences.edit().putBoolean("dynamic", it).apply()
-                            WidgetRuntime.requestRender(this)
-                        }, onProfile = onProfile, onWidgets = { showWidgets = true },
-                        language = language,
-                        onLanguage = {
-                            LanguagePreference.write(this, it)
-                            WidgetRuntime.requestRender(this)
-                            recreate()
-                        }
-                    )
-                }
-                if (showWidgets) HomeWidgetsDialog { showWidgets = false }
             }
         }
     }
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        if (intent.data?.scheme == "uitmobile-chatgpt") return
         setIntent(intent)
         announcementRoute = intent.getStringExtra(vn.edu.uit.mobile.data.AnnouncementSyncWorker.EXTRA_ANNOUNCEMENT)
         widgetRoute = WidgetRoute.read(intent)

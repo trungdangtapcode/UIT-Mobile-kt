@@ -1,6 +1,8 @@
 package vn.edu.uit.mobile.domain
 
 import java.net.URI
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import vn.edu.uit.mobile.model.Assignment
 import vn.edu.uit.mobile.model.Course
 import vn.edu.uit.mobile.model.CourseSection
@@ -9,8 +11,8 @@ data class StudySource(val id: String, val title: String, val text: String)
 data class StudyCitation(val sourceId: String, val quote: String)
 data class StudyItem(val kind: String, val text: String, val citations: List<StudyCitation> = emptyList())
 data class StudyAnswer(val model: String, val generatedAt: Long, val items: List<StudyItem>)
-enum class StudyConnectionMode { DIRECT, GATEWAY }
-data class StudyConnection(val endpoint: String = "https://api.openai.com", val configured: Boolean = false, val mode: StudyConnectionMode = StudyConnectionMode.DIRECT, val model: String = "")
+enum class StudyConnectionMode { DIRECT, GATEWAY, CHATGPT }
+data class StudyConnection(val endpoint: String = "https://api.openai.com", val configured: Boolean = false, val mode: StudyConnectionMode = StudyConnectionMode.DIRECT, val model: String = "", val accountLabel: String = "")
 data class StudyTask(val text: String, val checked: Boolean = false)
 class StudyAiException(message: String) : IllegalStateException(message)
 
@@ -19,9 +21,12 @@ fun interface OfflineCourseSourceLoader {
 }
 
 interface StudyAiRepository {
+    val chatGpt: ChatGptConnector? get() = null
+    val connectionChanges: Flow<StudyConnection> get() = emptyFlow()
     suspend fun connection(): StudyConnection
     suspend fun configure(endpoint: String, token: String)
     suspend fun configureDirect(apiKey: String, model: String)
+    suspend fun configureChatGpt(model: String): Unit = throw StudyAiException("ChatGPT sign-in is unavailable.")
     suspend fun disconnect()
     suspend fun generate(course: Course, mode: String, sources: List<StudySource>, question: String, language: String): StudyAnswer
     suspend fun generatePractice(course: Course, sources: List<StudySource>, options: PracticeOptions): PracticeGeneration = throw StudyAiException("Practice generation is unavailable for this connection.")

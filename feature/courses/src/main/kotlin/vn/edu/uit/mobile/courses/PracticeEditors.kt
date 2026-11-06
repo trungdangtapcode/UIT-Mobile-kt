@@ -51,7 +51,17 @@ import vn.edu.uit.mobile.feature.courses.R
         if (!state.connection.configured) {
             Text(stringResource(R.string.pp_connection_needed), style = MaterialTheme.typography.bodyMedium)
         } else {
-            Text(if (state.connection.mode == StudyConnectionMode.DIRECT)stringResource(R.string.st_direct, state.connection.model)else stringResource(R.string.st_gateway, state.connection.endpoint), style = MaterialTheme.typography.bodySmall)
+            ChatGptUsage(state.connection)
+            Text(
+                if (state.connection.mode == StudyConnectionMode.CHATGPT) {
+                    "${chatGptLabel()} · ${state.connection.model}"
+                } else if (state.connection.mode == StudyConnectionMode.DIRECT) {
+                    stringResource(R.string.st_direct, state.connection.model)
+                } else {
+                    stringResource(R.string.st_gateway, state.connection.endpoint)
+                },
+                style = MaterialTheme.typography.bodySmall
+            )
         }
         Text(stringResource(R.string.pp_send_help), style = MaterialTheme.typography.bodySmall)
         TextButton(onSettings, enabled = !state.busy, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_configure)) }

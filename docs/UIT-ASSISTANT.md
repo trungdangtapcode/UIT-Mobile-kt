@@ -25,6 +25,9 @@ No code-execution sandbox, Codex process, CLI, MCP server or hosted backend is
 required for the delivered runtime. The model itself runs through the configured
 API provider. Direct mode uses a personal key entered at runtime; the existing
 optional gateway supports the same client-owned tool loop after updating its code.
+The [ChatGPT account connection](CHATGPT-PLAN.md) additionally supports authorized
+plan-backed Responses calls without entering an API key. It adapts the protocol
+and namespaced local source tools while preserving source/evidence boundaries.
 
 ## Runtime decision: measured Koog compatibility
 
@@ -288,7 +291,7 @@ to 262,144 characters, total wire data to 2 MiB, accumulated structured preview 
 request and whole-turn deadlines remain. There is no automatic transport fallback
 or extra paid retry after a broken stream. The optional Python gateway currently
 returns a buffered response; its search/read activity still appears, but token
-streaming is available in Direct mode only.
+streaming is available in Direct API and ChatGPT account modes.
 
 Official contract references, accessed 2026-11-04:
 [Streaming responses](https://developers.openai.com/api/docs/guides/streaming-responses)

@@ -1,8 +1,19 @@
-plugins { alias(libs.plugins.android.application); kotlin("android"); id("org.jetbrains.kotlin.plugin.compose") }
+plugins {
+    alias(libs.plugins.android.application)
+    kotlin("android")
+    id("org.jetbrains.kotlin.plugin.compose")
+}
 android {
     namespace = "vn.edu.uit.mobile"
     compileSdk = 35
-    defaultConfig { applicationId = "vn.edu.uit.mobile"; minSdk = 26; targetSdk = 35; versionCode = 7; versionName = "0.1.6"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
+    defaultConfig {
+        applicationId = "vn.edu.uit.mobile"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 7
+        versionName = "0.1.6"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
     if (providers.gradleProperty("previewInstall").orNull == "true") {
         defaultConfig {
             applicationId = "vn.edu.uit.mobile.preview"
@@ -14,7 +25,10 @@ android {
     }
     buildFeatures { compose = true }
     testOptions { unitTests.isIncludeAndroidResources = true }
-    compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
     packaging { resources.excludes += setOf("META-INF/AL2.0", "META-INF/LGPL2.1", "META-INF/INDEX.LIST") }
 }
 kotlin { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
@@ -40,18 +54,31 @@ dependencies {
     testImplementation(libs.roborazzi)
     testImplementation(libs.roborazzi.compose)
     debugImplementation(libs.compose.ui.test.manifest)
-    implementation(project(":core:data")); implementation(project(":core:auth")); implementation(project(":core:database"))
-    implementation(project(":core:designsystem")); implementation(project(":core:domain"))
-    implementation(project(":feature:auth")); implementation(project(":feature:dashboard")); implementation(project(":feature:schedule"))
-    implementation(project(":feature:courses")); implementation(project(":feature:academic")); implementation(project(":feature:forum"))
-    implementation(platform(libs.compose.bom)); implementation(libs.compose.material3); implementation(libs.compose.ui)
-    implementation(libs.activity.compose); implementation(libs.lifecycle.compose); implementation(libs.lifecycle.viewmodel)
-    implementation(libs.koin.android); implementation(libs.work); implementation(libs.core.ktx)
+    implementation(project(":core:data"))
+    implementation(project(":core:auth"))
+    implementation(project(":core:database"))
+    implementation(project(":core:designsystem"))
+    implementation(project(":core:domain"))
+    implementation(project(":feature:auth"))
+    implementation(project(":feature:dashboard"))
+    implementation(project(":feature:schedule"))
+    implementation(project(":feature:courses"))
+    implementation(project(":feature:academic"))
+    implementation(project(":feature:forum"))
+    implementation(platform(libs.compose.bom))
+    implementation(libs.compose.material3)
+    implementation(libs.compose.ui)
+    implementation(libs.activity.compose)
+    implementation(libs.lifecycle.compose)
+    implementation(libs.lifecycle.viewmodel)
+    implementation(libs.koin.android)
+    implementation(libs.work)
+    implementation(libs.core.ktx)
 }
 
 tasks.withType<Test>().configureEach {
     // Compose rendering uses the debug-only host Activity supplied by ui-test-manifest.
-    if (name.contains("Release")) exclude("**/ForumReadingUxDesignTest.class", "**/ForumReadingLiveDesignTest.class", "**/AssistantDesignTest.class", "**/AssistantLiveDesignTest.class", "**/ForumDigestLiveDesignTest.class", "**/PassageSearchDesignTest.class", "**/PassageRetrievalLiveDesignTest.class", "**/AnnouncementsDesignTest.class", "**/AnnouncementsLiveDesignTest.class", "**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class", "**/ForumAccountDesignTest.class", "**/ForumAccountLiveTest.class")
+    if (name.contains("Release")) exclude("**/ChatGptDesignTest.class", "**/ForumReadingUxDesignTest.class", "**/ForumReadingLiveDesignTest.class", "**/AssistantDesignTest.class", "**/AssistantLiveDesignTest.class", "**/ForumDigestLiveDesignTest.class", "**/PassageSearchDesignTest.class", "**/PassageRetrievalLiveDesignTest.class", "**/AnnouncementsDesignTest.class", "**/AnnouncementsLiveDesignTest.class", "**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class", "**/ForumAccountDesignTest.class", "**/ForumAccountLiveTest.class")
     val accountLive = providers.gradleProperty("forumAccountLive").getOrElse("false").toBoolean()
     systemProperty("uit.forum.account.live", accountLive.toString())
     systemProperty("uit.forum.account.dir", layout.buildDirectory.dir("outputs/forum-account-private").get().asFile.absolutePath)

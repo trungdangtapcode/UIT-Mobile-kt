@@ -34,6 +34,7 @@ class PassageSearchViewModel(private val repository: PassageSearchRepository, pr
     private var job: Job? = null
     private var epoch = 0L
     init {
+        viewModelScope.launch { ai.connectionChanges.collect { connection -> mutable.update { it.copy(connection = connection) } } }
         viewModelScope.launch { repository.library.collect { library -> mutable.update { it.copy(library = library) } } }
         viewModelScope.launch {
             combine(snapshots, owners.accounts) { snapshot, accounts -> snapshot.courses.filter { c -> accounts.any { it.id == c.accountId && it.portal == PortalType.MOODLE } }.distinctBy { it.accountId to it.id } }.collect { courses ->
@@ -181,7 +182,11 @@ class PassageSearchViewModel(private val repository: PassageSearchRepository, pr
         if (token == epoch) mutable.update { it.copy(result = null, inspection = null, plan = null) }
     }
     fun configure(mode: StudyConnectionMode, endpoint: String, token: String, model: String) = operation(PassageWork.CONNECTION) { generation ->
-        if (mode == StudyConnectionMode.DIRECT) ai.configureDirect(token, model) else ai.configure(endpoint, token)
+        when (mode) {
+            StudyConnectionMode.DIRECT -> ai.configureDirect(token, model)
+            StudyConnectionMode.GATEWAY -> ai.configure(endpoint, token)
+            StudyConnectionMode.CHATGPT -> ai.configureChatGpt(model)
+        }
         val connection = ai.connection()
         if (generation == epoch) mutable.update { it.copy(connection = connection) }
     }

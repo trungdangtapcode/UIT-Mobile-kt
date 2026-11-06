@@ -126,8 +126,17 @@ import vn.edu.uit.mobile.feature.courses.R
                     OutlinedButton(onClick = onSettings, enabled = !state.busy, shape = TechnicalShapes.Field) { Text(stringResource(R.string.st_configure)) }
                 } else {
                     Text(stringResource(R.string.st_processor), style = MaterialTheme.typography.labelMedium)
-                    Text(if (state.connection.mode == StudyConnectionMode.DIRECT) stringResource(R.string.st_direct, state.connection.model) else stringResource(R.string.st_gateway, state.connection.endpoint), style = MaterialTheme.typography.bodySmall)
-                    Text(if (state.connection.mode == StudyConnectionMode.DIRECT) stringResource(R.string.st_direct_note) else stringResource(R.string.st_gateway_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        if (state.connection.mode == StudyConnectionMode.CHATGPT) {
+                            "${chatGptLabel()} · ${state.connection.model}"
+                        } else if (state.connection.mode == StudyConnectionMode.DIRECT) {
+                            stringResource(R.string.st_direct, state.connection.model)
+                        } else {
+                            stringResource(R.string.st_gateway, state.connection.endpoint)
+                        },
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    if (state.connection.mode == StudyConnectionMode.CHATGPT) ChatGptUsage(state.connection) else Text(if (state.connection.mode == StudyConnectionMode.DIRECT) stringResource(R.string.st_direct_note) else stringResource(R.string.st_gateway_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (state.assignment == null) OutlinedTextField(value = state.question, onValueChange = onQuestion, enabled = !state.busy, label = { Text(stringResource(R.string.st_question)) }, supportingText = { Text("${state.question.length}/1200") }, modifier = Modifier.fillMaxWidth(), shape = TechnicalShapes.Field, minLines = 2)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -250,7 +259,7 @@ import vn.edu.uit.mobile.feature.courses.R
 }
 
 @Composable fun StudyConnectionDialog(connection: StudyConnection, onDismiss: () -> Unit, onSave: (StudyConnectionMode, String, String, String) -> Unit, onDisconnect: () -> Unit, problem: String? = null, busy: Boolean = false) {
-    var mode by remember { mutableStateOf(connection.mode) }
+    var mode by remember { mutableStateOf(if (connection.configured) connection.mode else StudyConnectionMode.CHATGPT) }
     var endpoint by remember { mutableStateOf(if (connection.mode == StudyConnectionMode.GATEWAY) connection.endpoint else "") }
     var secret by remember { mutableStateOf("") }
     var model by remember { mutableStateOf(connection.model) }
@@ -277,7 +286,7 @@ import vn.edu.uit.mobile.feature.courses.R
                 Text(stringResource(R.string.st_conn_title), style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(16.dp))
                 Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).testTag("ai-connection-form"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    StudyConnectionMode.entries.forEach { option ->
+                    listOf(StudyConnectionMode.CHATGPT, StudyConnectionMode.DIRECT, StudyConnectionMode.GATEWAY).forEach { option ->
                         OutlinedButton(onClick = {
                             mode = option
                             secret = ""
@@ -285,18 +294,22 @@ import vn.edu.uit.mobile.feature.courses.R
                         }, enabled = !busy, shape = TechnicalShapes.Field, modifier = Modifier.fillMaxWidth()) {
                             RadioButton(selected = mode == option, onClick = null)
                             Spacer(Modifier.width(8.dp))
-                            Text(stringResource(if (option == StudyConnectionMode.DIRECT) R.string.st_direct_mode else R.string.st_gateway_mode))
+                            Text(if (option == StudyConnectionMode.CHATGPT) chatGptLabel() else stringResource(if (option == StudyConnectionMode.DIRECT) R.string.st_direct_mode else R.string.st_gateway_mode))
                         }
                     }
-                    if (mode == StudyConnectionMode.DIRECT) {
-                        Text(stringResource(R.string.st_direct_body), style = MaterialTheme.typography.bodySmall)
-                        OutlinedTextField(model, { model = it.take(100) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.st_model_id)) }, supportingText = { Text(stringResource(R.string.st_model_hint)) }, singleLine = true, enabled = !busy, shape = TechnicalShapes.Field)
+                    if (mode == StudyConnectionMode.CHATGPT) {
+                        ChatGptConnectionPanel({ onSave(StudyConnectionMode.CHATGPT, "", "", it) }, enabled = !busy)
                     } else {
-                        Text(stringResource(R.string.st_gateway_body), style = MaterialTheme.typography.bodySmall)
-                        OutlinedTextField(endpoint, { endpoint = it }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.st_endpoint)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), singleLine = true, enabled = !busy, shape = TechnicalShapes.Field)
+                        if (mode == StudyConnectionMode.DIRECT) {
+                            Text(stringResource(R.string.st_direct_body), style = MaterialTheme.typography.bodySmall)
+                            OutlinedTextField(model, { model = it.take(100) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.st_model_id)) }, supportingText = { Text(stringResource(R.string.st_model_hint)) }, singleLine = true, enabled = !busy, shape = TechnicalShapes.Field)
+                        } else {
+                            Text(stringResource(R.string.st_gateway_body), style = MaterialTheme.typography.bodySmall)
+                            OutlinedTextField(endpoint, { endpoint = it }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.st_endpoint)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), singleLine = true, enabled = !busy, shape = TechnicalShapes.Field)
+                        }
+                        OutlinedTextField(secret, { secret = it.take(1024) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(if (mode == StudyConnectionMode.DIRECT) R.string.st_api_key else R.string.st_token)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), visualTransformation = PasswordVisualTransformation(), singleLine = true, enabled = !busy, shape = TechnicalShapes.Field)
+                        Text(stringResource(R.string.st_credentials_note), style = MaterialTheme.typography.bodySmall)
                     }
-                    OutlinedTextField(secret, { secret = it.take(1024) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(if (mode == StudyConnectionMode.DIRECT) R.string.st_api_key else R.string.st_token)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), visualTransformation = PasswordVisualTransformation(), singleLine = true, enabled = !busy, shape = TechnicalShapes.Field)
-                    Text(stringResource(R.string.st_credentials_note), style = MaterialTheme.typography.bodySmall)
                     problem?.let { InlineNotice(it, true) }
                     error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                     if (connection.configured) TextButton(onDisconnect, enabled = !busy, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_clear)) }
@@ -304,7 +317,7 @@ import vn.edu.uit.mobile.feature.courses.R
                 Spacer(Modifier.height(12.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onDismiss, enabled = !busy, shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_cancel)) }
-                    TextButton(::save, enabled = !busy && secret.isNotBlank(), shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_save_conn)) }
+                    if (mode != StudyConnectionMode.CHATGPT) TextButton(::save, enabled = !busy && secret.isNotBlank(), shape = TechnicalShapes.Control) { Text(stringResource(R.string.st_save_conn)) }
                 }
             }
         }

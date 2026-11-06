@@ -429,7 +429,7 @@ class UitGraph(context: Context) {
     val announcements: AnnouncementRepository = createAnnouncementRepository(app)
     val forum: ForumRepository = createForumRepository(app)
     val reading: ReadingRepository = LocalReadingRepository(readingStorage, accounts)
-    val studyAi = ConnectedStudyAiRepository(studyStorage, accounts)
+    val studyAi = ConnectedStudyAiRepository(studyStorage, accounts, chatGptReturnUri = "uitmobile-chatgpt://${app.packageName}/return")
     val assistant: AssistantRepository = createAssistantRepository(app, announcements, studyAi)
     val portal: PortalRepository = OfflinePortalRepository(vault, store, File(app.filesDir, "materials"))
     companion object {

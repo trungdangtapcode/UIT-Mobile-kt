@@ -118,6 +118,40 @@ class AssistantRepositoryTest {
         assertEquals(repo.library.value, restored.library.value)
     }
 
+    @Test fun nullAndUitNamespacesRetrieveEvidenceAndRemainInLocalHistory() = runTest {
+        val input = mutableListOf<JsonObject>()
+        val delegate = successfulModel(input)
+        var calls = 0
+        val model = AssistantModel { payload ->
+            val response = delegate.step(payload)
+            val namespace = if (calls++ == 0) JsonNull else JsonPrimitive("uit")
+            buildJsonObject {
+                response.forEach { (key, value) -> put(key, value) }
+                put(
+                    "output",
+                    JsonArray(
+                        response.getValue("output").jsonArray.map { item ->
+                            if (item.jsonObject["type"]?.jsonPrimitive?.content == "function_call") {
+                                JsonObject(item.jsonObject + ("namespace" to namespace))
+                            } else {
+                                item
+                            }
+                        }
+                    )
+                )
+            }
+        }
+        val repo = LocalAssistantRepository(AssistantMemory(), notices(), { model })
+        val id = repo.create("Namespaces", scope)
+        repo.ask(id, "What is required?", "English")
+        val turn = repo.library.value.workspaces.single().turns.single()
+        assertEquals(AssistantTurnStatus.COMPLETE, turn.status)
+        assertEquals(listOf("search_announcements", "read_announcement"), turn.events.map { it.tool })
+        val history = input.last().getValue("input").jsonArray
+            .map { it.jsonObject }.filter { it["type"]?.jsonPrimitive?.content == "function_call" }
+        assertEquals(listOf(JsonNull, JsonPrimitive("uit")), history.map { it["namespace"] })
+    }
+
     @Test fun citationsFromEarlierTurnsAreNotAcceptedAsCurrentEvidence() = runTest {
         val memory = AssistantMemory()
         val notices = notices()

@@ -18,7 +18,7 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.*
 import kotlinx.serialization.json.*
 import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.model.Course
@@ -31,7 +31,7 @@ interface StudyStorage {
     fun clear(): Unit = error("Storage reset is unavailable")
 }
 
-fun createStudyAiRepository(context: Context, accounts: AccountRepository): StudyAiRepository = ConnectedStudyAiRepository(StudyPrivateStorage(context), accounts)
+fun createStudyAiRepository(context: Context, accounts: AccountRepository): StudyAiRepository = ConnectedStudyAiRepository(StudyPrivateStorage(context), accounts, chatGptReturnUri = "uitmobile-chatgpt://${context.packageName}/return")
 
 class StudyPrivateStorage(context: Context, preferenceName: String = "study_ai", private val keyAlias: String = "uit.study.v1") : StudyStorage {
     private val prefs = context.applicationContext.getSharedPreferences(preferenceName, Context.MODE_PRIVATE)
@@ -91,18 +91,36 @@ class ConnectedStudyAiRepository(
                 followSslRedirects(false)
             }
         }
-    }
+    },
+    chatGptReturnUri: String = "uitmobile-chatgpt://vn.edu.uit.mobile/return"
 ) : StudyAiRepository {
+    private val chatSession = ChatGptSession(storage, client, chatGptReturnUri)
+    override val chatGpt: ChatGptConnector get() = chatSession
+    private val connectionSignals = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    override val connectionChanges: Flow<StudyConnection> = merge(connectionSignals, chatSession.state.map { Unit }).map {
+        try {
+            connection()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            StudyConnection()
+        }
+    }.distinctUntilChanged()
     private fun config() = storage.read("connection")?.let { Json.parseToJsonElement(it).jsonObject }
-    private fun mode(config: JsonObject) = if (config["mode"]?.jsonPrimitive?.content == "DIRECT") StudyConnectionMode.DIRECT else StudyConnectionMode.GATEWAY
+    private fun mode(config: JsonObject) = when (config["mode"]?.jsonPrimitive?.content) {
+        "CHATGPT" -> StudyConnectionMode.CHATGPT
+        "DIRECT" -> StudyConnectionMode.DIRECT
+        else -> StudyConnectionMode.GATEWAY
+    }
     override suspend fun connection(): StudyConnection = withContext(Dispatchers.IO) {
         val config = config() ?: return@withContext StudyConnection()
         val mode = mode(config)
         StudyConnection(
-            if (mode == StudyConnectionMode.DIRECT) "https://api.openai.com" else config.getValue("endpoint").jsonPrimitive.content,
-            !config["token"]?.jsonPrimitive?.content.isNullOrBlank(),
+            if (mode != StudyConnectionMode.GATEWAY) "https://api.openai.com" else config.getValue("endpoint").jsonPrimitive.content,
+            if (mode == StudyConnectionMode.CHATGPT) chatSession.connected(config.getValue("chatgpt_account").jsonPrimitive.content) else !config["token"]?.jsonPrimitive?.content.isNullOrBlank(),
             mode,
-            config["model"]?.jsonPrimitive?.content.orEmpty()
+            config["model"]?.jsonPrimitive?.content.orEmpty(),
+            config["account_label"]?.jsonPrimitive?.content.orEmpty()
         )
     }
     override suspend fun configure(endpoint: String, token: String) = withContext(Dispatchers.IO) {
@@ -117,6 +135,8 @@ class ConnectedStudyAiRepository(
                 put("token", token)
             }.toString()
         )
+        connectionSignals.tryEmit(Unit)
+        Unit
     }
     override suspend fun configureDirect(apiKey: String, model: String) = withContext(Dispatchers.IO) {
         require(apiKey.length in 24..1024 && apiKey.all { it.code in 33..126 }) { "Enter your personal OpenAI API key without spaces." }
@@ -129,8 +149,34 @@ class ConnectedStudyAiRepository(
                 put("token", apiKey)
             }.toString()
         )
+        connectionSignals.tryEmit(Unit)
+        Unit
     }
-    override suspend fun disconnect() = withContext(Dispatchers.IO) { storage.remove("connection") }
+    override suspend fun configureChatGpt(model: String) = withContext(Dispatchers.IO) {
+        val (account, label) = chatSession.selected(model)
+        storage.write(
+            "connection",
+            buildJsonObject {
+                put("mode", "CHATGPT")
+                put("chatgpt_account", account)
+                put("account_label", label)
+                put("model", model)
+                put("selection", java.util.UUID.randomUUID().toString())
+            }.toString()
+        )
+        connectionSignals.tryEmit(Unit)
+        Unit
+    }
+    override suspend fun disconnect() = withContext(Dispatchers.IO) {
+        val expected = config()
+        if (expected != null && mode(expected) == StudyConnectionMode.CHATGPT) {
+            chatSession.selectAccount(expected.getValue("chatgpt_account").jsonPrimitive.content)
+            chatSession.signOut()
+        }
+        if (config() == expected) storage.remove("connection")
+        connectionSignals.tryEmit(Unit)
+        Unit
+    }
     private suspend fun requireAccount(course: Course?) {
         if (course == null) return
         check(accounts.accounts.first().any { it.id == course.accountId }) { "This course account was removed. Open the course again." }
@@ -239,29 +285,43 @@ class ConnectedStudyAiRepository(
     private suspend fun <T> exchange(course: Course?, request: JsonObject, onText: ((String) -> Unit)? = null, decode: (JsonObject, Boolean) -> T): T {
         requireAccount(course)
         val config = config() ?: error("Configure an AI connection before generating an answer.")
-        val direct = mode(config) == StudyConnectionMode.DIRECT
-        val streaming = direct && onText != null && request["mode"]?.jsonPrimitive?.content == "assistant"
+        val plan = mode(config) == StudyConnectionMode.CHATGPT
+        val direct = mode(config) != StudyConnectionMode.GATEWAY
+        val lease = if (plan) {
+            try {
+                chatSession.lease(config.getValue("chatgpt_account").jsonPrimitive.content)
+            } catch (e: ChatGptException) {
+                if (this@ConnectedStudyAiRepository.config() == config) chatSession.report(e)
+                throw e
+            }
+        } else {
+            null
+        }
+        val streaming = plan || (direct && onText != null && request["mode"]?.jsonPrimitive?.content == "assistant")
         val endpoint = if (direct) "https://api.openai.com/v1/responses" else StudyAiRules.endpoint(config.getValue("endpoint").jsonPrimitive.content) + "/v1/study"
         return try {
             client.preparePost(endpoint) {
-                header("Authorization", "Bearer ${config.getValue("token").jsonPrimitive.content}")
+                check(this@ConnectedStudyAiRepository.config() == config && (lease == null || chatSession.current(lease))) { "AI connection changed" }
+                header("Authorization", "Bearer ${lease?.token ?: config.getValue("token").jsonPrimitive.content}")
                 header("Content-Type", "application/json")
                 if (streaming) header("Accept", "text/event-stream")
                 setBody(
                     if (direct) {
                         val model = config.getValue("model").jsonPrimitive.content
-                        when (request["mode"]?.jsonPrimitive?.content) {
+                        val payload = when (request["mode"]?.jsonPrimitive?.content) {
                             "assistant" -> JsonObject(AssistantProtocol.request(model, request) + ("stream" to JsonPrimitive(streaming)))
                             "knowledge" -> KnowledgeProtocol.request(model, request)
                             "practice" -> PracticeProtocol.request(model, request)
                             "tutor" -> TutorProtocol.request(model, request)
                             else -> OpenAiStudyProtocol.request(model, request)
-                        }.toString()
+                        }
+                        (if (plan) ChatGptPlanProtocol.request(payload) else payload).toString()
                     } else {
                         request.toString()
                     }
                 )
             }.execute { response ->
+                if (plan && response.status.value != 200) throw ChatGptSession.failure(response)
                 val channel = response.bodyAsChannel()
                 try {
                     if (response.status.value != 200) {
@@ -285,7 +345,10 @@ class ConnectedStudyAiRepository(
                     }
                     val data = if (streaming) {
                         require(response.headers["Content-Type"]?.substringBefore(';')?.trim() == "text/event-stream") { "Expected an SSE response" }
-                        AssistantStream.read(channel, requireNotNull(onText))
+                        AssistantStream.read(channel) { text ->
+                            check(this@ConnectedStudyAiRepository.config() == config && (lease == null || chatSession.current(lease))) { "AI connection changed" }
+                            onText?.invoke(text)
+                        }
                     } else {
                         val bytes = ByteArrayOutputStream()
                         val buffer = ByteArray(4096)
@@ -299,10 +362,13 @@ class ConnectedStudyAiRepository(
                     }
                     val answer = decode(data, direct)
                     requireAccount(course)
+                    check(this@ConnectedStudyAiRepository.config() == config && (lease == null || chatSession.current(lease))) { "AI connection changed" }
                     answer
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: StudyAiException) {
+                    throw e
+                } catch (e: ChatGptException) {
                     throw e
                 } catch (e: Exception) {
                     throw StudyAiException("The AI result could not be verified against your selected sources.")
@@ -313,6 +379,9 @@ class ConnectedStudyAiRepository(
         } catch (e: CancellationException) {
             throw e
         } catch (e: StudyAiException) {
+            throw e
+        } catch (e: ChatGptException) {
+            if (this@ConnectedStudyAiRepository.config() == config) chatSession.report(e)
             throw e
         } catch (e: Exception) {
             error(if (direct) "Unable to reach OpenAI. Check your internet connection." else "Unable to reach the study gateway. Check your connection and HTTPS settings.")

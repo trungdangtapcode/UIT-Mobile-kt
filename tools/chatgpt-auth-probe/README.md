@@ -29,7 +29,51 @@ npm start
 The server prints a private launch URL like
 `http://127.0.0.1:8877/#<random-local-control-key>`. It binds IPv4 loopback only,
 validates Host and Origin, and requires the control key for its API. Do not expose
-this authentication harness on a public interface. It stops after one hour.
+this authentication harness on a public interface. There is no automatic shutdown
+by default. Set `AUTH_PROBE_TTL_MINUTES=60` for an explicit one-hour test window;
+`0` keeps it running until stopped. Access-token expiry is independent of server
+availability.
+
+### Keep it running across SSH disconnects
+
+On a Linux host with a working systemd user manager, start it as a user service
+from this directory. This does not require root or install a system service:
+
+```sh
+systemd-run --user --unit=uit-chatgpt-auth-probe \
+  --working-directory="$PWD" \
+  --property=UMask=0077 --property=Restart=on-failure --property=RestartSec=3 \
+  --setenv=AUTH_PROBE_STATE_DIR="$HOME/.local/state/uit-mobile-auth-probe" \
+  --setenv=AUTH_PROBE_CODEX="$(command -v codex)" \
+  "$(command -v node)" "$PWD/server.mjs"
+```
+
+The private state directory stores only a stable local UI control key and launch
+metadata. It does not store OAuth tokens. Reusing that key preserves the launch
+URL across process restarts; active authorization attempts and credentials remain
+in memory and must be restarted after a process restart. The directory must be
+owned by the current user with mode `0700`, and the key file uses mode `0600`.
+The user service is transient and is not enabled automatically at host boot.
+For operation after all login sessions end, the host must already support user
+lingering; the probe does not change that system setting.
+
+```sh
+systemctl --user status uit-chatgpt-auth-probe
+cat "$HOME/.local/state/uit-mobile-auth-probe/launch.json"
+curl -fsSL http://localhost:8877/ -o /dev/null -w 'HTTP %{http_code}\n'
+```
+
+Stop it explicitly when finished:
+
+```sh
+systemctl --user stop uit-chatgpt-auth-probe
+```
+
+`localhost` page requests redirect to the canonical IPv4 address `127.0.0.1`;
+foreign Host and Origin values remain rejected. Public static pages support HEAD
+requests. Open the current launch URL, including its fragment, after restarting an
+old temporary server. A normal foreground `npm start` still ends when its terminal
+session ends unless it is managed separately.
 
 In a new Windows terminal, reuse the SSH destination/options you already use,
 adding this forwarding option (replace `user@server` with that destination):
@@ -109,7 +153,8 @@ under the OS temporary directory. Remove only this probe's leftover directory.
 No token renewal is attempted. Reauthorize if the short-lived access token expires.
 Normal server output contains only its launch URL/control-file path, never OAuth
 requests, callbacks, tokens or app-server output. The private launch file is
-removed on normal shutdown. No API is exposed to export raw tokens.
+removed on normal shutdown. With `AUTH_PROBE_STATE_DIR`, the non-OAuth local UI
+key remains for the next start; otherwise its temporary directory is removed. No API is exposed to export raw tokens.
 
 ## Local validation
 

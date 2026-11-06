@@ -1,10 +1,10 @@
 import http from 'node:http';
-import { readFile, mkdtemp, writeFile, chmod, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BrowserFlow, ISSUER, jsonRequest, checkCatalog, random, equal, ProbeError, safeDiagnostic } from './auth.mjs';
 import { CodexDevice } from './codex-device.mjs';
+import { lifetimeMinutes, prepareRuntime, writeLaunch, cleanRuntime } from './runtime.mjs';
 
 const assets = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']]]);
 const security = {
@@ -83,6 +83,10 @@ export async function createProbeServer({ port = 8877, key = random(), probeOpti
   };
   const server = http.createServer(async (request, response) => {
     try {
+      if (request.headers.host === `localhost:${server.address().port}` && ['GET', 'HEAD'].includes(request.method)) {
+        response.writeHead(303, { ...security, Location: `${origin}${request.url}` });
+        response.end(`Open ${origin}${request.url}\n`); return;
+      }
       if (request.headers.host !== authority) { send(response, 403, { code: 'invalid_host' }); return; }
       const url = new URL(request.url, origin);
       if (url.pathname === '/auth/callback' && request.method === 'GET') {
@@ -94,9 +98,9 @@ export async function createProbeServer({ port = 8877, key = random(), probeOpti
         }
         return;
       }
-      if (request.method === 'GET' && assets.has(url.pathname)) {
+      if (['GET', 'HEAD'].includes(request.method) && assets.has(url.pathname)) {
         const [file, type] = assets.get(url.pathname);
-        send(response, 200, await readFile(new URL(file, import.meta.url), 'utf8'), type); return;
+        send(response, 200, request.method === 'HEAD' ? '' : await readFile(new URL(file, import.meta.url), 'utf8'), type); return;
       }
       if (!url.pathname.startsWith('/api/')) { send(response, 404, { code: 'not_found' }); return; }
       if (!equal(request.headers['x-probe-key'], key)) { send(response, 403, { code: 'open_private_launch_url' }); return; }
@@ -126,15 +130,15 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   process.umask(0o077);
   const port = Number(process.env.AUTH_PROBE_PORT || 8877);
   if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid AUTH_PROBE_PORT');
-  const app = await createProbeServer({ port, probeOptions: { codexBinary: process.env.AUTH_PROBE_CODEX || 'codex' } });
-  const runtime = await mkdtemp(join(tmpdir(), 'uit-auth-probe-control-'));
-  await chmod(runtime, 0o700);
-  await writeFile(join(runtime, 'launch.json'), JSON.stringify({ url: app.launchUrl, port }), { mode: 0o600 });
+  const ttl = lifetimeMinutes(process.env.AUTH_PROBE_TTL_MINUTES);
+  const runtime = await prepareRuntime(process.env.AUTH_PROBE_STATE_DIR);
+  const app = await createProbeServer({ port, key: runtime.key, probeOptions: { codexBinary: process.env.AUTH_PROBE_CODEX || 'codex' } });
+  await writeLaunch(runtime, app.launchUrl, port, ttl);
   // This is a local UI control capability, not an OpenAI credential. Never log OAuth traffic.
-  console.log(`Auth Probe: ${app.launchUrl}\nPrivate launch file: ${join(runtime, 'launch.json')}\nListening on loopback only. No inference is sent. Automatic stop after 60 minutes.`);
+  console.log(`Auth Probe: ${app.launchUrl}\nPrivate launch file: ${join(runtime.path, 'launch.json')}\nListening on loopback only. No inference is sent. ${ttl ? `Automatic stop after ${ttl} minutes.` : 'No automatic shutdown; stop the process or user service when finished.'}`);
   void app.probe.preflight();
   let stopping = false;
-  async function stop() { if (stopping) return; stopping = true; await app.close(); await rm(runtime, { recursive: true, force: true }); process.exit(0); }
+  async function stop() { if (stopping) return; stopping = true; await app.close(); await cleanRuntime(runtime); process.exit(0); }
   process.on('SIGINT', stop); process.on('SIGTERM', stop);
-  setTimeout(stop, 60 * 60 * 1000).unref();
+  if (ttl) setTimeout(stop, ttl * 60 * 1000).unref();
 }

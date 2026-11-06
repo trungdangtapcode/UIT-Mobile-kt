@@ -43,7 +43,9 @@ async function refresh() {
     $('discovery').textContent = JSON.stringify(state.discovery, null, 2);
     $('identity-comparison').textContent = state.verifiedSubjectsMatch === null ? 'Complete both methods to compare verified subjects.' : `Verified token subjects match: ${state.verifiedSubjectsMatch ? 'yes' : 'no'}. Client registrations remain separate.`;
   } catch (error) {
-    $('connection').textContent = key ? 'Local server unavailable. Check your SSH tunnel and server lifetime.' : 'Open the full private launch URL printed by the test server, including its fragment.';
+    $('connection').textContent = error.message === 'open_private_launch_url'
+      ? 'This launch link is missing or belongs to an older test server. Open the current full private launch URL, including its fragment.'
+      : 'Local server unavailable. Check your SSH tunnel and user service.';
   }
 }
 $('start-browser').onclick = async () => {

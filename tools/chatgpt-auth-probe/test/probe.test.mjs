@@ -1,13 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPair, SignJWT, exportJWK, createLocalJWKSet } from 'jose';
-import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile, readFile, rm, chmod, stat, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { request as httpRequest } from 'node:http';
 import { BrowserFlow, ISSUER, RESOURCE, SCOPES, ProbeError, verifyIdentity, inspectDirectGrant, checkCatalog, jsonRequest } from '../auth.mjs';
 import { CodexDevice, CODEX_CLIENT_ID } from '../codex-device.mjs';
 import { Probe, createProbeServer } from '../server.mjs';
+import { lifetimeMinutes, prepareRuntime, writeLaunch, cleanRuntime } from '../runtime.mjs';
 
 const { privateKey, publicKey } = await generateKeyPair('RS256');
 const jwk = { ...await exportJWK(publicKey), kid: 'fixture-key', use: 'sig', alg: 'RS256' };
@@ -129,7 +130,49 @@ test('localhost API rejects missing capability, foreign Origin and Host while ke
     assert.equal(report.headers.get('cache-control'), 'no-store');
     assert.equal((await report.json()).inferencePerformed, false);
     assert.equal(await rawStatus(`${app.origin}/`, { Host: 'example.test' }), 403);
+    assert.equal(await rawStatus(`${app.origin}/`, { Host: `localhost:${new URL(app.origin).port}` }), 303);
+    assert.equal((await fetch(app.origin, { method: 'HEAD' })).status, 200);
   } finally { await app.close(); }
+});
+
+test('probe stays available by default and a finite lifetime is explicit and validated', () => {
+  assert.equal(lifetimeMinutes(), 0);
+  assert.equal(lifetimeMinutes('60'), 60);
+  for (const value of ['-1', 'invalid', '1.5', '10081']) assert.throws(() => lifetimeMinutes(value));
+});
+
+test('persistent runtime retains the private UI key across clean service restarts without persisting OAuth credentials', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'uit-runtime-test-'));
+  try {
+    const first = await prepareRuntime(join(root, 'state'));
+    await writeLaunch(first, `http://127.0.0.1:8877/#${first.key}`, 8877, 0);
+    assert.equal((await stat(join(first.path, 'control-key'))).mode & 0o077, 0);
+    const info = JSON.parse(await readFile(join(first.path, 'launch.json'), 'utf8'));
+    assert.equal(info.autoStopMinutes, 0);
+    assert.deepEqual(Object.keys(info).sort(), ['autoStopMinutes', 'pid', 'port', 'url']);
+    await cleanRuntime(first);
+    await assert.rejects(readFile(join(first.path, 'launch.json')));
+    const second = await prepareRuntime(first.path);
+    assert.equal(second.key, first.key);
+    await cleanRuntime(second);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('runtime refuses shared directories, shared control keys and symlinked control keys', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'uit-runtime-test-'));
+  try {
+    const directory = join(root, 'state');
+    await prepareRuntime(directory);
+    await chmod(directory, 0o755);
+    await assert.rejects(prepareRuntime(directory));
+    await chmod(directory, 0o700);
+    await chmod(join(directory, 'control-key'), 0o644);
+    await assert.rejects(prepareRuntime(directory));
+    await rm(join(directory, 'control-key'));
+    await writeFile(join(root, 'outside'), 'fixture', { mode: 0o600 });
+    await symlink(join(root, 'outside'), join(directory, 'control-key'));
+    await assert.rejects(prepareRuntime(directory));
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 test('safe report omits device code and verification URL, and no catalog is fetched before explicit check', async () => {

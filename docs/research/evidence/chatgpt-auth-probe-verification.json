@@ -39,5 +39,27 @@
   "actualSubscriberTokenReceived": false,
   "actualInferencePerformed": false,
   "universityAccountUsed": false,
-  "githubActionsDispatched": false
+  "githubActionsDispatched": false,
+  "availabilityFollowUp": {
+    "cause": "The original one-hour lifetime elapsed before the owner returned",
+    "unitTests": {
+      "passed": 15,
+      "failed": 0
+    },
+    "userService": "uit-chatgpt-auth-probe.service",
+    "loopbackOnly": true,
+    "automaticShutdownMinutes": 0,
+    "curlIPv4Status": 200,
+    "curlLocalhostFollowingRedirectStatus": 200,
+    "persistentControlKey": true,
+    "oauthTokensPersistedInStateDirectory": false,
+    "browser": {
+      "canonicalOrigin": "http://127.0.0.1:8877",
+      "connected": true,
+      "autoStopMinutes": 0,
+      "pageErrors": [],
+      "accountAuthenticated": false
+    },
+    "githubActionsDispatched": false
+  }
 }

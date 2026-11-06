@@ -1,0 +1,27 @@
+{
+  "recordedAt": "2026-11-06T17:39:36.281Z",
+  "native": {
+    "phase": "completed",
+    "started": true,
+    "startedAt": "2026-11-06T17:39:04.645Z",
+    "completedAt": "2026-11-06T17:39:14.837Z",
+    "result": {
+      "result": "completed",
+      "model": "gpt-6.1-sol",
+      "connectionMode": "CHATGPT",
+      "runtime": "Production Kotlin on Linux JVM; not physical Android",
+      "registration": "Owner-authorized Auth Probe registration; not phone registration",
+      "requests": 2,
+      "networkRequests": 2,
+      "contentType": "missing",
+      "protocol": "h2",
+      "actualSubscriberInference": true,
+      "inferenceAttempted": true,
+      "credentialWrittenToDisk": false,
+      "universityAccountUsed": false
+    }
+  },
+  "physicalAndroidAcceptance": false,
+  "interpretation": "Real SIWC subscriber inference completed through production Kotlin. The successful HTTP/2 responses had no Content-Type header. This reproduces the old header rejection condition, but does not capture the phone response itself.",
+  "githubActionsDispatched": false
+}

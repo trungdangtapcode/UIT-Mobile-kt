@@ -360,8 +360,13 @@ The [optional native subscriber diagnostic](../tools/chatgpt-auth-probe/README.m
 lets the owner explicitly authorize a real `gpt-6.1-sol` hello check through the
 production Kotlin client, without transferring tokens to chat or using an API key.
 A host-JVM test with a new probe registration remains distinct from Android and
-from the existing phone registration. The exact phone response body is still
-unconfirmed until this diagnostic or a phone retest provides evidence.
+from the existing phone registration. The [owner-authorized subscriber run](research/evidence/chatgpt-subscriber-native.json)
+completed on 2026-11-06 at 17:39 UTC: two requests with `gpt-6.1-sol`, validated
+completion, HTTP/2 and a missing Content-Type header. This establishes real SIWC
+inference through production Kotlin and reproduces the condition that the old
+header gate rejects. No API key, Codex profile or university account was used.
+The probe's separate registration and Linux runtime do not establish physical
+Android acceptance; a Preview 7 phone retest remains required.
 
 ## Official references
 

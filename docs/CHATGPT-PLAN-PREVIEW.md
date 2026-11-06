@@ -1,19 +1,23 @@
 # ChatGPT account preview: owner acceptance
 
-[Download the preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/download/v0.1.7-chatgpt-preview.6/UIT-Mobile-chatgpt-preview.apk)
-from the [prerelease](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.7-chatgpt-preview.6).
+[Download the preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/download/v0.1.7-chatgpt-preview.7/UIT-Mobile-chatgpt-preview.apk)
+from the [prerelease](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.7-chatgpt-preview.7).
 The release includes `SHA256SUMS`. Launcher: **UIT Mobile Preview**; application ID:
-`vn.edu.uit.mobile.preview`; version: `0.1.7-chatgpt-preview.6`.
+`vn.edu.uit.mobile.preview`; version: `0.1.7-chatgpt-preview.7`.
 
-Preview 6 fixes two reproduced parser defects: compact completion events no longer
-lose finalized streamed items, and commentary is excluded from structured final
-JSON. Namespaces, message phases and opaque reasoning are retained across tool
-calls. Inference errors and Copy diagnostics remain available directly in chat.
-The model picker is now observed on the owner's phone; successful subscriber
-inference on that phone remains unconfirmed.
-See the [latest verification evidence](research/evidence/chatgpt-native-acceptance.json)
-for the live browser observation, controlled native checks and remaining device
-acceptance.
+Preview 7 accepts valid event-stream bytes even when Content-Type is missing or
+mislabeled, and reports safe JSON/service errors rather than rejecting at the
+header gate. Completed JSON responses still require normal output and citation
+validation. It retains the earlier compact-completion and final-answer fixes.
+
+The owner-authorized [real subscriber check](research/evidence/chatgpt-subscriber-native.json)
+completed with `gpt-6.1-sol`: two requests, HTTP/2, missing Content-Type, validated
+answer. This used production Kotlin on Linux with the Auth Probe registration,
+not an API key or a university account. **Physical-phone acceptance remains
+pending.** Install this APK over the existing preview, keep the saved connection
+and try hello again; signing out is unnecessary.
+See the [verification evidence](research/evidence/chatgpt-native-acceptance.json)
+for the runtime and registration boundaries.
 
 This is a debug preview installed separately from the normal app. It updates the
 earlier Forum/search preview using the same package and signing certificate;
@@ -99,11 +103,13 @@ The [phone gallery](design/CHATGPT-SIGN-IN.md) contains empty forms on the host,
 not connected-subscriber screenshots. Controlled tests use signed fixture tokens,
 an actual localhost callback socket, mocked official endpoints and bounded SSE.
 The public discovery endpoint was read without credentials to check metadata.
-Those results do not establish subscriber eligibility or physical-phone success.
+Controlled tests do not establish subscriber eligibility or physical-phone success.
+The separately recorded owner-authorized native run establishes subscriber
+inference on Linux only.
 
 Build locally without GitHub Actions:
 
 ```sh
 ./gradlew :app:assembleDebug \
-  -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.6
+  -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.7
 ```

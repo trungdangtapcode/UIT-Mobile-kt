@@ -7,13 +7,14 @@ import vn.edu.uit.mobile.domain.*
 
 /** Responses SSE transport. Only the completed response can reach the citation validator. */
 internal object AssistantStream {
-    suspend fun read(channel: ByteReadChannel, onText: (String) -> Unit): JsonObject = read(channel, ChatGptDiagnostic(200, operation = "responses"), onText)
-    suspend fun read(channel: ByteReadChannel, metadata: ChatGptDiagnostic, onText: (String) -> Unit): JsonObject {
+    suspend fun read(channel: ByteReadChannel, onText: (String) -> Unit): JsonObject = read(channel, ChatGptDiagnostic(200, operation = "responses"), onText = onText)
+    suspend fun read(channel: ByteReadChannel, metadata: ChatGptDiagnostic, requestedModel: String? = null, onText: (String) -> Unit): JsonObject {
         var wireBytes = 0
         val frame = StringBuilder()
         val draft = StringBuilder()
         var lastPreview = 0L
         var eventName = ""
+        val accumulator = AssistantResponseAccumulator(requestedModel)
         fun failure(code: String, phase: String = "sse_read", parameter: String = "", shape: String = "sse"): StudyAiException = StudyAiException(
             "The AI response did not complete.",
             metadata.copy(code = code, phase = phase, parameter = parameter, bodyShape = shape, responseBytes = wireBytes)
@@ -37,38 +38,47 @@ internal object AssistantStream {
                     throw failure("invalid_stream_json")
                 }
                 frame.clear()
-                when (val type = event["type"]?.jsonPrimitive?.content ?: eventName) {
-                    "response.output_text.delta" -> {
-                        draft.append(event.getValue("delta").jsonPrimitive.content)
-                        if (draft.length > 65536) throw failure("stream_draft_limit")
-                        val now = System.nanoTime()
-                        if (now - lastPreview >= 50000000) {
-                            onText(draft.toString())
-                            lastPreview = now
+                try {
+                    when (val type = event["type"]?.jsonPrimitive?.content ?: eventName) {
+                        "response.created", "response.queued", "response.in_progress" -> accumulator.lifecycle(event["response"])
+                        "response.output_item.added" -> accumulator.added(event)
+                        "response.output_item.done" -> accumulator.done(event)
+                        "response.output_text.delta" -> {
+                            if (accumulator.previewAllowed(event)) {
+                                draft.append(event.getValue("delta").jsonPrimitive.content)
+                                if (draft.length > 65536) throw failure("stream_draft_limit")
+                                val now = System.nanoTime()
+                                if (now - lastPreview >= 50000000) {
+                                    onText(draft.toString())
+                                    lastPreview = now
+                                }
+                            }
                         }
-                    }
-                    "response.completed" -> {
-                        val result = event.getValue("response").jsonObject
-                        if (result.toString().toByteArray(Charsets.UTF_8).size > 262144) throw failure("stream_result_limit")
-                        try {
-                            AssistantProtocol.output(result)
-                        } catch (_: IllegalArgumentException) {
-                            throw failure("response_output_invalid", "response_decode")
+                        "response.completed" -> {
+                            val result = accumulator.finish(event["response"])
+                            if (result.toString().toByteArray(Charsets.UTF_8).size > 262144) throw failure("stream_result_limit")
+                            try {
+                                AssistantProtocol.output(result)
+                            } catch (_: IllegalArgumentException) {
+                                throw failure("response_output_invalid", "response_decode")
+                            }
+                            if (draft.isNotEmpty()) onText(draft.toString())
+                            return result
                         }
-                        if (draft.isNotEmpty()) onText(draft.toString())
-                        return result
+                        "error", "response.failed" -> {
+                            val response = event["response"] as? JsonObject
+                            val error = (response?.get("error") ?: event["error"]) as? JsonObject ?: event
+                            val code = safeField(error["code"], "[A-Za-z0-9_.-]{1,100}").ifEmpty { "response_failed" }
+                            throw failure(code, type, safeField(error["param"], "[A-Za-z0-9_.\\[\\]-]{1,160}"), "sse-error")
+                        }
+                        "response.incomplete" -> {
+                            val details = (event["response"] as? JsonObject)?.get("incomplete_details") as? JsonObject
+                            throw failure("response_incomplete", type, safeField(details?.get("reason"), "[A-Za-z0-9_.-]{1,100}"))
+                        }
+                        "response.refusal.delta", "response.refusal.done" -> throw failure("response_refused", type)
                     }
-                    "error", "response.failed" -> {
-                        val response = event["response"] as? JsonObject
-                        val error = (response?.get("error") ?: event["error"]) as? JsonObject ?: event
-                        val code = safeField(error["code"], "[A-Za-z0-9_.-]{1,100}").ifEmpty { "response_failed" }
-                        throw failure(code, type, safeField(error["param"], "[A-Za-z0-9_.\\[\\]-]{1,160}"), "sse-error")
-                    }
-                    "response.incomplete" -> {
-                        val details = (event["response"] as? JsonObject)?.get("incomplete_details") as? JsonObject
-                        throw failure("response_incomplete", type, safeField(details?.get("reason"), "[A-Za-z0-9_.-]{1,100}"))
-                    }
-                    "response.refusal.delta", "response.refusal.done" -> throw failure("response_refused", type)
+                } catch (e: AssistantAssemblyException) {
+                    throw failure(e.code, "response_assembly")
                 }
                 eventName = ""
             }

@@ -13,7 +13,43 @@ internal fun assistantSseComplete(response: JsonObject) = "event: response.compl
     put("response", response)
 } + "\n\n"
 
+internal fun assistantCompactSse(response: JsonObject): String {
+    fun event(type: String, fields: JsonObject) = "data: " + JsonObject(fields + ("type" to JsonPrimitive(type))) + "\n\n"
+    val id = JsonPrimitive("resp_fixture")
+    return event("response.created", buildJsonObject { put("response", JsonObject(response - "output" + mapOf("id" to id, "status" to JsonPrimitive("in_progress")))) }) +
+        response.getValue("output").jsonArray.mapIndexed { index, item ->
+            event(
+                "response.output_item.done",
+                buildJsonObject {
+                    put("output_index", index)
+                    put("item", item)
+                }
+            )
+        }.joinToString("") +
+        event(
+            "response.completed",
+            buildJsonObject {
+                put(
+                    "response",
+                    buildJsonObject {
+                        put("id", id)
+                        put("status", "completed")
+                        put("output", JsonNull)
+                    }
+                )
+            }
+        )
+}
+
 class AssistantStreamTest {
+    @Test fun compactCompletionRetainsFinalizedToolItemsAndLifecycleModel() = runTest {
+        val expected = assistantOutput(JsonObject(assistantCall("call", "search_announcements", "{\"query\":\"\"}") + ("namespace" to JsonPrimitive("uit"))))
+        val actual = AssistantStream.read(ByteReadChannel(assistantCompactSse(expected))) {}
+        assertEquals(expected.getValue("output"), actual.getValue("output"))
+        assertEquals(expected.getValue("model"), actual.getValue("model"))
+        assertEquals("completed", actual.getValue("status").jsonPrimitive.content)
+    }
+
     private fun delta(text: String) = "data: " + buildJsonObject {
         put("type", "response.output_text.delta")
         put("delta", text)

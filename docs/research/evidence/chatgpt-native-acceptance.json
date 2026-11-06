@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-11-06T08:56:40.406002+00:00",
+  "recordedAt": "2026-11-06T10:24:05.931599+00:00",
   "liveBrowserObservation": {
     "runtime": "Separate Node.js auth probe; owner completed OpenAI consent",
     "completedAt": "2026-11-06T06:22:10.935Z",
@@ -31,18 +31,22 @@
     "catalogLoadingDuringTokenRefresh": "passed"
   },
   "actualSubscriberInference": false,
-  "physicalAndroidAcceptance": "Owner observed native model picker, then hello failed within seconds. Preview 5 adds inference diagnostics; subscriber inference remains unconfirmed.",
+  "physicalAndroidAcceptance": "Native picker observed; earlier immediate hello failure reported. Two reproduced parser bugs fixed in Preview 6; exact phone cause and subscriber inference remain unconfirmed.",
   "universityAccountUsed": false,
   "oauthCredentialsPublished": false,
   "probeTokensImportedIntoApp": false,
   "githubActionsDispatched": false,
   "localVerification": {
-    "fullCommand": "./gradlew check :app:assembleDebug :app:compileDebugAndroidTestKotlin -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.5",
-    "fullResult": "passed before final response-state reset and busy-control guards",
-    "finalCommand": "./gradlew formatKotlin ktlintCheck :core:data:check :app:testDebugUnitTest --tests '*AssistantDesignTest' --tests '*AssistantForumViewModelTest' :app:assembleDebug :app:compileDebugAndroidTestKotlin -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.5",
+    "command": "./gradlew formatKotlin check :app:assembleDebug :app:compileDebugAndroidTestKotlin -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.6",
     "result": "passed",
     "actionsDispatched": false,
-    "finalCases": {
+    "focusedCases": {
+      "vn.edu.uit.mobile.data.AssistantProtocolTest": {
+        "tests": 8,
+        "skipped": 0,
+        "failures": 0,
+        "errors": 0
+      },
       "vn.edu.uit.mobile.data.ChatGptAssistantTest": {
         "tests": 4,
         "skipped": 1,
@@ -50,7 +54,7 @@
         "errors": 0
       },
       "vn.edu.uit.mobile.data.AssistantStreamTest": {
-        "tests": 8,
+        "tests": 9,
         "skipped": 0,
         "failures": 0,
         "errors": 0
@@ -79,6 +83,18 @@
         "failures": 0,
         "errors": 0
       },
+      "vn.edu.uit.mobile.data.AssistantResponseAccumulatorTest": {
+        "tests": 7,
+        "skipped": 0,
+        "failures": 0,
+        "errors": 0
+      },
+      "vn.edu.uit.mobile.ChatGptDesignTest": {
+        "tests": 11,
+        "skipped": 0,
+        "failures": 0,
+        "errors": 0
+      },
       "vn.edu.uit.mobile.AssistantDesignTest": {
         "tests": 15,
         "skipped": 0,
@@ -91,13 +107,21 @@
         "failures": 0,
         "errors": 0
       }
+    },
+    "additionalLiveCheck": {
+      "result": "passed",
+      "mode": "Explicit API key with production plan-request adapter; not subscriber admission",
+      "model": "gpt-6-luna",
+      "completedTurns": 2,
+      "providerRequests": 4,
+      "historicalFinalPhaseReplayed": true
     }
   },
   "apk": {
     "package": "vn.edu.uit.mobile.preview",
-    "version": "0.1.7-chatgpt-preview.5",
-    "bytes": 26508746,
-    "sha256": "69a63a2e4d594e6c9e532ac34517d905662ae3380ca969840a6852ec0985a50a",
+    "version": "0.1.7-chatgpt-preview.6",
+    "bytes": 26516452,
+    "sha256": "f7cb73637d6ff1656303f8ab23aee128df682762de477279a699e73f6a5d9b72",
     "configuredApiKeyPresent": false,
     "testOAuthCredentialPresent": false,
     "signerSha256": "87e2bf7bbf1a5763754605bdb478c4234d7970b6182ad531c74e8f1d573d5e8e"
@@ -156,5 +180,14 @@
     "imagesInspected": true,
     "screenshotsPublished": false,
     "actualSubscriberScreenshots": false
+  },
+  "parserDoubleCheck": {
+    "compactTerminalRegressionBeforeFix": "failed",
+    "commentaryFinalRegressionBeforeFix": "failed",
+    "afterFix": "passed",
+    "partialOrConflictingStreamsRejected": true,
+    "billingOrModelFallbackAdded": false,
+    "serverTimestampInvented": false,
+    "realProviderMode": "API key with gpt-6-luna; not subscriber acceptance"
   }
 }

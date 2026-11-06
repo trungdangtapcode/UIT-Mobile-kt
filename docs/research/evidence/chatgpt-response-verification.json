@@ -47,5 +47,54 @@
     "Controlled native plan tool-loop tests are not subscriber inference",
     "Host-JVM inference is not physical Android execution",
     "No university account, private sources or credentials were used"
-  ]
+  ],
+  "doubleCheck": {
+    "recordedAt": "2026-11-06T10:28:02.274696+00:00",
+    "beforeFix": {
+      "compactCompletionRetainsFinalizedToolItemsAndLifecycleModel": {
+        "tests": 1,
+        "failures": 1,
+        "log": "Captured locally before changing the parser"
+      },
+      "commentaryIsNotConcatenatedIntoTheStructuredFinalAnswer": {
+        "tests": 1,
+        "failures": 1,
+        "log": "Captured locally before changing final-message selection"
+      }
+    },
+    "afterFix": {
+      "controlledRegressions": "passed",
+      "nativePlanGreeting": "passed with compact completion, reasoning, commentary and namespaced tools",
+      "realProviderRecheck": {
+        "runtime": "Production Kotlin repository, OkHttp, SSE and tool loop on Linux JVM; not Android",
+        "credentialMode": "Explicit owner-provided API key; not a subscriber token",
+        "requestAdapter": "Production ChatGptPlanProtocol in test-only HttpSend interceptor",
+        "model": "gpt-6-luna",
+        "question": "hello",
+        "followUp": "hello again",
+        "completedTurns": 2,
+        "historicalFinalPhaseReplayed": true,
+        "sourceMode": "Controlled empty announcement cache; no university network or account operations",
+        "providerRequests": 4,
+        "visiblePreviews": 6,
+        "status": "COMPLETE",
+        "factKinds": [
+          "SUGGESTION"
+        ],
+        "actualSubscriberInference": false,
+        "physicalAndroidAcceptance": false,
+        "recordedAt": "2026-11-06T10:25:44.794790+00:00"
+      }
+    },
+    "sourceReferences": [
+      "https://github.com/openai/openai-python/blob/main/src/openai/lib/streaming/responses/_responses.py",
+      "https://github.com/openai/codex/blob/main/codex-rs/codex-api/src/sse/responses.rs",
+      "https://developers.openai.com/api/docs/guides/deployment-checklist"
+    ],
+    "ownerPhoneExactCauseConfirmed": false,
+    "actualSubscriberInference": false,
+    "universityAccountUsed": false,
+    "githubActionsDispatched": false,
+    "sdkSourceSha256": "a3e9749c4c850881b0b361dab5b7445635b4ed02db7b2ed3bcffca0886497162"
+  }
 }

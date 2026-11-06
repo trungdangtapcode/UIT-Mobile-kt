@@ -362,7 +362,7 @@ class ConnectedStudyAiRepository(
                 try {
                     val data = if (streaming) {
                         if (response.headers["Content-Type"]?.substringBefore(';')?.trim() != "text/event-stream") throw StudyAiException("Expected an SSE response", metadata("unexpected_stream_content_type", "response_headers"))
-                        AssistantStream.read(channel, metadata()) { text ->
+                        AssistantStream.read(channel, metadata(), config["model"]?.jsonPrimitive?.content) { text ->
                             check(this@ConnectedStudyAiRepository.config() == config && (lease == null || chatSession.current(lease))) { "AI connection changed" }
                             onText?.invoke(text)
                         }

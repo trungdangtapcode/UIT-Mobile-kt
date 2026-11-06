@@ -290,6 +290,51 @@ UIT_CHATGPT_RESPONSE_LIVE=1 OPENAI_MODEL=gpt-6-luna \
 Ordinary checks skip this test. It must not be enabled in CI. The phone failure
 stays open until its expanded diagnostics or successful subscriber turn is observed.
 
+### Preview 6: reproduced stream assembly and message-phase defects
+
+The follow-up audit reproduced two parser defects in Preview 5, each with a failing
+regression before its implementation was changed:
+
+- Finalized items received in `response.output_item.done` were ignored. A compact
+  `response.completed` with absent/null/empty `output` therefore lost already
+  completed messages, tool calls and opaque reasoning items.
+- Structured-answer extraction concatenated every assistant message. A valid
+  commentary message followed by a `final_answer` JSON message became invalid JSON.
+
+The native accumulator now retains finalized items by output index, checks response
+and item identities, preserves namespaces and phases, and retains fresh encrypted
+reasoning metadata for the next tool request. A compact terminal event can use
+those finalized items. Added items and text deltas alone never become an answer;
+`response.completed` remains required. Unfinished items, contradictory identities,
+changed finalized content and oversized aggregates are rejected. Missing provider
+model metadata can use the exact requested model, tagged `model_source=requested`;
+this never chooses another model or invents a server timestamp.
+
+Only explicitly final messages are used for structured decoding when present;
+otherwise legacy messages without a phase remain supported. Commentary is kept in
+tool-loop history but excluded from final JSON and draft text when its phase is
+known. Verified summaries of earlier completed turns are replayed with
+`phase=final_answer`. Refusals and invalid citations remain failures. Context-budget
+failures and assembly failures retain a safe diagnostic phase/code.
+
+Source basis: the [OpenAI Python SDK response accumulator](https://github.com/openai/openai-python/blob/main/src/openai/lib/streaming/responses/_responses.py)
+handles completed output items and nullable terminal output; the
+[Codex response parser tests](https://github.com/openai/codex/blob/main/codex-rs/codex-api/src/sse/responses.rs)
+include item-done events followed by compact completion metadata. The
+[OpenAI message-phase guidance](https://developers.openai.com/api/docs/guides/deployment-checklist)
+distinguishes commentary from final answers and their replay semantics. These are
+protocol/source observations, not a captured SIWC inference trace from the owner's
+phone. The Android app continues to use the public `/v1/responses` endpoint.
+
+The compact stream and commentary regressions pass after the fixes, including a
+controlled native ChatGPT greeting with reasoning, commentary, namespaced tools,
+compact completion and a validated final answer. A fresh real-provider Kotlin
+check also completes `hello` and `hello again` with the supplied API key and
+`gpt-6-luna`: two verified turns, four requests and preserved historical final
+phase metadata. Its credential
+and physical-device limits are unchanged. The specific cause of the owner's
+earlier phone failure is still unconfirmed without a trace or retest.
+
 ## Official references
 
 - [Open-source integration overview](https://developers.openai.com/siwc/token-sharing-open-source)

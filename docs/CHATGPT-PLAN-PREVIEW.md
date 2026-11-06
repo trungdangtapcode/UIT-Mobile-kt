@@ -1,13 +1,14 @@
 # ChatGPT account preview: owner acceptance
 
-[Download the preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/download/v0.1.7-chatgpt-preview.5/UIT-Mobile-chatgpt-preview.apk)
-from the [prerelease](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.7-chatgpt-preview.5).
+[Download the preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/download/v0.1.7-chatgpt-preview.6/UIT-Mobile-chatgpt-preview.apk)
+from the [prerelease](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.7-chatgpt-preview.6).
 The release includes `SHA256SUMS`. Launcher: **UIT Mobile Preview**; application ID:
-`vn.edu.uit.mobile.preview`; version: `0.1.7-chatgpt-preview.5`.
+`vn.edu.uit.mobile.preview`; version: `0.1.7-chatgpt-preview.6`.
 
-Preview 5 adds specific inference errors and Copy diagnostics directly in chat.
-An active connection/model row shows what Send actually uses. Streaming provider
-errors, request rejection and citation verification are handled separately.
+Preview 6 fixes two reproduced parser defects: compact completion events no longer
+lose finalized streamed items, and commentary is excluded from structured final
+JSON. Namespaces, message phases and opaque reasoning are retained across tool
+calls. Inference errors and Copy diagnostics remain available directly in chat.
 The model picker is now observed on the owner's phone; successful subscriber
 inference on that phone remains unconfirmed.
 See the [latest verification evidence](research/evidence/chatgpt-native-acceptance.json)
@@ -104,5 +105,5 @@ Build locally without GitHub Actions:
 
 ```sh
 ./gradlew :app:assembleDebug \
-  -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.5
+  -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.6
 ```

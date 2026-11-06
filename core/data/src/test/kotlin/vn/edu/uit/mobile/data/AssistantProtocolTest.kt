@@ -19,6 +19,26 @@ internal class AssistantNoAccounts : AccountRepository {
     override suspend fun saveSessions(sessions: List<PortalSession>) = error("Session access forbidden")
 }
 class AssistantProtocolTest {
+    @Test fun commentaryIsNotConcatenatedIntoTheStructuredFinalAnswer() {
+        val final = assistantAnswer("""[{"kind":"UNKNOWN","text":"Hello.","references":[]}]""").getValue("output").jsonArray.single().jsonObject
+        val commentary = JsonObject(
+            final + mapOf(
+                "phase" to JsonPrimitive("commentary"),
+                "content" to JsonArray(
+                    listOf(
+                        buildJsonObject {
+                            put("type", "output_text")
+                            put("text", "I am checking your sources.")
+                        }
+                    )
+                )
+            )
+        )
+        val response = assistantOutput(commentary, JsonObject(final + ("phase" to JsonPrimitive("final_answer"))))
+        val result = OpenAiStudyProtocol.directPayload(response)
+        assertEquals("Hello.", AssistantProtocol.facts(result.toString()).single().text)
+    }
+
     @Test fun androidAndGatewayUseIdenticalInstructionsToolsAndFinalSchema() {
         val file = generateSequence(File(requireNotNull(System.getProperty("user.dir")))) { it.parentFile }.map { File(it, "server/assistant_contract.json") }.first { it.isFile }
         val contract = Json.parseToJsonElement(file.readText()).jsonObject

@@ -30,10 +30,12 @@ class ChatGptAssistantTest {
         val model = System.getenv("OPENAI_MODEL")?.takeIf { it.isNotBlank() } ?: "gpt-6-luna"
         var calls = 0
         var previews = 0
+        val requestShapes = mutableListOf<JsonObject>()
         studyAiHttpClient().use { client ->
             client.plugin(HttpSend).intercept { request ->
                 check(request.url.toString() == "https://api.openai.com/v1/responses")
                 val ordinary = Json.parseToJsonElement((request.body as TextContent).text).jsonObject
+                requestShapes += ordinary
                 request.setBody(TextContent(ChatGptPlanProtocol.request(ordinary).toString(), ContentType.Application.Json))
                 request.headers.remove(HttpHeaders.ContentLength)
                 calls++
@@ -44,16 +46,26 @@ class ChatGptAssistantTest {
             val repo = LocalAssistantRepository(AssistantMemory(), notices(), study::assistantModel)
             val id = repo.create("Controlled greeting check", AssistantScope())
             repo.ask(id, "hello", "Vietnamese") { if (it.draft.isNotBlank()) previews++ }
-            val turn = repo.library.value.workspaces.single().turns.single()
-            assertEquals(AssistantTurnStatus.COMPLETE, turn.status)
-            AssistantRules.verify(turn.facts, turn.evidence)
-            assertTrue(calls >= 2)
+            val firstTurnCalls = calls
+            repo.ask(id, "hello again", "Vietnamese") { if (it.draft.isNotBlank()) previews++ }
+            val turns = repo.library.value.workspaces.single().turns
+            turns.forEach { turn ->
+                assertEquals(AssistantTurnStatus.COMPLETE, turn.status)
+                AssistantRules.verify(turn.facts, turn.evidence)
+            }
+            val turn = turns.last()
+            assertEquals(2, turns.size)
+            assertTrue(calls >= 4)
+            assertTrue(requestShapes[firstTurnCalls].getValue("input").jsonArray.any { it.jsonObject["role"]?.jsonPrimitive?.content == "assistant" && it.jsonObject["phase"]?.jsonPrimitive?.content == "final_answer" })
             val report = buildJsonObject {
                 put("runtime", "Production Kotlin repository, OkHttp, SSE and tool loop on Linux JVM; not Android")
                 put("credentialMode", "Explicit owner-provided API key; not a subscriber token")
                 put("requestAdapter", "Production ChatGptPlanProtocol in test-only HttpSend interceptor")
                 put("model", turn.model)
                 put("question", "hello")
+                put("followUp", "hello again")
+                put("completedTurns", turns.size)
+                put("historicalFinalPhaseReplayed", true)
                 put("sourceMode", "Controlled empty announcement cache; no university network or account operations")
                 put("providerRequests", calls)
                 put("visiblePreviews", previews)
@@ -77,11 +89,36 @@ class ChatGptAssistantTest {
                 val request = requireNotNull(f.responseRequest)
                 requests += request
                 val next = if (requests.size == 1) {
-                    assistantOutput(JsonObject(assistantCall("search", "search_announcements", "{\"query\":\"\"}") + ("namespace" to JsonPrimitive("uit"))))
+                    assistantOutput(
+                        buildJsonObject {
+                            put("type", "reasoning")
+                            put("id", "rs")
+                            put("encrypted_content", "fixture-opaque-content")
+                            put("summary", JsonArray(emptyList()))
+                        },
+                        buildJsonObject {
+                            put("type", "message")
+                            put("role", "assistant")
+                            put("phase", "commentary")
+                            put(
+                                "content",
+                                buildJsonArray {
+                                    add(
+                                        buildJsonObject {
+                                            put("type", "output_text")
+                                            put("text", "Checking selected notices.")
+                                        }
+                                    )
+                                }
+                            )
+                        },
+                        JsonObject(assistantCall("search", "search_announcements", "{\"query\":\"\"}") + ("namespace" to JsonPrimitive("uit")))
+                    )
                 } else {
-                    assistantAnswer("""[{"kind":"UNKNOWN","text":"Hello. Ask about your selected notices.","references":[]}]""")
+                    val answer = assistantAnswer("""[{"kind":"UNKNOWN","text":"Hello. Ask about your selected notices.","references":[]}]""").getValue("output").jsonArray.single().jsonObject
+                    assistantOutput(JsonObject(answer + ("phase" to JsonPrimitive("final_answer"))))
                 }
-                f.response = assistantSseComplete(next)
+                f.response = assistantCompactSse(next)
             }
             val repo = LocalAssistantRepository(AssistantMemory(), notices(), study::assistantModel)
             val id = repo.create("Greeting regression", AssistantScope())
@@ -93,6 +130,8 @@ class ChatGptAssistantTest {
             assertEquals(2, requests.size)
             assertEquals("namespace", requests.first().getValue("tools").jsonArray.single().jsonObject.getValue("type").jsonPrimitive.content)
             assertTrue(requests.last().getValue("input").jsonArray.any { it.jsonObject["type"]?.jsonPrimitive?.content == "function_call_output" })
+            assertTrue(requests.last().getValue("input").jsonArray.any { it.jsonObject["encrypted_content"]?.jsonPrimitive?.content == "fixture-opaque-content" })
+            assertTrue(requests.last().getValue("input").jsonArray.any { it.jsonObject["phase"]?.jsonPrimitive?.content == "commentary" })
             assertEquals("Bearer fixture-initial-access-token", f.responseBearer)
         }
     }

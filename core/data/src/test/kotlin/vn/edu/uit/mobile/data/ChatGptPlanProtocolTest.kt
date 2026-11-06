@@ -132,9 +132,27 @@ class ChatGptPlanProtocolTest {
         ChatGptTestSupport().use { f ->
             val repo = ConnectedStudyAiRepository(f.storage, Accounts(), f.client)
             f.connect(repo.chatGpt)
-            repo.configureChatGpt("fixture-model")
-            assertEquals(StudyConnectionMode.CHATGPT, repo.connection().mode)
-            assertTrue(repo.connection().configured)
+            // Recreate the native repository after a retained login with an empty
+            // picker, as reported on the owner's phone. This is a controlled
+            // catalog larger than the 655,730-byte live web-probe observation.
+            val saved = Json.parseToJsonElement(f.storage.read("chatgpt_accounts")!!).jsonArray
+            val emptyModels = saved.map { JsonObject(it.jsonObject + ("models" to JsonArray(emptyList()))) }
+            f.storage.write("chatgpt_accounts", JsonArray(emptyModels).toString())
+            f.modelBody = """{"models":[{"slug":"fixture-model","display_name":"Fixture model","visibility":"list","capabilities":"${"x".repeat(700000)}"}]}"""
+            val restored = ConnectedStudyAiRepository(f.storage, Accounts(), f.client)
+            restored.chatGpt.initialize()
+            assertTrue(restored.chatGpt.state.value.accounts.single().signedIn)
+            assertTrue(restored.chatGpt.state.value.models.isEmpty())
+            assertFalse(restored.connection().configured)
+            restored.chatGpt.reloadModels()
+            assertNull(restored.chatGpt.state.value.problem)
+            assertEquals("fixture-model", restored.chatGpt.state.value.models.single().id)
+            assertFalse(restored.connection().configured)
+            restored.configureChatGpt("fixture-model")
+            assertEquals(StudyConnectionMode.CHATGPT, restored.connection().mode)
+            assertTrue(restored.connection().configured)
+            assertTrue(withTimeout(5000) { restored.connectionChanges.first { it.configured } }.configured)
+            assertEquals(1, f.authorizationQueries.size)
             val config = Json.parseToJsonElement(f.storage.read("connection")!!).jsonObject
             assertFalse(config.containsKey("token"))
             val answer = """{"items":[{"kind":"answer","text":"Transactions preserve consistency.","citations":[{"sourceId":"module:1","quote":"A transaction preserves consistency."}]}]}"""
@@ -169,15 +187,15 @@ class ChatGptPlanProtocolTest {
                 put("response", completed)
             } + "\n\n"
             val course = Course(1, "fixture-account", "IT004", "Fixture course")
-            val result = repo.generate(course, "ask", listOf(StudySource("module:1", "Fixture source", "A transaction preserves consistency.")), "What does it preserve?", "English")
+            val result = restored.generate(course, "ask", listOf(StudySource("module:1", "Fixture source", "A transaction preserves consistency.")), "What does it preserve?", "English")
             assertEquals("Transactions preserve consistency.", result.items.single().text)
             assertEquals("Bearer fixture-initial-access-token", f.responseBearer)
             assertTrue(f.responseRequest!!.getValue("stream").jsonPrimitive.boolean)
             assertFalse(f.responseRequest!!.containsKey("max_output_tokens"))
             assertTrue(f.requests.all { it.startsWith("https://auth.openai.com/") || it.startsWith("https://api.openai.com/") })
-            assertTrue(runCatching { repo.embed(course, listOf("text"), PassageEmbeddingConfig()) }.isFailure)
-            repo.disconnect()
-            assertFalse(repo.connection().configured)
+            assertTrue(runCatching { restored.embed(course, listOf("text"), PassageEmbeddingConfig()) }.isFailure)
+            restored.disconnect()
+            assertFalse(restored.connection().configured)
         }
     }
 }

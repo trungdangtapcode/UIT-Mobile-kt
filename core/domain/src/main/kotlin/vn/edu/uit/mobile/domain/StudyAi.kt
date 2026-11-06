@@ -14,7 +14,7 @@ data class StudyAnswer(val model: String, val generatedAt: Long, val items: List
 enum class StudyConnectionMode { DIRECT, GATEWAY, CHATGPT }
 data class StudyConnection(val endpoint: String = "https://api.openai.com", val configured: Boolean = false, val mode: StudyConnectionMode = StudyConnectionMode.DIRECT, val model: String = "", val accountLabel: String = "")
 data class StudyTask(val text: String, val checked: Boolean = false)
-class StudyAiException(message: String) : IllegalStateException(message)
+class StudyAiException(message: String, val diagnostic: ChatGptDiagnostic? = null) : IllegalStateException(message)
 
 fun interface OfflineCourseSourceLoader {
     suspend fun load(course: Course, sections: List<CourseSection>, assignments: List<Assignment>): List<StudySource>

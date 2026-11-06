@@ -1,7 +1,6 @@
 package vn.edu.uit.mobile.data
 
 import io.ktor.client.*
-import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
@@ -43,7 +42,7 @@ internal class ChatGptSession(
         require(all.size <= 10)
         storage.write("chatgpt_accounts", JsonArray(all).toString())
     }
-    private fun publish(problem: ChatGptProblem? = null, busy: Boolean = false, diagnostic: ChatGptDiagnostic? = null) {
+    private fun publish(problem: ChatGptProblem? = null, busy: Boolean = false, diagnostic: ChatGptDiagnostic? = null, loadingModels: Boolean = false) {
         val all = records()
         val selected = storage.read("chatgpt_selected")?.takeIf { id -> all.any { text(it, "id") == id } }
         val record = all.firstOrNull { text(it, "id") == selected }
@@ -54,13 +53,14 @@ internal class ChatGptSession(
             busy,
             problem,
             record?.get("welcome")?.jsonPrimitive?.booleanOrNull == true,
-            diagnostic
+            diagnostic,
+            loadingModels
         )
     }
     override suspend fun initialize() = withContext(Dispatchers.IO) {
         mutex.withLock {
             val previous = state.value
-            publish(previous.problem, previous.busy, previous.diagnostic)
+            publish(previous.problem, previous.busy, previous.diagnostic, previous.loadingModels)
         }
     }
     override fun cancelSignIn() {
@@ -154,6 +154,9 @@ internal class ChatGptSession(
     internal fun report(error: ChatGptException) {
         mutable.update { it.copy(problem = error.problem, diagnostic = error.diagnostic, busy = false) }
     }
+    internal fun beginResponse() {
+        mutable.update { if (it.diagnostic?.operation == "responses") it.copy(problem = null, diagnostic = null) else it }
+    }
     private fun credentials(old: JsonObject, result: JsonObject, idToken: String): JsonObject {
         require(result["token_type"]?.jsonPrimitive?.content?.equals("Bearer", true) == true)
         val access = result.getValue("access_token").jsonPrimitive.content
@@ -184,7 +187,7 @@ internal class ChatGptSession(
         mutex.withLock {
             val previous = state.value
             records().firstOrNull { text(it, "id") == state.value.selected }?.let { save(JsonObject(it + mapOf("welcome" to JsonPrimitive(false), "welcome_seen" to JsonPrimitive(true)))) }
-            publish(previous.problem, previous.busy, previous.diagnostic)
+            publish(previous.problem, previous.busy, previous.diagnostic, previous.loadingModels)
         }
     }
     internal class Lease(val account: String, val session: String, val token: String)
@@ -206,7 +209,8 @@ internal class ChatGptSession(
                 }
                 record = credentials(record, result, idToken ?: text(record, "id_token"))
                 save(record)
-                publish()
+                val previous = state.value
+                publish(busy = previous.busy, loadingModels = previous.loadingModels)
             } catch (e: ChatGptException) {
                 if (e.problem == ChatGptProblem.REAUTH) {
                     save(withoutTokens(record))
@@ -334,26 +338,44 @@ internal class ChatGptSession(
         }
         result
     }
-    private suspend fun getJson(url: String, bearer: String? = null, operation: String = "identity_keys", maxBytes: Int = 262144): JsonObject = try {
-        client.prepareGet(url) { bearer?.let { header(HttpHeaders.Authorization, "Bearer $it") } }.execute { response ->
-            if (response.status.value != 200) {
-                val error = failure(response)
-                throw ChatGptException(error.problem, error.diagnostic?.copy(operation = operation))
+    private suspend fun getJson(url: String, bearer: String? = null, operation: String = "identity_keys", maxBytes: Int = 262144): JsonObject {
+        val attempts = if (operation == "models") 2 else 1
+        for (attempt in 1..attempts) {
+            try {
+                return getJsonOnce(url, bearer, operation, maxBytes)
+            } catch (e: ChatGptException) {
+                currentCoroutineContext().ensureActive()
+                if (attempt == attempts || !ChatGptTransport.retryCatalog(e)) {
+                    throw ChatGptException(e.problem, e.diagnostic?.copy(attempt = attempt))
+                }
+                delay(300)
             }
-            boundedJson(response, maxBytes, operation)
         }
-    } catch (e: CancellationException) {
-        throw e
-    } catch (_: HttpRequestTimeoutException) {
-        throw ChatGptException(ChatGptProblem.TIMEOUT, ChatGptDiagnostic(0, "request_timeout", operation = operation))
-    } catch (e: IOException) {
-        val code = when (e) {
-            is java.net.UnknownHostException -> "dns_failure"
-            is javax.net.ssl.SSLException -> "tls_failure"
-            is java.net.SocketTimeoutException -> "network_timeout"
-            else -> "network_io"
+        error("Catalog request exhausted")
+    }
+    private suspend fun getJsonOnce(url: String, bearer: String?, operation: String, maxBytes: Int): JsonObject {
+        var observed: HttpResponse? = null
+        return try {
+            client.prepareGet(url) { bearer?.let { header(HttpHeaders.Authorization, "Bearer $it") } }.execute { response ->
+                observed = response
+                if (response.status.value != 200) {
+                    val error = failure(response)
+                    throw ChatGptException(error.problem, error.diagnostic?.copy(operation = operation))
+                }
+                boundedJson(response, maxBytes, operation)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IOException) {
+            currentCoroutineContext().ensureActive()
+            throw ChatGptTransport.failure(
+                e,
+                operation,
+                observed?.status?.value ?: 0,
+                observed?.headers?.get("x-request-id").orEmpty().takeIf { it.matches(Regex("[a-zA-Z0-9._-]{0,160}")) }.orEmpty(),
+                protocol = observed?.version?.toString().orEmpty()
+            )
         }
-        throw ChatGptException(ChatGptProblem.NETWORK, ChatGptDiagnostic(0, code, operation = operation))
     }
     internal companion object {
         private suspend fun errorBody(response: HttpResponse): JsonObject = try {
@@ -366,6 +388,7 @@ internal class ChatGptSession(
         suspend fun failure(response: HttpResponse): ChatGptException {
             val body = errorBody(response)
             val code = (body["error"] as? JsonObject)?.get("code")?.jsonPrimitive?.content?.takeIf { it.matches(Regex("[a-zA-Z0-9_-]{1,100}")) }.orEmpty()
+            val parameter = (body["error"] as? JsonObject)?.get("param")?.jsonPrimitive?.contentOrNull?.takeIf { it.matches(Regex("[A-Za-z0-9_.\\[\\]-]{1,160}")) }.orEmpty()
             val requestId = response.headers["x-request-id"]?.takeIf { it.matches(Regex("[a-zA-Z0-9._-]{1,160}")) }.orEmpty()
             val shape = when {
                 body["error"] is JsonObject -> "error-object"
@@ -373,17 +396,25 @@ internal class ChatGptSession(
                 body.isEmpty() -> "empty-or-non-json"
                 else -> "other-json"
             }
-            return ChatGptException(httpProblem(response.status.value, body), ChatGptDiagnostic(response.status.value, code, requestId, shape))
+            return ChatGptException(httpProblem(response.status.value, body), ChatGptDiagnostic(response.status.value, code, requestId, shape, parameter = parameter))
         }
         fun httpProblem(status: Int, body: JsonObject): ChatGptProblem {
             val code = (body["error"] as? JsonObject)?.get("code")?.jsonPrimitive?.content
             return when {
                 status == 429 || code == "subscription_sharing_usage_limit_exceeded" -> ChatGptProblem.QUOTA
+                code in setOf("subscription_sharing_user_not_eligible", "chatpass_v2_scope_not_authorized", "chatpass_v2_invalid_authorization_context") -> ChatGptProblem.ACCESS
+                code in setOf("subscription_sharing_route_not_supported", "model_not_found") -> ChatGptProblem.UNSUPPORTED
                 status == 401 -> ChatGptProblem.REAUTH
                 status == 403 -> ChatGptProblem.ACCESS
                 status == 400 || code == "subscription_sharing_unsupported_capability" -> ChatGptProblem.UNSUPPORTED
                 else -> ChatGptProblem.UNAVAILABLE
             }
+        }
+        fun responseProblem(diagnostic: ChatGptDiagnostic): ChatGptProblem = when {
+            diagnostic.code == "request_timeout" -> ChatGptProblem.TIMEOUT
+            diagnostic.code in setOf("dns_failure", "tls_failure", "network_timeout", "network_unreachable", "connect_failure", "http2_stream_reset", "http2_shutdown", "unexpected_eof", "http_protocol", "socket_failure", "network_interrupted", "network_io", "stream_ended_without_completion") -> ChatGptProblem.NETWORK
+            diagnostic.phase in setOf("response_decode", "response_assembly", "response_body") || diagnostic.code in setOf("response_incomplete", "response_refused", "invalid_stream_json", "stream_byte_limit", "stream_frame_limit", "stream_draft_limit", "stream_result_limit") -> ChatGptProblem.RESPONSE
+            else -> httpProblem(diagnostic.status, buildJsonObject { put("error", buildJsonObject { put("code", diagnostic.code) }) })
         }
         suspend fun boundedJson(response: HttpResponse, maxBytes: Int = 262144, operation: String = "response"): JsonObject {
             val stream = response.bodyAsChannel()
@@ -405,6 +436,16 @@ internal class ChatGptSession(
                 } catch (_: IllegalArgumentException) {
                     throw invalid("invalid_json", out.size())
                 }
+            } catch (e: IOException) {
+                currentCoroutineContext().ensureActive()
+                throw ChatGptTransport.failure(
+                    e,
+                    operation,
+                    response.status.value,
+                    response.headers["x-request-id"].orEmpty().takeIf { it.matches(Regex("[a-zA-Z0-9._-]{0,160}")) }.orEmpty(),
+                    out.size(),
+                    response.version.toString()
+                )
             } finally {
                 stream.cancel(null)
             }

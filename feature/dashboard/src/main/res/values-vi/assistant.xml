@@ -108,4 +108,13 @@
     <string name="as_forum_only">UIT Forum · Bài công khai đã chọn</string>
     <string name="as_delete_answer">Xóa câu trả lời</string>
     <string name="as_delete_answer_help">Xóa câu hỏi, câu trả lời, bản nguồn và checklist cục bộ của lượt này? Các tin nhắn khác và bài Forum gốc vẫn giữ nguyên.</string>
+    <string name="as_network_error">Kết nối đến dịch vụ AI bị gián đoạn. Câu hỏi đã được giữ lại. Kiểm tra kết nối trước khi gửi lại.</string>
+    <string name="as_timeout_error">Yêu cầu AI đã hết thời gian chờ. Câu hỏi được giữ lại; app chưa tự gửi yêu cầu mới.</string>
+    <string name="as_request_error">Dịch vụ AI từ chối yêu cầu hoặc không dùng được công cụ. Sao chép chẩn đoán để xác định trường bị từ chối.</string>
+    <string name="as_stream_error">Câu trả lời AI chưa hoàn tất. Sao chép chẩn đoán để xem lỗi dịch vụ hoặc gián đoạn kết nối.</string>
+    <string name="as_verification_error">Đã nhận phản hồi nhưng chưa xác minh được định dạng hoặc trích dẫn. Câu hỏi vẫn được giữ lại.</string>
+    <string name="as_copy_diagnostics">Sao chép chẩn đoán</string>
+    <string name="as_chatgpt_model">ChatGPT · %1$s</string>
+    <string name="as_api_model">OpenAI API · %1$s</string>
+    <string name="as_gateway_model">Gateway HTTPS</string>
 </resources>

@@ -1,0 +1,98 @@
+{
+  "checkedAt": "2026-11-05T22:08:16.276Z",
+  "unitTests": {
+    "passed": 12,
+    "failed": 0,
+    "command": "npm test"
+  },
+  "browser": {
+    "emptyFormRendered": true,
+    "widths": [
+      390,
+      900
+    ],
+    "horizontalOverflow": false,
+    "browserAuthorizationUrlGenerated": true,
+    "actualDeviceCodeIssued": true,
+    "deviceCodeOmittedFromReport": true,
+    "actualSubscriberAuthenticated": false,
+    "inferencePerformed": false,
+    "consoleErrors": []
+  },
+  "publicDiscovery": {
+    "phase": "checked",
+    "status": 200,
+    "issuerMatches": true,
+    "grants": [
+      "authorization_code",
+      "refresh_token"
+    ],
+    "deviceEndpointPublished": false,
+    "checkedAt": "2026-11-05T22:07:31.400Z"
+  },
+  "realDeviceCodePreflight": {
+    "actualCodexAppServer": true,
+    "deviceCodeIssued": true,
+    "cancelledBeforeAccountApproval": true,
+    "isolatedProfileRemoved": true
+  },
+  "actualSubscriberTokenReceived": false,
+  "actualInferencePerformed": false,
+  "universityAccountUsed": false,
+  "githubActionsDispatched": false,
+  "availabilityFollowUp": {
+    "cause": "The original one-hour lifetime elapsed before the owner returned",
+    "unitTests": {
+      "passed": 15,
+      "failed": 0
+    },
+    "userService": "uit-chatgpt-auth-probe.service",
+    "loopbackOnly": true,
+    "automaticShutdownMinutes": 0,
+    "curlIPv4Status": 200,
+    "curlLocalhostFollowingRedirectStatus": 200,
+    "persistentControlKey": true,
+    "oauthTokensPersistedInStateDirectory": false,
+    "browser": {
+      "canonicalOrigin": "http://127.0.0.1:8877",
+      "connected": true,
+      "autoStopMinutes": 0,
+      "pageErrors": [],
+      "accountAuthenticated": false
+    },
+    "githubActionsDispatched": false
+  },
+  "popupFollowUp": {
+    "reproducedBeforeFix": {
+      "controlledStaleLink": true,
+      "blankPlaceholderOpened": true,
+      "errorBelowViewport": true,
+      "diagnostic": "open_private_launch_url"
+    },
+    "fixes": [
+      "Validate local connection before enabling auth controls",
+      "Prepare provider URL before opening a tab",
+      "Keep ordinary link fallback",
+      "Visible focused errors",
+      "Handle launch fragment changes in an existing tab"
+    ],
+    "browserRegression": {
+      "invalidLinkDisabled": true,
+      "rejectedStartOpensNoPopup": true,
+      "rejectedStartErrorVisible": true,
+      "realPopupNavigation": true,
+      "controlledCallbackReturnsVerifiedResult": true,
+      "blockedPopupManualLinkWorks": true,
+      "actualSubscriberAuthenticated": false,
+      "providerLoginCompleted": false,
+      "inferencePerformed": false,
+      "fixtureCallbackUsed": true,
+      "pageErrors": []
+    },
+    "nodeTests": {
+      "passed": 15,
+      "failed": 0
+    },
+    "githubActionsDispatched": false
+  }
+}

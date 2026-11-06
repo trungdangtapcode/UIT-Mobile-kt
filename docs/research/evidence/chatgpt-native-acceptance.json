@@ -1,0 +1,216 @@
+{
+  "recordedAt": "2026-11-06T17:39:36.281Z",
+  "liveBrowserObservation": {
+    "runtime": "Separate Node.js auth probe; owner completed OpenAI consent",
+    "completedAt": "2026-11-06T06:22:10.935Z",
+    "tokenReceived": true,
+    "identityVerified": true,
+    "directPermission": true,
+    "endpoint": "https://api.openai.com/v1/models",
+    "catalog": {
+      "checkedAt": "2026-11-06T06:22:18.834Z",
+      "status": 200,
+      "responseBytes": 655730,
+      "bodyShape": "models-array",
+      "modelCount": 10,
+      "accepted": true
+    }
+  },
+  "deviceCodeObservation": {
+    "tokenReceived": false,
+    "directPermission": false,
+    "phase": "failed"
+  },
+  "nativeRegression": {
+    "runtime": "Production Kotlin repository with controlled HTTP endpoints and actual localhost callback sockets",
+    "catalogCapabilityCharacters": 700000,
+    "retainedLoginRecovery": "passed",
+    "explicitModelActivation": "passed",
+    "connectionChangeNotification": "passed",
+    "sourceValidatedSse": "passed",
+    "catalogLoadingDuringTokenRefresh": "passed"
+  },
+  "actualSubscriberInference": true,
+  "physicalAndroidAcceptance": "Pending Preview 7 phone retest. Production Kotlin on Linux completed real SIWC inference with missing Content-Type. The probe uses its own registration.",
+  "universityAccountUsed": false,
+  "oauthCredentialsPublished": false,
+  "probeTokensImportedIntoApp": false,
+  "githubActionsDispatched": false,
+  "localVerification": {
+    "command": "./gradlew check :app:assembleDebug :app:compileDebugAndroidTestKotlin -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.7",
+    "result": "passed",
+    "actionsDispatched": false,
+    "focusedCases": {
+      "vn.edu.uit.mobile.data.AssistantProtocolTest": {
+        "tests": 8,
+        "skipped": 0,
+        "failures": 0,
+        "errors": 0
+      },
+      "vn.edu.uit.mobile.data.ChatGptAssistantTest": {
+        "tests": 4,
+        "skipped": 1,
+        "failures": 0,
+        "errors": 0
+      },
+      "vn.edu.uit.mobile.data.AssistantStreamTest": {
+        "tests": 9,
+        "skipped": 0,
+        "failures": 0,
+        "errors": 0
+      },
+      "vn.edu.uit.mobile.data.AssistantRepositoryTest": {
+        "tests": 14,
+        "skipped": 0,
+        "failures": 0,
+        "errors": 0
+      },
+      "vn.edu.uit.mobile.data.ChatGptWireTest": {
+        "tests": 5,
+        "skipped": 1,
+        "failures": 0,
+        "errors": 0
+      },
+      "vn.edu.uit.mobile.data.ChatGptPlanProtocolTest": {
+        "tests": 6,
+        "skipped": 0,
+        "failures": 0,
+        "errors": 0
+      },
+      "vn.edu.uit.mobile.data.ChatGptSessionTest": {
+        "tests": 21,
+        "skipped": 0,
+        "failures": 0,
+        "errors": 0
+      },
+      "vn.edu.uit.mobile.data.AssistantResponseAccumulatorTest": {
+        "tests": 7,
+        "skipped": 0,
+        "failures": 0,
+        "errors": 0
+      },
+      "vn.edu.uit.mobile.ChatGptDesignTest": {
+        "tests": 11,
+        "skipped": 0,
+        "failures": 0,
+        "errors": 0
+      },
+      "vn.edu.uit.mobile.AssistantDesignTest": {
+        "tests": 15,
+        "skipped": 0,
+        "failures": 0,
+        "errors": 0
+      },
+      "vn.edu.uit.mobile.AssistantForumViewModelTest": {
+        "tests": 4,
+        "skipped": 0,
+        "failures": 0,
+        "errors": 0
+      }
+    },
+    "additionalLiveCheck": {
+      "result": "passed",
+      "mode": "Explicit API key with production plan-request adapter; not subscriber admission",
+      "model": "gpt-6-luna",
+      "completedTurns": 2,
+      "providerRequests": 4,
+      "historicalFinalPhaseReplayed": true
+    },
+    "responseReaderRegressions": "6 passed; missing/mislabeled media type, UTF-8 fragmentation, completed JSON, safe JSON errors, invalid documents, bounds and cancellation",
+    "authProbe": "18 Node tests and Chromium browser regression passed; subscriber evidence is from the separate owner-authorized run"
+  },
+  "apk": {
+    "package": "vn.edu.uit.mobile.preview",
+    "version": "0.1.7-chatgpt-preview.7",
+    "bytes": 26063801,
+    "sha256": "d87c087f22f73562c553f0f1bd020721405f2e097dc7abec8a201ab1410b4628",
+    "configuredApiKeyPresent": false,
+    "signerSha256": "87e2bf7bbf1a5763754605bdb478c4234d7970b6182ad531c74e8f1d573d5e8e"
+  },
+  "ownerNativeTransportReport": {
+    "operation": "models",
+    "status": 0,
+    "code": "network_io",
+    "requestId": "",
+    "bodyShape": "",
+    "responseBytes": "unknown",
+    "phase": "Not established by the older diagnostic",
+    "chromeOnSamePhone": "Missing bearer",
+    "privateAccountImagePublished": false,
+    "exactRootCauseConfirmed": false
+  },
+  "liveKeylessHostCheck": {
+    "runtime": "Production Ktor OkHttp engine on Linux JVM; not Android",
+    "endpoint": "https://api.openai.com/v1/models",
+    "authorizationSent": false,
+    "inferencePerformed": false,
+    "status": 401,
+    "protocol": "HTTP/2.0",
+    "recordedAt": "2026-11-06T07:51:51.284149+00:00"
+  },
+  "transportFollowUp": {
+    "wireTests": "Actual production OkHttp engine with local socket faults; separate explicit keyless public GET",
+    "catalogAttemptsMaximum": 2,
+    "catalogRetryDelayMs": 300,
+    "tlsVerificationWeakened": false,
+    "applicationRetryAddedToTokenOrInference": false,
+    "nestedExceptionTypesWithoutMessages": true,
+    "httpMetadataAndBytesRetainedForBodyFailure": true,
+    "physicalPhoneRecoveryConfirmed": false
+  },
+  "ownerLatestReport": {
+    "modelPickerDisplayed": true,
+    "displayedModel": "GPT-6.1-Sol",
+    "question": "hello",
+    "inferenceFailedWithinSeconds": true,
+    "exactProviderErrorUnknown": true,
+    "privateAccountImagesPublished": false
+  },
+  "responseVerification": "chatgpt-response-verification.json",
+  "uiReview": {
+    "runtime": "Robolectric Compose on host; controlled error states",
+    "widthsDp": [
+      360,
+      390,
+      412
+    ],
+    "theme": "dark",
+    "copyDiagnosticsVisible": true,
+    "activeConnectionVisible": true,
+    "composerVisible": true,
+    "imagesInspected": true,
+    "screenshotsPublished": false,
+    "actualSubscriberScreenshots": false
+  },
+  "parserDoubleCheck": {
+    "compactTerminalRegressionBeforeFix": "failed",
+    "commentaryFinalRegressionBeforeFix": "failed",
+    "afterFix": "passed",
+    "partialOrConflictingStreamsRejected": true,
+    "billingOrModelFallbackAdded": false,
+    "serverTimestampInvented": false,
+    "realProviderMode": "API key with gpt-6-luna; not subscriber acceptance"
+  },
+  "liveSubscriberNativeCheck": {
+    "phase": "completed",
+    "started": true,
+    "startedAt": "2026-11-06T17:39:04.645Z",
+    "completedAt": "2026-11-06T17:39:14.837Z",
+    "result": {
+      "result": "completed",
+      "model": "gpt-6.1-sol",
+      "connectionMode": "CHATGPT",
+      "runtime": "Production Kotlin on Linux JVM; not physical Android",
+      "registration": "Owner-authorized Auth Probe registration; not phone registration",
+      "requests": 2,
+      "networkRequests": 2,
+      "contentType": "missing",
+      "protocol": "h2",
+      "actualSubscriberInference": true,
+      "inferenceAttempted": true,
+      "credentialWrittenToDisk": false,
+      "universityAccountUsed": false
+    }
+  },
+  "probeTokenUsedInTestOnlyJvmMemory": true
+}

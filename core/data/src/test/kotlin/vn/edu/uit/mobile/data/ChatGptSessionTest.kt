@@ -8,6 +8,56 @@ import org.junit.Test
 import vn.edu.uit.mobile.domain.*
 
 class ChatGptSessionTest {
+    @Test fun catalogRetryNeverRepeatsAccessDenialsOrTransientIdentityRequests() = runBlocking {
+        ChatGptTestSupport().use { f ->
+            val session = f.session()
+            f.modelStatus = 403
+            f.connect(session)
+            assertEquals(1, f.modelCalls)
+            assertEquals(ChatGptProblem.ACCESS, session.state.value.problem)
+            f.modelStatus = 200
+            f.beforeModels = { throw javax.net.ssl.SSLException("fixture-sensitive-certificate") }
+            session.reloadModels()
+            assertEquals(2, f.modelCalls)
+            assertEquals("tls_failure", session.state.value.diagnostic?.code)
+            assertEquals(1, session.state.value.diagnostic?.attempt)
+            assertEquals(1, f.requests.count { it.endsWith("/oauth/token") })
+            assertEquals(0, f.requests.count { it.endsWith("/responses") })
+            assertTrue(session.state.value.accounts.single().signedIn)
+        }
+    }
+
+    @Test fun catalogLoadingRemainsVisibleAcrossCredentialRefreshAndInitialization() = runBlocking {
+        ChatGptTestSupport().use { f ->
+            val session = f.session()
+            f.connect(session)
+            f.now += 3550
+            val entered = CompletableDeferred<Unit>()
+            val release = CompletableDeferred<Unit>()
+            f.beforeModels = {
+                entered.complete(Unit)
+                release.await()
+            }
+            val work = async { session.reloadModels() }
+            try {
+                withTimeout(5000) { entered.await() }
+                assertEquals(1, f.refreshCalls)
+                assertTrue(session.state.value.busy)
+                assertTrue(session.state.value.loadingModels)
+                session.initialize()
+                session.acknowledgeWelcome()
+                assertTrue(session.state.value.busy)
+                assertTrue(session.state.value.loadingModels)
+            } finally {
+                release.complete(Unit)
+                work.await()
+            }
+            assertFalse(session.state.value.busy)
+            assertFalse(session.state.value.loadingModels)
+            assertNull(session.state.value.problem)
+        }
+    }
+
     @Test fun largeCatalogMetadataDoesNotPreventExplicitModelActivation() = runBlocking {
         ChatGptTestSupport().use { f ->
             f.modelBody = """{"models":[{"slug":"fixture-model","display_name":"Fixture model","visibility":"list","capability_description":"${"x".repeat(400000)}"}]}"""

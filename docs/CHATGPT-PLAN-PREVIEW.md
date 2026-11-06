@@ -1,9 +1,23 @@
 # ChatGPT account preview: owner acceptance
 
-[Download the preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/download/v0.1.7-chatgpt-preview.2/UIT-Mobile-chatgpt-preview.apk)
-from the [prerelease](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.7-chatgpt-preview.2).
+[Download the preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/download/v0.1.7-chatgpt-preview.7/UIT-Mobile-chatgpt-preview.apk)
+from the [prerelease](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.7-chatgpt-preview.7).
 The release includes `SHA256SUMS`. Launcher: **UIT Mobile Preview**; application ID:
-`vn.edu.uit.mobile.preview`; version: `0.1.7-chatgpt-preview.2`.
+`vn.edu.uit.mobile.preview`; version: `0.1.7-chatgpt-preview.7`.
+
+Preview 7 accepts valid event-stream bytes even when Content-Type is missing or
+mislabeled, and reports safe JSON/service errors rather than rejecting at the
+header gate. Completed JSON responses still require normal output and citation
+validation. It retains the earlier compact-completion and final-answer fixes.
+
+The owner-authorized [real subscriber check](research/evidence/chatgpt-subscriber-native.json)
+completed with `gpt-6.1-sol`: two requests, HTTP/2, missing Content-Type, validated
+answer. This used production Kotlin on Linux with the Auth Probe registration,
+not an API key or a university account. **Physical-phone acceptance remains
+pending.** Install this APK over the existing preview, keep the saved connection
+and try hello again; signing out is unnecessary.
+See the [verification evidence](research/evidence/chatgpt-native-acceptance.json)
+for the runtime and registration boundaries.
 
 This is a debug preview installed separately from the normal app. It updates the
 earlier Forum/search preview using the same package and signing certificate;
@@ -43,6 +57,13 @@ used later, leaves the phone only after an explicit selection and Send action.
 
 ## Recovery and lifecycle checks
 
+- If models are available but Send fails, use Copy diagnostics in the chat error
+  before dismissing it. Confirm the active connection row says ChatGPT and the
+  intended model. The report includes connection mode/model, status, safe provider
+  error code and parameter, request ID, operation and phase. It contains no token,
+  account label, question or source text. Do not repeatedly sign out to diagnose an
+  inference error. Use this ChatGPT account explicitly if another mode is active.
+
 - If the account is already listed but no model picker is shown, update this
   preview in place and tap Refresh available models. Keep the saved registration;
   signing out is unnecessary for a catalog-size or response-format failure.
@@ -51,8 +72,11 @@ used later, leaves the phone only after an explicit selection and Send action.
 - If refresh still fails, use Copy connection diagnostics near the account row.
   Share that text when reporting the problem. It contains the operation, HTTP
   status (`0` means no HTTP status was captured), safe error code, request ID, response-shape
-  category and, when available, the number of bytes read. It contains no account
-  identity, browser URL, OAuth token, exception text or selected source material.
+  category and, when available, the number of bytes copied. Preview 4 also includes
+  phase, trusted exception type names, protocol and attempt number. An interrupted
+  body can retain HTTP 200; status zero is reserved for failures without captured
+  response metadata. It contains no account identity, browser URL, OAuth token,
+  exception message or selected source material.
 - Cancel browser consent, close the settings form, or exceed the three-minute
   timeout. The previous connection should remain usable and no AI call should
   have been sent. An unfinished attempt needs a fresh sign-in after process death
@@ -79,11 +103,13 @@ The [phone gallery](design/CHATGPT-SIGN-IN.md) contains empty forms on the host,
 not connected-subscriber screenshots. Controlled tests use signed fixture tokens,
 an actual localhost callback socket, mocked official endpoints and bounded SSE.
 The public discovery endpoint was read without credentials to check metadata.
-Those results do not establish subscriber eligibility or physical-phone success.
+Controlled tests do not establish subscriber eligibility or physical-phone success.
+The separately recorded owner-authorized native run establishes subscriber
+inference on Linux only.
 
 Build locally without GitHub Actions:
 
 ```sh
 ./gradlew :app:assembleDebug \
-  -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.2
+  -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.7
 ```

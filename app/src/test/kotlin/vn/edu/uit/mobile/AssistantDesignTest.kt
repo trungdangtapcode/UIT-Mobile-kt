@@ -4,6 +4,9 @@ import android.app.Application
 import androidx.compose.runtime.*
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.captureScreenRoboImage
+import java.io.File
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -19,12 +22,44 @@ import vn.edu.uit.mobile.domain.*
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w390dp-h844dp-mdpi", application = Application::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
+@OptIn(ExperimentalRoborazziApi::class)
 class AssistantDesignTest {
     @get:Rule val compose = createComposeRule()
     private val source = AssistantEvidence("e", "https://portal.uit.edu.vn/bai-viet/fixture", AnnouncementSource.PORTAL, "Fixture scholarship notice", "2026-11-03", 1793700000, "a".repeat(64), listOf("Submit an application before Friday."))
     private val turn = AssistantTurn("turn", "What should I prepare?", 1793700000, AssistantTurnStatus.COMPLETE, listOf(AssistantFact(AssistantFactKind.FACT, "Prepare an application.", listOf(AssistantReference("e", 0, "Submit an application before Friday.")))), listOf(source))
     private val workspace = AssistantWorkspace("workspace", "My notices", AssistantScope(), 1793700000, listOf(turn))
     private val state = AssistantUiState(AssistantLibrary(listOf(workspace)), workspace.id, StudyConnection(configured = true, model = "fixture-model"))
+
+    private fun failedRequest(width: String) {
+        val failed = turn.copy(question = "hello", status = AssistantTurnStatus.FAILED, facts = emptyList(), evidence = emptyList())
+        val failedState = state.copy(
+            library = AssistantLibrary(listOf(workspace.copy(turns = listOf(failed)))),
+            connection = StudyConnection(configured = true, mode = StudyConnectionMode.CHATGPT, model = "fixture-model"),
+            problem = AssistantProblem.STREAM,
+            diagnostic = ChatGptDiagnostic(200, "response_incomplete", requestId = "fixture-request", operation = "responses", phase = "response.incomplete")
+        )
+        var sends = 0
+        compose.setContent { UitTheme(dark = true, dynamic = false) { WorkspaceFrame(0, {}, {}, "", false, false, 0) { AssistantContent(failedState, onAsk = { sends++ }) } } }
+        compose.onNodeWithTag("assistant-copy-diagnostics").assertIsDisplayed().performClick()
+        compose.onNodeWithTag("assistant-active-connection").assertIsDisplayed()
+        compose.onNodeWithTag("assistant-question").assertIsDisplayed()
+        assertEquals(0, sends)
+        // Private controlled error-state review only; never subscriber acceptance evidence.
+        if (java.lang.Boolean.getBoolean("roborazzi.test.record")) {
+            val directory = File("build/outputs/assistant-failure-design").apply { mkdirs() }
+            captureScreenRoboImage(File(directory, "assistant-failure-$width.png").absolutePath)
+        }
+    }
+
+    @Test fun requestFailure390HasVisibleDiagnosticsAndActualConnection() = failedRequest("390")
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-mdpi")
+    fun requestFailure360HasVisibleDiagnosticsAndActualConnection() = failedRequest("360")
+
+    @Test
+    @Config(qualifiers = "vi-rVN-w412dp-h915dp-mdpi")
+    fun requestFailure412VietnameseHasVisibleDiagnosticsAndActualConnection() = failedRequest("412-vi")
 
     @Test fun creatingWorkspaceDoesNotSendAQuestionAndRequiresNameAndAllowedSources() {
         var created = false
@@ -95,6 +130,7 @@ class AssistantDesignTest {
         val running = state.copy(busy = true, progress = AssistantProgress("read_announcement"), library = AssistantLibrary(listOf(workspace.copy(turns = listOf(turn.copy(status = AssistantTurnStatus.RUNNING, facts = emptyList(), evidence = emptyList()))))))
         compose.setContent { UitTheme { AssistantContent(running, onStop = { stopped = true }) } }
         compose.onNodeWithTag("assistant-progress").assertExists()
+        compose.onNodeWithTag("assistant-active-connection").assertIsNotEnabled()
         compose.onNodeWithContentDescription("Stop").performClick()
         assertTrue(stopped)
         compose.onNodeWithContentDescription("Send message").assertDoesNotExist()

@@ -166,6 +166,208 @@ specific failure. Preview 2 needs an owner retest; if it still fails, its copied
 diagnostics can distinguish HTTP access errors, malformed catalogs, size limits
 and transport failures without sharing OAuth credentials.
 
+### Browser-probe observation and native regression
+
+On 2026-11-06, the owner completed the separate browser probe's SIWC flow. The
+probe verified the signed identity and the two direct-access scopes. Its explicit
+read-only request to `https://api.openai.com/v1/models` returned HTTP 200, a
+`models` array with 10 entries and a 655,730-byte response. That actual response
+exceeds the app's former 262,144-byte limit. This supports the catalog-size
+diagnosis, although no response was captured from the failing phone itself.
+The device-code attempt expired; it did not establish a device-code grant.
+
+The native integration regression recreates `ConnectedStudyAiRepository` with a
+retained login and empty cached models, loads a controlled catalog containing a
+700,000-character capability field, explicitly activates a model, observes the
+connection update and decodes a source-validated SSE answer. It requires no new
+browser consent. A second regression covers credential renewal during catalog
+loading: the loading indicator must survive renewal, initialization and welcome
+acknowledgment until loading completes.
+
+These are distinct evidence layers. The owner-authorized probe read is a live
+service observation; the native tests use controlled endpoints. Neither is a
+completed subscriber inference on Android. The [preview acceptance checklist](CHATGPT-PLAN-PREVIEW.md)
+remains necessary for the phone's browser callback and actual plan-backed Send.
+The [sanitized verification record](research/evidence/chatgpt-native-acceptance.json)
+records the checks and APK identity. Probe credentials are not exported, injected into the APK or transferred between
+client registrations. The HTML tool is optional development tooling; the Kotlin
+app needs neither Node.js, Codex CLI nor a hosted backend. Device code is available
+only in that diagnostic tool, not as an Android sign-in option.
+
+### Native transport investigation
+
+The owner subsequently reported `operation=models`, `status=0`,
+`code=network_io` and unknown response bytes on the phone. Chrome on the same
+phone and network returned "Missing bearer" for the public models endpoint.
+This establishes browser reachability, not successful native authentication or
+catalog loading. The catalog-size change alone has not resolved phone acceptance.
+
+The older diagnostic caught IO failures outside the whole request/response block.
+It therefore lost HTTP status and request ID when a response body was interrupted,
+reporting status zero even after HTTP 200. The transport follow-up retains HTTP
+status, validated request ID, bytes copied, protocol and response phase. It
+classifies nested IO causes and copies only bounded trusted exception type names;
+exception messages, URLs, tokens, response content and account identity are not
+included. A pre-response failure still has status zero and unknown response size.
+
+Catalog GETs may retry once after 300 ms for a socket interruption, unexpected
+EOF, HTTP protocol failure or HTTP/2 stream/connection reset. The application
+does not retry DNS/TLS failures, access denials, malformed JSON or cancellation.
+This new loop is limited to catalog reads; it does not wrap token exchange,
+refresh, revocation or inference. TLS verification and provider endpoints remain
+unchanged. No fallback model, invented catalog or alternate billing route is used.
+
+`ChatGptWireTest` uses the same `studyAiHttpClient()` factory as the application,
+with localhost test routing rather than MockEngine. A socket server returns a
+700,000-character catalog or deliberately truncates its declared body. Tests cover
+successful loading, one-read recovery, bounded repeated failure with HTTP metadata
+and classification without private exception text. A separate explicit keyless
+GET to the public endpoint returned HTTP 401 over HTTP/2 from the Linux JVM.
+That is actual host networking, not Android or subscriber inference evidence.
+Run the network check deliberately with `UIT_CHATGPT_NETWORK_LIVE=1`; it is skipped
+in ordinary checks and never sends an Authorization header or inference request.
+
+Preview 4 includes this transport follow-up. Update in place, keep the retained
+registration, retry loading models and copy its expanded diagnostics if it fails.
+The cause of the owner's original native IO failure remains unconfirmed until
+that device result is available; do not mark this investigation resolved from the
+localhost regression or host HTTP 401 alone.
+
+### Inference failures after model loading
+
+The next owner phone report showed the model picker populated with GPT-6.1-Sol,
+followed by a failed `hello` turn within a few seconds. The previous generic chat
+banner combined provider, transport and citation failures, so those screenshots
+do not establish the failing phase or provider code. Model loading is now observed
+on the phone; subscriber inference remains unconfirmed.
+
+Preview 5 separates request rejection, transport interruption, timeout, incomplete
+stream and answer verification. The chat error exposes a deliberate Copy diagnostics
+action. It includes the actual active connection mode/model, operation, captured
+HTTP status, request ID, safe error code/parameter, stream phase and protocol.
+It excludes credentials, account labels, questions, source text and raw service
+messages. Diagnostics are temporary UI/session state, cleared when dismissed or
+when a new question is sent; they are not a persistent network log.
+
+Responses errors can arrive after HTTP 200 as `response.failed` or `error` events.
+The parser retains their machine-readable code and parameter. It handles an SSE
+event name when the JSON lacks a type, distinguishes `response.incomplete` and
+refusal, and never accepts `[DONE]` or EOF as a completed response. Stream failures
+stop the current turn without an inference retry or an API-key fallback. Citation
+verification still runs after a valid completed response; a failed repair remains
+a separate validation error, never a saved successful answer.
+
+The chat also shows the connection mode and model actually used for Send. Available
+models in the sign-in panel do not activate a connection until Use this ChatGPT
+account is selected. This status row uses the active configuration, not the pending
+picker choice or a subscriber identity.
+
+Verification includes a controlled native ChatGPT tool loop for `hello`, HTTP-400
+parameter retention, quota errors inside HTTP 200 and no automatic inference retry.
+Real API-key probes accepted the namespaced request on `gpt-6-luna`; that API
+project returned HTTP 403 `model_not_found` for `gpt-6.1-sol`. Project API access is
+not evidence about the selected ChatGPT plan's access, and no app model or billing
+connection was changed by those experiments.
+
+A separate opt-in Kotlin check completed a real `hello` turn with `gpt-6-luna`:
+two provider requests, streaming previews and a validated persisted answer. It
+uses the production repository, OkHttp engine, SSE parser and tool loop, with the
+production plan-request adapter applied in a **test-only** HTTP-send interceptor.
+The credential is the owner's explicitly supplied API key. The cache is controlled
+and empty; no university account or network operation is performed. This is actual
+provider inference with an API credential, not subscriber admission or Android
+device acceptance. See the sanitized evidence for the exact runtime and results.
+
+To run that paid opt-in check after privately loading `OPENAI_API_KEY` into the
+process environment (`.env` is not loaded automatically):
+
+```sh
+UIT_CHATGPT_RESPONSE_LIVE=1 OPENAI_MODEL=gpt-6-luna \
+  ./gradlew :core:data:testDebugUnitTest \
+  --tests '*ChatGptAssistantTest.actualGreetingWithPlanRequestShapeAndExplicitApiCredential'
+```
+
+Ordinary checks skip this test. It must not be enabled in CI. The phone failure
+stays open until its expanded diagnostics or successful subscriber turn is observed.
+
+### Preview 6: reproduced stream assembly and message-phase defects
+
+The follow-up audit reproduced two parser defects in Preview 5, each with a failing
+regression before its implementation was changed:
+
+- Finalized items received in `response.output_item.done` were ignored. A compact
+  `response.completed` with absent/null/empty `output` therefore lost already
+  completed messages, tool calls and opaque reasoning items.
+- Structured-answer extraction concatenated every assistant message. A valid
+  commentary message followed by a `final_answer` JSON message became invalid JSON.
+
+The native accumulator now retains finalized items by output index, checks response
+and item identities, preserves namespaces and phases, and retains fresh encrypted
+reasoning metadata for the next tool request. A compact terminal event can use
+those finalized items. Added items and text deltas alone never become an answer;
+`response.completed` remains required. Unfinished items, contradictory identities,
+changed finalized content and oversized aggregates are rejected. Missing provider
+model metadata can use the exact requested model, tagged `model_source=requested`;
+this never chooses another model or invents a server timestamp.
+
+Only explicitly final messages are used for structured decoding when present;
+otherwise legacy messages without a phase remain supported. Commentary is kept in
+tool-loop history but excluded from final JSON and draft text when its phase is
+known. Verified summaries of earlier completed turns are replayed with
+`phase=final_answer`. Refusals and invalid citations remain failures. Context-budget
+failures and assembly failures retain a safe diagnostic phase/code.
+
+Source basis: the [OpenAI Python SDK response accumulator](https://github.com/openai/openai-python/blob/main/src/openai/lib/streaming/responses/_responses.py)
+handles completed output items and nullable terminal output; the
+[Codex response parser tests](https://github.com/openai/codex/blob/main/codex-rs/codex-api/src/sse/responses.rs)
+include item-done events followed by compact completion metadata. The
+[OpenAI message-phase guidance](https://developers.openai.com/api/docs/guides/deployment-checklist)
+distinguishes commentary from final answers and their replay semantics. These are
+protocol/source observations, not a captured SIWC inference trace from the owner's
+phone. The Android app continues to use the public `/v1/responses` endpoint.
+
+The compact stream and commentary regressions pass after the fixes, including a
+controlled native ChatGPT greeting with reasoning, commentary, namespaced tools,
+compact completion and a validated final answer. A fresh real-provider Kotlin
+check also completes `hello` and `hello again` with the supplied API key and
+`gpt-6-luna`: two verified turns, four requests and preserved historical final
+phase metadata. Its credential
+and physical-device limits are unchanged. The specific cause of the owner's
+earlier phone failure is still unconfirmed without a trace or retest.
+
+## HTTP 200 with an unexpected response media type
+
+The owner's latest phone diagnostic reports HTTP 200 over HTTP/2, followed by
+`unexpected_stream_content_type` at `response_headers`. This establishes that the
+old header gate rejected the response before parsing its body. It does not
+establish that the provider returned a valid event stream or reveal the real
+media type, which older diagnostics omitted. Previous compact-stream fixes alone
+do not explain this failure.
+
+The client now records normalized `contentType` and `contentEncoding` and inspects
+a bounded prefix of the original response bytes. Recognizable SSE is replayed into
+the existing stream parser without sending another request, including fragmented
+UTF-8 and optional BOM bytes. A completed JSON Response is accepted only through
+the same output assembly and downstream answer/citation validators. No streaming
+previews are invented for JSON. Arbitrary JSON, HTML/XML, empty bodies, incomplete
+responses and refusals remain failures. HTTP-200 JSON errors preserve safe error
+codes and parameter names; raw provider messages remain excluded from app
+reports. JSON reads are capped at 256 KiB, prefix inspection at 4 KiB. Cancellation
+stops the stream replay pump. There is no automatic retry or billing/model fallback
+introduced by this change.
+
+The [optional native subscriber diagnostic](../tools/chatgpt-auth-probe/README.md#run-the-production-kotlin-subscriber-check)
+lets the owner explicitly authorize a real `gpt-6.1-sol` hello check through the
+production Kotlin client, without transferring tokens to chat or using an API key.
+A host-JVM test with a new probe registration remains distinct from Android and
+from the existing phone registration. The [owner-authorized subscriber run](research/evidence/chatgpt-subscriber-native.json)
+completed on 2026-11-06 at 17:39 UTC: two requests with `gpt-6.1-sol`, validated
+completion, HTTP/2 and a missing Content-Type header. This establishes real SIWC
+inference through production Kotlin and reproduces the condition that the old
+header gate rejects. No API key, Codex profile or university account was used.
+The probe's separate registration and Linux runtime do not establish physical
+Android acceptance; a Preview 7 phone retest remains required.
+
 ## Official references
 
 - [Open-source integration overview](https://developers.openai.com/siwc/token-sharing-open-source)

@@ -173,7 +173,10 @@ class AssistantRepositoryTest {
         try {
             repo.ask(id, "Apply", "English")
             fail("Unexpected tool")
-        } catch (_: IllegalArgumentException) { }
+        } catch (e: StudyAiException) {
+            assertEquals("unsupported_tool", e.diagnostic!!.code)
+            assertEquals("tool_dispatch", e.diagnostic!!.phase)
+        }
         assertEquals(AssistantTurnStatus.FAILED, repo.library.value.workspaces.single().turns.single().status)
     }
 

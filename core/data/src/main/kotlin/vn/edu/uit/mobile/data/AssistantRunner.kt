@@ -59,7 +59,7 @@ internal class AssistantRunner(private val model: AssistantModel, private val an
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Exception) {
-                    check(!repaired && step < AssistantRules.MAX_STEPS - 1) { "Answer evidence could not be verified" }
+                    if (repaired || step == AssistantRules.MAX_STEPS - 1) throw StudyAiException("Answer evidence could not be verified", ChatGptDiagnostic(0, "answer_evidence_unverified", operation = "assistant", phase = "validation"))
                     repaired = true
                     input.addAll(output)
                     input += buildJsonObject {
@@ -75,8 +75,8 @@ internal class AssistantRunner(private val model: AssistantModel, private val an
                     val id = call.getValue("call_id").jsonPrimitive.content
                     require(id.length in 1..160 && seenCalls.add(id))
                     val name = call.getValue("name").jsonPrimitive.content
-                    require(call["namespace"]?.jsonPrimitive?.contentOrNull?.let { it == "uit" } != false) { "Unsupported tool namespace" }
-                    require(name in AssistantProtocol.toolNames) { "Unsupported tool" }
+                    if (call["namespace"]?.jsonPrimitive?.contentOrNull?.let { it == "uit" } == false) throw StudyAiException("Unsupported tool namespace", ChatGptDiagnostic(0, "unsupported_tool_namespace", operation = "assistant", phase = "tool_dispatch"))
+                    if (name !in AssistantProtocol.toolNames) throw StudyAiException("Unsupported tool", ChatGptDiagnostic(0, "unsupported_tool", operation = "assistant", phase = "tool_dispatch"))
                     val arguments = call.getValue("arguments").jsonPrimitive.content
                     require(arguments.length <= 1000)
                     calls++
@@ -100,6 +100,6 @@ internal class AssistantRunner(private val model: AssistantModel, private val an
                 }
             }
         }
-        error("Assistant step limit reached")
+        throw StudyAiException("Assistant step limit reached", ChatGptDiagnostic(0, "assistant_step_limit", operation = "assistant", phase = "tool_loop"))
     }
 }

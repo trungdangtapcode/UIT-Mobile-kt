@@ -87,7 +87,7 @@ internal class ChatGptTestSupport : AutoCloseable {
                     responseRequest = Json.parseToJsonElement((request.body as TextContent).text).jsonObject
                     responseBearer = request.headers[HttpHeaders.Authorization]
                     beforeResponse?.invoke()
-                    respond(requireNotNull(response), HttpStatusCode.fromValue(responseStatus), headers = headersOf(HttpHeaders.ContentType, if (responseStatus == 200) "text/event-stream" else "application/json"))
+                    respond(requireNotNull(response), HttpStatusCode.fromValue(responseStatus), headers = headersOf(HttpHeaders.ContentType to listOf(if (responseStatus == 200) "text/event-stream" else "application/json"), "x-request-id" to listOf("fixture-response-request")))
                 }
                 else -> error("Unexpected fixture route")
             }

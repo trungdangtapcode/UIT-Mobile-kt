@@ -11,6 +11,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.utils.io.readAvailable
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.security.KeyStore
 import java.security.MessageDigest
 import javax.crypto.Cipher
@@ -301,6 +302,16 @@ class ConnectedStudyAiRepository(
         }
         val streaming = plan || (direct && onText != null && request["mode"]?.jsonPrimitive?.content == "assistant")
         val endpoint = if (direct) "https://api.openai.com/v1/responses" else StudyAiRules.endpoint(config.getValue("endpoint").jsonPrimitive.content) + "/v1/study"
+        var observed: HttpResponse? = null
+        fun metadata(code: String = "", phase: String = ""): ChatGptDiagnostic = ChatGptDiagnostic(
+            observed?.status?.value ?: 0,
+            code,
+            observed?.headers?.get("x-request-id").orEmpty().takeIf { it.matches(Regex("[A-Za-z0-9._-]{0,160}")) }.orEmpty(),
+            operation = "responses",
+            phase = phase,
+            protocol = observed?.version?.toString().orEmpty()
+        )
+        if (plan) chatSession.beginResponse()
         return try {
             client.preparePost(endpoint) {
                 check(this@ConnectedStudyAiRepository.config() == config && (lease == null || chatSession.current(lease))) { "AI connection changed" }
@@ -323,31 +334,35 @@ class ConnectedStudyAiRepository(
                     }
                 )
             }.execute { response ->
-                if (plan && response.status.value != 200) throw ChatGptSession.failure(response)
+                observed = response
+                if (response.status.value != 200) {
+                    val failure = ChatGptSession.failure(response)
+                    val diagnostic = failure.diagnostic?.copy(operation = "responses", phase = "http_error", protocol = response.version.toString())
+                    if (plan) throw ChatGptException(failure.problem, diagnostic)
+                    throw StudyAiException(
+                        if (direct) {
+                            when (response.status.value) {
+                                401, 403 -> "OpenAI rejected the API key or project access. Check your personal key and model permissions."
+                                429 -> "Your OpenAI quota or rate limit was reached. Check your API account and try later."
+                                400, 404 -> "OpenAI rejected the request or model. Choose an available model supporting Responses and structured outputs."
+                                else -> "OpenAI could not complete this request. Try again later."
+                            }
+                        } else {
+                            when (response.status.value) {
+                                401, 403 -> "The gateway token was rejected. Update the connection."
+                                429 -> "The study gateway is busy or its usage limit was reached. Try later."
+                                400, 413 -> "The gateway rejected this selection. Choose less text and try again."
+                                else -> "The gateway could not produce a supported answer. Try again later."
+                            }
+                        },
+                        diagnostic
+                    )
+                }
                 val channel = response.bodyAsChannel()
                 try {
-                    if (response.status.value != 200) {
-                        throw StudyAiException(
-                            if (direct) {
-                                when (response.status.value) {
-                                    401, 403 -> "OpenAI rejected the API key or project access. Check your personal key and model permissions."
-                                    429 -> "Your OpenAI quota or rate limit was reached. Check your API account and try later."
-                                    400, 404 -> "OpenAI rejected the request or model. Choose an available model supporting Responses and structured outputs."
-                                    else -> "OpenAI could not complete this request. Try again later."
-                                }
-                            } else {
-                                when (response.status.value) {
-                                    401, 403 -> "The gateway token was rejected. Update the connection."
-                                    429 -> "The study gateway is busy or its usage limit was reached. Try later."
-                                    400, 413 -> "The gateway rejected this selection. Choose less text and try again."
-                                    else -> "The gateway could not produce a supported answer. Try again later."
-                                }
-                            }
-                        )
-                    }
                     val data = if (streaming) {
-                        require(response.headers["Content-Type"]?.substringBefore(';')?.trim() == "text/event-stream") { "Expected an SSE response" }
-                        AssistantStream.read(channel) { text ->
+                        if (response.headers["Content-Type"]?.substringBefore(';')?.trim() != "text/event-stream") throw StudyAiException("Expected an SSE response", metadata("unexpected_stream_content_type", "response_headers"))
+                        AssistantStream.read(channel, metadata()) { text ->
                             check(this@ConnectedStudyAiRepository.config() == config && (lease == null || chatSession.current(lease))) { "AI connection changed" }
                             onText?.invoke(text)
                         }
@@ -372,8 +387,12 @@ class ConnectedStudyAiRepository(
                     throw e
                 } catch (e: ChatGptException) {
                     throw e
+                } catch (e: IOException) {
+                    currentCoroutineContext().ensureActive()
+                    val details = ChatGptTransport.failure(e, "responses", response.status.value, metadata().requestId, protocol = response.version.toString()).diagnostic
+                    throw StudyAiException("The AI response stream was interrupted.", details)
                 } catch (e: Exception) {
-                    throw StudyAiException("The AI result could not be verified against your selected sources.")
+                    throw StudyAiException("The AI result could not be verified against your selected sources.", metadata("response_decode_failed", "response_decode"))
                 } finally {
                     channel.cancel(null)
                 }
@@ -381,12 +400,26 @@ class ConnectedStudyAiRepository(
         } catch (e: CancellationException) {
             throw e
         } catch (e: StudyAiException) {
+            val details = e.diagnostic
+            if (plan && details != null) {
+                val failure = ChatGptException(ChatGptSession.responseProblem(details), details)
+                if (this@ConnectedStudyAiRepository.config() == config) chatSession.report(failure)
+                throw failure
+            }
             throw e
         } catch (e: ChatGptException) {
             if (this@ConnectedStudyAiRepository.config() == config) chatSession.report(e)
             throw e
+        } catch (e: IOException) {
+            currentCoroutineContext().ensureActive()
+            val failure = ChatGptTransport.failure(e, "responses", observed?.status?.value ?: 0, metadata().requestId, protocol = metadata().protocol)
+            if (plan) {
+                if (this@ConnectedStudyAiRepository.config() == config) chatSession.report(failure)
+                throw failure
+            }
+            throw StudyAiException("Unable to reach the AI service.", failure.diagnostic)
         } catch (e: Exception) {
-            error(if (direct) "Unable to reach OpenAI. Check your internet connection." else "Unable to reach the study gateway. Check your connection and HTTPS settings.")
+            throw StudyAiException(if (direct) "Unable to reach OpenAI. Check your internet connection." else "Unable to reach the study gateway. Check your connection and HTTPS settings.", metadata("request_failed", "request"))
         }
     }
     private fun taskKey(course: Course, assignmentId: Long) = "${studyAccountPrefix(course.accountId)}${course.id}:$assignmentId"

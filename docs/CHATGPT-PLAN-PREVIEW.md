@@ -1,14 +1,15 @@
 # ChatGPT account preview: owner acceptance
 
-[Download the preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/download/v0.1.7-chatgpt-preview.4/UIT-Mobile-chatgpt-preview.apk)
-from the [prerelease](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.7-chatgpt-preview.4).
+[Download the preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/download/v0.1.7-chatgpt-preview.5/UIT-Mobile-chatgpt-preview.apk)
+from the [prerelease](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.7-chatgpt-preview.5).
 The release includes `SHA256SUMS`. Launcher: **UIT Mobile Preview**; application ID:
-`vn.edu.uit.mobile.preview`; version: `0.1.7-chatgpt-preview.4`.
+`vn.edu.uit.mobile.preview`; version: `0.1.7-chatgpt-preview.5`.
 
-Preview 4 preserves catalog-loading feedback and adds one bounded catalog-read
-retry plus HTTP metadata and nested IO types in copied diagnostics. It includes
-real-engine socket tests for interrupted large catalogs. The owner's phone IO
-failure is still under investigation; this release is not confirmed device recovery.
+Preview 5 adds specific inference errors and Copy diagnostics directly in chat.
+An active connection/model row shows what Send actually uses. Streaming provider
+errors, request rejection and citation verification are handled separately.
+The model picker is now observed on the owner's phone; successful subscriber
+inference on that phone remains unconfirmed.
 See the [latest verification evidence](research/evidence/chatgpt-native-acceptance.json)
 for the live browser observation, controlled native checks and remaining device
 acceptance.
@@ -50,6 +51,13 @@ The AI tool loop has no university write operation. Selected private material, i
 used later, leaves the phone only after an explicit selection and Send action.
 
 ## Recovery and lifecycle checks
+
+- If models are available but Send fails, use Copy diagnostics in the chat error
+  before dismissing it. Confirm the active connection row says ChatGPT and the
+  intended model. The report includes connection mode/model, status, safe provider
+  error code and parameter, request ID, operation and phase. It contains no token,
+  account label, question or source text. Do not repeatedly sign out to diagnose an
+  inference error. Use this ChatGPT account explicitly if another mode is active.
 
 - If the account is already listed but no model picker is shown, update this
   preview in place and tap Refresh available models. Keep the saved registration;
@@ -96,5 +104,5 @@ Build locally without GitHub Actions:
 
 ```sh
 ./gradlew :app:assembleDebug \
-  -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.4
+  -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.5
 ```

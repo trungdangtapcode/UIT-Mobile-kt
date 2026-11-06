@@ -1,0 +1,51 @@
+{
+  "runtime": "Production Kotlin repository, OkHttp, SSE and tool loop on Linux JVM; not Android",
+  "credentialMode": "Explicit owner-provided API key; not a subscriber token",
+  "requestAdapter": "Production ChatGptPlanProtocol in test-only HttpSend interceptor",
+  "model": "gpt-6-luna",
+  "question": "hello",
+  "sourceMode": "Controlled empty announcement cache; no university network or account operations",
+  "providerRequests": 2,
+  "visiblePreviews": 2,
+  "status": "COMPLETE",
+  "factKinds": [
+    "SUGGESTION"
+  ],
+  "actualSubscriberInference": false,
+  "physicalAndroidAcceptance": false,
+  "recordedAt": "2026-11-06T08:46:38.639251+00:00",
+  "ownerPhoneObservation": {
+    "nativeModelPickerDisplayed": true,
+    "displayedModel": "GPT-6.1-Sol",
+    "question": "hello",
+    "failureTiming": "Immediate or within a few seconds",
+    "subscriberInferenceConfirmed": false,
+    "privateAccountImagesPublished": false
+  },
+  "rawApiContractChecks": [
+    {
+      "credentialMode": "Owner-provided API key; not ChatGPT subscriber acceptance",
+      "model": "gpt-6.1-sol",
+      "status": 403,
+      "providerError": {
+        "code": "model_not_found",
+        "type": "invalid_request_error",
+        "param": null
+      },
+      "requestId": "req_cc22e0658caf42ddafa5a43dc902f1c5"
+    },
+    {
+      "credentialMode": "Owner-provided API key; not ChatGPT subscriber acceptance",
+      "model": "gpt-6-luna",
+      "status": 200,
+      "requestId": "req_05c1da78d8654c7d80a2d4c4578895d0",
+      "responseStatus": "completed"
+    }
+  ],
+  "verificationBoundaries": [
+    "API-key model access does not establish ChatGPT plan access",
+    "Controlled native plan tool-loop tests are not subscriber inference",
+    "Host-JVM inference is not physical Android execution",
+    "No university account, private sources or credentials were used"
+  ]
+}

@@ -36,6 +36,7 @@ class AssistantForumViewModelTest {
         var fail = false
         var creates = 0
         var sends = 0
+        var failure: Exception? = null
         override suspend fun initialize() = Unit
         override suspend fun inspectForum(scope: AssistantForumScope): AssistantForumCoverage {
             pending?.let { withContext(NonCancellable) { it.await() } }
@@ -49,6 +50,7 @@ class AssistantForumViewModelTest {
         }
         override suspend fun ask(id: String, question: String, language: String, progress: (AssistantProgress) -> Unit) {
             sends++
+            failure?.let { throw it }
         }
         override suspend fun rename(id: String, name: String) = Unit
         override suspend fun delete(id: String) = Unit
@@ -72,6 +74,29 @@ class AssistantForumViewModelTest {
             }
         } as StudyAiRepository
         return AssistantViewModel(repo, study, announcements).also { store.put("assistant", it) }
+    }
+
+    @Test fun typedRequestFailuresStayDistinctAndNeverRetryAutomatically() = runTest(dispatcher) {
+        val cases = listOf(
+            ChatGptException(ChatGptProblem.QUOTA, ChatGptDiagnostic(200, "subscription_sharing_usage_limit_exceeded", phase = "response.failed")) to AssistantProblem.QUOTA,
+            ChatGptException(ChatGptProblem.NETWORK, ChatGptDiagnostic(200, "socket_failure", phase = "response_body")) to AssistantProblem.NETWORK,
+            StudyAiException("fixture-private-message", ChatGptDiagnostic(400, "invalid_request_error", phase = "http_error", parameter = "tools[0]")) to AssistantProblem.REQUEST,
+            StudyAiException("fixture-private-message", ChatGptDiagnostic(0, "answer_evidence_unverified", phase = "validation")) to AssistantProblem.VERIFICATION
+        )
+        for ((error, expected) in cases) {
+            val repo = Repo().apply { failure = error }
+            val vm = vm(repo)
+            runCurrent()
+            vm.select("workspace")
+            vm.ask("hello", "English")
+            advanceUntilIdle()
+            assertEquals(expected, vm.state.value.problem)
+            assertNotNull(vm.state.value.diagnostic)
+            assertFalse(vm.state.value.diagnostic!!.report().contains("fixture-private-message"))
+            assertEquals(1, repo.sends)
+            vm.dismiss()
+            assertNull(vm.state.value.diagnostic)
+        }
     }
 
     @Test fun creationChecksPublicAvailabilityWithoutSendingOrChangingTheSelectedScope() = runTest(dispatcher) {

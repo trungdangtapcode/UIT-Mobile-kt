@@ -25,6 +25,13 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks.withType<Test>().configureEach {
+    val live = providers.environmentVariable("UIT_CHATGPT_RESPONSE_LIVE").orElse("0")
+    inputs.property("uit.chatgpt.response.live", live)
+    outputs.upToDateWhen { live.get() != "1" }
+    outputs.doNotCacheIf("Explicit real Responses check must not reuse a cached result") { live.get() == "1" }
+}
+
+tasks.withType<Test>().configureEach {
     val live = providers.gradleProperty("assistantLive").getOrElse("false").toBoolean()
     systemProperty("uit.assistant.live", live.toString())
     systemProperty("uit.assistant.live.output", layout.buildDirectory.dir("outputs/assistant-live").get().asFile.absolutePath)

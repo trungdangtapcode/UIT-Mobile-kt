@@ -155,6 +155,16 @@ fun AssistantContent(
                             R.string.as_access_error
                         } else if (state.problem == AssistantProblem.QUOTA) {
                             R.string.as_quota_error
+                        } else if (state.problem == AssistantProblem.NETWORK) {
+                            R.string.as_network_error
+                        } else if (state.problem == AssistantProblem.TIMEOUT) {
+                            R.string.as_timeout_error
+                        } else if (state.problem == AssistantProblem.REQUEST) {
+                            R.string.as_request_error
+                        } else if (state.problem == AssistantProblem.STREAM) {
+                            R.string.as_stream_error
+                        } else if (state.problem == AssistantProblem.VERIFICATION) {
+                            R.string.as_verification_error
                         } else if (state.problem == AssistantProblem.GENERATION) {
                             R.string.as_generation_error
                         } else {
@@ -166,6 +176,9 @@ fun AssistantContent(
                 )
                 Row {
                     TextButton(onDismiss) { Text(stringResource(R.string.as_dismiss)) }
+                    state.diagnostic?.let { details ->
+                        TextButton({ coroutine.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("UIT Assistant diagnostics", details.report() + "\nconnectionMode=${state.connection.mode}\nmodel=${state.connection.model}"))) } }, Modifier.testTag("assistant-copy-diagnostics")) { Text(stringResource(R.string.as_copy_diagnostics)) }
+                    }
                     if (state.library.storageFailed) TextButton({ reset = true }) { Text(stringResource(R.string.as_reset)) }
                 }
             }
@@ -175,6 +188,23 @@ fun AssistantContent(
             Text(stringResource(R.string.as_forum_checking), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
         }
         if (workspace != null) {
+            if (state.connection.configured) {
+                TextButton({ settings = true }, Modifier.padding(horizontal = 8.dp).testTag("assistant-active-connection"), enabled = !state.busy) {
+                    Text(
+                        stringResource(
+                            when (state.connection.mode) {
+                                StudyConnectionMode.CHATGPT -> R.string.as_chatgpt_model
+                                StudyConnectionMode.DIRECT -> R.string.as_api_model
+                                StudyConnectionMode.GATEWAY -> R.string.as_gateway_model
+                            },
+                            state.connection.model
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
             Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.Source, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)

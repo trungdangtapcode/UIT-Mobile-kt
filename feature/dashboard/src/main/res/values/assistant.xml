@@ -108,4 +108,13 @@
     <string name="as_forum_only">UIT Forum · Selected public posts</string>
     <string name="as_delete_answer">Delete answer</string>
     <string name="as_delete_answer_help">Delete this question, answer, retained source copies and local checklist? Other messages and original Forum posts are unchanged.</string>
+    <string name="as_network_error">The connection to the AI service was interrupted. Your question is saved. Check the connection before sending it again.</string>
+    <string name="as_timeout_error">The AI request timed out. Your question is saved; no new request was sent automatically.</string>
+    <string name="as_request_error">The AI service rejected the request or a tool could not be used. Copy diagnostics to identify the rejected field.</string>
+    <string name="as_stream_error">The AI response did not complete. Copy diagnostics to check the service error or interruption.</string>
+    <string name="as_verification_error">The response was received but its format or citations could not be verified. Your question is saved.</string>
+    <string name="as_copy_diagnostics">Copy diagnostics</string>
+    <string name="as_chatgpt_model">ChatGPT · %1$s</string>
+    <string name="as_api_model">OpenAI API · %1$s</string>
+    <string name="as_gateway_model">HTTPS gateway</string>
 </resources>

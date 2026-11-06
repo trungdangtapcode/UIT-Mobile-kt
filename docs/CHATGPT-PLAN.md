@@ -233,6 +233,63 @@ The cause of the owner's original native IO failure remains unconfirmed until
 that device result is available; do not mark this investigation resolved from the
 localhost regression or host HTTP 401 alone.
 
+### Inference failures after model loading
+
+The next owner phone report showed the model picker populated with GPT-6.1-Sol,
+followed by a failed `hello` turn within a few seconds. The previous generic chat
+banner combined provider, transport and citation failures, so those screenshots
+do not establish the failing phase or provider code. Model loading is now observed
+on the phone; subscriber inference remains unconfirmed.
+
+Preview 5 separates request rejection, transport interruption, timeout, incomplete
+stream and answer verification. The chat error exposes a deliberate Copy diagnostics
+action. It includes the actual active connection mode/model, operation, captured
+HTTP status, request ID, safe error code/parameter, stream phase and protocol.
+It excludes credentials, account labels, questions, source text and raw service
+messages. Diagnostics are temporary UI/session state, cleared when dismissed or
+when a new question is sent; they are not a persistent network log.
+
+Responses errors can arrive after HTTP 200 as `response.failed` or `error` events.
+The parser retains their machine-readable code and parameter. It handles an SSE
+event name when the JSON lacks a type, distinguishes `response.incomplete` and
+refusal, and never accepts `[DONE]` or EOF as a completed response. Stream failures
+stop the current turn without an inference retry or an API-key fallback. Citation
+verification still runs after a valid completed response; a failed repair remains
+a separate validation error, never a saved successful answer.
+
+The chat also shows the connection mode and model actually used for Send. Available
+models in the sign-in panel do not activate a connection until Use this ChatGPT
+account is selected. This status row uses the active configuration, not the pending
+picker choice or a subscriber identity.
+
+Verification includes a controlled native ChatGPT tool loop for `hello`, HTTP-400
+parameter retention, quota errors inside HTTP 200 and no automatic inference retry.
+Real API-key probes accepted the namespaced request on `gpt-6-luna`; that API
+project returned HTTP 403 `model_not_found` for `gpt-6.1-sol`. Project API access is
+not evidence about the selected ChatGPT plan's access, and no app model or billing
+connection was changed by those experiments.
+
+A separate opt-in Kotlin check completed a real `hello` turn with `gpt-6-luna`:
+two provider requests, streaming previews and a validated persisted answer. It
+uses the production repository, OkHttp engine, SSE parser and tool loop, with the
+production plan-request adapter applied in a **test-only** HTTP-send interceptor.
+The credential is the owner's explicitly supplied API key. The cache is controlled
+and empty; no university account or network operation is performed. This is actual
+provider inference with an API credential, not subscriber admission or Android
+device acceptance. See the sanitized evidence for the exact runtime and results.
+
+To run that paid opt-in check after privately loading `OPENAI_API_KEY` into the
+process environment (`.env` is not loaded automatically):
+
+```sh
+UIT_CHATGPT_RESPONSE_LIVE=1 OPENAI_MODEL=gpt-6-luna \
+  ./gradlew :core:data:testDebugUnitTest \
+  --tests '*ChatGptAssistantTest.actualGreetingWithPlanRequestShapeAndExplicitApiCredential'
+```
+
+Ordinary checks skip this test. It must not be enabled in CI. The phone failure
+stays open until its expanded diagnostics or successful subscriber turn is observed.
+
 ## Official references
 
 - [Open-source integration overview](https://developers.openai.com/siwc/token-sharing-open-source)

@@ -6,6 +6,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.*
 import org.junit.Assert.*
 import org.junit.Test
+import vn.edu.uit.mobile.domain.*
 
 internal fun assistantSseComplete(response: JsonObject) = "event: response.completed\ndata: " + buildJsonObject {
     put("type", "response.completed")
@@ -66,7 +67,9 @@ class AssistantStreamTest {
             try {
                 AssistantStream.read(ByteReadChannel(event)) {}
                 fail("Unbounded stream accepted")
-            } catch (_: IllegalArgumentException) { }
+            } catch (e: StudyAiException) {
+                assertTrue(e.diagnostic!!.code in setOf("stream_draft_limit", "stream_byte_limit"))
+            }
         }
     }
 
@@ -77,6 +80,33 @@ class AssistantStreamTest {
         reader.cancelAndJoin()
         assertTrue(reader.isCancelled)
         channel.cancel(null)
+    }
+
+    @Test fun providerStreamFailuresRetainSafeCodesAndHttpContextWithoutErrorText() = runTest {
+        val metadata = ChatGptDiagnostic(200, requestId = "fixture-request", operation = "responses", protocol = "HTTP/2.0")
+        for (frame in listOf(
+            "data: {\"type\":\"response.failed\",\"response\":{\"error\":{\"code\":\"subscription_sharing_usage_limit_exceeded\",\"message\":\"fixture-private-text\",\"param\":\"tools[0]\"}}}\n\n",
+            "event: error\ndata: {\"code\":\"subscription_sharing_usage_limit_exceeded\",\"message\":\"fixture-private-text\",\"param\":\"tools[0]\"}\n\n"
+        )) {
+            val error = runCatching { AssistantStream.read(ByteReadChannel(frame), metadata) {} }.exceptionOrNull() as StudyAiException
+            assertEquals("subscription_sharing_usage_limit_exceeded", error.diagnostic!!.code)
+            assertEquals(200, error.diagnostic!!.status)
+            assertEquals("fixture-request", error.diagnostic!!.requestId)
+            assertEquals("tools[0]", error.diagnostic!!.parameter)
+            assertFalse(error.diagnostic!!.report().contains("fixture-private-text"))
+            assertTrue(error.diagnostic!!.responseBytes!! > 0)
+        }
+    }
+
+    @Test fun incompleteAndDoneWithoutCompletionHaveDifferentDiagnosticCodes() = runTest {
+        val inputs = listOf(
+            "data: {\"type\":\"response.incomplete\",\"response\":{\"incomplete_details\":{\"reason\":\"max_output_tokens\"}}}\n\n" to "response_incomplete",
+            "data: [DONE]\n\n" to "stream_ended_without_completion"
+        )
+        for ((frame, code) in inputs) {
+            val error = runCatching { AssistantStream.read(ByteReadChannel(frame)) {} }.exceptionOrNull() as StudyAiException
+            assertEquals(code, error.diagnostic!!.code)
+        }
     }
 
     @Test fun incompleteJsonPreviewPreservesEscapesAndHidesReferences() {

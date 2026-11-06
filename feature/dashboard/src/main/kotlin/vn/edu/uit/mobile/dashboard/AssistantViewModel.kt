@@ -6,7 +6,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import vn.edu.uit.mobile.domain.*
 
-enum class AssistantProblem { LOAD, ACTION, CONNECTION, GENERATION, ACCESS, QUOTA }
+enum class AssistantProblem { LOAD, ACTION, CONNECTION, GENERATION, ACCESS, QUOTA, NETWORK, TIMEOUT, REQUEST, STREAM, VERIFICATION }
 data class AssistantUiState(
     val library: AssistantLibrary = AssistantLibrary(),
     val selected: String? = null,
@@ -17,7 +17,8 @@ data class AssistantUiState(
     val notices: AnnouncementInbox = AnnouncementInbox(),
     val forumChecks: Map<String, AssistantForumCheck> = emptyMap(),
     val checkingForum: Boolean = false,
-    val preparingContext: Boolean = false
+    val preparingContext: Boolean = false,
+    val diagnostic: ChatGptDiagnostic? = null
 )
 class AssistantViewModel(private val repository: AssistantRepository, private val study: StudyAiRepository, private val announcements: AnnouncementRepository) : ViewModel() {
     private val mutable = MutableStateFlow(AssistantUiState())
@@ -50,7 +51,7 @@ class AssistantViewModel(private val repository: AssistantRepository, private va
     fun select(id: String?) {
         stop()
         sourceCheck?.cancel()
-        mutable.update { it.copy(selected = id, problem = null, checkingForum = false, forumChecks = emptyMap()) }
+        mutable.update { it.copy(selected = id, problem = null, diagnostic = null, checkingForum = false, forumChecks = emptyMap()) }
     }
     fun create(name: String, scope: AssistantScope) = prepareWorkspace(name, scope)
     fun createForForum(scope: AssistantForumScope) = prepareWorkspace(null, AssistantScope(emptySet(), forum = scope))
@@ -125,7 +126,7 @@ class AssistantViewModel(private val repository: AssistantRepository, private va
             StudyConnectionMode.GATEWAY -> study.configure(endpoint, token)
             StudyConnectionMode.CHATGPT -> study.configureChatGpt(model)
         }
-        mutable.update { it.copy(connection = study.connection(), problem = null) }
+        mutable.update { it.copy(connection = study.connection(), problem = null, diagnostic = null) }
     }
     fun disconnect() = action(AssistantProblem.CONNECTION) {
         stop()
@@ -133,29 +134,38 @@ class AssistantViewModel(private val repository: AssistantRepository, private va
         mutable.update { it.copy(connection = study.connection()) }
     }
     fun dismiss() {
-        mutable.update { it.copy(problem = null) }
+        mutable.update { it.copy(problem = null, diagnostic = null) }
     }
     fun ask(question: String, language: String) {
         val id = state.value.selected ?: return
         if (state.value.busy) return
-        mutable.update { it.copy(busy = true, progress = AssistantProgress("thinking"), problem = null) }
+        mutable.update { it.copy(busy = true, progress = AssistantProgress("thinking"), problem = null, diagnostic = null) }
         request = viewModelScope.launch {
             try {
                 repository.ask(id, question, language) { progress -> mutable.update { it.copy(progress = progress) } }
             } catch (_: TimeoutCancellationException) {
-                mutable.update { it.copy(problem = AssistantProblem.GENERATION) }
+                mutable.update { it.copy(problem = AssistantProblem.TIMEOUT, diagnostic = ChatGptDiagnostic(0, "assistant_timeout", operation = "assistant", phase = "tool_loop")) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 val message = e.message.orEmpty()
+                val diagnostic = (e as? ChatGptException)?.diagnostic ?: (e as? StudyAiException)?.diagnostic
                 val problem = when {
                     e is ChatGptException && e.problem == ChatGptProblem.QUOTA -> AssistantProblem.QUOTA
                     e is ChatGptException && e.problem in setOf(ChatGptProblem.REAUTH, ChatGptProblem.ACCESS) -> AssistantProblem.ACCESS
                     "API key or project access" in message || "gateway token was rejected" in message -> AssistantProblem.ACCESS
                     "quota or rate limit" in message || "gateway is busy" in message -> AssistantProblem.QUOTA
+                    diagnostic?.code == "subscription_sharing_usage_limit_exceeded" || diagnostic?.status == 429 -> AssistantProblem.QUOTA
+                    e is ChatGptException && e.problem == ChatGptProblem.UNSUPPORTED -> AssistantProblem.REQUEST
+                    diagnostic?.status in setOf(401, 403) -> AssistantProblem.ACCESS
+                    e is ChatGptException && e.problem == ChatGptProblem.TIMEOUT || diagnostic?.code in setOf("request_timeout", "network_timeout") -> AssistantProblem.TIMEOUT
+                    e is ChatGptException && e.problem == ChatGptProblem.NETWORK || diagnostic?.code in setOf("dns_failure", "tls_failure", "network_io", "socket_failure", "http2_stream_reset", "http2_shutdown", "unexpected_eof", "connect_failure", "network_unreachable", "network_interrupted") -> AssistantProblem.NETWORK
+                    diagnostic?.phase == "validation" || diagnostic?.phase == "response_decode" -> AssistantProblem.VERIFICATION
+                    diagnostic?.status in setOf(400, 404, 422) || diagnostic?.phase == "tool_dispatch" -> AssistantProblem.REQUEST
+                    diagnostic?.phase in setOf("sse_read", "response.failed", "response.incomplete", "error", "response_headers", "response.refusal.delta", "response.refusal.done") -> AssistantProblem.STREAM
                     else -> AssistantProblem.GENERATION
                 }
-                mutable.update { it.copy(problem = problem) }
+                mutable.update { it.copy(problem = problem, diagnostic = diagnostic) }
             } finally {
                 mutable.update { it.copy(busy = false, progress = null) }
             }

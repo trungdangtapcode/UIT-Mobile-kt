@@ -154,6 +154,9 @@ internal class ChatGptSession(
     internal fun report(error: ChatGptException) {
         mutable.update { it.copy(problem = error.problem, diagnostic = error.diagnostic, busy = false) }
     }
+    internal fun beginResponse() {
+        mutable.update { if (it.diagnostic?.operation == "responses") it.copy(problem = null, diagnostic = null) else it }
+    }
     private fun credentials(old: JsonObject, result: JsonObject, idToken: String): JsonObject {
         require(result["token_type"]?.jsonPrimitive?.content?.equals("Bearer", true) == true)
         val access = result.getValue("access_token").jsonPrimitive.content
@@ -385,6 +388,7 @@ internal class ChatGptSession(
         suspend fun failure(response: HttpResponse): ChatGptException {
             val body = errorBody(response)
             val code = (body["error"] as? JsonObject)?.get("code")?.jsonPrimitive?.content?.takeIf { it.matches(Regex("[a-zA-Z0-9_-]{1,100}")) }.orEmpty()
+            val parameter = (body["error"] as? JsonObject)?.get("param")?.jsonPrimitive?.contentOrNull?.takeIf { it.matches(Regex("[A-Za-z0-9_.\\[\\]-]{1,160}")) }.orEmpty()
             val requestId = response.headers["x-request-id"]?.takeIf { it.matches(Regex("[a-zA-Z0-9._-]{1,160}")) }.orEmpty()
             val shape = when {
                 body["error"] is JsonObject -> "error-object"
@@ -392,17 +396,25 @@ internal class ChatGptSession(
                 body.isEmpty() -> "empty-or-non-json"
                 else -> "other-json"
             }
-            return ChatGptException(httpProblem(response.status.value, body), ChatGptDiagnostic(response.status.value, code, requestId, shape))
+            return ChatGptException(httpProblem(response.status.value, body), ChatGptDiagnostic(response.status.value, code, requestId, shape, parameter = parameter))
         }
         fun httpProblem(status: Int, body: JsonObject): ChatGptProblem {
             val code = (body["error"] as? JsonObject)?.get("code")?.jsonPrimitive?.content
             return when {
                 status == 429 || code == "subscription_sharing_usage_limit_exceeded" -> ChatGptProblem.QUOTA
+                code in setOf("subscription_sharing_user_not_eligible", "chatpass_v2_scope_not_authorized", "chatpass_v2_invalid_authorization_context") -> ChatGptProblem.ACCESS
+                code in setOf("subscription_sharing_route_not_supported", "model_not_found") -> ChatGptProblem.UNSUPPORTED
                 status == 401 -> ChatGptProblem.REAUTH
                 status == 403 -> ChatGptProblem.ACCESS
                 status == 400 || code == "subscription_sharing_unsupported_capability" -> ChatGptProblem.UNSUPPORTED
                 else -> ChatGptProblem.UNAVAILABLE
             }
+        }
+        fun responseProblem(diagnostic: ChatGptDiagnostic): ChatGptProblem = when {
+            diagnostic.code == "request_timeout" -> ChatGptProblem.TIMEOUT
+            diagnostic.code in setOf("dns_failure", "tls_failure", "network_timeout", "network_unreachable", "connect_failure", "http2_stream_reset", "http2_shutdown", "unexpected_eof", "http_protocol", "socket_failure", "network_interrupted", "network_io", "stream_ended_without_completion") -> ChatGptProblem.NETWORK
+            diagnostic.phase == "response_decode" || diagnostic.code in setOf("response_incomplete", "response_refused", "invalid_stream_json", "stream_byte_limit", "stream_frame_limit", "stream_draft_limit", "stream_result_limit") -> ChatGptProblem.RESPONSE
+            else -> httpProblem(diagnostic.status, buildJsonObject { put("error", buildJsonObject { put("code", diagnostic.code) }) })
         }
         suspend fun boundedJson(response: HttpResponse, maxBytes: Int = 262144, operation: String = "response"): JsonObject {
             val stream = response.bodyAsChannel()

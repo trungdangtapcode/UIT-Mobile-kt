@@ -71,6 +71,9 @@ connection. Selected public [Forum context](docs/FORUM-AI.md) is available. Pers
 context and course documents in general chat remain later phases in the [broader design](docs/research/UIT-ASSISTANT.md). See the
 [evaluation record](docs/research/UIT-ASSISTANT-EVALUATION.md) for live verification
 and provider-access limits.
+The [real-source acceptance questions](docs/UIT-ASSISTANT-LIVE-TESTS.md) cover
+public discovery, the PVComBank change and pending personal-context/GPA checks;
+they distinguish researched sources from app test results.
 
 **Knowledge maps** creates an editable concept map from explicitly selected
 course text, with labeled directed relationships and inspectable source copies.

@@ -1,0 +1,73 @@
+{
+  "recordedAt": "2026-11-06T06:54:07.455Z",
+  "liveBrowserObservation": {
+    "runtime": "Separate Node.js auth probe; owner completed OpenAI consent",
+    "completedAt": "2026-11-06T06:22:10.935Z",
+    "tokenReceived": true,
+    "identityVerified": true,
+    "directPermission": true,
+    "endpoint": "https://api.openai.com/v1/models",
+    "catalog": {
+      "checkedAt": "2026-11-06T06:22:18.834Z",
+      "status": 200,
+      "responseBytes": 655730,
+      "bodyShape": "models-array",
+      "modelCount": 10,
+      "accepted": true
+    }
+  },
+  "deviceCodeObservation": {
+    "tokenReceived": false,
+    "directPermission": false,
+    "phase": "failed"
+  },
+  "nativeRegression": {
+    "runtime": "Production Kotlin repository with controlled HTTP endpoints and actual localhost callback sockets",
+    "catalogCapabilityCharacters": 700000,
+    "retainedLoginRecovery": "passed",
+    "explicitModelActivation": "passed",
+    "connectionChangeNotification": "passed",
+    "sourceValidatedSse": "passed",
+    "catalogLoadingDuringTokenRefresh": "passed"
+  },
+  "actualSubscriberInference": false,
+  "physicalAndroidAcceptance": "Pending owner retest; no Android device is connected to this host",
+  "universityAccountUsed": false,
+  "oauthCredentialsPublished": false,
+  "probeTokensImportedIntoApp": false,
+  "githubActionsDispatched": false,
+  "localVerification": {
+    "command": "./gradlew check :app:assembleDebug :app:compileDebugAndroidTestKotlin -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.3",
+    "result": "passed",
+    "actionsDispatched": false,
+    "focusedCases": {
+      "vn.edu.uit.mobile.data.ChatGptSessionTest": {
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "vn.edu.uit.mobile.data.ChatGptPlanProtocolTest": {
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "vn.edu.uit.mobile.ChatGptDesignTest": {
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  },
+  "apk": {
+    "package": "vn.edu.uit.mobile.preview",
+    "version": "0.1.7-chatgpt-preview.3",
+    "bytes": 26026057,
+    "sha256": "f92bd0a75157fca1df3cbb08684b0044dfc5c656ad96376469e4f6d677e3aec3",
+    "configuredApiKeyPresent": false,
+    "testOAuthCredentialPresent": false,
+    "signerSha256": "87e2bf7bbf1a5763754605bdb478c4234d7970b6182ad531c74e8f1d573d5e8e"
+  }
+}

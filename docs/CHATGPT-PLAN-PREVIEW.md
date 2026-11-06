@@ -1,9 +1,15 @@
 # ChatGPT account preview: owner acceptance
 
-[Download the preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/download/v0.1.7-chatgpt-preview.2/UIT-Mobile-chatgpt-preview.apk)
-from the [prerelease](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.7-chatgpt-preview.2).
+[Download the preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/download/v0.1.7-chatgpt-preview.3/UIT-Mobile-chatgpt-preview.apk)
+from the [prerelease](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.7-chatgpt-preview.3).
 The release includes `SHA256SUMS`. Launcher: **UIT Mobile Preview**; application ID:
-`vn.edu.uit.mobile.preview`; version: `0.1.7-chatgpt-preview.2`.
+`vn.edu.uit.mobile.preview`; version: `0.1.7-chatgpt-preview.3`.
+
+Preview 3 preserves the catalog-loading indicator across credential refresh and
+includes a native recovery regression for large catalogs after app recreation.
+See the [latest verification evidence](research/evidence/chatgpt-native-acceptance.json)
+for the live browser observation, controlled native checks and remaining device
+acceptance.
 
 This is a debug preview installed separately from the normal app. It updates the
 earlier Forum/search preview using the same package and signing certificate;
@@ -85,5 +91,5 @@ Build locally without GitHub Actions:
 
 ```sh
 ./gradlew :app:assembleDebug \
-  -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.2
+  -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.3
 ```

@@ -43,7 +43,7 @@ internal class ChatGptSession(
         require(all.size <= 10)
         storage.write("chatgpt_accounts", JsonArray(all).toString())
     }
-    private fun publish(problem: ChatGptProblem? = null, busy: Boolean = false, diagnostic: ChatGptDiagnostic? = null) {
+    private fun publish(problem: ChatGptProblem? = null, busy: Boolean = false, diagnostic: ChatGptDiagnostic? = null, loadingModels: Boolean = false) {
         val all = records()
         val selected = storage.read("chatgpt_selected")?.takeIf { id -> all.any { text(it, "id") == id } }
         val record = all.firstOrNull { text(it, "id") == selected }
@@ -54,13 +54,14 @@ internal class ChatGptSession(
             busy,
             problem,
             record?.get("welcome")?.jsonPrimitive?.booleanOrNull == true,
-            diagnostic
+            diagnostic,
+            loadingModels
         )
     }
     override suspend fun initialize() = withContext(Dispatchers.IO) {
         mutex.withLock {
             val previous = state.value
-            publish(previous.problem, previous.busy, previous.diagnostic)
+            publish(previous.problem, previous.busy, previous.diagnostic, previous.loadingModels)
         }
     }
     override fun cancelSignIn() {
@@ -184,7 +185,7 @@ internal class ChatGptSession(
         mutex.withLock {
             val previous = state.value
             records().firstOrNull { text(it, "id") == state.value.selected }?.let { save(JsonObject(it + mapOf("welcome" to JsonPrimitive(false), "welcome_seen" to JsonPrimitive(true)))) }
-            publish(previous.problem, previous.busy, previous.diagnostic)
+            publish(previous.problem, previous.busy, previous.diagnostic, previous.loadingModels)
         }
     }
     internal class Lease(val account: String, val session: String, val token: String)
@@ -206,7 +207,8 @@ internal class ChatGptSession(
                 }
                 record = credentials(record, result, idToken ?: text(record, "id_token"))
                 save(record)
-                publish()
+                val previous = state.value
+                publish(busy = previous.busy, loadingModels = previous.loadingModels)
             } catch (e: ChatGptException) {
                 if (e.problem == ChatGptProblem.REAUTH) {
                     save(withoutTokens(record))

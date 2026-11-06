@@ -8,6 +8,37 @@ import org.junit.Test
 import vn.edu.uit.mobile.domain.*
 
 class ChatGptSessionTest {
+    @Test fun catalogLoadingRemainsVisibleAcrossCredentialRefreshAndInitialization() = runBlocking {
+        ChatGptTestSupport().use { f ->
+            val session = f.session()
+            f.connect(session)
+            f.now += 3550
+            val entered = CompletableDeferred<Unit>()
+            val release = CompletableDeferred<Unit>()
+            f.beforeModels = {
+                entered.complete(Unit)
+                release.await()
+            }
+            val work = async { session.reloadModels() }
+            try {
+                withTimeout(5000) { entered.await() }
+                assertEquals(1, f.refreshCalls)
+                assertTrue(session.state.value.busy)
+                assertTrue(session.state.value.loadingModels)
+                session.initialize()
+                session.acknowledgeWelcome()
+                assertTrue(session.state.value.busy)
+                assertTrue(session.state.value.loadingModels)
+            } finally {
+                release.complete(Unit)
+                work.await()
+            }
+            assertFalse(session.state.value.busy)
+            assertFalse(session.state.value.loadingModels)
+            assertNull(session.state.value.problem)
+        }
+    }
+
     @Test fun largeCatalogMetadataDoesNotPreventExplicitModelActivation() = runBlocking {
         ChatGptTestSupport().use { f ->
             f.modelBody = """{"models":[{"slug":"fixture-model","display_name":"Fixture model","visibility":"list","capability_description":"${"x".repeat(400000)}"}]}"""

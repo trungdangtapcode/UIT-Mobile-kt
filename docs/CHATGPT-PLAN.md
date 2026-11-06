@@ -166,6 +166,34 @@ specific failure. Preview 2 needs an owner retest; if it still fails, its copied
 diagnostics can distinguish HTTP access errors, malformed catalogs, size limits
 and transport failures without sharing OAuth credentials.
 
+### Browser-probe observation and native regression
+
+On 2026-11-06, the owner completed the separate browser probe's SIWC flow. The
+probe verified the signed identity and the two direct-access scopes. Its explicit
+read-only request to `https://api.openai.com/v1/models` returned HTTP 200, a
+`models` array with 10 entries and a 655,730-byte response. That actual response
+exceeds the app's former 262,144-byte limit. This supports the catalog-size
+diagnosis, although no response was captured from the failing phone itself.
+The device-code attempt expired; it did not establish a device-code grant.
+
+The native integration regression recreates `ConnectedStudyAiRepository` with a
+retained login and empty cached models, loads a controlled catalog containing a
+700,000-character capability field, explicitly activates a model, observes the
+connection update and decodes a source-validated SSE answer. It requires no new
+browser consent. A second regression covers credential renewal during catalog
+loading: the loading indicator must survive renewal, initialization and welcome
+acknowledgment until loading completes.
+
+These are distinct evidence layers. The owner-authorized probe read is a live
+service observation; the native tests use controlled endpoints. Neither is a
+completed subscriber inference on Android. The [preview acceptance checklist](CHATGPT-PLAN-PREVIEW.md)
+remains necessary for the phone's browser callback and actual plan-backed Send.
+The [sanitized verification record](research/evidence/chatgpt-native-acceptance.json)
+records the checks and APK identity. Probe credentials are not exported, injected into the APK or transferred between
+client registrations. The HTML tool is optional development tooling; the Kotlin
+app needs neither Node.js, Codex CLI nor a hosted backend. Device code is available
+only in that diagnostic tool, not as an Android sign-in option.
+
 ## Official references
 
 - [Open-source integration overview](https://developers.openai.com/siwc/token-sharing-open-source)

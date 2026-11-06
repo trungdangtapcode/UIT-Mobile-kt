@@ -15,7 +15,11 @@ async function api(path, post = false) {
   return result;
 }
 function failure(error) {
-  const detail = error.message === 'open_private_launch_url'
+  const detail = error.message === 'fresh_browser_sign_in_required'
+    ? 'Select Continue with ChatGPT again, finish fresh OpenAI authorization, then run the native check.'
+    : error.message === 'native_runner_not_prepared'
+      ? 'The native diagnostic runtime is not prepared on the server yet.'
+      : error.message === 'open_private_launch_url'
     ? 'Open the current full private launch URL, including its fragment, then try again.'
     : error.message === 'invalid_origin' || error.message === 'same_origin_post_required'
       ? 'Open the test through its 127.0.0.1 launch URL and SSH tunnel, then reload.'
@@ -50,8 +54,10 @@ async function refresh() {
     renderResult('browser-result', state.browser, 'browser'); renderResult('device-result', state.device, 'device');
     $('check-browser').disabled = !state.browser.tokenReceived || state.browser.checkingModels;
     $('check-device').disabled = !state.device.tokenReceived || state.device.checkingModels;
-    $('start-browser').disabled = browserStarting;
+    $('start-browser').disabled = browserStarting || state.native?.phase === 'running';
     $('start-device').disabled = state.device.phase !== 'idle';
+    $('start-native').disabled = !state.browser.identityVerified || !state.browser.directPermission || state.native?.phase === 'running';
+    $('native-result').textContent = JSON.stringify(state.native || { phase: 'idle' }, null, 2);
     $('reset').disabled = false; $('report').disabled = false;
     $('device-approval').hidden = !state.device.userCode;
     $('device-code').textContent = state.device.userCode || '';
@@ -60,7 +66,7 @@ async function refresh() {
     $('identity-comparison').textContent = state.verifiedSubjectsMatch === null ? 'Complete both methods to compare verified subjects.' : `Verified token subjects match: ${state.verifiedSubjectsMatch ? 'yes' : 'no'}. Client registrations remain separate.`;
   } catch (error) {
     connected = false;
-    for (const id of ['start-browser', 'start-device', 'check-browser', 'check-device', 'report', 'reset']) $(id).disabled = true;
+    for (const id of ['start-browser', 'start-device', 'start-native', 'check-browser', 'check-device', 'report', 'reset']) $(id).disabled = true;
     $('connection').textContent = error.message === 'open_private_launch_url'
       ? 'This launch link is missing or belongs to an older test server. Open the current full private launch URL, including its fragment.'
       : 'Local server unavailable. Check your SSH tunnel and user service.';
@@ -86,6 +92,10 @@ $('start-browser').onclick = async () => {
 $('start-device').onclick = async () => {
   $('start-device').disabled = true; $('error').hidden = true;
   try { await api('start/device', true); } catch (error) { failure(error); } finally { await refresh(); }
+};
+$('start-native').onclick = async () => {
+  $('start-native').disabled = true; $('error').hidden = true;
+  try { await api('start/native', true); } catch (error) { failure(error); } finally { await refresh(); }
 };
 for (const method of ['browser', 'device']) $(`check-${method}`).onclick = async () => {
   $(`check-${method}`).disabled = true; $('error').hidden = true;

@@ -14,7 +14,7 @@
     <h1>Test ChatGPT sign-in</h1>
     <p>Compare browser PKCE and device code. Sign in on OpenAI's page yourself. This page never asks for a password or displays an access token.</p>
   </header>
-  <p class="notice">No AI generation is sent. Optional model checks are read-only. Authentication may create an app connection in your ChatGPT account.</p>
+  <p class="notice">Sign-in and catalog checks send no generation. The explicit native hello test below can consume your ChatGPT plan usage. Authentication may create an app connection in your ChatGPT account.</p>
   <p id="connection" role="status">Connecting to the local test server…</p>
   <p id="error" role="alert" tabindex="-1" hidden></p>
   <section aria-labelledby="browser-title">
@@ -27,6 +27,15 @@
     <p class="hint">Finish in the new tab, then return here. To use another account, clear the comparison first.</p>
     <div id="browser-result" class="result" aria-live="polite"></div>
     <button id="check-browser" class="secondary" disabled>Check API access · read-only</button>
+  </section>
+  <section aria-labelledby="native-title">
+    <p class="eyebrow">Native Kotlin / real subscriber test</p>
+    <h2 id="native-title">Test the app's response path</h2>
+    <p>After a fresh browser sign-in, explicitly run one hello turn with GPT-6.1-Sol through the production Kotlin HTTP client, model catalog, tool loop and validators. It uses an empty controlled cache and performs no university account or network operation.</p>
+    <p class="hint">This runs on the Linux JVM, not your phone. Tokens pass only from server memory into the child process's stdin. No API key or normal Codex profile is used. The report identifies the actual response format.</p>
+    <button id="start-native" disabled>Run native hello · uses ChatGPT plan</button>
+    <pre id="native-result" aria-live="polite">Not run.</pre>
+    <p class="hint">A redacted service hint may appear here privately. Download safe report omits that hint and all credentials.</p>
   </section>
   <section aria-labelledby="device-title">
     <p class="eyebrow">Method 2 / Codex compatibility test</p>
@@ -44,7 +53,7 @@
   <section aria-labelledby="evidence-title">
     <h2 id="evidence-title">Evidence</h2>
     <p id="identity-comparison">Complete both methods to compare verified subjects.</p>
-    <p>A token, permission and accepted catalog are separate checks. This tool does not prove completed model inference.</p>
+    <p>Authentication, catalog access and completed native inference are separate results. Only a completed native test establishes subscriber inference on this host; phone acceptance remains separate.</p>
     <details><summary>Public OpenAI discovery</summary><pre id="discovery">Not checked yet.</pre></details>
     <div class="actions">
       <button id="report" class="secondary" disabled>Download safe report</button>

@@ -14,6 +14,7 @@ internal object AssistantStream {
         val draft = StringBuilder()
         var lastPreview = 0L
         var eventName = ""
+        var firstLine = true
         val accumulator = AssistantResponseAccumulator(requestedModel)
         fun failure(code: String, phase: String = "sse_read", parameter: String = "", shape: String = "sse"): StudyAiException = StudyAiException(
             "The AI response did not complete.",
@@ -21,7 +22,9 @@ internal object AssistantStream {
         )
         while (true) {
             currentCoroutineContext().ensureActive()
-            val line = channel.readUTF8Line(524288) ?: throw failure("stream_ended_without_completion")
+            val rawLine = channel.readUTF8Line(524288) ?: throw failure("stream_ended_without_completion")
+            val line = if (firstLine) rawLine.removePrefix("\uFEFF") else rawLine
+            firstLine = false
             wireBytes += line.toByteArray(Charsets.UTF_8).size + 1
             if (wireBytes > 2097152) throw failure("stream_byte_limit")
             if (line.startsWith("data:")) {

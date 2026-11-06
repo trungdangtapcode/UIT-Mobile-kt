@@ -12,7 +12,9 @@ A small loopback-only HTML test tool for comparing two real authorization paths:
 
 The owner completes authentication and consent on OpenAI's page. No credentials
 from the normal Codex installation, `.env`, API keys or university accounts are
-read or reused. No model inference, posting or other university action is sent.
+read or reused. Authentication and catalog checks do not generate answers. The
+separate, explicitly selected native hello check uses the authorized ChatGPT plan.
+No university action is sent.
 
 ## Run on the Linux SSH host
 
@@ -124,8 +126,9 @@ AUTH_PROBE_PORT=8878 AUTH_PROBE_CODEX=/home/your-user/.local/bin/codex npm start
 
 Token received, verified identity, direct plan permission, accepted catalog and
 completed inference are separate facts. The probe displays each available fact.
-It does not perform inference, so a successful catalog is not proof that a paid
-or plan-backed generation will complete.
+A successful catalog is not proof that generation will complete. Only a completed
+native check with `actualSubscriberInference: true` establishes that the Kotlin
+client completed and validated an answer with the freshly authorized SIWC grant.
 
 For device code, `Direct SIWC permission: Verified` requires an access JWT with
 a valid OpenAI signature, issuer, resource audience, lifetime and both direct
@@ -137,6 +140,54 @@ separate catalog results can reveal different admission/response contracts.
 The public discovery panel shows whether a standard device authorization endpoint
 is advertised. Its absence does not prove that no private device flow exists.
 This tool uses the documented Codex RPC rather than inventing a SIWC device API.
+
+## Run the production Kotlin subscriber check
+
+Prepare the test-only JVM runner from the repository root, with the same JDK and
+Android SDK used for local builds:
+
+```sh
+./gradlew :core:data:writeChatGptProbeClasspath
+```
+
+The task compiles the test entry point and writes an ignored runtime snapshot
+under `core/data/build/outputs/chatgpt-native/`. Project artifacts are copied so a
+subsequent Android build cannot change classes underneath an active test. External
+Gradle dependencies remain in the local Gradle cache. A clean build removes the
+snapshot; prepare it again afterward. This does not install anything on Android.
+
+On the probe page, complete **Continue with ChatGPT**, then explicitly select
+**Run native hello · uses ChatGPT plan**. A fresh, verified browser grant with
+direct permission is required. The owner authorizes any plan usage by selecting
+this button. Codex device credentials are not accepted by this runner.
+
+The Node service starts Java directly, without Gradle, and transfers only the
+fresh grant through child stdin. Tokens are excluded from command arguments,
+environment variables, reports and files; the child does not receive the parent's
+API key, university password or Codex configuration variables. Neither this runner
+nor the production Kotlin path reads parent Codex credentials. The imported test
+account exists in memory only and has no refresh token. Reset kills this child and
+clears its diagnostic state.
+
+The runner loads the real model catalog and uses **gpt-6.1-sol** through the
+production HTTP client, connection selection, assistant tool loop, stream reader
+and answer validators. It has an explicitly empty source cache and forbids all
+university reads. There is no fallback model, API-key billing or private Codex
+backend. A missing model fails before inference. Its own transport disables
+connection retries; the user must explicitly request a new attempt after failure.
+
+The report distinguishes logical requests, observed network requests, content type,
+HTTP protocol, provider diagnostic and validated completion. For an unexpected
+JSON response only, a bounded diagnostic interceptor extracts a redacted service
+hint for the protected local page. It never displays the complete upstream body;
+the downloadable safe report omits this private hint. Review even redacted local
+hints before sharing them publicly.
+
+This is production Kotlin running on the **Linux JVM**, using the **Auth Probe's
+SIWC registration**. It is not a physical Android test or the phone's registration.
+A successful result narrows protocol problems; the updated APK still needs a
+phone retest. Authentication alone, a fixture browser callback, and an API-key
+inference run are not subscriber inference evidence.
 
 ## Credential lifecycle
 
@@ -193,8 +244,8 @@ control-key guards, report redaction and environment/profile isolation.
 During development the actual installed Codex 0.166.0 returned a fresh device
 code from OpenAI. That attempt was cancelled before any account authenticated.
 The actual HTML was exercised in Chromium at 390px and 900px; no subscriber
-credentials or generated answers were substituted into the page. Owner sign-in
-and real token/catalog acceptance still require the owner's browser approval.
+credentials or generated answers were substituted into the page. These automated checks do not establish subscriber acceptance. Real sign-in,
+catalog and inference checks require the owner's separate browser approval.
 
 ## Official references
 

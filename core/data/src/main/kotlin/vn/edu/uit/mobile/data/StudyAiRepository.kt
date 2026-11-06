@@ -76,7 +76,7 @@ class StudyPrivateStorage(context: Context, preferenceName: String = "study_ai",
 
 private fun studyAccountPrefix(accountId: String) = MessageDigest.getInstance("SHA-256").digest(accountId.toByteArray()).joinToString("") { "%02x".format(it) } + ":"
 
-internal fun studyAiHttpClient(): HttpClient = HttpClient(OkHttp) {
+internal fun studyAiHttpClient(customize: io.ktor.client.engine.okhttp.OkHttpConfig.() -> Unit = {}): HttpClient = HttpClient(OkHttp) {
     followRedirects = false
     install(HttpTimeout) {
         requestTimeoutMillis = 60000
@@ -84,6 +84,7 @@ internal fun studyAiHttpClient(): HttpClient = HttpClient(OkHttp) {
         socketTimeoutMillis = 55000
     }
     engine {
+        customize()
         config {
             followRedirects(false)
             followSslRedirects(false)
@@ -309,7 +310,9 @@ class ConnectedStudyAiRepository(
             observed?.headers?.get("x-request-id").orEmpty().takeIf { it.matches(Regex("[A-Za-z0-9._-]{0,160}")) }.orEmpty(),
             operation = "responses",
             phase = phase,
-            protocol = observed?.version?.toString().orEmpty()
+            protocol = observed?.version?.toString().orEmpty(),
+            contentType = StudyResponseReader.mediaType(observed?.headers?.get("Content-Type")),
+            contentEncoding = StudyResponseReader.encoding(observed?.headers?.get("Content-Encoding"))
         )
         if (plan) chatSession.beginResponse()
         return try {
@@ -337,7 +340,7 @@ class ConnectedStudyAiRepository(
                 observed = response
                 if (response.status.value != 200) {
                     val failure = ChatGptSession.failure(response)
-                    val diagnostic = failure.diagnostic?.copy(operation = "responses", phase = "http_error", protocol = response.version.toString())
+                    val diagnostic = failure.diagnostic?.copy(operation = "responses", phase = "http_error", protocol = response.version.toString(), contentType = metadata().contentType, contentEncoding = metadata().contentEncoding)
                     if (plan) throw ChatGptException(failure.problem, diagnostic)
                     throw StudyAiException(
                         if (direct) {
@@ -361,8 +364,7 @@ class ConnectedStudyAiRepository(
                 val channel = response.bodyAsChannel()
                 try {
                     val data = if (streaming) {
-                        if (response.headers["Content-Type"]?.substringBefore(';')?.trim() != "text/event-stream") throw StudyAiException("Expected an SSE response", metadata("unexpected_stream_content_type", "response_headers"))
-                        AssistantStream.read(channel, metadata(), config["model"]?.jsonPrimitive?.content) { text ->
+                        StudyResponseReader.read(channel, metadata(), config["model"]?.jsonPrimitive?.content) { text ->
                             check(this@ConnectedStudyAiRepository.config() == config && (lease == null || chatSession.current(lease))) { "AI connection changed" }
                             onText?.invoke(text)
                         }

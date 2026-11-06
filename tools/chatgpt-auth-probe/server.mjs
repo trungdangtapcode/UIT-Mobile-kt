@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BrowserFlow, ISSUER, jsonRequest, checkCatalog, random, equal, ProbeError, safeDiagnostic } from './auth.mjs';
 import { CodexDevice } from './codex-device.mjs';
+import { NativeCheck } from './native-check.mjs';
 import { lifetimeMinutes, prepareRuntime, writeLaunch, cleanRuntime } from './runtime.mjs';
 
 const assets = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']]]);
@@ -13,12 +14,13 @@ const security = {
 };
 
 export class Probe {
-  constructor(redirect, { browserOptions, codexBinary = 'codex', deviceFactory, fetcher = fetch } = {}) {
+  constructor(redirect, { browserOptions, codexBinary = 'codex', deviceFactory, fetcher = fetch, nativeFactory } = {}) {
     this.redirect = redirect; this.browserOptions = browserOptions; this.codexBinary = codexBinary;
     this.deviceFactory = deviceFactory || (() => new CodexDevice(codexBinary));
     this.fetcher = fetcher; this.browser = new BrowserFlow(redirect, browserOptions);
     this.device = this.deviceFactory(); this.checks = { browser: {}, device: {} };
     this.discovery = { phase: 'not_checked' }; this.checking = new Set(); this.generation = 0;
+    this.native = nativeFactory ? nativeFactory() : new NativeCheck();
   }
   async preflight() {
     try {
@@ -35,11 +37,13 @@ export class Probe {
       recordedAt: new Date().toISOString(), discovery: this.discovery,
       browser: { ...browser, checks: this.checks.browser, checkingModels: this.checking.has('browser') },
       device: { ...device, checks: this.checks.device, checkingModels: this.checking.has('device') },
+      native: this.native.publicView({ report }),
       verifiedSubjectsMatch: this.browser.subject && this.device.subject ? this.browser.subject === this.device.subject : null,
-      inferencePerformed: false, universityAccountUsed: false,
+      inferencePerformed: Boolean(this.native.view.result?.inferenceAttempted ?? this.native.view.started), universityAccountUsed: false,
     };
   }
   async start(method) {
+    if (this.native.child) throw new ProbeError('native_check_in_progress');
     if (method === 'browser') { this.checks.browser = {}; return { authorizationUrl: this.browser.start() }; }
     if (method !== 'device') throw new ProbeError('unknown_method');
     this.checks.device = {};
@@ -67,12 +71,13 @@ export class Probe {
   async reset() {
     const generation = ++this.generation;
     this.browser.cancel(); this.browser.credentials = null;
+    await this.native.close();
     await this.device.close();
     if (generation !== this.generation) return;
     this.browser = new BrowserFlow(this.redirect, this.browserOptions); this.device = this.deviceFactory();
     this.checks = { browser: {}, device: {} }; this.checking.clear();
   }
-  async close() { this.generation++; this.browser.cancel(); this.browser.credentials = null; await this.device.close(); }
+  async close() { this.generation++; this.browser.cancel(); this.browser.credentials = null; await this.native.close(); await this.device.close(); }
 }
 
 export async function createProbeServer({ port = 8877, key = random(), probeOptions = {} } = {}) {
@@ -113,6 +118,7 @@ export async function createProbeServer({ port = 8877, key = random(), probeOpti
       const route = url.pathname;
       if (route === '/api/start/browser') { send(response, 200, await probe.start('browser')); return; }
       if (route === '/api/start/device') { send(response, 200, await probe.start('device')); return; }
+      if (route === '/api/start/native') { await probe.native.start(probe.browser); send(response, 200, {}); return; }
       if (route === '/api/check/browser' || route === '/api/check/device') { await probe.check(route.endsWith('/browser') ? 'browser' : 'device'); send(response, 200, {}); return; }
       if (route === '/api/reset') { await probe.reset(); send(response, 200, {}); return; }
       send(response, 404, { code: 'not_found' });
@@ -135,7 +141,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const app = await createProbeServer({ port, key: runtime.key, probeOptions: { codexBinary: process.env.AUTH_PROBE_CODEX || 'codex' } });
   await writeLaunch(runtime, app.launchUrl, port, ttl);
   // This is a local UI control capability, not an OpenAI credential. Never log OAuth traffic.
-  console.log(`Auth Probe: ${app.launchUrl}\nPrivate launch file: ${join(runtime.path, 'launch.json')}\nListening on loopback only. No inference is sent. ${ttl ? `Automatic stop after ${ttl} minutes.` : 'No automatic shutdown; stop the process or user service when finished.'}`);
+  console.log(`Auth Probe: ${app.launchUrl}\nPrivate launch file: ${join(runtime.path, 'launch.json')}\nListening on loopback only. Native inference requires its explicit page button. ${ttl ? `Automatic stop after ${ttl} minutes.` : 'No automatic shutdown; stop the process or user service when finished.'}`);
   void app.probe.preflight();
   let stopping = false;
   async function stop() { if (stopping) return; stopping = true; await app.close(); await cleanRuntime(runtime); process.exit(0); }

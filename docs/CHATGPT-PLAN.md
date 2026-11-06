@@ -335,6 +335,34 @@ phase metadata. Its credential
 and physical-device limits are unchanged. The specific cause of the owner's
 earlier phone failure is still unconfirmed without a trace or retest.
 
+## HTTP 200 with an unexpected response media type
+
+The owner's latest phone diagnostic reports HTTP 200 over HTTP/2, followed by
+`unexpected_stream_content_type` at `response_headers`. This establishes that the
+old header gate rejected the response before parsing its body. It does not
+establish that the provider returned a valid event stream or reveal the real
+media type, which older diagnostics omitted. Previous compact-stream fixes alone
+do not explain this failure.
+
+The client now records normalized `contentType` and `contentEncoding` and inspects
+a bounded prefix of the original response bytes. Recognizable SSE is replayed into
+the existing stream parser without sending another request, including fragmented
+UTF-8 and optional BOM bytes. A completed JSON Response is accepted only through
+the same output assembly and downstream answer/citation validators. No streaming
+previews are invented for JSON. Arbitrary JSON, HTML/XML, empty bodies, incomplete
+responses and refusals remain failures. HTTP-200 JSON errors preserve safe error
+codes and parameter names; raw provider messages remain excluded from app
+reports. JSON reads are capped at 256 KiB, prefix inspection at 4 KiB. Cancellation
+stops the stream replay pump. There is no automatic retry or billing/model fallback
+introduced by this change.
+
+The [optional native subscriber diagnostic](../tools/chatgpt-auth-probe/README.md#run-the-production-kotlin-subscriber-check)
+lets the owner explicitly authorize a real `gpt-6.1-sol` hello check through the
+production Kotlin client, without transferring tokens to chat or using an API key.
+A host-JVM test with a new probe registration remains distinct from Android and
+from the existing phone registration. The exact phone response body is still
+unconfirmed until this diagnostic or a phone retest provides evidence.
+
 ## Official references
 
 - [Open-source integration overview](https://developers.openai.com/siwc/token-sharing-open-source)

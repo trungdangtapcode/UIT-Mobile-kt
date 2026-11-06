@@ -162,7 +162,7 @@ class AssistantViewModel(private val repository: AssistantRepository, private va
                     e is ChatGptException && e.problem == ChatGptProblem.NETWORK || diagnostic?.code in setOf("dns_failure", "tls_failure", "network_io", "socket_failure", "http2_stream_reset", "http2_shutdown", "unexpected_eof", "connect_failure", "network_unreachable", "network_interrupted") -> AssistantProblem.NETWORK
                     diagnostic?.phase in setOf("validation", "response_decode", "response_assembly") -> AssistantProblem.VERIFICATION
                     diagnostic?.status in setOf(400, 404, 422) || diagnostic?.phase == "tool_dispatch" -> AssistantProblem.REQUEST
-                    diagnostic?.phase in setOf("sse_read", "response.failed", "response.incomplete", "error", "response_headers", "response.refusal.delta", "response.refusal.done") -> AssistantProblem.STREAM
+                    diagnostic?.phase in setOf("sse_read", "response.failed", "response.incomplete", "error", "response_headers", "response_body", "json_error", "response.refusal.delta", "response.refusal.done") -> AssistantProblem.STREAM
                     else -> AssistantProblem.GENERATION
                 }
                 mutable.update { it.copy(problem = problem, diagnostic = diagnostic) }

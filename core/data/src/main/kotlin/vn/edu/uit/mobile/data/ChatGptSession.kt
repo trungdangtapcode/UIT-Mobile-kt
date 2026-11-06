@@ -413,7 +413,7 @@ internal class ChatGptSession(
         fun responseProblem(diagnostic: ChatGptDiagnostic): ChatGptProblem = when {
             diagnostic.code == "request_timeout" -> ChatGptProblem.TIMEOUT
             diagnostic.code in setOf("dns_failure", "tls_failure", "network_timeout", "network_unreachable", "connect_failure", "http2_stream_reset", "http2_shutdown", "unexpected_eof", "http_protocol", "socket_failure", "network_interrupted", "network_io", "stream_ended_without_completion") -> ChatGptProblem.NETWORK
-            diagnostic.phase in setOf("response_decode", "response_assembly") || diagnostic.code in setOf("response_incomplete", "response_refused", "invalid_stream_json", "stream_byte_limit", "stream_frame_limit", "stream_draft_limit", "stream_result_limit") -> ChatGptProblem.RESPONSE
+            diagnostic.phase in setOf("response_decode", "response_assembly", "response_body") || diagnostic.code in setOf("response_incomplete", "response_refused", "invalid_stream_json", "stream_byte_limit", "stream_frame_limit", "stream_draft_limit", "stream_result_limit") -> ChatGptProblem.RESPONSE
             else -> httpProblem(diagnostic.status, buildJsonObject { put("error", buildJsonObject { put("code", diagnostic.code) }) })
         }
         suspend fun boundedJson(response: HttpResponse, maxBytes: Int = 262144, operation: String = "response"): JsonObject {

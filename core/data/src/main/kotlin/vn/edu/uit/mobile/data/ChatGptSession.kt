@@ -1,7 +1,6 @@
 package vn.edu.uit.mobile.data
 
 import io.ktor.client.*
-import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
@@ -336,26 +335,44 @@ internal class ChatGptSession(
         }
         result
     }
-    private suspend fun getJson(url: String, bearer: String? = null, operation: String = "identity_keys", maxBytes: Int = 262144): JsonObject = try {
-        client.prepareGet(url) { bearer?.let { header(HttpHeaders.Authorization, "Bearer $it") } }.execute { response ->
-            if (response.status.value != 200) {
-                val error = failure(response)
-                throw ChatGptException(error.problem, error.diagnostic?.copy(operation = operation))
+    private suspend fun getJson(url: String, bearer: String? = null, operation: String = "identity_keys", maxBytes: Int = 262144): JsonObject {
+        val attempts = if (operation == "models") 2 else 1
+        for (attempt in 1..attempts) {
+            try {
+                return getJsonOnce(url, bearer, operation, maxBytes)
+            } catch (e: ChatGptException) {
+                currentCoroutineContext().ensureActive()
+                if (attempt == attempts || !ChatGptTransport.retryCatalog(e)) {
+                    throw ChatGptException(e.problem, e.diagnostic?.copy(attempt = attempt))
+                }
+                delay(300)
             }
-            boundedJson(response, maxBytes, operation)
         }
-    } catch (e: CancellationException) {
-        throw e
-    } catch (_: HttpRequestTimeoutException) {
-        throw ChatGptException(ChatGptProblem.TIMEOUT, ChatGptDiagnostic(0, "request_timeout", operation = operation))
-    } catch (e: IOException) {
-        val code = when (e) {
-            is java.net.UnknownHostException -> "dns_failure"
-            is javax.net.ssl.SSLException -> "tls_failure"
-            is java.net.SocketTimeoutException -> "network_timeout"
-            else -> "network_io"
+        error("Catalog request exhausted")
+    }
+    private suspend fun getJsonOnce(url: String, bearer: String?, operation: String, maxBytes: Int): JsonObject {
+        var observed: HttpResponse? = null
+        return try {
+            client.prepareGet(url) { bearer?.let { header(HttpHeaders.Authorization, "Bearer $it") } }.execute { response ->
+                observed = response
+                if (response.status.value != 200) {
+                    val error = failure(response)
+                    throw ChatGptException(error.problem, error.diagnostic?.copy(operation = operation))
+                }
+                boundedJson(response, maxBytes, operation)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IOException) {
+            currentCoroutineContext().ensureActive()
+            throw ChatGptTransport.failure(
+                e,
+                operation,
+                observed?.status?.value ?: 0,
+                observed?.headers?.get("x-request-id").orEmpty().takeIf { it.matches(Regex("[a-zA-Z0-9._-]{0,160}")) }.orEmpty(),
+                protocol = observed?.version?.toString().orEmpty()
+            )
         }
-        throw ChatGptException(ChatGptProblem.NETWORK, ChatGptDiagnostic(0, code, operation = operation))
     }
     internal companion object {
         private suspend fun errorBody(response: HttpResponse): JsonObject = try {
@@ -407,6 +424,16 @@ internal class ChatGptSession(
                 } catch (_: IllegalArgumentException) {
                     throw invalid("invalid_json", out.size())
                 }
+            } catch (e: IOException) {
+                currentCoroutineContext().ensureActive()
+                throw ChatGptTransport.failure(
+                    e,
+                    operation,
+                    response.status.value,
+                    response.headers["x-request-id"].orEmpty().takeIf { it.matches(Regex("[a-zA-Z0-9._-]{0,160}")) }.orEmpty(),
+                    out.size(),
+                    response.version.toString()
+                )
             } finally {
                 stream.cancel(null)
             }

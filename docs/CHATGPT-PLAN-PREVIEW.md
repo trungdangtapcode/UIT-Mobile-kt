@@ -1,12 +1,14 @@
 # ChatGPT account preview: owner acceptance
 
-[Download the preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/download/v0.1.7-chatgpt-preview.3/UIT-Mobile-chatgpt-preview.apk)
-from the [prerelease](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.7-chatgpt-preview.3).
+[Download the preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/download/v0.1.7-chatgpt-preview.4/UIT-Mobile-chatgpt-preview.apk)
+from the [prerelease](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.7-chatgpt-preview.4).
 The release includes `SHA256SUMS`. Launcher: **UIT Mobile Preview**; application ID:
-`vn.edu.uit.mobile.preview`; version: `0.1.7-chatgpt-preview.3`.
+`vn.edu.uit.mobile.preview`; version: `0.1.7-chatgpt-preview.4`.
 
-Preview 3 preserves the catalog-loading indicator across credential refresh and
-includes a native recovery regression for large catalogs after app recreation.
+Preview 4 preserves catalog-loading feedback and adds one bounded catalog-read
+retry plus HTTP metadata and nested IO types in copied diagnostics. It includes
+real-engine socket tests for interrupted large catalogs. The owner's phone IO
+failure is still under investigation; this release is not confirmed device recovery.
 See the [latest verification evidence](research/evidence/chatgpt-native-acceptance.json)
 for the live browser observation, controlled native checks and remaining device
 acceptance.
@@ -57,8 +59,11 @@ used later, leaves the phone only after an explicit selection and Send action.
 - If refresh still fails, use Copy connection diagnostics near the account row.
   Share that text when reporting the problem. It contains the operation, HTTP
   status (`0` means no HTTP status was captured), safe error code, request ID, response-shape
-  category and, when available, the number of bytes read. It contains no account
-  identity, browser URL, OAuth token, exception text or selected source material.
+  category and, when available, the number of bytes copied. Preview 4 also includes
+  phase, trusted exception type names, protocol and attempt number. An interrupted
+  body can retain HTTP 200; status zero is reserved for failures without captured
+  response metadata. It contains no account identity, browser URL, OAuth token,
+  exception message or selected source material.
 - Cancel browser consent, close the settings form, or exceed the three-minute
   timeout. The previous connection should remain usable and no AI call should
   have been sent. An unfinished attempt needs a fresh sign-in after process death
@@ -91,5 +96,5 @@ Build locally without GitHub Actions:
 
 ```sh
 ./gradlew :app:assembleDebug \
-  -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.3
+  -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.4
 ```

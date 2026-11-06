@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-11-06T06:54:07.455Z",
+  "recordedAt": "2026-11-06T07:54:26.499903+00:00",
   "liveBrowserObservation": {
     "runtime": "Separate Node.js auth probe; owner completed OpenAI consent",
     "completedAt": "2026-11-06T06:22:10.935Z",
@@ -31,24 +31,30 @@
     "catalogLoadingDuringTokenRefresh": "passed"
   },
   "actualSubscriberInference": false,
-  "physicalAndroidAcceptance": "Pending owner retest; no Android device is connected to this host",
+  "physicalAndroidAcceptance": "Owner reported native catalog network_io; Chrome on the same phone returned Missing bearer. Preview 4 device recovery remains pending.",
   "universityAccountUsed": false,
   "oauthCredentialsPublished": false,
   "probeTokensImportedIntoApp": false,
   "githubActionsDispatched": false,
   "localVerification": {
-    "command": "./gradlew check :app:assembleDebug :app:compileDebugAndroidTestKotlin -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.3",
+    "command": "UIT_CHATGPT_NETWORK_LIVE=1 ./gradlew formatKotlin check :app:assembleDebug :app:compileDebugAndroidTestKotlin -PpreviewInstall=true -PpreviewVersion=0.1.7-chatgpt-preview.4",
     "result": "passed",
     "actionsDispatched": false,
     "focusedCases": {
-      "vn.edu.uit.mobile.data.ChatGptSessionTest": {
-        "tests": 20,
+      "vn.edu.uit.mobile.data.ChatGptWireTest": {
+        "tests": 5,
         "failures": 0,
         "errors": 0,
         "skipped": 0
       },
       "vn.edu.uit.mobile.data.ChatGptPlanProtocolTest": {
         "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "vn.edu.uit.mobile.data.ChatGptSessionTest": {
+        "tests": 21,
         "failures": 0,
         "errors": 0,
         "skipped": 0
@@ -63,11 +69,42 @@
   },
   "apk": {
     "package": "vn.edu.uit.mobile.preview",
-    "version": "0.1.7-chatgpt-preview.3",
-    "bytes": 26026057,
-    "sha256": "f92bd0a75157fca1df3cbb08684b0044dfc5c656ad96376469e4f6d677e3aec3",
+    "version": "0.1.7-chatgpt-preview.4",
+    "bytes": 26483326,
+    "sha256": "881f7e943c6a5ffcd55be5952f3bf9efa27dd5f0de8b6f35a5085dac1093a8e1",
     "configuredApiKeyPresent": false,
     "testOAuthCredentialPresent": false,
     "signerSha256": "87e2bf7bbf1a5763754605bdb478c4234d7970b6182ad531c74e8f1d573d5e8e"
+  },
+  "ownerNativeTransportReport": {
+    "operation": "models",
+    "status": 0,
+    "code": "network_io",
+    "requestId": "",
+    "bodyShape": "",
+    "responseBytes": "unknown",
+    "phase": "Not established by the older diagnostic",
+    "chromeOnSamePhone": "Missing bearer",
+    "privateAccountImagePublished": false,
+    "exactRootCauseConfirmed": false
+  },
+  "liveKeylessHostCheck": {
+    "runtime": "Production Ktor OkHttp engine on Linux JVM; not Android",
+    "endpoint": "https://api.openai.com/v1/models",
+    "authorizationSent": false,
+    "inferencePerformed": false,
+    "status": 401,
+    "protocol": "HTTP/2.0",
+    "recordedAt": "2026-11-06T07:51:51.284149+00:00"
+  },
+  "transportFollowUp": {
+    "wireTests": "Actual production OkHttp engine with local socket faults; separate explicit keyless public GET",
+    "catalogAttemptsMaximum": 2,
+    "catalogRetryDelayMs": 300,
+    "tlsVerificationWeakened": false,
+    "applicationRetryAddedToTokenOrInference": false,
+    "nestedExceptionTypesWithoutMessages": true,
+    "httpMetadataAndBytesRetainedForBodyFailure": true,
+    "physicalPhoneRecoveryConfirmed": false
   }
 }

@@ -75,23 +75,25 @@ class StudyPrivateStorage(context: Context, preferenceName: String = "study_ai",
 
 private fun studyAccountPrefix(accountId: String) = MessageDigest.getInstance("SHA-256").digest(accountId.toByteArray()).joinToString("") { "%02x".format(it) } + ":"
 
+internal fun studyAiHttpClient(): HttpClient = HttpClient(OkHttp) {
+    followRedirects = false
+    install(HttpTimeout) {
+        requestTimeoutMillis = 60000
+        connectTimeoutMillis = 10000
+        socketTimeoutMillis = 55000
+    }
+    engine {
+        config {
+            followRedirects(false)
+            followSslRedirects(false)
+        }
+    }
+}
+
 class ConnectedStudyAiRepository(
     private val storage: StudyStorage,
     private val accounts: AccountRepository,
-    private val client: HttpClient = HttpClient(OkHttp) {
-        followRedirects = false
-        install(HttpTimeout) {
-            requestTimeoutMillis = 60000
-            connectTimeoutMillis = 10000
-            socketTimeoutMillis = 55000
-        }
-        engine {
-            config {
-                followRedirects(false)
-                followSslRedirects(false)
-            }
-        }
-    },
+    private val client: HttpClient = studyAiHttpClient(),
     chatGptReturnUri: String = "uitmobile-chatgpt://vn.edu.uit.mobile/return"
 ) : StudyAiRepository {
     private val chatSession = ChatGptSession(storage, client, chatGptReturnUri)

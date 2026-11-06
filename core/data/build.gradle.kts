@@ -18,6 +18,13 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
+    val live = providers.environmentVariable("UIT_CHATGPT_NETWORK_LIVE").orElse("0")
+    inputs.property("uit.chatgpt.network.live", live)
+    outputs.upToDateWhen { live.get() != "1" }
+    outputs.doNotCacheIf("Explicit keyless transport check must reach the current public endpoint") { live.get() == "1" }
+}
+
+tasks.withType<Test>().configureEach {
     val live = providers.gradleProperty("assistantLive").getOrElse("false").toBoolean()
     systemProperty("uit.assistant.live", live.toString())
     systemProperty("uit.assistant.live.output", layout.buildDirectory.dir("outputs/assistant-live").get().asFile.absolutePath)

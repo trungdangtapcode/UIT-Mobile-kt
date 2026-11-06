@@ -194,6 +194,45 @@ client registrations. The HTML tool is optional development tooling; the Kotlin
 app needs neither Node.js, Codex CLI nor a hosted backend. Device code is available
 only in that diagnostic tool, not as an Android sign-in option.
 
+### Native transport investigation
+
+The owner subsequently reported `operation=models`, `status=0`,
+`code=network_io` and unknown response bytes on the phone. Chrome on the same
+phone and network returned "Missing bearer" for the public models endpoint.
+This establishes browser reachability, not successful native authentication or
+catalog loading. The catalog-size change alone has not resolved phone acceptance.
+
+The older diagnostic caught IO failures outside the whole request/response block.
+It therefore lost HTTP status and request ID when a response body was interrupted,
+reporting status zero even after HTTP 200. The transport follow-up retains HTTP
+status, validated request ID, bytes copied, protocol and response phase. It
+classifies nested IO causes and copies only bounded trusted exception type names;
+exception messages, URLs, tokens, response content and account identity are not
+included. A pre-response failure still has status zero and unknown response size.
+
+Catalog GETs may retry once after 300 ms for a socket interruption, unexpected
+EOF, HTTP protocol failure or HTTP/2 stream/connection reset. The application
+does not retry DNS/TLS failures, access denials, malformed JSON or cancellation.
+This new loop is limited to catalog reads; it does not wrap token exchange,
+refresh, revocation or inference. TLS verification and provider endpoints remain
+unchanged. No fallback model, invented catalog or alternate billing route is used.
+
+`ChatGptWireTest` uses the same `studyAiHttpClient()` factory as the application,
+with localhost test routing rather than MockEngine. A socket server returns a
+700,000-character catalog or deliberately truncates its declared body. Tests cover
+successful loading, one-read recovery, bounded repeated failure with HTTP metadata
+and classification without private exception text. A separate explicit keyless
+GET to the public endpoint returned HTTP 401 over HTTP/2 from the Linux JVM.
+That is actual host networking, not Android or subscriber inference evidence.
+Run the network check deliberately with `UIT_CHATGPT_NETWORK_LIVE=1`; it is skipped
+in ordinary checks and never sends an Authorization header or inference request.
+
+Preview 4 includes this transport follow-up. Update in place, keep the retained
+registration, retry loading models and copy its expanded diagnostics if it fails.
+The cause of the owner's original native IO failure remains unconfirmed until
+that device result is available; do not mark this investigation resolved from the
+localhost regression or host HTTP 401 alone.
+
 ## Official references
 
 - [Open-source integration overview](https://developers.openai.com/siwc/token-sharing-open-source)

@@ -8,6 +8,25 @@ import org.junit.Test
 import vn.edu.uit.mobile.domain.*
 
 class ChatGptSessionTest {
+    @Test fun catalogRetryNeverRepeatsAccessDenialsOrTransientIdentityRequests() = runBlocking {
+        ChatGptTestSupport().use { f ->
+            val session = f.session()
+            f.modelStatus = 403
+            f.connect(session)
+            assertEquals(1, f.modelCalls)
+            assertEquals(ChatGptProblem.ACCESS, session.state.value.problem)
+            f.modelStatus = 200
+            f.beforeModels = { throw javax.net.ssl.SSLException("fixture-sensitive-certificate") }
+            session.reloadModels()
+            assertEquals(2, f.modelCalls)
+            assertEquals("tls_failure", session.state.value.diagnostic?.code)
+            assertEquals(1, session.state.value.diagnostic?.attempt)
+            assertEquals(1, f.requests.count { it.endsWith("/oauth/token") })
+            assertEquals(0, f.requests.count { it.endsWith("/responses") })
+            assertTrue(session.state.value.accounts.single().signedIn)
+        }
+    }
+
     @Test fun catalogLoadingRemainsVisibleAcrossCredentialRefreshAndInitialization() = runBlocking {
         ChatGptTestSupport().use { f ->
             val session = f.session()

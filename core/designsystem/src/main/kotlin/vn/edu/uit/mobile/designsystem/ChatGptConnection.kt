@@ -154,6 +154,6 @@ val LocalChatGptConnector = staticCompositionLocalOf<ChatGptConnector?> { null }
         Text(stringResource(message), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
     }
     state.diagnostic?.let { details ->
-        TextButton({ clipboard.setText(AnnotatedString("ChatGPT connection\noperation=${details.operation}\nstatus=${details.status}\ncode=${details.code}\nrequestId=${details.requestId}\nbodyShape=${details.bodyShape}\nresponseBytes=${details.responseBytes ?: "unknown"}")) }, Modifier.testTag("chatgpt-copy-diagnostics")) { Text(stringResource(R.string.cg_copy_details)) }
+        TextButton({ clipboard.setText(AnnotatedString("ChatGPT connection\noperation=${details.operation}\nstatus=${details.status}\ncode=${details.code}\nrequestId=${details.requestId}\nbodyShape=${details.bodyShape}\nresponseBytes=${details.responseBytes ?: "unknown"}\nphase=${details.phase}\nexceptionTypes=${details.exceptionTypes}\nprotocol=${details.protocol}\nattempt=${details.attempt}")) }, Modifier.testTag("chatgpt-copy-diagnostics")) { Text(stringResource(R.string.cg_copy_details)) }
     }
 }

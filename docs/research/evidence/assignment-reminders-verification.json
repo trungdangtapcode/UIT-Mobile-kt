@@ -1,0 +1,75 @@
+{
+  "recordedAt": "2026-11-07T21:56:44.949954+00:00",
+  "runtime": "Local JDK 21 unit tests and Robolectric Android framework; no physical Android",
+  "universityAccountUsed": false,
+  "universityMutationsSent": false,
+  "modelInferencePerformed": false,
+  "githubActionsDispatched": false,
+  "physicalAndroidAcceptance": false,
+  "fullLocalCheck": {
+    "command": "./gradlew formatKotlin check :app:assembleDebug :app:compileDebugAndroidTestKotlin -PpreviewInstall=true -PpreviewVersion=0.1.8-reminders-preview.1",
+    "result": "passed"
+  },
+  "focusedCases": [
+    {
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "name": "vn.edu.uit.mobile.domain.AssignmentReminderPolicyTest"
+    },
+    {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "name": "vn.edu.uit.mobile.data.MoodleAssignmentReminderSourceTest"
+    },
+    {
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "name": "vn.edu.uit.mobile.data.AssignmentReminderDeliveryTest"
+    },
+    {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "name": "vn.edu.uit.mobile.AssignmentReminderNotificationTest"
+    },
+    {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "name": "vn.edu.uit.mobile.database.RoomSnapshotStoreTest"
+    }
+  ],
+  "focusedTests": 27,
+  "newTests": 23,
+  "simulatedWeek": {
+    "clock": "Injected; no real wait or device timing capture",
+    "pendingWindowDays": 7,
+    "checkpointHours": 8,
+    "groupedNotificationsBeforeDeadline": 21,
+    "notificationAfterDeadline": false
+  },
+  "sourceVerification": {
+    "gateway": "Production MoodleGateway with controlled read-only AJAX fixtures",
+    "statusFixtures": 14,
+    "unsupportedMethods": "Fresh calendar-action fallback tested for unavailable assignment definitions and unavailable submission status",
+    "modulePagesOpened": false,
+    "upstreamContract": "Moodle MOODLE_405_STABLE; not an authenticated UIT version observation"
+  },
+  "apk": {
+    "package": "vn.edu.uit.mobile.preview",
+    "version": "0.1.8-reminders-preview.1",
+    "bytes": 26941635,
+    "sha256": "52f04427e1cf264aff0201d6b8c4b6f6865d2f13dfb1d9fdd87db7b11da9034b",
+    "configuredApiKeyPresent": false,
+    "testFixtureCredentialsPresent": false,
+    "signerSha256": "87e2bf7bbf1a5763754605bdb478c4234d7970b6182ad531c74e8f1d573d5e8e"
+  }
+}

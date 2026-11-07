@@ -73,4 +73,16 @@ class RoomSnapshotStoreTest {
         assertFalse(old.portalLinked)
         assertEquals("IT001", old.courses.single().shortname)
     }
+
+    @Test fun reminderCheckpointUpsertsSurvivesAdapterRecreationAndIsRemovedWithItsAccount() = runTest {
+        val one = vn.edu.uit.mobile.domain.assignmentReminderKey("one")
+        val two = vn.edu.uit.mobile.domain.assignmentReminderKey("two")
+        db.dao().reserveDelivery(DeliveredAlert(one, 100))
+        db.dao().reserveDelivery(DeliveredAlert(one, 200))
+        db.dao().reserveDelivery(DeliveredAlert(two, 300))
+        assertEquals(200L, db.dao().deliveryTime(one))
+        RoomSnapshotStore(db).delete("one")
+        assertNull(db.dao().deliveryTime(one))
+        assertEquals(300L, db.dao().deliveryTime(two))
+    }
 }

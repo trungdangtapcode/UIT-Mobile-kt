@@ -90,6 +90,14 @@ interface UitDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun delivered(alert: DeliveredAlert)
+
+    @Query("SELECT deliveredAt FROM delivered_alerts WHERE `key` = :key")
+    suspend fun deliveryTime(key: String): Long?
+
+    @Upsert suspend fun reserveDelivery(alert: DeliveredAlert)
+
+    @Query("DELETE FROM delivered_alerts WHERE `key` = :key")
+    suspend fun deleteDelivery(key: String)
 }
 
 @Database(
@@ -126,6 +134,7 @@ class RoomSnapshotStore(private val db: UitDatabase) : SnapshotStore {
     override suspend fun delete(accountId: String) = db.withTransaction {
         clear(accountId)
         dao.deleteSnapshot(accountId)
+        dao.deleteDelivery(vn.edu.uit.mobile.domain.assignmentReminderKey(accountId))
     }
     private suspend fun clear(id: String) {
         dao.deleteCourses(id)

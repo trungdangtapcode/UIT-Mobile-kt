@@ -22,7 +22,8 @@ interface ForumDataSource {
 }
 class MoodleGateway(
     private val transport: PortalTransport,
-    private val api: MoodleApiClient = ResilientMoodleApiClient(AjaxMoodleApiClient(transport), HtmlScrapingMoodleApiClient(transport))
+    private val api: MoodleApiClient = ResilientMoodleApiClient(AjaxMoodleApiClient(transport), HtmlScrapingMoodleApiClient(transport)),
+    private val allowSubmissionPageFallback: Boolean = true
 ) : CourseCatalogDataSource,
     AssignmentDataSource,
     ForumDataSource {
@@ -61,12 +62,28 @@ class MoodleGateway(
         val result = try {
             AjaxMoodleApiClient(transport).raw("mod_assign_get_submission_status", args)
         } catch (e: PortalException) {
-            if (!MoodleErrorClassifier.isUnavailableSessionMethod(e)) throw e
+            if (!allowSubmissionPageFallback || !MoodleErrorClassifier.isUnavailableSessionMethod(e)) throw e
             HtmlScrapingMoodleApiClient(transport).call("mod_assign_get_submission_status", obj("assignid" to assignment.id, "cmid" to assignment.cmid))
         }
-        val submission = result.field("lastattempt").field("submission")
+        val attempt = result.field("lastattempt")
+        val individual = attempt.field("submission")
+        val team = attempt.field("teamsubmission")
+        val submission = if (team is JsonObject) team else individual
+        fun flag(name: String): Boolean? = when (attempt.field(name).str()) {
+            "true", "1" -> true
+            "false", "0" -> false
+            else -> null
+        }
+        val state = submission.str("status")
+        val pending = when {
+            individual.str("status") == "submitted" || team.str("status") == "submitted" -> false
+            flag("submissionsenabled") == false || flag("locked") == true -> false
+            state in setOf("new", "draft", "reopened") -> !(flag("canedit") == false && flag("cansubmit") == false)
+            individual == JsonNull && team == JsonNull && flag("submissionsenabled") == true && flag("locked") == false && (flag("canedit") == true || flag("cansubmit") == true) -> true
+            else -> null
+        }
         val files = submission.list("plugins").flatMap { it.list("fileareas").flatMap { area -> area.list("files") } }
-        return SubmissionStatus(submission.str("status"), submission.long("timemodified"), files(files), result.field("feedback").field("grade").str("grade"))
+        return SubmissionStatus(state, submission.long("timemodified"), files(files), result.field("feedback").field("grade").str("grade"), pending, attempt.long("extensionduedate").takeIf { it > 0 })
     }
     suspend fun submitFile(assignment: Assignment, name: String, data: ByteArray, confirmed: Boolean) {
         require(confirmed) { "Confirm the file submission first" }
@@ -133,7 +150,7 @@ class MoodleGateway(
             CalendarEvent(
                 "${account.id}:$id", id, account.id, it.field("course").long("id").takeIf { c -> c > 0 }, it.str("name"), start,
                 start + it.long("timeduration"), deadline, action.flag("actionable"), safe(it.str("url").ifEmpty { action.str("url") }),
-                it.long("instance").takeIf { a -> a > 0 && it.str("modulename") == "assign" }
+                it.long("instance").takeIf { a -> a > 0 && it.str("modulename") == "assign" }, eventType = it.str("eventtype"), actionUrl = action.str("url").takeIf { link -> link.isNotBlank() }?.let(::safe)
             )
         }.distinctBy { it.key }
     }

@@ -139,15 +139,18 @@ behavior.
 
 ## Local verification
 
-See the [verification record](research/evidence/assignment-reminders-verification.json)
+See the [deterministic verification record](research/evidence/assignment-reminders-verification.json)
 for the local check result, 27 relevant tests (23 new), fixture boundaries and APK
-checksum. The [preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.8-reminders-preview.1)
+checksum, and the [owner-authorized live follow-up](research/evidence/assignment-reminders-owner-live.json)
+for actual UIT source and Android framework acceptance. The [preview APK](https://github.com/trungdangtapcode/UIT-Mobile-kt/releases/tag/v0.1.8-reminders-preview.1)
 updates the existing UIT Mobile Preview package with the same signing certificate;
 install in place to preserve its local accounts/data. Enable the reminder channel
 and grant notification permission when testing on the phone.
 
-Tests use explicit synthetic fixtures and injected time. They do not send actual
-alerts to the owner's phone, access university credentials or submit anything.
+The deterministic suite uses explicit synthetic fixtures and injected time. It
+does not access university credentials or submit anything. The separately enabled
+owner live test below uses actual UIT reads; neither suite sends alerts to the
+owner's physical phone.
 
 - Domain policy: seven-day and expiration boundaries, eight-hour threshold,
   clock rollback, explicit pending states, ownership, course visibility, personal
@@ -178,6 +181,36 @@ Focused command, with JDK 21 and the local Android SDK configured:
   :core:database:testDebugUnitTest \
   :app:testDebugUnitTest --tests '*AssignmentReminderNotificationTest' --tests '*AnnouncementNotificationTest'
 ```
+
+### Actual owner-account follow-up
+
+On 2026-11-07 at 23:04 UTC, the owner-authorized test authenticated through UIT
+SSO and passed the resulting session to a separate JUnit process through stdin.
+The password was used only for the official sign-in. The temporary Chromium
+profile was removed; the JVM did not persist the university session. The live test
+code is excluded from the APK and skips by default unless
+`UIT_REMINDER_OWNER_LIVE=1` is explicitly set. Credentials are not command-line
+arguments, provider context, committed fixtures or public evidence.
+
+The exact production `MoodleAssignmentReminderSource` found pending work from the
+real account. UIT accepted course-overview and monthly-calendar reads; assignment
+definitions returned `servicenotavailable`. Consequently this run genuinely
+exercised the fresh student calendar-action fallback, rather than substituting
+fixture responses or claiming direct submission API support.
+
+The same production delivery coordinator, Room ledger and
+`AssignmentReminderNotifier` posted a grouped notification through Robolectric's
+Android NotificationManager. Its private visibility and deadline navigation were
+checked. An immediate second pass made no further university reads and did not
+duplicate the alert. The authenticated HTTP interceptor allowed only the exact
+Moodle AJAX endpoint and five read function names. No module page, action URL,
+submission, message or completion request was allowed.
+
+JUnit reported **OK (1 live test)**. The private item list remains outside the
+repository; public evidence omits assignment names, course codes, identifiers,
+record counts, cookies and session keys. This live follow-up changes the earlier
+source-admission status: the calendar fallback is now verified against the owner's
+actual UIT session. Physical Android scheduling remains separate.
 
 No physical Android device was connected during implementation. Host tests cannot
 establish Itel/OEM background execution, sound/vibration presentation or actual

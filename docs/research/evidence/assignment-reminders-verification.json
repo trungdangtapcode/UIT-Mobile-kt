@@ -71,5 +71,7 @@
     "configuredApiKeyPresent": false,
     "testFixtureCredentialsPresent": false,
     "signerSha256": "87e2bf7bbf1a5763754605bdb478c4234d7970b6182ad531c74e8f1d573d5e8e"
-  }
+  },
+  "scope": "Original deterministic baseline; actual owner-authorized follow-up recorded separately",
+  "ownerLiveFollowUp": "assignment-reminders-owner-live.json"
 }

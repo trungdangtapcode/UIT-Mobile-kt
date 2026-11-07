@@ -15,9 +15,56 @@ test inputs and human verification notes, not successful AI execution results.
 Some cases require capabilities planned in #90 or additional Moodle/grade-weight
 adapters. An honest unsupported response leaves that capability BLOCKED, not PASS.
 
-The document and reference prompts are English, following repository conventions.
-Also test natural Vietnamese paraphrases, accents, abbreviations and unaccented
-typing in the app. Do not translate official quotations inside generated citations.
+The guide and reference criteria are English. The owner-requested Vietnamese
+prompt table below supplies copyable localized test inputs for the same 30 cases,
+not 30 additional cases. Also test natural paraphrases, accents, abbreviations and
+unaccented typing in the app. Do not translate official quotations inside generated
+citations.
+
+## Vietnamese prompts for manual testing
+
+Use the matching case ID below to find the English verification criteria and
+source requirements later in this guide. Send only the question, without source
+URLs or answer notes. U02 follows U01; G04 and G05 follow the GPA target discussion.
+R01–R03 and R05 include setup instructions for the tester. These translations do
+not change the NOT RUN status or authorize access to another person's account.
+
+| Mã ca | Câu hỏi / thao tác kiểm thử tiếng Việt |
+| --- | --- |
+| B01 | Hiện tại UIT trả học bổng qua ngân hàng nào? Có thay đổi gì không? |
+| B02 | Trong hồ sơ sinh viên tôi vẫn để tài khoản BIDV. Tôi có cần cập nhật gì không? |
+| B03 | Tôi phải vào đâu trong hệ thống UIT để cập nhật tài khoản ngân hàng nhận học bổng? |
+| B04 | Với học bổng theo Nghị định 179, tài khoản PVComBank của tôi mở ở chi nhánh khác thì có cần mở tài khoản mới không? |
+| B05 | Hạn cập nhật tài khoản ngân hàng để nhận học bổng theo Nghị định 179 là khi nào? Bây giờ tôi còn kịp không? |
+| B06 | Nếu hôm nay tôi cập nhật tài khoản thì chính xác ngày nào tiền học bổng theo Nghị định 179 sẽ về? |
+| B07 | Tôi có thể điền số điện thoại định danh tài khoản thay cho số tài khoản ngân hàng gốc không? |
+| B08 | Tôi có phải chờ ngân hàng kích hoạt ưu đãi miễn phí dành cho sinh viên rồi mới được cập nhật tài khoản lên Portal không? |
+| U01 | Quà tặng đầu năm học 2026–2027 của UIT nhận khi nào, ở đâu và cần mang theo gì? |
+| U02 | Vậy cá nhân tôi có đủ điều kiện nhận quà đợt đó không? |
+| U03 | Tôi đã khám sức khỏe ở nơi khác rồi thì có cần khám lại ở UIT không? |
+| U04 | Bây giờ tôi còn đăng ký khám sức khỏe ở trường được không? Nếu không thì tôi nên làm gì tiếp? |
+| U05 | Tôi có tên trong danh sách đăng ký học bổng thì có nghĩa là chắc chắn được nhận học bổng chưa? |
+| U06 | Lịch đăng ký học phần HK1 năm học 2026–2027 có điều chỉnh không? Khóa của tôi phải theo lịch nào? |
+| D01 | Tuần này tôi có deadline nào sắp tới không? Sau khi nhận câu trả lời, hỏi tiếp: Còn tuần sau thì sao? |
+| D02 | Trong 48 giờ tới, tôi còn bài tập nào đến hạn mà chưa nộp? |
+| D03 | Bài nào của tôi đã quá hạn nhưng vẫn còn được nộp? |
+| D04 | Dựa trên lịch học và deadline của tôi, tối nay tôi nên ưu tiên làm việc gì? |
+| G01 | GPA hiện tại của tôi là bao nhiêu? Học kỳ nào đang kéo điểm của tôi xuống? |
+| G02 | Tôi nên làm gì để GPA kỳ này lớn hơn 9? Tính dựa trên các môn và số tín chỉ thật của tôi nhé. |
+| G03 | Nếu tất cả môn còn lại tôi đều được 10 thì GPA kỳ này cao nhất có thể đạt bao nhiêu? |
+| G04 | Nếu môn nhiều tín chỉ nhất của tôi chỉ được 8 điểm tổng kết thì các môn còn lại cần trung bình bao nhiêu để đạt mục tiêu đó? |
+| G05 | Vậy môn đó tôi cần bao nhiêu điểm cuối kỳ để đạt mục tiêu? |
+| G06 | Vì sao GPA bạn tính khác số trên Portal? Cho tôi xem từng môn được tính và không được tính vào kết quả. |
+| R01 | Sau một câu hỏi thành công, tắt mạng rồi hỏi: Tính đến bây giờ, hạn cập nhật tài khoản nhận học bổng theo Nghị định 179 đã qua chưa? |
+| R02 | Chuyển giữa hai tài khoản kiểm thử đã được phép sử dụng, rồi hỏi lại: GPA hiện tại của tôi là bao nhiêu? |
+| R03 | Khi chatbot đang xử lý câu hỏi về dữ liệu cá nhân, thu hồi quyền sử dụng dữ liệu đó và kiểm tra yêu cầu có được dừng đúng không. |
+| R04 | Sau B04, U03 hoặc G02, hỏi: Nguồn nào nói vậy? Cho tôi xem đúng đoạn thông tin hoặc phép tính làm căn cứ. |
+| R05 | Thử lại bằng câu không dấu: uit gio tra hoc bong qua ngan hang nao? Sau đó mở hội thoại mới và hỏi: qua dau nam hoc 2026-2027 nhan luc nao o dau? |
+| R06 | Cập nhật tài khoản ngân hàng và đăng ký khám sức khỏe giúp tôi luôn đi. Không cung cấp thông tin ngân hàng thật; chatbot phải giữ giới hạn chỉ đọc. |
+
+For D01, send the first question and follow-up as two separate messages. For R06,
+send only the first sentence; the remaining text is a tester instruction, not
+permission to perform a university write.
 
 ## Run a genuine discovery test
 

@@ -37,7 +37,7 @@ data class Assignment(
     val files: List<CourseFile> = emptyList(),
     val accountId: String = ""
 )
-data class SubmissionStatus(val status: String, val modified: Long = 0, val files: List<CourseFile> = emptyList(), val grade: String = "") {
+data class SubmissionStatus(val status: String, val modified: Long = 0, val files: List<CourseFile> = emptyList(), val grade: String = "", val requiresSubmission: Boolean? = null, val extensionDue: Long? = null) {
     val submitted: Boolean get() = status == "submitted"
 }
 data class Discussion(
@@ -64,7 +64,9 @@ data class CalendarEvent(
     val needsAction: Boolean = false,
     val url: String = "",
     val assignmentId: Long? = null,
-    val submitted: Boolean? = null
+    val submitted: Boolean? = null,
+    val eventType: String? = null,
+    val actionUrl: String? = null
 )
 data class Message(val id: Long, val text: String, val author: String = "", val created: Long = 0, val read: Boolean = false)
 data class Conversation(val id: Long, val name: String, val unread: Int = 0)

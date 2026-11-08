@@ -3,6 +3,9 @@
     <string name="notif_channel">Hạn nộp và cập nhật học vụ UIT</string>
     <string name="notif_due">Còn %1$d giờ</string>
     <string name="notif_grade">Đã có điểm: %1$s</string>
+    <string name="assignment_reminder_channel">Nhắc bài tập chưa nộp</string>
+    <string name="assignment_reminder_title">%1$d bài chưa nộp · hạn trong 7 ngày</string>
+    <string name="assignment_reminder_more">Và %1$d bài khác · mở hạn nộp</string>
     <string name="announcement_channel">Thông báo trường</string>
     <string name="announcement_new">Tin mới từ trường · %1$d</string>
     <string name="announcement_reminder">Nhắc việc bạn đã đặt · %1$d</string>

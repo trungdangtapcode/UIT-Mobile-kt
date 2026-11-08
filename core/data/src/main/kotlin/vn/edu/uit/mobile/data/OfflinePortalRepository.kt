@@ -395,6 +395,7 @@ class UitGraph(context: Context) {
     private val knowledgeStorage = StudyPrivateStorage(app, "knowledge", "uit.knowledge.v1")
     private val readingStorage = StudyPrivateStorage(app, "reading", "uit.reading.v1")
     val accounts: AccountRepository = VaultAccountRepository(vault, store, File(app.filesDir, "materials")) { id ->
+        runCatching { AssignmentReminderNotifier(app).cancel(id) }
         try {
             studyStorage.removeAccount(id)
         } finally {

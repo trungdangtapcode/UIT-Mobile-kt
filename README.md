@@ -158,8 +158,11 @@ environment-variable tips and the distinction from CI emulator/device tests.
   file; assignments configured with a separate final submission step still need
   that step in Moodle. Private messages are never automatically retried.
 * WorkManager refreshes periodically with network and battery constraints.
-  Notification delivery is deduplicated in Room. Android controls execution time,
-  so 24-hour/1-hour reminders are opportunistic, not exact alarms.
+  [Unsubmitted assignment reminders](docs/ASSIGNMENT-REMINDERS.md) verify Moodle
+  status for deadlines within seven days and group alerts on an eight-hour
+  checkpoint per account. Room persists the cadence. Other academic reminders
+  retain their 24-hour/1-hour windows. Android controls actual execution time;
+  these are opportunistic notifications, not exact alarms.
 
 ## Validation limits
 

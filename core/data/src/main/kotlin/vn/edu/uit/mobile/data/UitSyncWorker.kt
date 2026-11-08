@@ -45,7 +45,8 @@ class UitSyncWorker(context: Context, parameters: WorkerParameters) : CoroutineW
             manager.notify(key.hashCode(), notification)
             dao.delivered(DeliveredAlert(key, now))
         }
-        CalculateDeadlineRemindersUseCase()(fresh.events, delivered, now).forEach { alert(it.key, localized.getString(vn.edu.uit.mobile.core.data.R.string.notif_due, it.hours), it.event.name) }
+        // Assignment reminders use fresh submission reads and a separate eight-hour cadence.
+        CalculateDeadlineRemindersUseCase()(fresh.events.filter { it.assignmentId == null && !it.url.contains("/mod/assign/") }, delivered, now).forEach { alert(it.key, localized.getString(vn.edu.uit.mobile.core.data.R.string.notif_due, it.hours), it.event.name) }
         fresh.notices.filter { notice -> CourseCrossLinker().match(notice.classCode, fresh.courses) != null }.forEach {
             alert("notice:${it.nodeId}:${it.classCode}:${it.targetDate}", it.title, "${it.classCode} · ${it.targetDate} · ${it.room}")
         }
@@ -74,6 +75,7 @@ class UitSyncWorker(context: Context, parameters: WorkerParameters) : CoroutineW
     }
     companion object {
         fun schedule(context: Context) {
+            AssignmentReminderWorker.schedule(context)
             val request = PeriodicWorkRequestBuilder<UitSyncWorker>(15, TimeUnit.MINUTES)
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).setRequiresBatteryNotLow(true).build())
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS).build()

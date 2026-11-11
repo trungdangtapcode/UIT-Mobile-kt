@@ -1,4 +1,5 @@
 <resources>
+    <string name="uma_sign_in">UMA · UIT sign-in</string>
     <string name="sso_title">UIT sign-in</string>
     <string name="sso_close">Close</string>
     <string name="sso_retry">Try again</string>

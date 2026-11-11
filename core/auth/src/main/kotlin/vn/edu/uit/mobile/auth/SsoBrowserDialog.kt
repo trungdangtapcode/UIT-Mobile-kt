@@ -16,7 +16,7 @@ import android.widget.TextView
 import vn.edu.uit.mobile.core.auth.R
 
 /** Native controls remain usable when the remote page cannot render. */
-internal class SsoBrowserDialog(activity: Activity) {
+internal class SsoBrowserDialog(activity: Activity, title: Int = R.string.sso_title) {
     val dialog = Dialog(activity, android.R.style.Theme_Material_Light_NoActionBar)
     val web = WebView(activity)
     private val density = activity.resources.displayMetrics.density
@@ -47,7 +47,7 @@ internal class SsoBrowserDialog(activity: Activity) {
 
     init {
         val heading = TextView(activity).apply {
-            setText(R.string.sso_title)
+            setText(title)
             textSize = 18f
             setTextColor(Color.rgb(0, 75, 130))
             setPadding(dp(16), 0, 0, 0)

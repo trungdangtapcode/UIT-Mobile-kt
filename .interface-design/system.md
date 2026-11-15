@@ -258,3 +258,14 @@ dimensions, chunk parameters and the saved receipt in Search details. A local fi
 check never gets a Moodle-synced badge. Follow the same TechnicalShapes, Plex type,
 16dp gutters, 4dp spacing grid and five-tab shell. References and evidence are in
 `docs/design/COURSE-SEARCH-UPDATES.md`.
+
+UMA: enter the official UIT service from the Assistant workspace list. Keep its
+own verified identity/account identifier and selected source scope in one native
+control above the chat. Reuse the existing 88% user frame and reading-canvas
+answers; keep the composer fixed below scrolling content. UMA JSON is nonstreaming:
+show a waiting state, never simulated tokens. Citations collapse below answers;
+retain scan/low-confidence/older-source warnings. Structured records use stacked
+metrics and label/value groups; tables scroll horizontally and weekly classes
+become a date-grouped phone list. Source changes start a new conversation after
+explicit confirmation. Privacy copy distinguishes local memory from server logs.
+Review evidence is in `docs/design/UMA.md`.

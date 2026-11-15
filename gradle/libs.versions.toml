@@ -12,6 +12,8 @@ compose = "2025.04.01"
 lifecycle = "2.9.0"
 
 [libraries]
+commonmark = { module = "org.commonmark:commonmark", version = "0.24.0" }
+commonmark-tables = { module = "org.commonmark:commonmark-ext-gfm-tables", version = "0.24.0" }
 android-test-runner = { module = "androidx.test:runner", version = "1.6.2" }
 android-test-junit = { module = "androidx.test.ext:junit", version = "1.2.1" }
 compose-ui-test = { module = "androidx.compose.ui:ui-test-junit4" }

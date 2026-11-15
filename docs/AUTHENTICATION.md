@@ -36,9 +36,9 @@ WebView unable to load the page even when a recent desktop browser can.
 
 The application uses Android's declarative
 [Network Security Configuration](https://developer.android.com/privacy-and-security/security-config)
-to supplement system trust with that public root on exactly five hosts:
+to supplement system trust with that public root on exactly six hosts:
 `courses.uit.edu.vn`, `coursesold.uit.edu.vn`, `sso.uit.edu.vn`,
-`portal.uit.edu.vn` and `daa.uit.edu.vn`. Subdomains and unrelated origins do not
+`portal.uit.edu.vn`, `daa.uit.edu.vn` and `uma.uit.edu.vn`. Subdomains and unrelated origins do not
 inherit this addition. Cleartext, user-installed CAs and invalid TLS certificates
 remain disallowed. The SSL error handler always cancels invalid connections.
 
@@ -55,6 +55,10 @@ C90F26F0FB1B4018B22227519B5CA2B53E2CA5B3BE5CF18EFE1BEF47380C5383
 This is a public CA certificate, not a private key or a replacement for hostname,
 chain or validity checks. Keep its resource, scoped configuration and fingerprint
 regression test together when updating trust material.
+
+The [November UMA follow-up](research/UMA-TLS-ANDROID.md) records the missing UMA
+host correction, current cross-signed server chain, regression checks and device
+verification limits. The October chain observation above is historical.
 
 ## Current academic reads
 

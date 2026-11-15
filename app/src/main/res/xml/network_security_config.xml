@@ -5,13 +5,14 @@
             <certificates src="system" />
         </trust-anchors>
     </base-config>
-    <!-- UIT currently omits the legacy cross-sign for this public CA from its chain. -->
+    <!-- Compatibility for supported UIT hosts on Android stores without this public root. -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="false">courses.uit.edu.vn</domain>
         <domain includeSubdomains="false">coursesold.uit.edu.vn</domain>
         <domain includeSubdomains="false">sso.uit.edu.vn</domain>
         <domain includeSubdomains="false">daa.uit.edu.vn</domain>
         <domain includeSubdomains="false">portal.uit.edu.vn</domain>
+        <domain includeSubdomains="false">uma.uit.edu.vn</domain>
         <trust-anchors>
             <certificates src="system" />
             <certificates src="@raw/sectigo_public_server_authentication_root_e46" />

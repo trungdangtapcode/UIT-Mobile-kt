@@ -33,7 +33,12 @@ import vn.edu.uit.mobile.domain.*
 import vn.edu.uit.mobile.feature.dashboard.R
 
 @Composable
-fun AssistantScreen(vm: AssistantViewModel, onBack: () -> Unit, initialUrl: String? = null, initialForum: AssistantForumScope? = null, onOriginal: (String) -> Unit = {}) {
+fun AssistantScreen(vm: AssistantViewModel, onBack: () -> Unit, initialUrl: String? = null, initialForum: AssistantForumScope? = null, uma: UmaViewModel? = null, onUmaLogin: () -> Unit = {}, onOriginal: (String) -> Unit = {}) {
+    var showUma by rememberSaveable { mutableStateOf(false) }
+    if (showUma && uma != null) {
+        UmaScreen(uma, { showUma = false }, onUmaLogin)
+        return
+    }
     val state by vm.state.collectAsStateWithLifecycle()
     var restored by rememberSaveable { mutableStateOf<String?>(null) }
     var seeded by rememberSaveable(initialUrl, initialForum) { mutableStateOf(false) }
@@ -70,7 +75,12 @@ fun AssistantScreen(vm: AssistantViewModel, onBack: () -> Unit, initialUrl: Stri
         },
         onAsk = { vm.ask(it, language) }, onStop = vm::stop, onDismiss = vm::dismiss,
         onRefresh = vm::refresh, onConfigure = vm::configure, onDisconnect = vm::disconnect,
-        onChecklist = vm::checklist, onOriginal = onOriginal, onRecheckForum = vm::recheckForum, onDeleteTurn = vm::deleteTurn
+        onChecklist = vm::checklist, onOriginal = onOriginal, onRecheckForum = vm::recheckForum, onDeleteTurn = vm::deleteTurn,
+        onUma = if (uma == null) {
+            null
+        } else {
+            { showUma = true }
+        }
     )
 }
 
@@ -92,7 +102,8 @@ fun AssistantContent(
     onChecklist: (String, String, List<AssistantChecklistItem>) -> Unit = { _, _, _ -> },
     onOriginal: (String) -> Unit = {},
     onRecheckForum: (String) -> Unit = {},
-    onDeleteTurn: (String) -> Unit = {}
+    onDeleteTurn: (String) -> Unit = {},
+    onUma: (() -> Unit)? = null
 ) {
     val workspace = state.library.workspaces.find { it.id == state.selected }
     var create by rememberSaveable { mutableStateOf(false) }
@@ -229,6 +240,16 @@ fun AssistantContent(
         }
         LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag("assistant-content"), state = scroll, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             if (workspace == null) {
+                if (onUma != null) {
+                    item {
+                        Panel(Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.uma_title), style = MaterialTheme.typography.titleLarge)
+                            Text(stringResource(R.string.uma_official), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.uma_entry), style = MaterialTheme.typography.bodyMedium)
+                            Button(onUma, Modifier.fillMaxWidth().testTag("assistant-open-uma"), shape = TechnicalShapes.Control) { Text(stringResource(R.string.uma_open)) }
+                        }
+                    }
+                }
                 item {
                     Text(stringResource(R.string.as_intro), style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(12.dp))

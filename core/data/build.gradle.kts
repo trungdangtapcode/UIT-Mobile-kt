@@ -22,6 +22,8 @@ tasks.register("writeChatGptProbeClasspath") {
     }
 }
 dependencies {
+    implementation(libs.commonmark)
+    implementation(libs.commonmark.tables)
     implementation(libs.ksoup)
     implementation(libs.ktor.okhttp)
     testImplementation(libs.ktor.mock)

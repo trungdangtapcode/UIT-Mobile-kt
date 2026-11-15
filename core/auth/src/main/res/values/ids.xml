@@ -1,4 +1,5 @@
 <resources>
+    <item name="sso_copy_diagnostics" type="id" />
     <item name="sso_close" type="id" />
     <item name="sso_status" type="id" />
     <item name="sso_retry" type="id" />

@@ -1,0 +1,46 @@
+{
+  "recordedAt": "2026-11-11T21:06:04.321603122Z",
+  "runtime": "Production Kotlin HTTP/parser on Linux JVM; not physical Android",
+  "ownerAccountUsed": true,
+  "identityVerifiedFromBootstrap": true,
+  "personalRecordsReturned": true,
+  "regulationResult": "answered",
+  "regulationCitationCount": 5,
+  "personalStructuredDisplayPresent": true,
+  "academicAccountMutations": false,
+  "umaQuestionLoggingPossible": true,
+  "openAiCredentialsUsed": false,
+  "fixturesUsed": false,
+  "networkStatuses": [
+    200,
+    200,
+    200
+  ],
+  "routes": [
+    "GET /uma/nhung/",
+    "POST /uma/api/hoi/"
+  ],
+  "physicalAndroidVerified": false,
+  "githubActionsDispatched": false,
+  "publicCapture": "uma-public-reply.json",
+  "exactNativeLoginEntryVerifiedInChromium": true,
+  "nativeWebViewGuardTestsPassed": 4,
+  "localVerification": {
+    "fullCheckPassed": true,
+    "androidTestCompilationPassed": true,
+    "previewApkAssembled": true,
+    "newDeterministicTests": 23,
+    "explicitRealResponseRenderTests": 4,
+    "initialExistingChatGptWireFlake": "Passed in isolation and subsequent full run; no unrelated code change",
+    "finalUmaUiAndApkRecheckPassed": true
+  },
+  "apk": {
+    "package": "vn.edu.uit.mobile.preview",
+    "version": "0.1.9-uma-preview.1",
+    "versionCode": 7,
+    "bytes": 26773701,
+    "sha256": "debdc36f12598de9348a9edadbcf33b52f99850492ea6685f742b422ae5185a8",
+    "signerSha256": "87e2bf7bbf1a5763754605bdb478c4234d7970b6182ad531c74e8f1d573d5e8e",
+    "actualSessionAndConfiguredKeyAbsent": true
+  }
+}

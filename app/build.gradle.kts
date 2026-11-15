@@ -78,7 +78,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     // Compose rendering uses the debug-only host Activity supplied by ui-test-manifest.
-    if (name.contains("Release")) exclude("**/ChatGptDesignTest.class", "**/ForumReadingUxDesignTest.class", "**/ForumReadingLiveDesignTest.class", "**/AssistantDesignTest.class", "**/AssistantLiveDesignTest.class", "**/ForumDigestLiveDesignTest.class", "**/PassageSearchDesignTest.class", "**/PassageRetrievalLiveDesignTest.class", "**/AnnouncementsDesignTest.class", "**/AnnouncementsLiveDesignTest.class", "**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class", "**/ForumAccountDesignTest.class", "**/ForumAccountLiveTest.class")
+    if (name.contains("Release")) exclude("**/UmaDesignTest.class", "**/ChatGptDesignTest.class", "**/ForumReadingUxDesignTest.class", "**/ForumReadingLiveDesignTest.class", "**/AssistantDesignTest.class", "**/AssistantLiveDesignTest.class", "**/ForumDigestLiveDesignTest.class", "**/PassageSearchDesignTest.class", "**/PassageRetrievalLiveDesignTest.class", "**/AnnouncementsDesignTest.class", "**/AnnouncementsLiveDesignTest.class", "**/WorkspaceDesignTest.class", "**/WidgetNavigationTest.class", "**/StudyDesignTest.class", "**/CalendarExportDesignTest.class", "**/FreeTimeDesignTest.class", "**/WorkspaceSearchDesignTest.class", "**/OfflineDownloadsDesignTest.class", "**/BookmarksDesignTest.class", "**/TimetableImageDesignTest.class", "**/WorkloadDesignTest.class", "**/RevisionDesignTest.class", "**/PracticeDesignTest.class", "**/CodeTutorDesignTest.class", "**/ReadingDesignTest.class", "**/KnowledgeDesignTest.class", "**/ForumDesignTest.class", "**/ForumLiveDesignTest.class", "**/ForumAccountDesignTest.class", "**/ForumAccountLiveTest.class")
     val accountLive = providers.gradleProperty("forumAccountLive").getOrElse("false").toBoolean()
     systemProperty("uit.forum.account.live", accountLive.toString())
     systemProperty("uit.forum.account.dir", layout.buildDirectory.dir("outputs/forum-account-private").get().asFile.absolutePath)
@@ -120,4 +120,12 @@ tasks.withType<Test>().configureEach {
     systemProperty("uit.retrieval.output", layout.buildDirectory.dir("outputs/retrieval-live").get().asFile.absolutePath)
     outputs.upToDateWhen { !preview }
     outputs.doNotCacheIf("Retrieval phone review must replay actual source/results") { preview }
+}
+
+ tasks.withType<Test>().configureEach {
+    providers.gradleProperty("umaCapture").orNull?.let { capture ->
+        systemProperty("uit.uma.capture", capture)
+        outputs.upToDateWhen { false }
+        outputs.doNotCacheIf("Explicit UMA capture must render the selected actual response") { true }
+    }
 }

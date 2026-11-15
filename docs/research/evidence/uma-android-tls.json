@@ -1,0 +1,87 @@
+{
+  "recordedAt": "2026-11-15T01:58:07.636875+00:00",
+  "ownerReport": {
+    "device": "Itel S23",
+    "umaWebViewCertificateError": true,
+    "samePhoneChromeOpensUma": true,
+    "actualSslErrorFlagsNotYetProvided": true
+  },
+  "configurationOmissionConfirmed": true,
+  "currentEndpoints": [
+    "118.69.123.140",
+    "45.122.249.78"
+  ],
+  "currentServerSentCertificateCount": 3,
+  "currentServerSendsUsertrustCrossSign": true,
+  "currentLeafSha256": "467a65d5fde980a8e879bffed11d89275cfc88df0ef4799548deef2d338fe711",
+  "bundledRootSha256": "c90f26f0fb1b4018b22227519b5ca2b53e2ca5b3be5cf18efe1bef47380c5383",
+  "aospAndroid13E46SubjectHashFilePresent": false,
+  "aospAndroid13UsertrustEccSubjectHashFilePresent": true,
+  "linuxTls13WithUsertrustOnlyPassedBothAddresses": true,
+  "linuxTls12WithCrossSignVerified": true,
+  "wrongHostnameRejected": true,
+  "missingCrossSignMatrixIsControlledReplay": true,
+  "opensslMatrix": [
+    {
+      "roots": "USERTrust ECC only",
+      "chain": "Current full server chain",
+      "trusted": true
+    },
+    {
+      "roots": "USERTrust ECC only",
+      "chain": "Cross-sign omitted",
+      "trusted": false
+    },
+    {
+      "roots": "Bundled Sectigo E46",
+      "chain": "Current full server chain",
+      "trusted": true
+    },
+    {
+      "roots": "Bundled Sectigo E46",
+      "chain": "Cross-sign omitted",
+      "trusted": true
+    }
+  ],
+  "regressionBefore": {
+    "tlsHostCoverage": "failed: UMA absent",
+    "publicRootFingerprint": "passed"
+  },
+  "regressionAfter": {
+    "tlsConfigurationTestsPassed": 2,
+    "umaLoginTestsPassed": 5,
+    "existingSsoTestsPassed": 9,
+    "authLintPassed": true,
+    "appLintPassed": true,
+    "previewBuildPassed": true,
+    "instrumentationCompilationPassed": true,
+    "publicCertificateDiagnosticTestPassed": true
+  },
+  "physicalAndroidAcceptance": false,
+  "emulatorAcceptanceCompleted": false,
+  "emulatorAttempt": "Fresh Android 11 Google APIs x86_64, rootless CPU emulation without KVM. Framework watchdog/startup and package-installation instability prevented completed instrumentation. Not an Android TLS pass.",
+  "credentialsUsed": false,
+  "academicAccountMutations": false,
+  "githubActionsDispatched": false,
+  "limitations": [
+    "The exact Itel SSL error category still requires device diagnostics or successful updated-app confirmation.",
+    "Current live server chain observations differ from the deliberately truncated compatibility case.",
+    "Linux/JVM and host rendering do not prove physical Android WebView behavior."
+  ],
+  "apk": {
+    "version": "0.1.9-uma-preview.2",
+    "package": "vn.edu.uit.mobile.preview",
+    "versionCode": 7,
+    "sha256": "e24375d2812d3d78c8759c0500b97036e72d49881e4f145b63abfe2dbd5835bf",
+    "bytes": 27887438,
+    "signerSha256": "87e2bf7bbf1a5763754605bdb478c4234d7970b6182ad531c74e8f1d573d5e8e",
+    "configuredKeyAndOwnerIdAbsent": true
+  },
+  "hostErrorDialogReviewed": {
+    "widthDp": 390,
+    "locale": "vi",
+    "renderer": "Production native View hierarchy drawn synchronously under Robolectric",
+    "errorCondition": "Controlled UNTRUSTED with actual captured public certificate",
+    "liveAndroidHandshakeScreenshot": false
+  }
+}

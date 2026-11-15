@@ -253,3 +253,7 @@ Read verified course PDFs in the app, resume the saved page/zoom, bookmark pages
 and keep page-linked pin notes. Export reading data as a separate JSON file; the
 original PDF stays unchanged. See [usage, privacy and limits](docs/COURSE-READING.md)
 and [phone/native verification](docs/COURSE-READING-EVIDENCE.md).
+
+The [official UMA integration](docs/UMA.md) provides UIT SSO chat without an OpenAI
+API key, with native sources, citations, academic display blocks and an explicit
+privacy boundary. See the [actual-source phone review](docs/design/UMA.md).

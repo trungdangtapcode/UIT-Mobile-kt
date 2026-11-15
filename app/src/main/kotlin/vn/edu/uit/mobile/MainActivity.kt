@@ -104,6 +104,7 @@ class MainActivity : ComponentActivity() {
                     val tutor = ownedViewModel { CodeTutorViewModel(studyRepository, accounts, repository, createOfflineCourseSourceLoader(createOfflineDownloadStorage(this)), createOfflineTutorCodeLoader(createOfflineDownloadStorage(this))) }
                     val knowledge = ownedViewModel { KnowledgeViewModel(studyRepository, knowledgeRepository, accounts, repository, createKnowledgeSourceLoader(createOfflineDownloadStorage(this))) }
                     val reading = ownedViewModel { CourseReadingViewModel(readingRepository, accounts, repository, createOfflineDownloadStorage(this), createReadingDocumentLoader(createOfflineDownloadStorage(this)), nativeReadingPdfFactory(cacheDir)) }
+                    val uma = ownedViewModel { UmaViewModel(vn.edu.uit.mobile.data.UitGraph.get(this).uma) }
                     val assistant = ownedViewModel { AssistantViewModel(assistantRepository, studyRepository, announcementRepository) }
                     val announcements = ownedViewModel { AnnouncementsViewModel(announcementRepository) }
                     val forum = ownedViewModel { ForumViewModel(forumRepository) }
@@ -129,7 +130,9 @@ class MainActivity : ComponentActivity() {
                             }
                         }, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                     }
-                    UitShell(repository, dashboard, schedule, workload, revision, courses, search, passages, downloads, bookmarks, study, practice, tutor, knowledge, reading, forum, inbox, academic, studentProfile, announcements, assistant, announcementRoute, {
+                    UitShell(repository, dashboard, schedule, workload, revision, courses, search, passages, downloads, bookmarks, study, practice, tutor, knowledge, reading, forum, inbox, academic, studentProfile, announcements, assistant, uma, {
+                        UmaSsoLoginController(this).launch(onResult = uma::connect, onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
+                    }, announcementRoute, {
                         announcementRoute = null
                         intent.removeExtra(vn.edu.uit.mobile.data.AnnouncementSyncWorker.EXTRA_ANNOUNCEMENT)
                     }, { if (Build.VERSION.SDK_INT >= 33) permission.launch(Manifest.permission.POST_NOTIFICATIONS) }, widgetRoute, {
@@ -212,6 +215,8 @@ private fun UitShell(
     studentProfile: StudentProfileViewModel,
     announcements: AnnouncementsViewModel,
     assistant: AssistantViewModel,
+    uma: UmaViewModel,
+    onUmaLogin: () -> Unit,
     announcementRoute: String?,
     onAnnouncementConsumed: () -> Unit,
     onAnnouncementPermission: () -> Unit,
@@ -342,7 +347,7 @@ private fun UitShell(
                 AssistantScreen(assistant, {
                     showAssistant = false
                     assistantSeed = null
-                }, initialUrl = assistantSeed.takeIf { forumSeed == null }, initialForum = forumSeed) { url ->
+                }, initialUrl = assistantSeed.takeIf { forumSeed == null }, initialForum = forumSeed, uma = uma, onUmaLogin = onUmaLogin) { url ->
                     showAssistant = false
                     assistantSeed = null
                     returnToAssistant = true

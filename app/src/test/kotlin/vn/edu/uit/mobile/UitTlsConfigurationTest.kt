@@ -51,7 +51,7 @@ class UitTlsConfigurationTest {
                 }
             }
         }
-        assertEquals(setOf("courses.uit.edu.vn", "coursesold.uit.edu.vn", "sso.uit.edu.vn", "daa.uit.edu.vn", "portal.uit.edu.vn"), domains)
+        assertEquals(setOf("courses.uit.edu.vn", "coursesold.uit.edu.vn", "sso.uit.edu.vn", "daa.uit.edu.vn", "portal.uit.edu.vn", "uma.uit.edu.vn"), domains)
         assertEquals(listOf("system"), anchors["base-config"])
         val scoped = requireNotNull(anchors["domain-config"])
         assertEquals(2, scoped.size)

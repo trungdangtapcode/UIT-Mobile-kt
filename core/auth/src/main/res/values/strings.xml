@@ -1,5 +1,8 @@
 <resources>
-    <string name="uma_sign_in">UMA · UIT sign-in</string>
+    <string name="sso_copy_diagnostics">Copy connection diagnostics</string>
+    <string name="sso_diagnostics_copied">Diagnostics copied</string>
+    <string name="uma_tls_error">Cannot verify the HTTPS connection to %1$s. The connection was stopped. Copy the diagnostics to check the cause.</string>
+    <string name="uma_sso_title">UMA · UIT sign-in</string>
     <string name="sso_title">UIT sign-in</string>
     <string name="sso_close">Close</string>
     <string name="sso_retry">Try again</string>

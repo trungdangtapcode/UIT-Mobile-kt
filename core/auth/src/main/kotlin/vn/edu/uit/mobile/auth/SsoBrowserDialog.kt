@@ -35,6 +35,12 @@ internal class SsoBrowserDialog(activity: Activity, title: Int = R.string.sso_ti
         setText(R.string.sso_retry)
         visibility = View.GONE
     }
+    private val diagnostics = Button(activity).apply {
+        id = R.id.sso_copy_diagnostics
+        setText(R.string.sso_copy_diagnostics)
+        visibility = View.GONE
+    }
+    private val clipboard = activity.getSystemService(android.content.ClipboardManager::class.java)
     private val skipDaa = Button(activity).apply {
         id = R.id.sso_continue_moodle
         setText(R.string.sso_continue_moodle)
@@ -64,6 +70,7 @@ internal class SsoBrowserDialog(activity: Activity, title: Int = R.string.sso_ti
             addView(progress, LinearLayout.LayoutParams(MATCH_PARENT, dp(3)))
             addView(status, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
             addView(retry, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+            addView(diagnostics, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
             addView(skipDaa, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
             addView(web, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
         }
@@ -87,6 +94,8 @@ internal class SsoBrowserDialog(activity: Activity, title: Int = R.string.sso_ti
         status.setTextColor(Color.rgb(30, 50, 70))
         progress.visibility = View.VISIBLE
         retry.visibility = View.GONE
+        diagnostics.visibility = View.GONE
+        diagnostics.setOnClickListener(null)
         web.visibility = View.VISIBLE
     }
 
@@ -94,15 +103,29 @@ internal class SsoBrowserDialog(activity: Activity, title: Int = R.string.sso_ti
         status.text = message
         progress.visibility = View.INVISIBLE
         retry.visibility = View.GONE
+        diagnostics.visibility = View.GONE
+        diagnostics.setOnClickListener(null)
         web.visibility = View.VISIBLE
     }
 
-    fun error(message: String, canRetry: Boolean = true) {
+    fun error(message: String, canRetry: Boolean = true, diagnostic: String? = null) {
         status.text = message
         status.setTextColor(Color.rgb(155, 30, 30))
         progress.visibility = View.INVISIBLE
         retry.visibility = if (canRetry) View.VISIBLE else View.GONE
         web.visibility = View.GONE
+        diagnostics.visibility = if (diagnostic == null) View.GONE else View.VISIBLE
+        diagnostics.setText(R.string.sso_copy_diagnostics)
+        diagnostics.setOnClickListener(
+            if (diagnostic == null) {
+                null
+            } else {
+                View.OnClickListener {
+                    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("UIT HTTPS diagnostics", diagnostic))
+                    diagnostics.setText(R.string.sso_diagnostics_copied)
+                }
+            }
+        )
     }
 
     fun allowMoodleOnly() {

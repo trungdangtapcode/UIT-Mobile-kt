@@ -88,6 +88,29 @@ class UmaSsoLoginTest {
         assertFalse(d.isShowing)
     }
 
+    @Test fun tlsDiagnosticsCanBeCopiedWithoutCallbackCodesOrCookiesAndRetryClearsThem() {
+        val d = launch()
+        val web = d.web()
+        val handler = Shadow.newInstanceOf(SslErrorHandler::class.java)
+        val error = SslError(SslError.SSL_UNTRUSTED, SslCertificate("Synthetic", "Test CA", "", ""), "https://uma.uit.edu.vn/oidc/callback/?code=private-code&state=private-state")
+        error.addError(SslError.SSL_EXPIRED)
+        web.webViewClient.onReceivedSslError(web, handler, error)
+        val copy = d.findViewById<Button>(R.id.sso_copy_diagnostics)
+        assertEquals(View.VISIBLE, copy.visibility)
+        copy.performClick()
+        val clipboard = activity.getSystemService(android.content.ClipboardManager::class.java)
+        val report = clipboard.primaryClip!!.getItemAt(0).text.toString()
+        assertTrue(report.contains("host=uma.uit.edu.vn"))
+        assertTrue(report.contains("EXPIRED"))
+        assertTrue(report.contains("UNTRUSTED"))
+        assertTrue(report.contains("deviceUtc="))
+        for (private in listOf("private-code", "private-state", "callback", "cookie", "password")) assertFalse(report.contains(private))
+        assertTrue(shadowOf(handler).wasCancelCalled())
+        assertFalse(shadowOf(handler).wasProceedCalled())
+        d.findViewById<Button>(R.id.sso_retry).performClick()
+        assertEquals(View.GONE, copy.visibility)
+    }
+
     @Test fun sslFailureNeverProceedsAndCloseDoesNotReturnACredential() {
         val d = launch()
         val web = d.web()

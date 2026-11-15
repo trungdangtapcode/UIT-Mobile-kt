@@ -174,3 +174,12 @@ full run, without changing the ChatGPT implementation or weakening the test. A
 pre-existing hardcoded-text checker finding in `ForumScreen.kt` is unchanged;
 architecture and staged repository-hygiene checks are separate from that finding.
 No GitHub Actions run was requested.
+
+### Android TLS follow-up
+
+Preview 0.1.9-uma-preview.1 omitted UMA from the existing per-host E46 compatibility
+configuration. Preview .2 adds the exact UMA host and a credential-free, explicit
+TLS diagnostic copy action. See [the investigation](research/UMA-TLS-ANDROID.md)
+for current server chains, Chrome/WebView differences, before/after regression
+results and physical-device acceptance limits. Do not treat the earlier Linux
+subscriber/source test as Android TLS acceptance.

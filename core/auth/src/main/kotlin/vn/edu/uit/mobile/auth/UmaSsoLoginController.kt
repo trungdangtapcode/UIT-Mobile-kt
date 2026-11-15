@@ -16,7 +16,7 @@ import vn.edu.uit.mobile.model.UmaSession
 class UmaSsoLoginController(private val activity: Activity) {
     @SuppressLint("SetJavaScriptEnabled")
     fun launch(onResult: (UmaSession) -> Unit, onError: (String) -> Unit) {
-        val browser = SsoBrowserDialog(activity, R.string.uma_sign_in)
+        val browser = SsoBrowserDialog(activity, R.string.uma_sso_title)
         val web = browser.web
         val handler = Handler(Looper.getMainLooper())
         var closed = false
@@ -27,11 +27,11 @@ class UmaSsoLoginController(private val activity: Activity) {
             timeout?.let(handler::removeCallbacks)
             timeout = null
         }
-        fun fail(message: String, retry: Boolean = true) {
+        fun fail(message: String, retry: Boolean = true, diagnostic: String? = null) {
             if (closed || failed) return
             failed = true
             cancelTimeout()
-            browser.error(message, retry)
+            browser.error(message, retry, diagnostic)
             onError(message)
         }
         fun finish(result: UmaSession? = null) {
@@ -107,7 +107,7 @@ class UmaSsoLoginController(private val activity: Activity) {
             }
             override fun onReceivedSslError(view: WebView, sslHandler: SslErrorHandler, error: SslError) {
                 sslHandler.cancel()
-                fail(activity.getString(R.string.sso_ssl_error, Uri.parse(error.url).host.orEmpty()))
+                fail(activity.getString(R.string.uma_tls_error, Uri.parse(error.url).host.orEmpty()), diagnostic = SsoTlsDiagnostics.report(activity, error))
             }
             override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
                 (view.parent as? ViewGroup)?.removeView(view)

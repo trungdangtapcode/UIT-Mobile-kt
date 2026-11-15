@@ -1,0 +1,20 @@
+<resources>
+    <string name="sso_copy_diagnostics">Sao chép chẩn đoán kết nối</string>
+    <string name="sso_diagnostics_copied">Đã sao chép chẩn đoán</string>
+    <string name="uma_tls_error">Không xác minh được kết nối HTTPS đến %1$s. Kết nối đã dừng. Sao chép chẩn đoán để kiểm tra nguyên nhân.</string>
+    <string name="sso_close">Đóng</string>
+    <string name="sso_retry">Thử lại</string>
+    <string name="uma_sso_title">UMA · Đăng nhập UIT</string>
+    <string name="sso_title">Đăng nhập UIT</string>
+    <string name="sso_continue_moodle">Tiếp tục chỉ với Moodle</string>
+    <string name="sso_preparing">Đang chuẩn bị đăng nhập an toàn…</string>
+    <string name="sso_loading">Đang tải %1$s…</string>
+    <string name="sso_ready">Đăng nhập trên %1$s</string>
+    <string name="sso_portal_connecting">Đã kết nối Moodle. Đang kết nối UIT Portal bằng cùng phiên SSO…</string>
+    <string name="sso_timeout">Trang đăng nhập phản hồi quá lâu. Kiểm tra kết nối và thử lại.</string>
+    <string name="sso_network_error">Không tải được trang đăng nhập (lỗi mạng %1$d). Kiểm tra kết nối và thử lại.</string>
+    <string name="sso_http_error">Máy chủ đăng nhập trả về HTTP %1$d. Hãy thử lại sau.</string>
+    <string name="sso_ssl_error">Không xác minh được chứng chỉ HTTPS của %1$s. Kiểm tra ngày giờ trên điện thoại và cập nhật Android System WebView. Kết nối đã dừng.</string>
+    <string name="sso_blocked">Luồng đăng nhập đã chuyển ra ngoài các trang UIT được tin cậy. Trang đã bị chặn.</string>
+    <string name="sso_renderer_error">Android WebView đã dừng. Đóng cửa sổ này và thử đăng nhập lại.</string>
+</resources>

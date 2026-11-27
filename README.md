@@ -1,8 +1,10 @@
 # UIT Mobile
 
-An Android phone app unifying UIT Moodle and the current UIT student portal. Built from the
-[implementation plan](docs/plan/README.md), with protocol behavior ported from
-[`uit-cli`](https://github.com/RyanNg1403/uit-cli).
+A standalone Android phone app for UIT Moodle and the current UIT student portal.
+The app builds from this repository and connects directly to the UIT services.
+See the [Privacy Policy and Terms of Use draft](docs/PRIVACY-AND-TERMS.md),
+[NOTICE](NOTICE) for third-party attributions, and the
+[implementation plan](docs/plan/README.md) for the project's original design.
 
 The app has five destinations: Today, Schedule, Courses, Deadlines & Inbox, and
 Academic. It supports current UIT SSO and linked undergraduate/graduate legacy

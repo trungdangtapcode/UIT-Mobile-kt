@@ -1,0 +1,5 @@
+views.setOnClickPendingIntent(
+    row,
+    WidgetRoute("schedule", dateText(entry.start))
+        .pendingIntent(context)
+)

@@ -1,0 +1,9 @@
+"relation":
+  ["delegate_permission/common.handle_all_urls"],
+"target": {
+  "namespace": "android_app",
+  "package_name": "com.google.android.youtube",
+  "sha256_cert_fingerprints": [
+    "3D:7A:12:...:99:4A", "7F:D2:CE:...:99:2D",
+    "5A:AD:2B:...:B0:C6"]
+}

@@ -1,0 +1,160 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{beamerthemeUITSeminar}[2026/11/25 UIT seminar]
+\RequirePackage{fontspec}
+\RequirePackage{graphicx}
+\RequirePackage{tikz}
+\RequirePackage{array,tabularx,booktabs,fancyvrb}
+\usetikzlibrary{arrows.meta,backgrounds,calc,positioning}
+
+\mode<presentation>
+\usefonttheme{professionalfonts}
+\setsansfont{BeVietnamPro-Regular.ttf}[
+  Path=assets/fonts/,
+  BoldFont=BeVietnamPro-Bold.ttf,
+  ItalicFont=BeVietnamPro-Italic.ttf
+]
+\newfontfamily\SeminarSemibold{BeVietnamPro-SemiBold.ttf}[
+  Path=assets/fonts/,
+  BoldFont=BeVietnamPro-Bold.ttf
+]
+\newfontfamily\SeminarHeavy{BeVietnamPro-ExtraBold.ttf}[Path=assets/fonts/]
+\setmonofont{IBMPlexMono-Regular.ttf}[Path=assets/fonts/,Scale=.94]
+
+\definecolor{UITBlue}{HTML}{2F6BFF}
+\definecolor{Ink}{HTML}{101D39}
+\definecolor{Navy}{HTML}{101E41}
+\definecolor{Midnight}{HTML}{0B1530}
+\definecolor{Slate}{HTML}{455878}
+\definecolor{Mist}{HTML}{A8BDE6}
+\definecolor{Rule}{HTML}{CCD8EF}
+\definecolor{Paper}{HTML}{F5F8FF}
+\definecolor{Ice}{HTML}{E8F0FF}
+\definecolor{Action}{HTML}{1849B8}
+\definecolor{Cyan}{HTML}{93E8FE}
+\definecolor{CoverMuted}{HTML}{B9CDED}
+\definecolor{WarnInk}{HTML}{794018}
+\definecolor{WarnPaper}{HTML}{FFF0DF}
+
+\setbeamersize{text margin left=9mm,text margin right=9mm}
+\setbeamercolor{background canvas}{bg=white}
+\setbeamercolor{normal text}{fg=Ink,bg=white}
+\setbeamercolor{frametitle}{fg=Ink}
+\setbeamercolor{framesubtitle}{fg=Slate}
+\setbeamercolor{structure}{fg=Action}
+\setbeamercolor{seminar footer}{fg=Slate,bg=Paper}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize item}{\raisebox{.16ex}{\textcolor{Action}{\small\textbullet}}}
+\setbeamerfont{frametitle}{family=\SeminarHeavy,size=\fontsize{17.5}{21.5}\selectfont}
+\setbeamerfont{framesubtitle}{size=\fontsize{10}{13}\selectfont}
+\hypersetup{colorlinks=true,urlcolor=Action,linkcolor=Action}
+\setlength{\emergencystretch}{1.1em}
+
+% Frame titles, source credits and panels are normal-flow boxes.
+\setbeamertemplate{frametitle}{%
+  \nointerlineskip
+  \begin{beamercolorbox}[wd=\textwidth,sep=0pt,vmode]{frametitle}
+    \vskip5mm
+    {\usebeamerfont{frametitle}\raggedright\noindent\insertframetitle\par}%
+    \ifx\insertframesubtitle\empty\else
+      \vskip1.3mm
+      {\usebeamerfont{framesubtitle}\usebeamercolor[fg]{framesubtitle}\noindent\insertframesubtitle\par}
+    \fi
+    \vskip2.3mm
+    {\color{UITBlue}\hrule width 10mm height .7pt}%
+    \vskip2mm
+  \end{beamercolorbox}%
+}
+\newcommand{\SemPageNumber}{\ifnum\insertframenumber<10 0\fi\insertframenumber}
+\newcommand{\SemProgressWidth}{%
+  \ifnum\insertframenumber>\inserttotalframenumber\space
+    \paperwidth
+  \else
+    \dimexpr\paperwidth*\insertframenumber/\inserttotalframenumber\relax
+  \fi
+}
+\setbeamertemplate{footline}{%
+  \vbox{\offinterlineskip
+    \hbox to \paperwidth{%
+      \rlap{\color{Rule}\rule{\paperwidth}{.6pt}}%
+      {\color{UITBlue}\rule{\SemProgressWidth}{.6pt}}\hss}%
+    \hbox{\begin{beamercolorbox}[wd=\paperwidth,ht=4.5mm,dp=2.1mm,leftskip=9mm,rightskip=9mm]{seminar footer}
+      \raisebox{-.75mm}{\includegraphics[height=3.65mm]{assets/uit-emblem.png}}%
+      \hspace{2.2mm}{\SeminarSemibold\fontsize{7.8}{9.8}\selectfont SE114\enspace·\enspace Deep Links và App Links}%
+      \hfill{\SeminarSemibold\fontsize{8.3}{10}\selectfont \SemPageNumber/\inserttotalframenumber}%
+    \end{beamercolorbox}}%
+  }%
+}
+
+\newcommand{\SemCode}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\SemOpeningColors}{%
+  \setbeamercolor{background canvas}{bg=Midnight}%
+  \setbeamercolor{frametitle}{fg=white}%
+}
+\newcommand{\SemLabel}[1]{{\SeminarSemibold\color{Action}\fontsize{9}{11.5}\selectfont #1}}
+\newcommand{\SemLead}[1]{%
+  \par\noindent{\SeminarSemibold\fontsize{11.2}{14.4}\selectfont #1\par}%
+  \smallskip
+}
+\newcommand{\SemSource}[1]{%
+  \par\smallskip\noindent
+  {\color{Slate}\fontsize{7.7}{10}\selectfont\raggedright #1\par}%
+}
+\newcommand{\SemCols}[2]{%
+  \par\noindent
+  \begin{minipage}[t]{.482\linewidth}\vspace{0pt}\ignorespaces#1\end{minipage}%
+  \hfill
+  \begin{minipage}[t]{.482\linewidth}\vspace{0pt}\ignorespaces#2\end{minipage}\par\smallskip
+}
+
+% Measure the content before drawing the clipped corners.
+\newcommand{\SemPanel}[5]{%
+  \par\noindent
+  \begin{tikzpicture}[baseline=(content.south)]
+    \node[inner xsep=3.6mm,inner ysep=2.3mm,outer sep=0pt,
+      text width=\dimexpr\linewidth-7.6mm\relax,text=#3] (content) {%
+        \raggedright
+        \if\relax\detokenize{#4}\relax\else
+          {\SeminarSemibold\fontsize{10.9}{14}\selectfont #4\par}\vskip1.25mm
+        \fi
+        #5%
+      };
+    \begin{scope}[on background layer]
+      \draw[fill=#1,draw=#2,line width=.42pt,line join=round]
+        ($(content.north west)+(1.1mm,0)$) --
+        ($(content.north east)+(-1.1mm,0)$) --
+        ($(content.north east)+(0,-1.1mm)$) --
+        ($(content.south east)+(0,2.6mm)$) --
+        ($(content.south east)+(-2.6mm,0)$) --
+        ($(content.south west)+(1.1mm,0)$) --
+        ($(content.south west)+(0,1.1mm)$) --
+        ($(content.north west)+(0,-1.1mm)$) -- cycle;
+    \end{scope}
+  \end{tikzpicture}\par
+}
+\newcommand{\SemCard}[2]{\SemPanel{Paper}{Rule}{Ink}{#1}{#2}}
+\newcommand{\SemBlueCard}[2]{\SemPanel{Navy}{Navy}{white}{#1}{#2}}
+\newcommand{\SemCallout}[1]{\SemPanel{Ice}{Rule}{Ink}{}{#1}}
+\newcommand{\SemFlow}[3]{%
+  \par\noindent
+  \begin{minipage}[c]{.284\linewidth}\SemCard{}{#1}\end{minipage}\hfill
+  {\color{UITBlue}$\longrightarrow$}\hfill
+  \begin{minipage}[c]{.284\linewidth}\SemCard{}{#2}\end{minipage}\hfill
+  {\color{UITBlue}$\longrightarrow$}\hfill
+  \begin{minipage}[c]{.284\linewidth}\SemBlueCard{}{#3}\end{minipage}\par\smallskip
+}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\renewcommand{\arraystretch}{1.23}
+\newcommand{\SemListingFont}{\fontsize{8.5}{11.1}\selectfont}
+\DefineVerbatimEnvironment{SemListing}{Verbatim}{%
+  fontsize=\SemListingFont,
+  frame=leftline,
+  rulecolor=\color{UITBlue},
+  framesep=2.2mm,
+  xleftmargin=3mm
+}
+\newcommand{\SemListingFile}[1]{%
+  \VerbatimInput[fontsize=\SemListingFont,frame=leftline,rulecolor=\color{UITBlue},%
+    framesep=2.2mm,xleftmargin=3mm]{#1}%
+}
+\mode<all>

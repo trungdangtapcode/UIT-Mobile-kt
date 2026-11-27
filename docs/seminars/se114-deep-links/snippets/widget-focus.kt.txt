@@ -1,0 +1,8 @@
+"schedule" -> {
+    selected = 1
+    schedule.onIntent(ScheduleIntent.FocusDate(
+        route.date
+            ?.let(kotlinx.datetime.LocalDate::parse)
+            ?: today()
+    ))
+}

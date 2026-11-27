@@ -1,0 +1,4 @@
+val date = uri.getQueryParameter("date")
+if (date != null &&
+    runCatching { LocalDate.parse(date) }.isFailure
+) return null

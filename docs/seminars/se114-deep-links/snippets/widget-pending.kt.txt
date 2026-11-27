@@ -1,0 +1,6 @@
+fun pendingIntent(context: Context): PendingIntent =
+    PendingIntent.getActivity(
+        context, 0, intent(context),
+        PendingIntent.FLAG_IMMUTABLE or
+            PendingIntent.FLAG_UPDATE_CURRENT
+    )

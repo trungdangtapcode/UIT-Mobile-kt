@@ -1,10 +1,9 @@
-UIT Mobile includes Kotlin ports of protocol, URL security, session health,
-calendar reminder, assignment submission, and H5P handling logic from:
+UIT Mobile connects to UIT's Moodle learning platform. Moodle was originally
+created by Martin Dougiamas and has contributions from the Moodle community.
+See https://moodledev.io/general/license for Moodle's licensing and credits.
 
-RyanNg1403/uit-cli
-https://github.com/RyanNg1403/uit-cli
-Copyright (c) 2026 Phat Nguyen
-MIT License (see LICENSE)
+The original MIT license for adapted Moodle integration code is in
+licenses/uit-cli-MIT.txt.
 
 The architecture is informed by Google's Now in Android project. No Now in
 Android source files or artwork are included.

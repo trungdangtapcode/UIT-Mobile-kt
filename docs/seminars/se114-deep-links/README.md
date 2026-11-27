@@ -3,8 +3,8 @@
 A 22-slide Vietnamese Beamer seminar. The opening calendar question leads through
 Web addresses, Android Intent resolution, and verified HTTPS links. It ends by
 tracing a UIT Mobile widget interaction through production Kotlin, the
-Activity lifecycle, and the schedule screen. The 20-minute script includes
-the code walkthrough, phone demonstration, and closing question.
+Activity lifecycle, and the schedule screen. The deck is designed for a
+20-minute presentation with a code walkthrough and phone demonstration.
 
 ## Build the PDF
 
